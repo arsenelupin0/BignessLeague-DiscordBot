@@ -1,5 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "bigness-league"
 version = "0.1.0"
+description = "Base inicial de un bot de Discord con discord.py y slash commands."
+readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "discord.py>=2.4,<3",
+    "python-dotenv>=1.0,<2",
+]
+
+[project.scripts]
+bigness-bot = "bigness_league_bot.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
