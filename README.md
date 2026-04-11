@@ -53,6 +53,21 @@ python -m bigness_league_bot.main
 ## Slash command incluido
 
 - `/countchars text:<texto>`: devuelve cuantos caracteres tiene la cadena enviada.
+- `/cerrar_canal accion:<opcion>`: aplica acciones de cierre sobre el canal actual.
+
+Opciones disponibles en `/cerrar_canal`:
+
+- `Partido jugado`: deja el canal en modo solo lectura para el resto de roles y mantiene escritura para `Staff`,
+  `Administrador` y `Ceo`.
+- `Jornada cerrada`: oculta el canal para los roles no protegidos y deja acceso solo a `Staff`, `Administrador` y `Ceo`.
+- `Reabrir partido`: restaura lectura y escritura para todos los miembros del canal.
+- `Eliminacion de canal`: pide confirmacion con botones y elimina el canal por completo.
+
+Restricciones de `/cerrar_canal`:
+
+- solo funciona en canales cuyo nombre cumpla `j[1-9][0-9]?-partido-[1-9][0-9]?`
+- solo pueden usarlo miembros con alguno de estos roles: `Staff`, `Administrador`, `Ceo`
+- las respuestas del comando son publicas
 
 ## Comandos de desarrollo
 

@@ -13,6 +13,11 @@
 #
 #  https://www.gnu.org/licenses/gpl-3.0.html
 #
+#
+#  Licensed under the GNU General Public License v3.0
+#
+#  https://www.gnu.org/licenses/gpl-3.0.html
+#
 from __future__ import annotations
 
 import json
@@ -21,6 +26,10 @@ from typing import TYPE_CHECKING, Any
 
 import discord
 from discord import app_commands
+
+from bigness_league_bot.infrastructure.discord.error_handling import (
+    classify_app_command_error,
+)
 
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
@@ -87,12 +96,15 @@ def register_tree_error_handler(bot: BignessLeagueBot) -> None:
             error: app_commands.AppCommandError,
     ) -> None:
         command_name = command_label(interaction.command)
-        LOGGER.exception(
-            "SLASH_COMMAND_ERROR command=%s user=%s guild=%s channel=%s payload=%s",
+        error_details = classify_app_command_error(error)
+        LOGGER.log(
+            error_details.log_level,
+            "%s command=%s user=%s guild=%s channel=%s payload=%s",
+            error_details.log_code,
             command_name,
             user_label(interaction.user),
             guild_label(interaction.guild),
             channel_label(interaction.channel),
             _serialize_payload(interaction.data),
-            exc_info=error,
+            exc_info=error if error_details.include_traceback else None,
         )

@@ -3,8 +3,8 @@
   <component name="Black">
     <option name="sdkName" value="uv (Bigness League)" />
   </component>
-  <component name="KubernetesApiProvider">{}</component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="uv (Bigness League)" project-jdk-type="Python SDK">
+  <component name="KubernetesApiProvider"><![CDATA[{}]]></component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_26" project-jdk-name="Python 3.11 (Bigness League)" project-jdk-type="Python SDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
 </project>
