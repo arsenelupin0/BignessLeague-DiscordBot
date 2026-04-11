@@ -27,6 +27,7 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
 )
+from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
 from bigness_league_bot.presentation.discord.views.channel_role_addition import (
     ChannelRoleAdditionView,
@@ -38,13 +39,9 @@ if TYPE_CHECKING:
 
 class ChannelAccess(commands.Cog):
     @app_commands.command(
-        name=localized_locale_str(
-            "anadir_al_canal",
-            "commands.channel_access.add_to_channel.name",
-        ),
+        name=localized_locale_str(I18N.commands.channel_access.add_to_channel.name),
         description=localized_locale_str(
-            "Anade roles al canal actual con un selector filtrado.",
-            "commands.channel_access.add_to_channel.description",
+            I18N.commands.channel_access.add_to_channel.description
         ),
     )
     @app_commands.guild_only()
@@ -54,7 +51,7 @@ class ChannelAccess(commands.Cog):
     ) -> None:
         if not isinstance(interaction.user, discord.Member):
             raise UnsupportedChannelError(
-                localize("errors.channel_management.server_only")
+                localize(I18N.errors.channel_management.server_only)
             )
 
         channel = require_text_channel(interaction.channel)

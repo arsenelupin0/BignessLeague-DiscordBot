@@ -16,14 +16,35 @@ from typing import Any
 import discord
 from discord import app_commands
 
-from bigness_league_bot.core.localization import LocalizedText
+from bigness_league_bot.core.localization import (
+    LocalizedText,
+    TranslationKey,
+    TranslationKeyLike,
+    normalize_translation_key,
+)
 from bigness_league_bot.infrastructure.i18n.catalog import TranslationCatalog
 
 TRANSLATION_KEY_EXTRA = "i18n_key"
 
 
-def localized_locale_str(default_text: str, key: str) -> app_commands.locale_str:
-    return app_commands.locale_str(default_text, **{TRANSLATION_KEY_EXTRA: key})
+def localized_locale_str(
+        key: TranslationKeyLike,
+        translation_key: str | None = None,
+) -> app_commands.locale_str:
+    if isinstance(key, TranslationKey):
+        if translation_key is not None:
+            raise TypeError(
+                "No puedes pasar `translation_key` cuando usas `TranslationKey`."
+            )
+        entry = key
+    else:
+        if translation_key is None:
+            raise TypeError(
+                "Si usas una cadena como texto base, debes indicar la clave de traduccion."
+            )
+        entry = TranslationKey(key=translation_key, default_text=key)
+
+    return app_commands.locale_str(entry.default, **{TRANSLATION_KEY_EXTRA: entry.key})
 
 
 class LocalizationService:
@@ -53,17 +74,18 @@ class LocalizationService:
 
     def translate(
             self,
-            key: str,
+            key: TranslationKeyLike,
             *,
             locale: str | discord.Locale | None = None,
             fallback: str | None = None,
             **params: Any,
     ) -> str:
+        translation_key = normalize_translation_key(key)
         locale_code = self._coerce_locale(locale)
         return self.catalog.translate(
-            key,
+            translation_key.key,
             locale=locale_code,
-            fallback=fallback,
+            fallback=translation_key.default_text if fallback is None else fallback,
             params=params,
         )
 
@@ -77,7 +99,7 @@ class LocalizationService:
         return self.translate(
             text.key,
             locale=locale,
-            fallback=fallback,
+            fallback=text.fallback if fallback is None else fallback,
             **text.params,
         )
 

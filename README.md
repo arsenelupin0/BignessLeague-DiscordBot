@@ -81,10 +81,10 @@ Restricciones de `/cerrar_canal`:
 
 ## Localizacion
 
-El bot carga sus textos desde `locales/`.
+El bot carga sus textos desde `aa_resources/locales/`.
 
-- `locales/es-ES.json`: catalogo base en espanol
-- `locales/en-US.json`: ejemplo de segundo idioma
+- `aa_resources/locales/es-ES.json`: catalogo base en espanol
+- `aa_resources/locales/en-US.json`: ejemplo de segundo idioma
 - `BOT_DEFAULT_LOCALE`: locale de fallback del bot
 - `BOT_LOCALES_DIR`: directorio donde se cargan los catalogos
 
@@ -96,6 +96,19 @@ La localizacion cubre:
 
 Para anadir un idioma nuevo, crea otro JSON con el nombre del locale de Discord, por ejemplo `fr.json` o `fr-FR.json`,
 y replica las mismas claves.
+
+Las claves no se referencian ya como cadenas crudas en el codigo. El flujo recomendado es:
+
+1. Edita `aa_resources/locales/es-ES.json`.
+2. Regenera el modulo tipado:
+
+```powershell
+python aa_scripts\i18n\generate_i18n_keys.py --catalog aa_resources\locales\es-ES.json --output src\bigness_league_bot\infrastructure\i18n\keys.py
+```
+
+3. Usa las claves desde `I18N`, por ejemplo `I18N.messages.general.countchars.result`.
+
+Esto te da autocompletado en IntelliJ IDEA y evita typos en las rutas de traduccion.
 
 ## Comandos de desarrollo
 
@@ -122,7 +135,7 @@ Discord hacia esos casos de uso.
 
 ## Logs
 
-El bot escribe logs en consola y en `logs/bigness_league.log`.
+El bot escribe logs en consola y en `aa_var/logs/bigness_league.log`.
 
 Se registran:
 

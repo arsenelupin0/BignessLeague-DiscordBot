@@ -24,6 +24,7 @@ from bigness_league_bot.application.services.channel_closure import (
     protected_role_names_label,
 )
 from bigness_league_bot.core.localization import LocalizedText, localize
+from bigness_league_bot.infrastructure.i18n.keys import I18N
 
 LOGGER = logging.getLogger(__name__)
 OverwriteTarget = discord.Role | discord.Member | discord.Object
@@ -95,7 +96,7 @@ def require_text_channel(channel: object) -> discord.TextChannel:
         return channel
 
     raise UnsupportedChannelError(
-        localize("errors.channel_management.text_only")
+        localize(I18N.errors.channel_management.text_only)
     )
 
 
@@ -104,7 +105,7 @@ def ensure_valid_match_channel_name(channel: discord.TextChannel) -> None:
         return
 
     raise InvalidChannelNameError(
-        localize("errors.channel_management.invalid_channel_name")
+        localize(I18N.errors.channel_management.invalid_channel_name)
     )
 
 
@@ -119,7 +120,7 @@ def ensure_allowed_member(member: discord.Member) -> None:
 
     raise UnauthorizedRoleError(
         localize(
-            "errors.channel_management.unauthorized_role",
+            I18N.errors.channel_management.unauthorized_role,
             protected_roles=protected_role_names_label(),
         )
     )
@@ -136,7 +137,7 @@ def get_protected_roles(guild: discord.Guild) -> ProtectedRoles:
         missing = ", ".join(missing_roles)
         raise ProtectedRoleMissingError(
             localize(
-                "errors.channel_management.protected_roles_missing",
+                I18N.errors.channel_management.protected_roles_missing,
                 missing_roles=missing,
             )
         )
@@ -207,14 +208,14 @@ def normalize_channel_access_roles(
         if role.guild.id != guild.id:
             raise InvalidChannelAccessRoleError(
                 localize(
-                    "errors.channel_management.invalid_role_not_in_guild",
+                    I18N.errors.channel_management.invalid_role_not_in_guild,
                     role_name=role.name,
                 )
             )
 
         if role == guild.default_role:
             raise InvalidChannelAccessRoleError(
-                localize("errors.channel_management.invalid_role_everyone")
+                localize(I18N.errors.channel_management.invalid_role_everyone)
             )
 
         if role.name.casefold() in protected_role_names:
@@ -234,7 +235,7 @@ def get_channel_access_role_catalog(
     if range_start is None:
         raise ChannelAccessRoleRangeError(
             localize(
-                "errors.channel_management.range_start_missing",
+                I18N.errors.channel_management.range_start_missing,
                 role_id=range_start_role_id,
             )
         )
@@ -243,7 +244,7 @@ def get_channel_access_role_catalog(
     if range_end is None:
         raise ChannelAccessRoleRangeError(
             localize(
-                "errors.channel_management.range_end_missing",
+                I18N.errors.channel_management.range_end_missing,
                 role_id=range_end_role_id,
             )
         )
@@ -266,7 +267,7 @@ def get_channel_access_role_catalog(
     )
     if not candidate_roles:
         raise ChannelAccessRoleRangeError(
-            localize("errors.channel_management.range_empty")
+            localize(I18N.errors.channel_management.range_empty)
         )
 
     return ChannelAccessRoleCatalog(
@@ -316,7 +317,7 @@ async def apply_match_played_lockdown(
     )
     return ChannelActionResult(
         action=ChannelCloseMode.MATCH_PLAYED,
-        summary=localize("actions.channel_management.match_played_summary"),
+        summary=localize(I18N.actions.channel_management.match_played_summary),
     )
 
 
@@ -358,7 +359,7 @@ async def apply_matchday_closed(
     )
     return ChannelActionResult(
         action=ChannelCloseMode.MATCHDAY_CLOSED,
-        summary=localize("actions.channel_management.matchday_closed_summary"),
+        summary=localize(I18N.actions.channel_management.matchday_closed_summary),
     )
 
 
@@ -426,7 +427,7 @@ async def add_roles_to_channel(
 ) -> LocalizedText:
     if not roles:
         raise InvalidChannelAccessRoleError(
-            localize("errors.channel_management.no_valid_additional_roles")
+            localize(I18N.errors.channel_management.no_valid_additional_roles)
         )
 
     overwrites = _current_overwrites(channel)
@@ -460,11 +461,11 @@ async def add_roles_to_channel(
 
 def _reopen_summary(extra_roles: tuple[discord.Role, ...]) -> LocalizedText:
     if not extra_roles:
-        return localize("actions.channel_management.reopen_summary")
+        return localize(I18N.actions.channel_management.reopen_summary)
 
     roles_label = ", ".join(role.mention for role in extra_roles)
     return localize(
-        "actions.channel_management.reopen_with_roles_summary",
+        I18N.actions.channel_management.reopen_with_roles_summary,
         roles=roles_label,
     )
 
@@ -472,7 +473,7 @@ def _reopen_summary(extra_roles: tuple[discord.Role, ...]) -> LocalizedText:
 def _add_roles_summary(roles: tuple[discord.Role, ...]) -> LocalizedText:
     roles_label = ", ".join(role.mention for role in roles)
     return localize(
-        "actions.channel_management.add_roles_summary",
+        I18N.actions.channel_management.add_roles_summary,
         roles=roles_label,
     )
 

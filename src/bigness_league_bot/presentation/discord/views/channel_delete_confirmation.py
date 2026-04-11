@@ -17,6 +17,7 @@ import discord
 from bigness_league_bot.infrastructure.discord.channel_management import (
     delete_text_channel,
 )
+from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import LocalizationService
 
 if TYPE_CHECKING:
@@ -72,7 +73,7 @@ class ChannelDeleteConfirmationView(discord.ui.View):
         self.add_item(
             _ConfirmDeleteButton(
                 label=self.localizer.translate(
-                    "messages.channel_delete_confirmation.buttons.confirm",
+                    I18N.messages.channel_delete_confirmation.buttons.confirm,
                     locale=self.locale,
                 )
             )
@@ -80,7 +81,7 @@ class ChannelDeleteConfirmationView(discord.ui.View):
         self.add_item(
             _CancelDeleteButton(
                 label=self.localizer.translate(
-                    "messages.channel_delete_confirmation.buttons.cancel",
+                    I18N.messages.channel_delete_confirmation.buttons.cancel,
                     locale=self.locale,
                 )
             )
@@ -95,7 +96,7 @@ class ChannelDeleteConfirmationView(discord.ui.View):
 
         await interaction.response.send_message(
             self.localizer.translate(
-                "messages.channel_delete_confirmation.only_actor",
+                I18N.messages.channel_delete_confirmation.only_actor,
                 locale=interaction.locale,
             ),
             ephemeral=True,
@@ -107,7 +108,7 @@ class ChannelDeleteConfirmationView(discord.ui.View):
         if self.message is not None:
             await self.message.edit(
                 content=self.localizer.translate(
-                    "messages.channel_delete_confirmation.timeout",
+                    I18N.messages.channel_delete_confirmation.timeout,
                     locale=self.locale,
                 ),
                 view=self,
@@ -121,7 +122,7 @@ class ChannelDeleteConfirmationView(discord.ui.View):
         self._disable_children()
         await interaction.response.edit_message(
             content=self.localizer.translate(
-                "messages.channel_delete_confirmation.deleting",
+                I18N.messages.channel_delete_confirmation.deleting,
                 locale=interaction.locale,
             ),
             view=self,
@@ -137,7 +138,7 @@ class ChannelDeleteConfirmationView(discord.ui.View):
         self._disable_children()
         await interaction.response.edit_message(
             content=self.localizer.translate(
-                "messages.channel_delete_confirmation.cancelled",
+                I18N.messages.channel_delete_confirmation.cancelled,
                 locale=interaction.locale,
             ),
             view=self,

@@ -18,6 +18,7 @@ from bigness_league_bot.infrastructure.discord.sync import (
     get_local_command_names,
     sync_command_tree,
 )
+from bigness_league_bot.infrastructure.i18n.keys import I18N
 
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
@@ -37,14 +38,14 @@ class Admin(commands.Cog):
         normalized_scope = (scope or self.bot.settings.sync_scope).lower().strip()
         if normalized_scope not in {"guild", "global"}:
             await ctx.send(
-                self.bot.localizer.translate("messages.admin.sync.invalid_scope")
+                self.bot.localizer.translate(I18N.messages.admin.sync.invalid_scope)
             )
             return
 
         if normalized_scope != self.bot.settings.sync_scope:
             await ctx.send(
                 self.bot.localizer.translate(
-                    "messages.admin.sync.scope_locked",
+                    I18N.messages.admin.sync.scope_locked,
                     sync_scope=self.bot.settings.sync_scope,
                 )
             )
@@ -57,7 +58,7 @@ class Admin(commands.Cog):
         )
         await ctx.send(
             self.bot.localizer.translate(
-                "messages.admin.sync.completed",
+                I18N.messages.admin.sync.completed,
                 summary=report.format_summary(),
             )
         )
@@ -69,7 +70,7 @@ class Admin(commands.Cog):
         commands_label = ", ".join(local_commands) if local_commands else "(ninguno)"
         await ctx.send(
             self.bot.localizer.translate(
-                "messages.admin.slash_status.result",
+                I18N.messages.admin.slash_status.result,
                 guild_id=self.bot.settings.guild_id or "(sin configurar)",
                 commands=commands_label,
             )

@@ -4,5 +4,6 @@ __pycache__/
 *.egg-info/
 src/*.egg-info/
 logs/
+aa_var/
 dist/
 build/

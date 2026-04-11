@@ -19,6 +19,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+
 
 def _read_bool(name: str, default: bool) -> bool:
     raw_value = os.getenv(name)
@@ -45,6 +48,20 @@ def _read_int(name: str, default: int) -> int:
         raise ValueError(f"{name} debe ser un entero valido.") from exc
 
 
+def _resolve_storage_path(name: str, default: str) -> Path:
+    raw_value = os.getenv(name, default).strip() or default
+    path = Path(raw_value)
+    if path.is_absolute():
+        return path
+
+    project_path = PROJECT_ROOT / path
+    package_path = PACKAGE_ROOT / path
+    if project_path.exists() or not package_path.exists():
+        return project_path
+
+    return package_path
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     token: str
@@ -53,9 +70,9 @@ class Settings:
     environment: Literal["development", "production"] = "development"
     sync_scope: Literal["guild", "global"] = "guild"
     default_locale: str = "es-ES"
-    locales_dir: Path = Path("locales")
+    locales_dir: Path = Path("aa_resources/locales")
     log_level: str = "INFO"
-    log_dir: Path = Path("logs")
+    log_dir: Path = Path("aa_var/logs")
     log_max_bytes: int = 1_048_576
     log_backup_count: int = 5
     log_all_messages: bool = False
@@ -93,9 +110,9 @@ class Settings:
             )
 
         default_locale = os.getenv("BOT_DEFAULT_LOCALE", "es-ES").strip() or "es-ES"
-        locales_dir = Path(os.getenv("BOT_LOCALES_DIR", "locales").strip() or "locales")
+        locales_dir = _resolve_storage_path("BOT_LOCALES_DIR", "aa_resources/locales")
         log_level = os.getenv("BOT_LOG_LEVEL", "INFO").strip().upper() or "INFO"
-        log_dir = Path(os.getenv("BOT_LOG_DIR", "logs").strip() or "logs")
+        log_dir = _resolve_storage_path("BOT_LOG_DIR", "aa_var/logs")
         log_max_bytes = _read_int("BOT_LOG_MAX_BYTES", 1_048_576)
         log_backup_count = _read_int("BOT_LOG_BACKUP_COUNT", 5)
         log_all_messages = _read_bool("BOT_LOG_ALL_MESSAGES", False)

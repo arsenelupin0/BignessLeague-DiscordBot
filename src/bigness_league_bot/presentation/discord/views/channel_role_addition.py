@@ -23,6 +23,7 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
     add_roles_to_channel,
     normalize_channel_access_roles,
 )
+from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import LocalizationService
 
 if TYPE_CHECKING:
@@ -57,7 +58,7 @@ class _ChannelRoleSelect(discord.ui.Select["ChannelRoleAdditionView"]):
             self.options = [
                 discord.SelectOption(
                     label=localizer.translate(
-                        "messages.channel_role_addition.no_results_label",
+                        I18N.messages.channel_role_addition.no_results_label,
                         locale=locale,
                     ),
                     value="0",
@@ -65,7 +66,7 @@ class _ChannelRoleSelect(discord.ui.Select["ChannelRoleAdditionView"]):
             ]
             self.max_values = 1
             self.placeholder = localizer.translate(
-                "messages.channel_role_addition.no_results_placeholder",
+                I18N.messages.channel_role_addition.no_results_placeholder,
                 locale=locale,
             )
             self.disabled = True
@@ -81,7 +82,7 @@ class _ChannelRoleSelect(discord.ui.Select["ChannelRoleAdditionView"]):
         ]
         self.max_values = len(roles)
         self.placeholder = localizer.translate(
-            "messages.channel_role_addition.select_placeholder",
+            I18N.messages.channel_role_addition.select_placeholder,
             locale=locale,
             page=page_index + 1,
             page_count=page_count,
@@ -203,8 +204,8 @@ class _ClearFilterButton(discord.ui.Button["ChannelRoleAdditionView"]):
 
 class _RoleSearchModal(discord.ui.Modal):
     search_query = discord.ui.TextInput(
-        label="query",
-        placeholder="query",
+        label=I18N.messages.channel_role_addition.modal.query_label.default,
+        placeholder=I18N.messages.channel_role_addition.modal.query_placeholder.default,
         max_length=100,
         required=False,
     )
@@ -213,16 +214,16 @@ class _RoleSearchModal(discord.ui.Modal):
         self.channel_role_addition_view = view
         super().__init__(
             title=view.localizer.translate(
-                "messages.channel_role_addition.modal.title",
+                I18N.messages.channel_role_addition.modal.title,
                 locale=view.locale,
             )
         )
         self.search_query.label = view.localizer.translate(
-            "messages.channel_role_addition.modal.query_label",
+            I18N.messages.channel_role_addition.modal.query_label,
             locale=view.locale,
         )
         self.search_query.placeholder = view.localizer.translate(
-            "messages.channel_role_addition.modal.query_placeholder",
+            I18N.messages.channel_role_addition.modal.query_placeholder,
             locale=view.locale,
         )
 
@@ -263,17 +264,17 @@ class ChannelRoleAdditionView(discord.ui.View):
 
         self.role_select = _ChannelRoleSelect(
             placeholder=self.localizer.translate(
-                "messages.channel_role_addition.loading_placeholder",
+                I18N.messages.channel_role_addition.loading_placeholder,
                 locale=self.locale,
             ),
             empty_label=self.localizer.translate(
-                "messages.channel_role_addition.empty_option_label",
+                I18N.messages.channel_role_addition.empty_option_label,
                 locale=self.locale,
             ),
         )
         self.previous_button = _PageButton(
             label=self.localizer.translate(
-                "messages.channel_role_addition.buttons.previous",
+                I18N.messages.channel_role_addition.buttons.previous,
                 locale=self.locale,
             ),
             delta=-1,
@@ -281,7 +282,7 @@ class ChannelRoleAdditionView(discord.ui.View):
         )
         self.next_button = _PageButton(
             label=self.localizer.translate(
-                "messages.channel_role_addition.buttons.next",
+                I18N.messages.channel_role_addition.buttons.next,
                 locale=self.locale,
             ),
             delta=1,
@@ -289,25 +290,25 @@ class ChannelRoleAdditionView(discord.ui.View):
         )
         self.search_button = _SearchButton(
             label=self.localizer.translate(
-                "messages.channel_role_addition.buttons.search",
+                I18N.messages.channel_role_addition.buttons.search,
                 locale=self.locale,
             )
         )
         self.clear_filter_button = _ClearFilterButton(
             label=self.localizer.translate(
-                "messages.channel_role_addition.buttons.clear_filter",
+                I18N.messages.channel_role_addition.buttons.clear_filter,
                 locale=self.locale,
             )
         )
         self.confirm_button = _ConfirmButton(
             label=self.localizer.translate(
-                "messages.channel_role_addition.buttons.confirm",
+                I18N.messages.channel_role_addition.buttons.confirm,
                 locale=self.locale,
             )
         )
         self.cancel_button = _CancelButton(
             label=self.localizer.translate(
-                "messages.channel_role_addition.buttons.cancel",
+                I18N.messages.channel_role_addition.buttons.cancel,
                 locale=self.locale,
             )
         )
@@ -327,11 +328,11 @@ class ChannelRoleAdditionView(discord.ui.View):
 
     def render_content(self) -> str:
         search_query = self.search_query or self.localizer.translate(
-            "messages.channel_role_addition.search_none",
+            I18N.messages.channel_role_addition.search_none,
             locale=self.locale,
         )
         return self.localizer.translate(
-            "messages.channel_role_addition.render_content",
+            I18N.messages.channel_role_addition.render_content,
             locale=self.locale,
             range_start=self.role_catalog.range_start.name,
             range_end=self.role_catalog.range_end.name,
@@ -353,7 +354,7 @@ class ChannelRoleAdditionView(discord.ui.View):
         await self._send_interaction_message(
             interaction,
             self.localizer.translate(
-                "messages.channel_role_addition.only_actor",
+                I18N.messages.channel_role_addition.only_actor,
                 locale=interaction.locale,
             ),
             ephemeral=True,
@@ -367,7 +368,7 @@ class ChannelRoleAdditionView(discord.ui.View):
 
         await self.message.edit(
             content=self.localizer.translate(
-                "messages.channel_role_addition.timeout",
+                I18N.messages.channel_role_addition.timeout,
                 locale=self.locale,
             ),
             view=self,
@@ -417,7 +418,7 @@ class ChannelRoleAdditionView(discord.ui.View):
             await self._send_interaction_message(
                 interaction,
                 self.localizer.translate(
-                    "messages.channel_role_addition.select_before_confirm",
+                    I18N.messages.channel_role_addition.select_before_confirm,
                     locale=interaction.locale,
                 ),
                 ephemeral=True,
@@ -456,7 +457,7 @@ class ChannelRoleAdditionView(discord.ui.View):
             await self._send_interaction_message(
                 interaction,
                 self.localizer.translate(
-                    "errors.slash.discord_forbidden",
+                    I18N.errors.slash.discord_forbidden,
                     locale=interaction.locale,
                 ),
                 ephemeral=True,
@@ -473,7 +474,7 @@ class ChannelRoleAdditionView(discord.ui.View):
             await self._send_interaction_message(
                 interaction,
                 self.localizer.translate(
-                    "errors.slash.http_error",
+                    I18N.errors.slash.http_error,
                     locale=interaction.locale,
                 ),
                 ephemeral=True,
@@ -529,7 +530,7 @@ class ChannelRoleAdditionView(discord.ui.View):
         self._disable_children()
         await interaction.response.edit_message(
             content=self.localizer.translate(
-                "messages.channel_role_addition.selection_cancelled",
+                I18N.messages.channel_role_addition.selection_cancelled,
                 locale=interaction.locale,
             ),
             view=self,

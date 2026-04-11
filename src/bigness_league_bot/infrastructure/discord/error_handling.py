@@ -20,6 +20,7 @@ from bigness_league_bot.core.localization import LocalizedText, localize
 from bigness_league_bot.infrastructure.discord.channel_management import (
     ChannelManagementError,
 )
+from bigness_league_bot.infrastructure.i18n.keys import I18N
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,7 +53,7 @@ def classify_app_command_error(
 
     if isinstance(original_error, app_commands.CheckFailure):
         return AppCommandErrorDetails(
-            user_message=localize("errors.slash.forbidden"),
+            user_message=localize(I18N.errors.slash.forbidden),
             log_level=logging.WARNING,
             log_code="SLASH_COMMAND_FORBIDDEN",
             expected=True,
@@ -60,7 +61,7 @@ def classify_app_command_error(
 
     if isinstance(original_error, app_commands.BotMissingPermissions):
         return AppCommandErrorDetails(
-            user_message=localize("errors.slash.bot_missing_permissions"),
+            user_message=localize(I18N.errors.slash.bot_missing_permissions),
             log_level=logging.ERROR,
             log_code="SLASH_COMMAND_BOT_MISSING_PERMISSIONS",
             expected=False,
@@ -68,7 +69,7 @@ def classify_app_command_error(
 
     if isinstance(original_error, discord.Forbidden):
         return AppCommandErrorDetails(
-            user_message=localize("errors.slash.discord_forbidden"),
+            user_message=localize(I18N.errors.slash.discord_forbidden),
             log_level=logging.ERROR,
             log_code="SLASH_COMMAND_DISCORD_FORBIDDEN",
             expected=False,
@@ -76,14 +77,14 @@ def classify_app_command_error(
 
     if isinstance(original_error, discord.HTTPException):
         return AppCommandErrorDetails(
-            user_message=localize("errors.slash.http_error"),
+            user_message=localize(I18N.errors.slash.http_error),
             log_level=logging.ERROR,
             log_code="SLASH_COMMAND_HTTP_ERROR",
             expected=False,
         )
 
     return AppCommandErrorDetails(
-        user_message=localize("errors.slash.unexpected"),
+        user_message=localize(I18N.errors.slash.unexpected),
         log_level=logging.ERROR,
         log_code="SLASH_COMMAND_ERROR",
         expected=False,

@@ -34,6 +34,7 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
 )
+from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
 from bigness_league_bot.presentation.discord.views.channel_delete_confirmation import (
     ChannelDeleteConfirmationView,
@@ -53,29 +54,25 @@ def _string_choice(
 CHANNEL_CLOSE_CHOICES: list[app_commands.Choice[str]] = [
     _string_choice(
         name=localized_locale_str(
-            "Partido jugado",
-            "commands.channel_management.close_channel.choices.match_played",
+            I18N.commands.channel_management.close_channel.choices.match_played
         ),
         value=ChannelCloseMode.MATCH_PLAYED.value,
     ),
     _string_choice(
         name=localized_locale_str(
-            "Jornada cerrada",
-            "commands.channel_management.close_channel.choices.matchday_closed",
+            I18N.commands.channel_management.close_channel.choices.matchday_closed
         ),
         value=ChannelCloseMode.MATCHDAY_CLOSED.value,
     ),
     _string_choice(
         name=localized_locale_str(
-            "Reabrir partido",
-            "commands.channel_management.close_channel.choices.reopen_match",
+            I18N.commands.channel_management.close_channel.choices.reopen_match
         ),
         value=ChannelCloseMode.REOPEN_MATCH.value,
     ),
     _string_choice(
         name=localized_locale_str(
-            "Eliminacion de canal",
-            "commands.channel_management.close_channel.choices.delete_channel",
+            I18N.commands.channel_management.close_channel.choices.delete_channel
         ),
         value=ChannelCloseMode.DELETE_CHANNEL.value,
     ),
@@ -84,20 +81,15 @@ CHANNEL_CLOSE_CHOICES: list[app_commands.Choice[str]] = [
 
 class ChannelManagement(commands.Cog):
     @app_commands.command(
-        name=localized_locale_str(
-            "cerrar_canal",
-            "commands.channel_management.close_channel.name",
-        ),
+        name=localized_locale_str(I18N.commands.channel_management.close_channel.name),
         description=localized_locale_str(
-            "Aplica una accion de cierre sobre el canal actual.",
-            "commands.channel_management.close_channel.description",
+            I18N.commands.channel_management.close_channel.description
         ),
     )
     @app_commands.guild_only()
     @app_commands.describe(
         accion=localized_locale_str(
-            "Selecciona el tipo de cierre que quieres aplicar",
-            "commands.channel_management.close_channel.parameters.action.description",
+            I18N.commands.channel_management.close_channel.parameters.action.description
         ),
     )
     @app_commands.choices(accion=CHANNEL_CLOSE_CHOICES)
@@ -108,7 +100,7 @@ class ChannelManagement(commands.Cog):
     ) -> None:
         if not isinstance(interaction.user, discord.Member):
             raise UnsupportedChannelError(
-                localize("errors.channel_management.server_only")
+                localize(I18N.errors.channel_management.server_only)
             )
 
         channel = require_text_channel(interaction.channel)
@@ -140,7 +132,7 @@ class ChannelManagement(commands.Cog):
     ) -> None:
         if not isinstance(interaction.user, discord.Member):
             raise UnsupportedChannelError(
-                localize("errors.channel_management.server_only")
+                localize(I18N.errors.channel_management.server_only)
             )
 
         protected_roles = protected_role_names_label()
@@ -152,7 +144,7 @@ class ChannelManagement(commands.Cog):
         )
         await interaction.response.send_message(
             interaction.client.localizer.translate(
-                "messages.channel_management.delete_prompt",
+                I18N.messages.channel_management.delete_prompt,
                 locale=interaction.locale,
                 channel_name=channel.name,
                 protected_roles=protected_roles,
