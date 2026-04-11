@@ -13,6 +13,11 @@
 #
 #  https://www.gnu.org/licenses/gpl-3.0.html
 #
+#
+#  Licensed under the GNU General Public License v3.0
+#
+#  https://www.gnu.org/licenses/gpl-3.0.html
+#
 from __future__ import annotations
 
 import logging
@@ -63,10 +68,11 @@ class BignessLeagueBot(commands.Bot):
         LOGGER.info("Sincronizacion completada: %s", sync_report.format_summary())
 
     async def on_ready(self) -> None:
-        if self.user is None:
+        user = self.user
+        if user is None:
             return
 
-        LOGGER.info("Bot conectado como %s (%s).", self.user, self.user.id)
+        LOGGER.info("Bot conectado como %s (%s).", user, user.id)
         LOGGER.info(
             "Prefijo=%s | Entorno=%s | Sync scope=%s | Guild de desarrollo=%s",
             self.settings.command_prefix,
