@@ -18,6 +18,16 @@
 #
 #  https://www.gnu.org/licenses/gpl-3.0.html
 #
+#
+#  Licensed under the GNU General Public License v3.0
+#
+#  https://www.gnu.org/licenses/gpl-3.0.html
+#
+#
+#  Licensed under the GNU General Public License v3.0
+#
+#  https://www.gnu.org/licenses/gpl-3.0.html
+#
 from __future__ import annotations
 
 import os
@@ -62,6 +72,8 @@ class Settings:
     command_prefix: str = "!"
     environment: Literal["development", "production"] = "development"
     sync_scope: Literal["guild", "global"] = "guild"
+    default_locale: str = "es-ES"
+    locales_dir: Path = Path("locales")
     log_level: str = "INFO"
     log_dir: Path = Path("logs")
     log_max_bytes: int = 1_048_576
@@ -100,6 +112,8 @@ class Settings:
                 "BOT_SYNC_SCOPE=guild requiere que DISCORD_GUILD_ID este configurado."
             )
 
+        default_locale = os.getenv("BOT_DEFAULT_LOCALE", "es-ES").strip() or "es-ES"
+        locales_dir = Path(os.getenv("BOT_LOCALES_DIR", "locales").strip() or "locales")
         log_level = os.getenv("BOT_LOG_LEVEL", "INFO").strip().upper() or "INFO"
         log_dir = Path(os.getenv("BOT_LOG_DIR", "logs").strip() or "logs")
         log_max_bytes = _read_int("BOT_LOG_MAX_BYTES", 1_048_576)
@@ -120,6 +134,8 @@ class Settings:
             command_prefix=command_prefix,
             environment=environment_raw,
             sync_scope=sync_scope_raw,
+            default_locale=default_locale,
+            locales_dir=locales_dir,
             log_level=log_level,
             log_dir=log_dir,
             log_max_bytes=log_max_bytes,
