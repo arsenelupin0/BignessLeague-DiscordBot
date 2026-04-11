@@ -8,9 +8,15 @@
 #  works and modifications, which include larger works using a licensed work, under the same license. Copyright and
 #  license notices must be preserved. Contributors provide an express grant of patent rights.
 
+#
+#  Licensed under the GNU General Public License v3.0
+#
+#  https://www.gnu.org/licenses/gpl-3.0.html
+#
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import discord
@@ -55,6 +61,14 @@ class UnauthorizedRoleError(ChannelManagementError):
     """Raised when the user lacks the allowed roles."""
 
 
+class InvalidChannelAccessRoleError(ChannelManagementError):
+    """Raised when an invalid role is provided for channel access changes."""
+
+
+class ChannelAccessRoleRangeError(ChannelManagementError):
+    """Raised when the configured role range for channel access is invalid."""
+
+
 @dataclass(frozen=True, slots=True)
 class ProtectedRoles:
     staff: discord.Role
@@ -64,6 +78,13 @@ class ProtectedRoles:
     @property
     def as_tuple(self) -> tuple[discord.Role, ...]:
         return self.staff, self.administrator, self.ceo
+
+
+@dataclass(frozen=True, slots=True)
+class ChannelAccessRoleCatalog:
+    range_start: discord.Role
+    range_end: discord.Role
+    roles: tuple[discord.Role, ...]
 
 
 def require_text_channel(channel: object) -> discord.TextChannel:
@@ -167,6 +188,78 @@ def _role_targets(
     return targets
 
 
+def normalize_channel_access_roles(
+        guild: discord.Guild,
+        roles: Sequence[discord.Role | None],
+) -> tuple[discord.Role, ...]:
+    unique_roles: dict[int, discord.Role] = {}
+    protected_role_names = {role_name.casefold() for role_name in PROTECTED_ROLE_NAMES}
+    provided_roles = tuple(role for role in roles if isinstance(role, discord.Role))
+
+    for role in provided_roles:
+        if role.guild.id != guild.id:
+            raise InvalidChannelAccessRoleError(
+                f"El rol `{role.name}` no pertenece a este servidor."
+            )
+
+        if role == guild.default_role:
+            raise InvalidChannelAccessRoleError(
+                "No puedes anadir `@everyone` al canal."
+            )
+
+        if role.name.casefold() in protected_role_names:
+            continue
+
+        unique_roles[role.id] = role
+
+    return tuple(unique_roles.values())
+
+
+def get_channel_access_role_catalog(
+        guild: discord.Guild,
+        range_start_role_id: int,
+        range_end_role_id: int,
+) -> ChannelAccessRoleCatalog:
+    range_start = guild.get_role(range_start_role_id)
+    if range_start is None:
+        raise ChannelAccessRoleRangeError(
+            f"No existe el rol de inicio configurado para el selector: `{range_start_role_id}`."
+        )
+
+    range_end = guild.get_role(range_end_role_id)
+    if range_end is None:
+        raise ChannelAccessRoleRangeError(
+            f"No existe el rol de fin configurado para el selector: `{range_end_role_id}`."
+        )
+
+    upper_position = max(range_start.position, range_end.position)
+    lower_position = min(range_start.position, range_end.position)
+    candidate_roles = tuple(
+        sorted(
+            (
+                role
+                for role in guild.roles
+                if role != guild.default_role
+                   and not role.managed
+                   and role.id not in {range_start.id, range_end.id}
+                   and lower_position < role.position < upper_position
+            ),
+            key=lambda role: role.position,
+            reverse=True,
+        )
+    )
+    if not candidate_roles:
+        raise ChannelAccessRoleRangeError(
+            "No hay roles seleccionables entre los separadores configurados."
+        )
+
+    return ChannelAccessRoleCatalog(
+        range_start=range_start,
+        range_end=range_end,
+        roles=candidate_roles,
+    )
+
+
 async def apply_match_played_lockdown(
         channel: discord.TextChannel,
         actor: discord.abc.User,
@@ -262,6 +355,7 @@ async def apply_matchday_closed(
 async def apply_match_reopen(
         channel: discord.TextChannel,
         actor: discord.abc.User,
+        extra_roles: tuple[discord.Role, ...] = (),
 ) -> ChannelActionResult:
     protected_roles = get_protected_roles(channel.guild)
     overwrites = _current_overwrites(channel)
@@ -287,6 +381,14 @@ async def apply_match_reopen(
             can_write=can_write,
         )
 
+    for role in extra_roles:
+        overwrite = channel.overwrites_for(role)
+        overwrites[role] = _set_text_permissions(
+            overwrite,
+            view_channel=True,
+            can_write=True,
+        )
+
     await channel.edit(
         overwrites=overwrites,
         reason=(
@@ -303,10 +405,63 @@ async def apply_match_reopen(
     )
     return ChannelActionResult(
         action=ChannelCloseMode.REOPEN_MATCH,
-        summary=(
-            "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal."
+        summary=_reopen_summary(extra_roles),
+    )
+
+
+async def add_roles_to_channel(
+        channel: discord.TextChannel,
+        actor: discord.abc.User,
+        roles: tuple[discord.Role, ...],
+) -> str:
+    if not roles:
+        raise InvalidChannelAccessRoleError(
+            "Selecciona al menos un rol adicional valido."
+        )
+
+    overwrites = _current_overwrites(channel)
+    _set_everyone_hidden_permissions(channel, overwrites)
+
+    for role in roles:
+        overwrite = channel.overwrites_for(role)
+        overwrites[role] = _set_text_permissions(
+            overwrite,
+            view_channel=True,
+            can_write=True,
+        )
+
+    await channel.edit(
+        overwrites=overwrites,
+        reason=(
+            f"{actor} ({actor.id}) ejecuto /anadir_al_canal "
+            f"roles={','.join(str(role.id) for role in roles)}"
         ),
     )
+    LOGGER.info(
+        "CHANNEL_ROLES_ADDED channel=%s(%s) actor=%s(%s) roles=%s",
+        channel.name,
+        channel.id,
+        actor,
+        actor.id,
+        ",".join(str(role.id) for role in roles),
+    )
+    return _add_roles_summary(roles)
+
+
+def _reopen_summary(extra_roles: tuple[discord.Role, ...]) -> str:
+    if not extra_roles:
+        return "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal."
+
+    roles_label = ", ".join(role.mention for role in extra_roles)
+    return (
+        "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal "
+        f"y se han anadido estos roles: {roles_label}."
+    )
+
+
+def _add_roles_summary(roles: tuple[discord.Role, ...]) -> str:
+    roles_label = ", ".join(role.mention for role in roles)
+    return f"Se han anadido al canal estos roles: {roles_label}."
 
 
 async def delete_text_channel(

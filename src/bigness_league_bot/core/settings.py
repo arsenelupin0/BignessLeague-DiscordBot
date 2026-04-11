@@ -13,6 +13,11 @@
 #
 #  https://www.gnu.org/licenses/gpl-3.0.html
 #
+#
+#  Licensed under the GNU General Public License v3.0
+#
+#  https://www.gnu.org/licenses/gpl-3.0.html
+#
 from __future__ import annotations
 
 import os
@@ -62,6 +67,8 @@ class Settings:
     log_max_bytes: int = 1_048_576
     log_backup_count: int = 5
     log_all_messages: bool = False
+    channel_access_range_start_role_id: int = 1_364_338_457_106_845_717
+    channel_access_range_end_role_id: int = 1_364_336_738_323_009_796
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -98,6 +105,14 @@ class Settings:
         log_max_bytes = _read_int("BOT_LOG_MAX_BYTES", 1_048_576)
         log_backup_count = _read_int("BOT_LOG_BACKUP_COUNT", 5)
         log_all_messages = _read_bool("BOT_LOG_ALL_MESSAGES", False)
+        channel_access_range_start_role_id = _read_int(
+            "BOT_CHANNEL_ACCESS_RANGE_START_ROLE_ID",
+            1_364_338_457_106_845_717,
+        )
+        channel_access_range_end_role_id = _read_int(
+            "BOT_CHANNEL_ACCESS_RANGE_END_ROLE_ID",
+            1_364_336_738_323_009_796,
+        )
 
         return cls(
             token=token,
@@ -110,4 +125,6 @@ class Settings:
             log_max_bytes=log_max_bytes,
             log_backup_count=log_backup_count,
             log_all_messages=log_all_messages,
+            channel_access_range_start_role_id=channel_access_range_start_role_id,
+            channel_access_range_end_role_id=channel_access_range_end_role_id,
         )

@@ -18,6 +18,11 @@
 #
 #  https://www.gnu.org/licenses/gpl-3.0.html
 #
+#
+#  Licensed under the GNU General Public License v3.0
+#
+#  https://www.gnu.org/licenses/gpl-3.0.html
+#
 from __future__ import annotations
 
 import logging
@@ -32,6 +37,7 @@ INITIAL_EXTENSIONS: tuple[str, ...] = (
     "bigness_league_bot.presentation.discord.cogs.general",
     "bigness_league_bot.presentation.discord.cogs.admin",
     "bigness_league_bot.presentation.discord.cogs.channel_management",
+    "bigness_league_bot.presentation.discord.cogs.channel_access",
 )
 
 

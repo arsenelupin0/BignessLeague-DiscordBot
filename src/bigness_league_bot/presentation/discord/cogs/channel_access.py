@@ -1,0 +1,92 @@
+#  Copyright (c) 2026. Bigness League.
+#
+#  Licensed under the GNU General Public License v3.0
+#
+#  https://www.gnu.org/licenses/gpl-3.0.html
+#
+#  Permissions of this strong copyleft license are conditioned on making available complete source code of licensed
+#  works and modifications, which include larger works using a licensed work, under the same license. Copyright and
+#  license notices must be preserved. Contributors provide an express grant of patent rights.
+
+#
+#  Licensed under the GNU General Public License v3.0
+#
+#  https://www.gnu.org/licenses/gpl-3.0.html
+#
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import discord
+from discord import app_commands
+from discord.ext import commands
+
+from bigness_league_bot.infrastructure.discord.channel_management import (
+    UnsupportedChannelError,
+    ensure_allowed_member,
+    ensure_valid_match_channel_name,
+    get_channel_access_role_catalog,
+    require_text_channel,
+)
+from bigness_league_bot.infrastructure.discord.error_handling import (
+    classify_app_command_error,
+)
+from bigness_league_bot.presentation.discord.views.channel_role_addition import (
+    ChannelRoleAdditionView,
+)
+
+if TYPE_CHECKING:
+    from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
+
+
+class ChannelAccess(commands.Cog):
+    @app_commands.command(
+        name="anadir_al_canal",
+        description="Anade roles al canal actual con un selector de Discord.",
+    )
+    @app_commands.guild_only()
+    async def add_roles_to_channel(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+    ) -> None:
+        if not isinstance(interaction.user, discord.Member):
+            raise UnsupportedChannelError(
+                "Este comando solo se puede usar dentro de un servidor."
+            )
+
+        channel = require_text_channel(interaction.channel)
+        ensure_valid_match_channel_name(channel)
+        ensure_allowed_member(interaction.user)
+        settings = interaction.client.settings
+        role_catalog = get_channel_access_role_catalog(
+            channel.guild,
+            settings.channel_access_range_start_role_id,
+            settings.channel_access_range_end_role_id,
+        )
+
+        view = ChannelRoleAdditionView(
+            channel=channel,
+            actor=interaction.user,
+            role_catalog=role_catalog,
+        )
+        await interaction.response.send_message(
+            view.render_content(),
+            view=view,
+        )
+        view.message = await interaction.original_response()
+
+    async def cog_app_command_error(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            error: app_commands.AppCommandError,
+    ) -> None:
+        error_details = classify_app_command_error(error)
+        if interaction.response.is_done():
+            await interaction.followup.send(error_details.user_message)
+            return
+
+        await interaction.response.send_message(error_details.user_message)
+
+
+async def setup(bot: BignessLeagueBot) -> None:
+    await bot.add_cog(ChannelAccess())

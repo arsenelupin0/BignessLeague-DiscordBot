@@ -60,7 +60,8 @@ Opciones disponibles en `/cerrar_canal`:
 - `Partido jugado`: deja el canal en modo solo lectura para el resto de roles y mantiene escritura para `Staff`,
   `Administrador` y `Ceo`.
 - `Jornada cerrada`: oculta el canal para los roles no protegidos y deja acceso solo a `Staff`, `Administrador` y `Ceo`.
-- `Reabrir partido`: restaura lectura y escritura para todos los miembros del canal.
+- `Reabrir partido`: restaura la escritura para los roles que ya tenian acceso al canal y permite anadir hasta 3 roles
+  extra desde el propio slash command.
 - `Eliminacion de canal`: pide confirmacion con botones y elimina el canal por completo.
 
 Restricciones de `/cerrar_canal`:
@@ -68,6 +69,7 @@ Restricciones de `/cerrar_canal`:
 - solo funciona en canales cuyo nombre cumpla `j[1-9][0-9]?-partido-[1-9][0-9]?`
 - solo pueden usarlo miembros con alguno de estos roles: `Staff`, `Administrador`, `Ceo`
 - las respuestas del comando son publicas
+- los campos `rol_1`, `rol_2` y `rol_3` se usan solo cuando eliges `Reabrir partido`
 
 ## Comandos de desarrollo
 
