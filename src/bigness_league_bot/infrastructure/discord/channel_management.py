@@ -8,11 +8,6 @@
 #  works and modifications, which include larger works using a licensed work, under the same license. Copyright and
 #  license notices must be preserved. Contributors provide an express grant of patent rights.
 
-#
-#  Licensed under the GNU General Public License v3.0
-#
-#  https://www.gnu.org/licenses/gpl-3.0.html
-#
 from __future__ import annotations
 
 import logging
@@ -28,6 +23,7 @@ from bigness_league_bot.application.services.channel_closure import (
     is_match_channel_name,
     protected_role_names_label,
 )
+from bigness_league_bot.core.localization import LocalizedText, localize
 
 LOGGER = logging.getLogger(__name__)
 OverwriteTarget = discord.Role | discord.Member | discord.Object
@@ -43,6 +39,13 @@ READ_ONLY_PERMISSION_FIELDS: tuple[str, ...] = (
 
 class ChannelManagementError(RuntimeError):
     """Base error for channel management operations."""
+
+    def __init__(self, message: LocalizedText) -> None:
+        super().__init__(message.key)
+        self.message = message
+
+    def __str__(self) -> str:
+        return self.message.key
 
 
 class UnsupportedChannelError(ChannelManagementError):
@@ -92,7 +95,7 @@ def require_text_channel(channel: object) -> discord.TextChannel:
         return channel
 
     raise UnsupportedChannelError(
-        "Este comando solo se puede usar dentro de un canal de texto."
+        localize("errors.channel_management.text_only")
     )
 
 
@@ -101,8 +104,7 @@ def ensure_valid_match_channel_name(channel: discord.TextChannel) -> None:
         return
 
     raise InvalidChannelNameError(
-        "Este comando solo se puede usar en canales con nombre "
-        "`j[1-9][0-9]?-partido-[1-9][0-9]?`."
+        localize("errors.channel_management.invalid_channel_name")
     )
 
 
@@ -116,8 +118,10 @@ def ensure_allowed_member(member: discord.Member) -> None:
         return
 
     raise UnauthorizedRoleError(
-        "Solo pueden usar este comando los roles: "
-        f"{protected_role_names_label()}."
+        localize(
+            "errors.channel_management.unauthorized_role",
+            protected_roles=protected_role_names_label(),
+        )
     )
 
 
@@ -131,7 +135,10 @@ def get_protected_roles(guild: discord.Guild) -> ProtectedRoles:
     if missing_roles:
         missing = ", ".join(missing_roles)
         raise ProtectedRoleMissingError(
-            f"Faltan roles protegidos en el servidor: {missing}."
+            localize(
+                "errors.channel_management.protected_roles_missing",
+                missing_roles=missing,
+            )
         )
 
     return ProtectedRoles(
@@ -199,12 +206,15 @@ def normalize_channel_access_roles(
     for role in provided_roles:
         if role.guild.id != guild.id:
             raise InvalidChannelAccessRoleError(
-                f"El rol `{role.name}` no pertenece a este servidor."
+                localize(
+                    "errors.channel_management.invalid_role_not_in_guild",
+                    role_name=role.name,
+                )
             )
 
         if role == guild.default_role:
             raise InvalidChannelAccessRoleError(
-                "No puedes anadir `@everyone` al canal."
+                localize("errors.channel_management.invalid_role_everyone")
             )
 
         if role.name.casefold() in protected_role_names:
@@ -223,13 +233,19 @@ def get_channel_access_role_catalog(
     range_start = guild.get_role(range_start_role_id)
     if range_start is None:
         raise ChannelAccessRoleRangeError(
-            f"No existe el rol de inicio configurado para el selector: `{range_start_role_id}`."
+            localize(
+                "errors.channel_management.range_start_missing",
+                role_id=range_start_role_id,
+            )
         )
 
     range_end = guild.get_role(range_end_role_id)
     if range_end is None:
         raise ChannelAccessRoleRangeError(
-            f"No existe el rol de fin configurado para el selector: `{range_end_role_id}`."
+            localize(
+                "errors.channel_management.range_end_missing",
+                role_id=range_end_role_id,
+            )
         )
 
     upper_position = max(range_start.position, range_end.position)
@@ -250,7 +266,7 @@ def get_channel_access_role_catalog(
     )
     if not candidate_roles:
         raise ChannelAccessRoleRangeError(
-            "No hay roles seleccionables entre los separadores configurados."
+            localize("errors.channel_management.range_empty")
         )
 
     return ChannelAccessRoleCatalog(
@@ -300,10 +316,7 @@ async def apply_match_played_lockdown(
     )
     return ChannelActionResult(
         action=ChannelCloseMode.MATCH_PLAYED,
-        summary=(
-            "Canal puesto en modo solo lectura para el resto de roles. "
-            "Staff, Administrador y Ceo mantienen escritura."
-        ),
+        summary=localize("actions.channel_management.match_played_summary"),
     )
 
 
@@ -345,10 +358,7 @@ async def apply_matchday_closed(
     )
     return ChannelActionResult(
         action=ChannelCloseMode.MATCHDAY_CLOSED,
-        summary=(
-            "Canal cerrado para roles no protegidos. "
-            "Solo Staff, Administrador y Ceo conservan acceso."
-        ),
+        summary=localize("actions.channel_management.matchday_closed_summary"),
     )
 
 
@@ -413,10 +423,10 @@ async def add_roles_to_channel(
         channel: discord.TextChannel,
         actor: discord.abc.User,
         roles: tuple[discord.Role, ...],
-) -> str:
+) -> LocalizedText:
     if not roles:
         raise InvalidChannelAccessRoleError(
-            "Selecciona al menos un rol adicional valido."
+            localize("errors.channel_management.no_valid_additional_roles")
         )
 
     overwrites = _current_overwrites(channel)
@@ -448,20 +458,23 @@ async def add_roles_to_channel(
     return _add_roles_summary(roles)
 
 
-def _reopen_summary(extra_roles: tuple[discord.Role, ...]) -> str:
+def _reopen_summary(extra_roles: tuple[discord.Role, ...]) -> LocalizedText:
     if not extra_roles:
-        return "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal."
+        return localize("actions.channel_management.reopen_summary")
 
     roles_label = ", ".join(role.mention for role in extra_roles)
-    return (
-        "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal "
-        f"y se han anadido estos roles: {roles_label}."
+    return localize(
+        "actions.channel_management.reopen_with_roles_summary",
+        roles=roles_label,
     )
 
 
-def _add_roles_summary(roles: tuple[discord.Role, ...]) -> str:
+def _add_roles_summary(roles: tuple[discord.Role, ...]) -> LocalizedText:
     roles_label = ", ".join(role.mention for role in roles)
-    return f"Se han anadido al canal estos roles: {roles_label}."
+    return localize(
+        "actions.channel_management.add_roles_summary",
+        roles=roles_label,
+    )
 
 
 async def delete_text_channel(

@@ -14,6 +14,8 @@ import re
 from dataclasses import dataclass
 from enum import StrEnum
 
+from bigness_league_bot.core.localization import LocalizedText
+
 PROTECTED_ROLE_NAMES: tuple[str, ...] = ("Staff", "Administrador", "Ceo")
 MATCH_CHANNEL_NAME_PATTERN = re.compile(r"^j[1-9][0-9]?-partido-[1-9][0-9]?$")
 
@@ -32,18 +34,8 @@ class ChannelCloseMode(StrEnum):
     REOPEN_MATCH = "reabrir_partido"
     DELETE_CHANNEL = "eliminacion_canal"
 
-    @property
-    def label(self) -> str:
-        if self is ChannelCloseMode.MATCH_PLAYED:
-            return "Partido jugado"
-        if self is ChannelCloseMode.MATCHDAY_CLOSED:
-            return "Jornada cerrada"
-        if self is ChannelCloseMode.REOPEN_MATCH:
-            return "Reabrir partido"
-        return "Eliminacion de canal"
-
 
 @dataclass(frozen=True, slots=True)
 class ChannelActionResult:
     action: ChannelCloseMode
-    summary: str
+    summary: LocalizedText

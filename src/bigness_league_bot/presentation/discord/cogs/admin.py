@@ -8,11 +8,6 @@
 #  works and modifications, which include larger works using a licensed work, under the same license. Copyright and
 #  license notices must be preserved. Contributors provide an express grant of patent rights.
 
-#
-#  Licensed under the GNU General Public License v3.0
-#
-#  https://www.gnu.org/licenses/gpl-3.0.html
-#
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -41,14 +36,17 @@ class Admin(commands.Cog):
     ) -> None:
         normalized_scope = (scope or self.bot.settings.sync_scope).lower().strip()
         if normalized_scope not in {"guild", "global"}:
-            await ctx.send("Usa `!sync guild` o `!sync global`.")
+            await ctx.send(
+                self.bot.localizer.translate("messages.admin.sync.invalid_scope")
+            )
             return
 
         if normalized_scope != self.bot.settings.sync_scope:
             await ctx.send(
-                "El bot esta configurado para "
-                f"`BOT_SYNC_SCOPE={self.bot.settings.sync_scope}`. "
-                "Cambia el `.env` y reinicia si quieres usar el otro scope."
+                self.bot.localizer.translate(
+                    "messages.admin.sync.scope_locked",
+                    sync_scope=self.bot.settings.sync_scope,
+                )
             )
             return
 
@@ -57,7 +55,12 @@ class Admin(commands.Cog):
             self.bot.settings.sync_scope,
             self.bot.settings.guild_id,
         )
-        await ctx.send(f"Sincronizacion completada: {report.format_summary()}")
+        await ctx.send(
+            self.bot.localizer.translate(
+                "messages.admin.sync.completed",
+                summary=report.format_summary(),
+            )
+        )
 
     @commands.command(name="slashstatus")
     @commands.is_owner()
@@ -65,9 +68,11 @@ class Admin(commands.Cog):
         local_commands = get_local_command_names(self.bot.tree)
         commands_label = ", ".join(local_commands) if local_commands else "(ninguno)"
         await ctx.send(
-            "Estado local de slash commands: "
-            f"guild_id={self.bot.settings.guild_id or '(sin configurar)'} "
-            f"commands=[{commands_label}]"
+            self.bot.localizer.translate(
+                "messages.admin.slash_status.result",
+                guild_id=self.bot.settings.guild_id or "(sin configurar)",
+                commands=commands_label,
+            )
         )
 
 

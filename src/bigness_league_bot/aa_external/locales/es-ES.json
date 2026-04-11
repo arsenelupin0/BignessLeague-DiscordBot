@@ -1,0 +1,125 @@
+{
+  "commands": {
+    "general": {
+      "countchars": {
+        "name": "countchars",
+        "description": "Cuenta cuantos caracteres tiene un texto.",
+        "parameters": {
+          "text": {
+            "description": "Texto que quieres analizar"
+          }
+        }
+      }
+    },
+    "channel_management": {
+      "close_channel": {
+        "name": "cerrar_canal",
+        "description": "Aplica una accion de cierre sobre el canal actual.",
+        "parameters": {
+          "action": {
+            "description": "Selecciona el tipo de cierre que quieres aplicar"
+          }
+        },
+        "choices": {
+          "match_played": "Partido jugado",
+          "matchday_closed": "Jornada cerrada",
+          "reopen_match": "Reabrir partido",
+          "delete_channel": "Eliminacion de canal"
+        }
+      }
+    },
+    "channel_access": {
+      "add_to_channel": {
+        "name": "anadir_al_canal",
+        "description": "Anade roles al canal actual con un selector filtrado."
+      }
+    }
+  },
+  "messages": {
+    "general": {
+      "countchars": {
+        "result": "El texto tiene {total_characters} caracteres."
+      }
+    },
+    "admin": {
+      "sync": {
+        "invalid_scope": "Usa `!sync guild` o `!sync global`.",
+        "scope_locked": "El bot esta configurado para `BOT_SYNC_SCOPE={sync_scope}`. Cambia el `.env` y reinicia si quieres usar el otro scope.",
+        "completed": "Sincronizacion completada: {summary}"
+      },
+      "slash_status": {
+        "result": "Estado local de slash commands: guild_id={guild_id} commands=[{commands}]"
+      }
+    },
+    "channel_management": {
+      "delete_prompt": "Vas a eliminar el canal `{channel_name}` de forma permanente.\nRoles protegidos del sistema: {protected_roles}.\nConfirma solo si estas completamente seguro."
+    },
+    "channel_role_addition": {
+      "loading_placeholder": "Cargando roles...",
+      "empty_option_label": "Sin roles",
+      "no_results_label": "Sin resultados",
+      "no_results_placeholder": "No hay roles para mostrar",
+      "select_placeholder": "Selecciona roles de la pagina {page}/{page_count}",
+      "buttons": {
+        "previous": "Anterior",
+        "next": "Siguiente",
+        "confirm": "Confirmar",
+        "cancel": "Cancelar",
+        "search": "Buscar",
+        "clear_filter": "Limpiar filtro"
+      },
+      "modal": {
+        "title": "Buscar roles",
+        "query_label": "Nombre, ID o mencion del rol",
+        "query_placeholder": "Ejemplo: Dragons, 123456789 o <@&123456789>"
+      },
+      "render_content": "Selecciona los roles que quieres anadir a este canal.\nRango filtrado: `{range_start}` < roles < `{range_end}`.\nPagina {page}/{page_count} | Seleccionados: {selected_count} | Disponibles: {visible_count}/{candidate_count}.\nBusqueda: {search_query}.\nUsa Confirmar para aplicar los permisos al canal.",
+      "search_none": "sin filtro",
+      "only_actor": "Solo quien ejecuto el comando puede usar este selector.",
+      "timeout": "La seleccion de roles ha expirado. No se han aplicado cambios.",
+      "select_before_confirm": "Selecciona al menos un rol antes de confirmar.",
+      "selection_cancelled": "Seleccion de roles cancelada."
+    },
+    "channel_delete_confirmation": {
+      "only_actor": "Solo quien ejecuto el comando puede confirmar esta accion.",
+      "timeout": "La confirmacion ha expirado. No se ha eliminado el canal.",
+      "deleting": "Eliminando canal...",
+      "cancelled": "Eliminacion cancelada.",
+      "buttons": {
+        "confirm": "Confirmar eliminacion",
+        "cancel": "Cancelar"
+      }
+    }
+  },
+  "errors": {
+    "channel_management": {
+      "server_only": "Este comando solo se puede usar dentro de un servidor.",
+      "text_only": "Este comando solo se puede usar dentro de un canal de texto.",
+      "invalid_channel_name": "Este comando solo se puede usar en canales con nombre `j[1-9][0-9]?-partido-[1-9][0-9]?`.",
+      "unauthorized_role": "Solo pueden usar este comando los roles: {protected_roles}.",
+      "protected_roles_missing": "Faltan roles protegidos en el servidor: {missing_roles}.",
+      "invalid_role_not_in_guild": "El rol `{role_name}` no pertenece a este servidor.",
+      "invalid_role_everyone": "No puedes anadir `@everyone` al canal.",
+      "no_valid_additional_roles": "Selecciona al menos un rol adicional valido.",
+      "range_start_missing": "No existe el rol de inicio configurado para el selector: `{role_id}`.",
+      "range_end_missing": "No existe el rol de fin configurado para el selector: `{role_id}`.",
+      "range_empty": "No hay roles seleccionables entre los separadores configurados."
+    },
+    "slash": {
+      "forbidden": "No tienes permisos para ejecutar este comando.",
+      "bot_missing_permissions": "El bot necesita permisos suficientes para gestionar el canal.",
+      "discord_forbidden": "Discord ha rechazado la accion. Revisa los permisos del bot.",
+      "http_error": "Discord ha devuelto un error al actualizar el canal.",
+      "unexpected": "Ha ocurrido un error inesperado al procesar el comando."
+    }
+  },
+  "actions": {
+    "channel_management": {
+      "match_played_summary": "Canal puesto en modo solo lectura para el resto de roles. Staff, Administrador y Ceo mantienen escritura.",
+      "matchday_closed_summary": "Canal cerrado para roles no protegidos. Solo Staff, Administrador y Ceo conservan acceso.",
+      "reopen_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal.",
+      "reopen_with_roles_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal y se han anadido estos roles: {roles}.",
+      "add_roles_summary": "Se han anadido al canal estos roles: {roles}."
+    }
+  }
+}

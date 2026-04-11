@@ -21,6 +21,7 @@ from bigness_league_bot.application.services.channel_closure import (
     ChannelCloseMode,
     protected_role_names_label,
 )
+from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.discord.channel_management import (
     UnsupportedChannelError,
     apply_match_reopen,
@@ -33,6 +34,7 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
 )
+from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
 from bigness_league_bot.presentation.discord.views.channel_delete_confirmation import (
     ChannelDeleteConfirmationView,
 )
@@ -41,25 +43,40 @@ if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
 
-def _string_choice(name: str, value: str) -> app_commands.Choice[str]:
+def _string_choice(
+        name: str | app_commands.locale_str,
+        value: str,
+) -> app_commands.Choice[str]:
     return cast(app_commands.Choice[str], app_commands.Choice(name=name, value=value))
 
 
 CHANNEL_CLOSE_CHOICES: list[app_commands.Choice[str]] = [
     _string_choice(
-        name=ChannelCloseMode.MATCH_PLAYED.label,
+        name=localized_locale_str(
+            "Partido jugado",
+            "commands.channel_management.close_channel.choices.match_played",
+        ),
         value=ChannelCloseMode.MATCH_PLAYED.value,
     ),
     _string_choice(
-        name=ChannelCloseMode.MATCHDAY_CLOSED.label,
+        name=localized_locale_str(
+            "Jornada cerrada",
+            "commands.channel_management.close_channel.choices.matchday_closed",
+        ),
         value=ChannelCloseMode.MATCHDAY_CLOSED.value,
     ),
     _string_choice(
-        name=ChannelCloseMode.REOPEN_MATCH.label,
+        name=localized_locale_str(
+            "Reabrir partido",
+            "commands.channel_management.close_channel.choices.reopen_match",
+        ),
         value=ChannelCloseMode.REOPEN_MATCH.value,
     ),
     _string_choice(
-        name=ChannelCloseMode.DELETE_CHANNEL.label,
+        name=localized_locale_str(
+            "Eliminacion de canal",
+            "commands.channel_management.close_channel.choices.delete_channel",
+        ),
         value=ChannelCloseMode.DELETE_CHANNEL.value,
     ),
 ]
@@ -67,12 +84,21 @@ CHANNEL_CLOSE_CHOICES: list[app_commands.Choice[str]] = [
 
 class ChannelManagement(commands.Cog):
     @app_commands.command(
-        name="cerrar_canal",
-        description="Aplica una accion de cierre sobre el canal actual.",
+        name=localized_locale_str(
+            "cerrar_canal",
+            "commands.channel_management.close_channel.name",
+        ),
+        description=localized_locale_str(
+            "Aplica una accion de cierre sobre el canal actual.",
+            "commands.channel_management.close_channel.description",
+        ),
     )
     @app_commands.guild_only()
     @app_commands.describe(
-        accion="Selecciona el tipo de cierre que quieres aplicar",
+        accion=localized_locale_str(
+            "Selecciona el tipo de cierre que quieres aplicar",
+            "commands.channel_management.close_channel.parameters.action.description",
+        ),
     )
     @app_commands.choices(accion=CHANNEL_CLOSE_CHOICES)
     async def close_channel(
@@ -82,7 +108,7 @@ class ChannelManagement(commands.Cog):
     ) -> None:
         if not isinstance(interaction.user, discord.Member):
             raise UnsupportedChannelError(
-                "Este comando solo se puede usar dentro de un servidor."
+                localize("errors.channel_management.server_only")
             )
 
         channel = require_text_channel(interaction.channel)
@@ -100,7 +126,12 @@ class ChannelManagement(commands.Cog):
             actor=interaction.user,
             action=selected_action,
         )
-        await interaction.followup.send(action_result.summary)
+        await interaction.followup.send(
+            interaction.client.localizer.render(
+                action_result.summary,
+                locale=interaction.locale,
+            )
+        )
 
     @staticmethod
     async def _prompt_channel_deletion(
@@ -109,19 +140,22 @@ class ChannelManagement(commands.Cog):
     ) -> None:
         if not isinstance(interaction.user, discord.Member):
             raise UnsupportedChannelError(
-                "Este comando solo se puede usar dentro de un servidor."
+                localize("errors.channel_management.server_only")
             )
 
         protected_roles = protected_role_names_label()
         view = ChannelDeleteConfirmationView(
             channel=channel,
             actor=interaction.user,
+            localizer=interaction.client.localizer,
+            locale=interaction.locale,
         )
         await interaction.response.send_message(
-            (
-                f"Vas a eliminar el canal `{channel.name}` de forma permanente.\n"
-                f"Roles protegidos del sistema: {protected_roles}.\n"
-                "Confirma solo si estas completamente seguro."
+            interaction.client.localizer.translate(
+                "messages.channel_management.delete_prompt",
+                locale=interaction.locale,
+                channel_name=channel.name,
+                protected_roles=protected_roles,
             ),
             view=view,
         )
@@ -151,7 +185,13 @@ class ChannelManagement(commands.Cog):
             error: app_commands.AppCommandError,
     ) -> None:
         error_details = classify_app_command_error(error)
-        await self._send_error(interaction, error_details.user_message)
+        await self._send_error(
+            interaction,
+            interaction.client.localizer.render(
+                error_details.user_message,
+                locale=interaction.locale,
+            ),
+        )
 
     @staticmethod
     async def _send_error(

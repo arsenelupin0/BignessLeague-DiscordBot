@@ -17,9 +17,40 @@ import discord
 from bigness_league_bot.infrastructure.discord.channel_management import (
     delete_text_channel,
 )
+from bigness_league_bot.infrastructure.i18n.service import LocalizationService
 
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
+
+
+class _ConfirmDeleteButton(discord.ui.Button["ChannelDeleteConfirmationView"]):
+    def __init__(self, *, label: str) -> None:
+        super().__init__(label=label, style=discord.ButtonStyle.danger)
+
+    async def callback(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+    ) -> None:
+        view = self.view
+        if not isinstance(view, ChannelDeleteConfirmationView):
+            return
+
+        await view.confirm_delete(interaction)
+
+
+class _CancelDeleteButton(discord.ui.Button["ChannelDeleteConfirmationView"]):
+    def __init__(self, *, label: str) -> None:
+        super().__init__(label=label, style=discord.ButtonStyle.secondary)
+
+    async def callback(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+    ) -> None:
+        view = self.view
+        if not isinstance(view, ChannelDeleteConfirmationView):
+            return
+
+        await view.cancel_delete(interaction)
 
 
 class ChannelDeleteConfirmationView(discord.ui.View):
@@ -28,12 +59,32 @@ class ChannelDeleteConfirmationView(discord.ui.View):
             *,
             channel: discord.TextChannel,
             actor: discord.Member,
+            localizer: LocalizationService,
+            locale: str | discord.Locale,
             timeout: float = 60.0,
     ) -> None:
         super().__init__(timeout=timeout)
         self.channel = channel
         self.actor = actor
+        self.localizer = localizer
+        self.locale = locale
         self.message: discord.InteractionMessage | None = None
+        self.add_item(
+            _ConfirmDeleteButton(
+                label=self.localizer.translate(
+                    "messages.channel_delete_confirmation.buttons.confirm",
+                    locale=self.locale,
+                )
+            )
+        )
+        self.add_item(
+            _CancelDeleteButton(
+                label=self.localizer.translate(
+                    "messages.channel_delete_confirmation.buttons.cancel",
+                    locale=self.locale,
+                )
+            )
+        )
 
     async def interaction_check(
             self,
@@ -43,56 +94,56 @@ class ChannelDeleteConfirmationView(discord.ui.View):
             return True
 
         await interaction.response.send_message(
-            "Solo quien ejecuto el comando puede confirmar esta accion.",
+            self.localizer.translate(
+                "messages.channel_delete_confirmation.only_actor",
+                locale=interaction.locale,
+            ),
             ephemeral=True,
         )
         return False
 
     async def on_timeout(self) -> None:
-        for child in self.children:
-            child.disabled = True
-
+        self._disable_children()
         if self.message is not None:
             await self.message.edit(
-                content="La confirmacion ha expirado. No se ha eliminado el canal.",
+                content=self.localizer.translate(
+                    "messages.channel_delete_confirmation.timeout",
+                    locale=self.locale,
+                ),
                 view=self,
             )
 
-    @discord.ui.button(
-        label="Confirmar eliminacion",
-        style=discord.ButtonStyle.danger,
-    )
     async def confirm_delete(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
-            button: discord.ui.Button[discord.ui.View],
     ) -> None:
-        del button
-        for child in self.children:
-            child.disabled = True
-
+        self.locale = interaction.locale
+        self._disable_children()
         await interaction.response.edit_message(
-            content="Eliminando canal...",
+            content=self.localizer.translate(
+                "messages.channel_delete_confirmation.deleting",
+                locale=interaction.locale,
+            ),
             view=self,
         )
         self.stop()
         await delete_text_channel(self.channel, self.actor)
 
-    @discord.ui.button(
-        label="Cancelar",
-        style=discord.ButtonStyle.secondary,
-    )
     async def cancel_delete(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
-            button: discord.ui.Button[discord.ui.View],
     ) -> None:
-        del button
-        for child in self.children:
-            child.disabled = True
-
+        self.locale = interaction.locale
+        self._disable_children()
         await interaction.response.edit_message(
-            content="Eliminacion cancelada.",
+            content=self.localizer.translate(
+                "messages.channel_delete_confirmation.cancelled",
+                locale=interaction.locale,
+            ),
             view=self,
         )
         self.stop()
+
+    def _disable_children(self) -> None:
+        for child in self.children:
+            child.disabled = True

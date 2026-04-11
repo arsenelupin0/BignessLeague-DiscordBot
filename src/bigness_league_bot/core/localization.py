@@ -8,6 +8,17 @@
 #  works and modifications, which include larger works using a licensed work, under the same license. Copyright and
 #  license notices must be preserved. Contributors provide an express grant of patent rights.
 
-from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
+from __future__ import annotations
 
-__all__ = ["BignessLeagueBot"]
+from dataclasses import dataclass, field
+from typing import Any
+
+
+@dataclass(frozen=True, slots=True)
+class LocalizedText:
+    key: str
+    params: dict[str, Any] = field(default_factory=dict)
+
+
+def localize(key: str, /, **params: Any) -> LocalizedText:
+    return LocalizedText(key=key, params=params)

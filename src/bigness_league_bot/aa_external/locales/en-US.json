@@ -1,0 +1,125 @@
+{
+  "commands": {
+    "general": {
+      "countchars": {
+        "name": "countchars",
+        "description": "Counts how many characters a text contains.",
+        "parameters": {
+          "text": {
+            "description": "Text you want to analyze"
+          }
+        }
+      }
+    },
+    "channel_management": {
+      "close_channel": {
+        "name": "close_channel",
+        "description": "Applies a channel closing action to the current channel.",
+        "parameters": {
+          "action": {
+            "description": "Select the closing action you want to apply"
+          }
+        },
+        "choices": {
+          "match_played": "Match played",
+          "matchday_closed": "Matchday closed",
+          "reopen_match": "Reopen match",
+          "delete_channel": "Delete channel"
+        }
+      }
+    },
+    "channel_access": {
+      "add_to_channel": {
+        "name": "add_to_channel",
+        "description": "Adds roles to the current channel using a filtered selector."
+      }
+    }
+  },
+  "messages": {
+    "general": {
+      "countchars": {
+        "result": "The text has {total_characters} characters."
+      }
+    },
+    "admin": {
+      "sync": {
+        "invalid_scope": "Use `!sync guild` or `!sync global`.",
+        "scope_locked": "The bot is configured with `BOT_SYNC_SCOPE={sync_scope}`. Change `.env` and restart if you want to use the other scope.",
+        "completed": "Sync completed: {summary}"
+      },
+      "slash_status": {
+        "result": "Local slash command state: guild_id={guild_id} commands=[{commands}]"
+      }
+    },
+    "channel_management": {
+      "delete_prompt": "You are about to permanently delete `{channel_name}`.\nProtected system roles: {protected_roles}.\nConfirm only if you are completely sure."
+    },
+    "channel_role_addition": {
+      "loading_placeholder": "Loading roles...",
+      "empty_option_label": "No roles",
+      "no_results_label": "No results",
+      "no_results_placeholder": "There are no roles to display",
+      "select_placeholder": "Select roles from page {page}/{page_count}",
+      "buttons": {
+        "previous": "Previous",
+        "next": "Next",
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "search": "Search",
+        "clear_filter": "Clear filter"
+      },
+      "modal": {
+        "title": "Search roles",
+        "query_label": "Role name, ID, or mention",
+        "query_placeholder": "Example: Dragons, 123456789, or <@&123456789>"
+      },
+      "render_content": "Select the roles you want to add to this channel.\nFiltered range: `{range_start}` < roles < `{range_end}`.\nPage {page}/{page_count} | Selected: {selected_count} | Available: {visible_count}/{candidate_count}.\nSearch: {search_query}.\nUse Confirm to apply the channel permissions.",
+      "search_none": "no filter",
+      "only_actor": "Only the user who ran the command can use this selector.",
+      "timeout": "Role selection expired. No changes were applied.",
+      "select_before_confirm": "Select at least one role before confirming.",
+      "selection_cancelled": "Role selection cancelled."
+    },
+    "channel_delete_confirmation": {
+      "only_actor": "Only the user who ran the command can confirm this action.",
+      "timeout": "Confirmation expired. The channel was not deleted.",
+      "deleting": "Deleting channel...",
+      "cancelled": "Deletion cancelled.",
+      "buttons": {
+        "confirm": "Confirm deletion",
+        "cancel": "Cancel"
+      }
+    }
+  },
+  "errors": {
+    "channel_management": {
+      "server_only": "This command can only be used inside a server.",
+      "text_only": "This command can only be used inside a text channel.",
+      "invalid_channel_name": "This command can only be used in channels named `j[1-9][0-9]?-partido-[1-9][0-9]?`.",
+      "unauthorized_role": "Only these roles can use this command: {protected_roles}.",
+      "protected_roles_missing": "Protected roles are missing from the server: {missing_roles}.",
+      "invalid_role_not_in_guild": "The role `{role_name}` does not belong to this server.",
+      "invalid_role_everyone": "You cannot add `@everyone` to the channel.",
+      "no_valid_additional_roles": "Select at least one valid additional role.",
+      "range_start_missing": "The configured selector start role does not exist: `{role_id}`.",
+      "range_end_missing": "The configured selector end role does not exist: `{role_id}`.",
+      "range_empty": "There are no selectable roles between the configured separators."
+    },
+    "slash": {
+      "forbidden": "You do not have permission to run this command.",
+      "bot_missing_permissions": "The bot needs enough permissions to manage the channel.",
+      "discord_forbidden": "Discord rejected the action. Check the bot permissions.",
+      "http_error": "Discord returned an error while updating the channel.",
+      "unexpected": "An unexpected error occurred while processing the command."
+    }
+  },
+  "actions": {
+    "channel_management": {
+      "match_played_summary": "The channel is now read-only for the rest of the roles. Staff, Administrador, and Ceo keep write access.",
+      "matchday_closed_summary": "The channel is now closed for unprotected roles. Only Staff, Administrador, and Ceo keep access.",
+      "reopen_summary": "The channel has been reopened. Write access was restored for the roles that already had access.",
+      "reopen_with_roles_summary": "The channel has been reopened. Write access was restored for the roles that already had access and these roles were added: {roles}.",
+      "add_roles_summary": "These roles were added to the channel: {roles}."
+    }
+  }
+}

@@ -22,7 +22,8 @@ pip install -e .
 3. Define `DISCORD_GUILD_ID` con el ID de tu servidor de pruebas.
 4. Opcionalmente ajusta `BOT_PREFIX` si quieres usar otro prefijo para comandos de texto.
 5. Ajusta `BOT_ENV` y `BOT_SYNC_SCOPE` segun el entorno.
-6. Ajusta las variables `BOT_LOG_*` si quieres mas o menos verbosidad.
+6. Ajusta `BOT_DEFAULT_LOCALE` y `BOT_LOCALES_DIR` si quieres cambiar el idioma base o la carpeta de catalogos.
+7. Ajusta las variables `BOT_LOG_*` si quieres mas o menos verbosidad.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
 dejas vacio, se sincronizan globalmente y Discord puede tardar en propagarlos.
@@ -54,14 +55,14 @@ python -m bigness_league_bot.main
 
 - `/countchars text:<texto>`: devuelve cuantos caracteres tiene la cadena enviada.
 - `/cerrar_canal accion:<opcion>`: aplica acciones de cierre sobre el canal actual.
+- `/anadir_al_canal`: abre un selector filtrado para anadir roles al canal actual.
 
 Opciones disponibles en `/cerrar_canal`:
 
 - `Partido jugado`: deja el canal en modo solo lectura para el resto de roles y mantiene escritura para `Staff`,
   `Administrador` y `Ceo`.
 - `Jornada cerrada`: oculta el canal para los roles no protegidos y deja acceso solo a `Staff`, `Administrador` y `Ceo`.
-- `Reabrir partido`: restaura la escritura para los roles que ya tenian acceso al canal y permite anadir hasta 3 roles
-  extra desde el propio slash command.
+- `Reabrir partido`: restaura la escritura para los roles que ya tenian acceso al canal.
 - `Eliminacion de canal`: pide confirmacion con botones y elimina el canal por completo.
 
 Restricciones de `/cerrar_canal`:
@@ -69,7 +70,32 @@ Restricciones de `/cerrar_canal`:
 - solo funciona en canales cuyo nombre cumpla `j[1-9][0-9]?-partido-[1-9][0-9]?`
 - solo pueden usarlo miembros con alguno de estos roles: `Staff`, `Administrador`, `Ceo`
 - las respuestas del comando son publicas
-- los campos `rol_1`, `rol_2` y `rol_3` se usan solo cuando eliges `Reabrir partido`
+
+`/anadir_al_canal`:
+
+- solo funciona en canales cuyo nombre cumpla `j[1-9][0-9]?-partido-[1-9][0-9]?`
+- solo pueden usarlo miembros con alguno de estos roles: `Staff`, `Administrador`, `Ceo`
+- muestra solo roles entre los separadores configurados en `BOT_CHANNEL_ACCESS_RANGE_START_ROLE_ID` y
+  `BOT_CHANNEL_ACCESS_RANGE_END_ROLE_ID`
+- incluye busqueda propia por nombre parcial, ID o mencion de rol
+
+## Localizacion
+
+El bot carga sus textos desde `locales/`.
+
+- `locales/es-ES.json`: catalogo base en espanol
+- `locales/en-US.json`: ejemplo de segundo idioma
+- `BOT_DEFAULT_LOCALE`: locale de fallback del bot
+- `BOT_LOCALES_DIR`: directorio donde se cargan los catalogos
+
+La localizacion cubre:
+
+- nombres y descripciones de slash commands
+- opciones visibles de comandos y componentes
+- mensajes de respuesta, validacion y error
+
+Para anadir un idioma nuevo, crea otro JSON con el nombre del locale de Discord, por ejemplo `fr.json` o `fr-FR.json`,
+y replica las mismas claves.
 
 ## Comandos de desarrollo
 

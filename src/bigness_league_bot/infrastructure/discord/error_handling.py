@@ -16,6 +16,7 @@ from dataclasses import dataclass
 import discord
 from discord import app_commands
 
+from bigness_league_bot.core.localization import LocalizedText, localize
 from bigness_league_bot.infrastructure.discord.channel_management import (
     ChannelManagementError,
 )
@@ -23,7 +24,7 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
 
 @dataclass(frozen=True, slots=True)
 class AppCommandErrorDetails:
-    user_message: str
+    user_message: LocalizedText
     log_level: int
     log_code: str
     expected: bool
@@ -43,7 +44,7 @@ def classify_app_command_error(
 
     if isinstance(original_error, ChannelManagementError):
         return AppCommandErrorDetails(
-            user_message=str(original_error),
+            user_message=original_error.message,
             log_level=logging.WARNING,
             log_code="SLASH_COMMAND_REJECTED",
             expected=True,
@@ -51,7 +52,7 @@ def classify_app_command_error(
 
     if isinstance(original_error, app_commands.CheckFailure):
         return AppCommandErrorDetails(
-            user_message="No tienes permisos para ejecutar este comando.",
+            user_message=localize("errors.slash.forbidden"),
             log_level=logging.WARNING,
             log_code="SLASH_COMMAND_FORBIDDEN",
             expected=True,
@@ -59,7 +60,7 @@ def classify_app_command_error(
 
     if isinstance(original_error, app_commands.BotMissingPermissions):
         return AppCommandErrorDetails(
-            user_message="El bot necesita permisos suficientes para gestionar el canal.",
+            user_message=localize("errors.slash.bot_missing_permissions"),
             log_level=logging.ERROR,
             log_code="SLASH_COMMAND_BOT_MISSING_PERMISSIONS",
             expected=False,
@@ -67,7 +68,7 @@ def classify_app_command_error(
 
     if isinstance(original_error, discord.Forbidden):
         return AppCommandErrorDetails(
-            user_message="Discord ha rechazado la accion. Revisa los permisos del bot.",
+            user_message=localize("errors.slash.discord_forbidden"),
             log_level=logging.ERROR,
             log_code="SLASH_COMMAND_DISCORD_FORBIDDEN",
             expected=False,
@@ -75,14 +76,14 @@ def classify_app_command_error(
 
     if isinstance(original_error, discord.HTTPException):
         return AppCommandErrorDetails(
-            user_message="Discord ha devuelto un error al actualizar el canal.",
+            user_message=localize("errors.slash.http_error"),
             log_level=logging.ERROR,
             log_code="SLASH_COMMAND_HTTP_ERROR",
             expected=False,
         )
 
     return AppCommandErrorDetails(
-        user_message="Ha ocurrido un error inesperado al procesar el comando.",
+        user_message=localize("errors.slash.unexpected"),
         log_level=logging.ERROR,
         log_code="SLASH_COMMAND_ERROR",
         expected=False,

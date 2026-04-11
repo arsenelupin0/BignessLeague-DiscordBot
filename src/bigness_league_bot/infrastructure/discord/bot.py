@@ -8,16 +8,6 @@
 #  works and modifications, which include larger works using a licensed work, under the same license. Copyright and
 #  license notices must be preserved. Contributors provide an express grant of patent rights.
 
-#
-#  Licensed under the GNU General Public License v3.0
-#
-#  https://www.gnu.org/licenses/gpl-3.0.html
-#
-#
-#  Licensed under the GNU General Public License v3.0
-#
-#  https://www.gnu.org/licenses/gpl-3.0.html
-#
 from __future__ import annotations
 
 import logging
@@ -35,6 +25,8 @@ from bigness_league_bot.infrastructure.discord.sync import (
     sync_command_tree,
 )
 from bigness_league_bot.infrastructure.discord.telemetry import register_tree_error_handler
+from bigness_league_bot.infrastructure.i18n.discord_translator import DiscordTranslator
+from bigness_league_bot.infrastructure.i18n.service import LocalizationService
 
 LOGGER = logging.getLogger(__name__)
 
@@ -49,9 +41,14 @@ class BignessLeagueBot(commands.Bot):
             intents=intents,
         )
         self.settings = settings
+        self.localizer: LocalizationService = LocalizationService.from_directory(
+            directory=settings.locales_dir,
+            default_locale=settings.default_locale,
+        )
         register_tree_error_handler(self)
 
     async def setup_hook(self) -> None:
+        await self.tree.set_translator(DiscordTranslator(self.localizer))
         await load_extensions(self, INITIAL_EXTENSIONS)
 
         local_commands = get_local_command_names(self.tree)
