@@ -33,6 +33,33 @@
         "name": "anadir_al_canal",
         "description": "Anade roles al canal actual con un selector filtrado."
       }
+    },
+    "match_channel_creation": {
+      "create_match_channel": {
+        "name": "canal_de_jornada",
+        "description": "Crea un canal de partido para una jornada concreta.",
+        "parameters": {
+          "jornada": {
+            "description": "Numero de jornada del partido"
+          },
+          "partido": {
+            "description": "Numero de partido dentro de la jornada"
+          },
+          "categoria": {
+            "description": "Division donde se creara el canal"
+          },
+          "equipo_1": {
+            "description": "Rol del primer equipo"
+          },
+          "equipo_2": {
+            "description": "Rol del segundo equipo"
+          }
+        },
+        "choices": {
+          "gold_division": "Gold Division",
+          "silver_division": "Silver Division"
+        }
+      }
     }
   },
   "messages": {
@@ -95,7 +122,7 @@
     "channel_management": {
       "server_only": "Este comando solo se puede usar dentro de un servidor.",
       "text_only": "Este comando solo se puede usar dentro de un canal de texto.",
-      "invalid_channel_name": "Este comando solo se puede usar en canales con nombre `j[1-9][0-9]?-partido-[1-9][0-9]?`.",
+      "invalid_channel_name": "Este comando solo se puede usar en canales con nombre tipo `『𝗝』1️⃣『𝗣』4️⃣・⚽`.",
       "unauthorized_role": "Solo pueden usar este comando los roles: {protected_roles}.",
       "protected_roles_missing": "Faltan roles protegidos en el servidor: {missing_roles}.",
       "invalid_role_not_in_guild": "El rol `{role_name}` no pertenece a este servidor.",
@@ -104,6 +131,13 @@
       "range_start_missing": "No existe el rol de inicio configurado para el selector: `{role_id}`.",
       "range_end_missing": "No existe el rol de fin configurado para el selector: `{role_id}`.",
       "range_empty": "No hay roles seleccionables entre los separadores configurados."
+    },
+    "match_channel_creation": {
+      "same_team_roles": "No puedes crear un partido usando el mismo rol dos veces: `{role_name}`.",
+      "invalid_team_role": "El rol `{role_name}` no se puede usar como equipo en un canal de partido.",
+      "team_role_out_of_range": "El rol `{role_name}` no esta dentro del rango de roles de equipos configurado: `{range_start}` < rol < `{range_end}`.",
+      "channel_already_exists": "Ya existe un canal para esa jornada y ese partido: `{channel_name}`.",
+      "category_missing": "No existe la categoria configurada para crear este canal: `{category_id}`."
     },
     "slash": {
       "forbidden": "No tienes permisos para ejecutar este comando.",
@@ -120,6 +154,9 @@
       "reopen_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal.",
       "reopen_with_roles_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal y se han anadido estos roles: {roles}.",
       "add_roles_summary": "Se han anadido al canal estos roles: {roles}."
+    },
+    "match_channel_creation": {
+      "created_summary": "Se ha creado {channel} en `{category}` para la jornada {jornada}, partido {partido}, entre {team_one} y {team_two}."
     }
   }
 }

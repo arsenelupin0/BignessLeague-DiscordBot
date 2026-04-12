@@ -56,6 +56,8 @@ python -m bigness_league_bot.main
 - `/countchars text:<texto>`: devuelve cuantos caracteres tiene la cadena enviada.
 - `/cerrar_canal accion:<opcion>`: aplica acciones de cierre sobre el canal actual.
 - `/anadir_al_canal`: abre un selector filtrado para anadir roles al canal actual.
+- `/canal_de_jornada jornada:<numero> partido:<numero> categoria:<division> equipo_1:<rol> equipo_2:<rol>`: crea un
+  canal de partido con permisos para ambos equipos.
 
 Opciones disponibles en `/cerrar_canal`:
 
@@ -78,6 +80,16 @@ Restricciones de `/cerrar_canal`:
 - muestra solo roles entre los separadores configurados en `BOT_CHANNEL_ACCESS_RANGE_START_ROLE_ID` y
   `BOT_CHANNEL_ACCESS_RANGE_END_ROLE_ID`
 - incluye busqueda propia por nombre parcial, ID o mencion de rol
+
+`/canal_de_jornada`:
+
+- solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
+- crea el canal con nombre `『𝗝』1️⃣『𝗣』2️⃣・⚽`
+- oculta el canal para `@everyone`
+- permite elegir la categoria de destino entre `Gold Division` y `Silver Division`
+- da acceso de lectura y escritura a `Staff`, `Administrador`, `Ceo`, `equipo_1` y `equipo_2`
+- valida que los dos roles de equipo sean distintos y esten dentro del rango de roles configurado
+- usa `BOT_GOLD_DIVISION_CATEGORY_ID` y `BOT_SILVER_DIVISION_CATEGORY_ID` para resolver las categorias reales
 
 ## Localizacion
 

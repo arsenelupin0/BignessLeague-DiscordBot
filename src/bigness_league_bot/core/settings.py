@@ -78,6 +78,8 @@ class Settings:
     log_all_messages: bool = False
     channel_access_range_start_role_id: int = 1_364_338_457_106_845_717
     channel_access_range_end_role_id: int = 1_364_336_738_323_009_796
+    gold_division_category_id: int = 1_487_858_997_812_789_298
+    silver_division_category_id: int = 1_487_859_192_256_790_630
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -124,6 +126,14 @@ class Settings:
             "BOT_CHANNEL_ACCESS_RANGE_END_ROLE_ID",
             1_364_336_738_323_009_796,
         )
+        gold_division_category_id = _read_int(
+            "BOT_GOLD_DIVISION_CATEGORY_ID",
+            1_487_858_997_812_789_298,
+        )
+        silver_division_category_id = _read_int(
+            "BOT_SILVER_DIVISION_CATEGORY_ID",
+            1_487_859_192_256_790_630,
+        )
 
         return cls(
             token=token,
@@ -140,4 +150,6 @@ class Settings:
             log_all_messages=log_all_messages,
             channel_access_range_start_role_id=channel_access_range_start_role_id,
             channel_access_range_end_role_id=channel_access_range_end_role_id,
+            gold_division_category_id=gold_division_category_id,
+            silver_division_category_id=silver_division_category_id,
         )

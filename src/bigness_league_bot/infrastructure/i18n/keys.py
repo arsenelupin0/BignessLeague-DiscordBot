@@ -8,10 +8,8 @@ class _CommandsGeneralCountcharsParametersText:
     description: TranslationKey = TranslationKey(key="commands.general.countchars.parameters.text.description",
                                                  default_text="Texto que quieres analizar")
 
-
 class _CommandsGeneralCountcharsParameters:
     text: _CommandsGeneralCountcharsParametersText = _CommandsGeneralCountcharsParametersText()
-
 
 class _CommandsGeneralCountchars:
     name: TranslationKey = TranslationKey(key="commands.general.countchars.name", default_text="countchars")
@@ -19,20 +17,16 @@ class _CommandsGeneralCountchars:
                                                  default_text="Cuenta cuantos caracteres tiene un texto.")
     parameters: _CommandsGeneralCountcharsParameters = _CommandsGeneralCountcharsParameters()
 
-
 class _CommandsGeneral:
     countchars: _CommandsGeneralCountchars = _CommandsGeneralCountchars()
-
 
 class _CommandsChannelManagementCloseChannelParametersAction:
     description: TranslationKey = TranslationKey(
         key="commands.channel_management.close_channel.parameters.action.description",
         default_text="Selecciona el tipo de cierre que quieres aplicar")
 
-
 class _CommandsChannelManagementCloseChannelParameters:
     action: _CommandsChannelManagementCloseChannelParametersAction = _CommandsChannelManagementCloseChannelParametersAction()
-
 
 class _CommandsChannelManagementCloseChannelChoices:
     match_played: TranslationKey = TranslationKey(key="commands.channel_management.close_channel.choices.match_played",
@@ -44,7 +38,6 @@ class _CommandsChannelManagementCloseChannelChoices:
     delete_channel: TranslationKey = TranslationKey(
         key="commands.channel_management.close_channel.choices.delete_channel", default_text="Eliminacion de canal")
 
-
 class _CommandsChannelManagementCloseChannel:
     name: TranslationKey = TranslationKey(key="commands.channel_management.close_channel.name",
                                           default_text="cerrar_canal")
@@ -53,10 +46,8 @@ class _CommandsChannelManagementCloseChannel:
     parameters: _CommandsChannelManagementCloseChannelParameters = _CommandsChannelManagementCloseChannelParameters()
     choices: _CommandsChannelManagementCloseChannelChoices = _CommandsChannelManagementCloseChannelChoices()
 
-
 class _CommandsChannelManagement:
     close_channel: _CommandsChannelManagementCloseChannel = _CommandsChannelManagementCloseChannel()
-
 
 class _CommandsChannelAccessAddToChannel:
     name: TranslationKey = TranslationKey(key="commands.channel_access.add_to_channel.name",
@@ -64,25 +55,80 @@ class _CommandsChannelAccessAddToChannel:
     description: TranslationKey = TranslationKey(key="commands.channel_access.add_to_channel.description",
                                                  default_text="Anade roles al canal actual con un selector filtrado.")
 
-
 class _CommandsChannelAccess:
     add_to_channel: _CommandsChannelAccessAddToChannel = _CommandsChannelAccessAddToChannel()
 
+
+class _CommandsMatchChannelCreationCreateMatchChannelParametersJornada:
+    description: TranslationKey = TranslationKey(
+        key="commands.match_channel_creation.create_match_channel.parameters.jornada.description",
+        default_text="Numero de jornada del partido")
+
+
+class _CommandsMatchChannelCreationCreateMatchChannelParametersPartido:
+    description: TranslationKey = TranslationKey(
+        key="commands.match_channel_creation.create_match_channel.parameters.partido.description",
+        default_text="Numero de partido dentro de la jornada")
+
+
+class _CommandsMatchChannelCreationCreateMatchChannelParametersCategoria:
+    description: TranslationKey = TranslationKey(
+        key="commands.match_channel_creation.create_match_channel.parameters.categoria.description",
+        default_text="Division donde se creara el canal")
+
+
+class _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo1:
+    description: TranslationKey = TranslationKey(
+        key="commands.match_channel_creation.create_match_channel.parameters.equipo_1.description",
+        default_text="Rol del primer equipo")
+
+
+class _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo2:
+    description: TranslationKey = TranslationKey(
+        key="commands.match_channel_creation.create_match_channel.parameters.equipo_2.description",
+        default_text="Rol del segundo equipo")
+
+
+class _CommandsMatchChannelCreationCreateMatchChannelParameters:
+    jornada: _CommandsMatchChannelCreationCreateMatchChannelParametersJornada = _CommandsMatchChannelCreationCreateMatchChannelParametersJornada()
+    partido: _CommandsMatchChannelCreationCreateMatchChannelParametersPartido = _CommandsMatchChannelCreationCreateMatchChannelParametersPartido()
+    categoria: _CommandsMatchChannelCreationCreateMatchChannelParametersCategoria = _CommandsMatchChannelCreationCreateMatchChannelParametersCategoria()
+    equipo_1: _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo1 = _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo1()
+    equipo_2: _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo2 = _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo2()
+
+
+class _CommandsMatchChannelCreationCreateMatchChannelChoices:
+    gold_division: TranslationKey = TranslationKey(
+        key="commands.match_channel_creation.create_match_channel.choices.gold_division", default_text="Gold Division")
+    silver_division: TranslationKey = TranslationKey(
+        key="commands.match_channel_creation.create_match_channel.choices.silver_division",
+        default_text="Silver Division")
+
+
+class _CommandsMatchChannelCreationCreateMatchChannel:
+    name: TranslationKey = TranslationKey(key="commands.match_channel_creation.create_match_channel.name",
+                                          default_text="canal_de_jornada")
+    description: TranslationKey = TranslationKey(key="commands.match_channel_creation.create_match_channel.description",
+                                                 default_text="Crea un canal de partido para una jornada concreta.")
+    parameters: _CommandsMatchChannelCreationCreateMatchChannelParameters = _CommandsMatchChannelCreationCreateMatchChannelParameters()
+    choices: _CommandsMatchChannelCreationCreateMatchChannelChoices = _CommandsMatchChannelCreationCreateMatchChannelChoices()
+
+
+class _CommandsMatchChannelCreation:
+    create_match_channel: _CommandsMatchChannelCreationCreateMatchChannel = _CommandsMatchChannelCreationCreateMatchChannel()
 
 class _Commands:
     general: _CommandsGeneral = _CommandsGeneral()
     channel_management: _CommandsChannelManagement = _CommandsChannelManagement()
     channel_access: _CommandsChannelAccess = _CommandsChannelAccess()
-
+    match_channel_creation: _CommandsMatchChannelCreation = _CommandsMatchChannelCreation()
 
 class _MessagesGeneralCountchars:
     result: TranslationKey = TranslationKey(key="messages.general.countchars.result",
                                             default_text="El texto tiene {total_characters} caracteres.")
 
-
 class _MessagesGeneral:
     countchars: _MessagesGeneralCountchars = _MessagesGeneralCountchars()
-
 
 class _MessagesAdminSync:
     invalid_scope: TranslationKey = TranslationKey(key="messages.admin.sync.invalid_scope",
@@ -92,21 +138,17 @@ class _MessagesAdminSync:
     completed: TranslationKey = TranslationKey(key="messages.admin.sync.completed",
                                                default_text="Sincronizacion completada: {summary}")
 
-
 class _MessagesAdminSlashStatus:
     result: TranslationKey = TranslationKey(key="messages.admin.slash_status.result",
                                             default_text="Estado local de slash commands: guild_id={guild_id} commands=[{commands}]")
-
 
 class _MessagesAdmin:
     sync: _MessagesAdminSync = _MessagesAdminSync()
     slash_status: _MessagesAdminSlashStatus = _MessagesAdminSlashStatus()
 
-
 class _MessagesChannelManagement:
     delete_prompt: TranslationKey = TranslationKey(key="messages.channel_management.delete_prompt",
                                                    default_text="Vas a eliminar el canal `{channel_name}` de forma permanente.\nRoles protegidos del sistema: {protected_roles}.\nConfirma solo si estas completamente seguro.")
-
 
 class _MessagesChannelRoleAdditionButtons:
     previous: TranslationKey = TranslationKey(key="messages.channel_role_addition.buttons.previous",
@@ -120,7 +162,6 @@ class _MessagesChannelRoleAdditionButtons:
     clear_filter: TranslationKey = TranslationKey(key="messages.channel_role_addition.buttons.clear_filter",
                                                   default_text="Limpiar filtro")
 
-
 class _MessagesChannelRoleAdditionModal:
     title: TranslationKey = TranslationKey(key="messages.channel_role_addition.modal.title",
                                            default_text="Buscar roles")
@@ -128,7 +169,6 @@ class _MessagesChannelRoleAdditionModal:
                                                  default_text="Nombre, ID o mencion del rol")
     query_placeholder: TranslationKey = TranslationKey(key="messages.channel_role_addition.modal.query_placeholder",
                                                        default_text="Ejemplo: Dragons, 123456789 o <@&123456789>")
-
 
 class _MessagesChannelRoleAddition:
     loading_placeholder: TranslationKey = TranslationKey(key="messages.channel_role_addition.loading_placeholder",
@@ -156,13 +196,11 @@ class _MessagesChannelRoleAddition:
     selection_cancelled: TranslationKey = TranslationKey(key="messages.channel_role_addition.selection_cancelled",
                                                          default_text="Seleccion de roles cancelada.")
 
-
 class _MessagesChannelDeleteConfirmationButtons:
     confirm: TranslationKey = TranslationKey(key="messages.channel_delete_confirmation.buttons.confirm",
                                              default_text="Confirmar eliminacion")
     cancel: TranslationKey = TranslationKey(key="messages.channel_delete_confirmation.buttons.cancel",
                                             default_text="Cancelar")
-
 
 class _MessagesChannelDeleteConfirmation:
     only_actor: TranslationKey = TranslationKey(key="messages.channel_delete_confirmation.only_actor",
@@ -175,7 +213,6 @@ class _MessagesChannelDeleteConfirmation:
                                                default_text="Eliminacion cancelada.")
     buttons: _MessagesChannelDeleteConfirmationButtons = _MessagesChannelDeleteConfirmationButtons()
 
-
 class _Messages:
     general: _MessagesGeneral = _MessagesGeneral()
     admin: _MessagesAdmin = _MessagesAdmin()
@@ -183,14 +220,13 @@ class _Messages:
     channel_role_addition: _MessagesChannelRoleAddition = _MessagesChannelRoleAddition()
     channel_delete_confirmation: _MessagesChannelDeleteConfirmation = _MessagesChannelDeleteConfirmation()
 
-
 class _ErrorsChannelManagement:
     server_only: TranslationKey = TranslationKey(key="errors.channel_management.server_only",
                                                  default_text="Este comando solo se puede usar dentro de un servidor.")
     text_only: TranslationKey = TranslationKey(key="errors.channel_management.text_only",
                                                default_text="Este comando solo se puede usar dentro de un canal de texto.")
     invalid_channel_name: TranslationKey = TranslationKey(key="errors.channel_management.invalid_channel_name",
-                                                          default_text="Este comando solo se puede usar en canales con nombre `j[1-9][0-9]?-partido-[1-9][0-9]?`.")
+                                                          default_text="Este comando solo se puede usar en canales con nombre tipo `\u300e\ud835\udddd\u300f1\ufe0f\u20e3\u300e\ud835\udde3\u300f4\ufe0f\u20e3\u30fb\u26bd`.")
     unauthorized_role: TranslationKey = TranslationKey(key="errors.channel_management.unauthorized_role",
                                                        default_text="Solo pueden usar este comando los roles: {protected_roles}.")
     protected_roles_missing: TranslationKey = TranslationKey(key="errors.channel_management.protected_roles_missing",
@@ -211,6 +247,18 @@ class _ErrorsChannelManagement:
                                                  default_text="No hay roles seleccionables entre los separadores configurados.")
 
 
+class _ErrorsMatchChannelCreation:
+    same_team_roles: TranslationKey = TranslationKey(key="errors.match_channel_creation.same_team_roles",
+                                                     default_text="No puedes crear un partido usando el mismo rol dos veces: `{role_name}`.")
+    invalid_team_role: TranslationKey = TranslationKey(key="errors.match_channel_creation.invalid_team_role",
+                                                       default_text="El rol `{role_name}` no se puede usar como equipo en un canal de partido.")
+    team_role_out_of_range: TranslationKey = TranslationKey(key="errors.match_channel_creation.team_role_out_of_range",
+                                                            default_text="El rol `{role_name}` no esta dentro del rango de roles de equipos configurado: `{range_start}` < rol < `{range_end}`.")
+    channel_already_exists: TranslationKey = TranslationKey(key="errors.match_channel_creation.channel_already_exists",
+                                                            default_text="Ya existe un canal para esa jornada y ese partido: `{channel_name}`.")
+    category_missing: TranslationKey = TranslationKey(key="errors.match_channel_creation.category_missing",
+                                                      default_text="No existe la categoria configurada para crear este canal: `{category_id}`.")
+
 class _ErrorsSlash:
     forbidden: TranslationKey = TranslationKey(key="errors.slash.forbidden",
                                                default_text="No tienes permisos para ejecutar este comando.")
@@ -223,11 +271,10 @@ class _ErrorsSlash:
     unexpected: TranslationKey = TranslationKey(key="errors.slash.unexpected",
                                                 default_text="Ha ocurrido un error inesperado al procesar el comando.")
 
-
 class _Errors:
     channel_management: _ErrorsChannelManagement = _ErrorsChannelManagement()
+    match_channel_creation: _ErrorsMatchChannelCreation = _ErrorsMatchChannelCreation()
     slash: _ErrorsSlash = _ErrorsSlash()
-
 
 class _ActionsChannelManagement:
     match_played_summary: TranslationKey = TranslationKey(key="actions.channel_management.match_played_summary",
@@ -243,16 +290,19 @@ class _ActionsChannelManagement:
                                                        default_text="Se han anadido al canal estos roles: {roles}.")
 
 
+class _ActionsMatchChannelCreation:
+    created_summary: TranslationKey = TranslationKey(key="actions.match_channel_creation.created_summary",
+                                                     default_text="Se ha creado {channel} en `{category}` para la jornada {jornada}, partido {partido}, entre {team_one} y {team_two}.")
+
 class _Actions:
     channel_management: _ActionsChannelManagement = _ActionsChannelManagement()
-
+    match_channel_creation: _ActionsMatchChannelCreation = _ActionsMatchChannelCreation()
 
 class I18nKeys:
     commands: _Commands = _Commands()
     messages: _Messages = _Messages()
     errors: _Errors = _Errors()
     actions: _Actions = _Actions()
-
 
 I18N: I18nKeys = I18nKeys()
 

@@ -33,6 +33,33 @@
         "name": "add_to_channel",
         "description": "Adds roles to the current channel using a filtered selector."
       }
+    },
+    "match_channel_creation": {
+      "create_match_channel": {
+        "name": "match_channel",
+        "description": "Creates a match channel for a specific matchday entry.",
+        "parameters": {
+          "jornada": {
+            "description": "Matchday number"
+          },
+          "partido": {
+            "description": "Match number inside the matchday"
+          },
+          "categoria": {
+            "description": "Division where the channel will be created"
+          },
+          "equipo_1": {
+            "description": "First team role"
+          },
+          "equipo_2": {
+            "description": "Second team role"
+          }
+        },
+        "choices": {
+          "gold_division": "Gold Division",
+          "silver_division": "Silver Division"
+        }
+      }
     }
   },
   "messages": {
@@ -95,7 +122,7 @@
     "channel_management": {
       "server_only": "This command can only be used inside a server.",
       "text_only": "This command can only be used inside a text channel.",
-      "invalid_channel_name": "This command can only be used in channels named `j[1-9][0-9]?-partido-[1-9][0-9]?`.",
+      "invalid_channel_name": "This command can only be used in channels named like `『𝗝』1️⃣『𝗣』4️⃣・⚽`.",
       "unauthorized_role": "Only these roles can use this command: {protected_roles}.",
       "protected_roles_missing": "Protected roles are missing from the server: {missing_roles}.",
       "invalid_role_not_in_guild": "The role `{role_name}` does not belong to this server.",
@@ -104,6 +131,13 @@
       "range_start_missing": "The configured selector start role does not exist: `{role_id}`.",
       "range_end_missing": "The configured selector end role does not exist: `{role_id}`.",
       "range_empty": "There are no selectable roles between the configured separators."
+    },
+    "match_channel_creation": {
+      "same_team_roles": "You cannot create a match using the same role twice: `{role_name}`.",
+      "invalid_team_role": "The role `{role_name}` cannot be used as a team role for a match channel.",
+      "team_role_out_of_range": "The role `{role_name}` is not inside the configured team role range: `{range_start}` < role < `{range_end}`.",
+      "channel_already_exists": "A channel for that matchday and match already exists: `{channel_name}`.",
+      "category_missing": "The configured category for this channel does not exist: `{category_id}`."
     },
     "slash": {
       "forbidden": "You do not have permission to run this command.",
@@ -120,6 +154,9 @@
       "reopen_summary": "The channel has been reopened. Write access was restored for the roles that already had access.",
       "reopen_with_roles_summary": "The channel has been reopened. Write access was restored for the roles that already had access and these roles were added: {roles}.",
       "add_roles_summary": "These roles were added to the channel: {roles}."
+    },
+    "match_channel_creation": {
+      "created_summary": "Created {channel} in `{category}` for matchday {jornada}, match {partido}, between {team_one} and {team_two}."
     }
   }
 }
