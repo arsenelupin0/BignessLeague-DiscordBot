@@ -122,7 +122,7 @@
     "channel_management": {
       "server_only": "Este comando solo se puede usar dentro de un servidor.",
       "text_only": "Este comando solo se puede usar dentro de un canal de texto.",
-      "invalid_channel_name": "Este comando solo se puede usar en canales con nombre tipo `『𝗝』1️⃣『𝗣』4️⃣・⚽`.",
+      "invalid_channel_name": "Este comando solo se puede usar en canales con nombre tipo `『𝗝』1️⃣『𝗣』4️⃣・⚽`, `『𝗝』1️⃣『𝗣』4️⃣・✅` o `『𝗝』1️⃣『𝗣』4️⃣・🔒`.",
       "unauthorized_role": "Solo pueden usar este comando los roles: {protected_roles}.",
       "protected_roles_missing": "Faltan roles protegidos en el servidor: {missing_roles}.",
       "invalid_role_not_in_guild": "El rol `{role_name}` no pertenece a este servidor.",

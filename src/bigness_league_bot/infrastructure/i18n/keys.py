@@ -58,36 +58,30 @@ class _CommandsChannelAccessAddToChannel:
 class _CommandsChannelAccess:
     add_to_channel: _CommandsChannelAccessAddToChannel = _CommandsChannelAccessAddToChannel()
 
-
 class _CommandsMatchChannelCreationCreateMatchChannelParametersJornada:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.jornada.description",
         default_text="Numero de jornada del partido")
-
 
 class _CommandsMatchChannelCreationCreateMatchChannelParametersPartido:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.partido.description",
         default_text="Numero de partido dentro de la jornada")
 
-
 class _CommandsMatchChannelCreationCreateMatchChannelParametersCategoria:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.categoria.description",
         default_text="Division donde se creara el canal")
-
 
 class _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo1:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.equipo_1.description",
         default_text="Rol del primer equipo")
 
-
 class _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo2:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.equipo_2.description",
         default_text="Rol del segundo equipo")
-
 
 class _CommandsMatchChannelCreationCreateMatchChannelParameters:
     jornada: _CommandsMatchChannelCreationCreateMatchChannelParametersJornada = _CommandsMatchChannelCreationCreateMatchChannelParametersJornada()
@@ -96,14 +90,12 @@ class _CommandsMatchChannelCreationCreateMatchChannelParameters:
     equipo_1: _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo1 = _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo1()
     equipo_2: _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo2 = _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo2()
 
-
 class _CommandsMatchChannelCreationCreateMatchChannelChoices:
     gold_division: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.choices.gold_division", default_text="Gold Division")
     silver_division: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.choices.silver_division",
         default_text="Silver Division")
-
 
 class _CommandsMatchChannelCreationCreateMatchChannel:
     name: TranslationKey = TranslationKey(key="commands.match_channel_creation.create_match_channel.name",
@@ -112,7 +104,6 @@ class _CommandsMatchChannelCreationCreateMatchChannel:
                                                  default_text="Crea un canal de partido para una jornada concreta.")
     parameters: _CommandsMatchChannelCreationCreateMatchChannelParameters = _CommandsMatchChannelCreationCreateMatchChannelParameters()
     choices: _CommandsMatchChannelCreationCreateMatchChannelChoices = _CommandsMatchChannelCreationCreateMatchChannelChoices()
-
 
 class _CommandsMatchChannelCreation:
     create_match_channel: _CommandsMatchChannelCreationCreateMatchChannel = _CommandsMatchChannelCreationCreateMatchChannel()
@@ -226,7 +217,7 @@ class _ErrorsChannelManagement:
     text_only: TranslationKey = TranslationKey(key="errors.channel_management.text_only",
                                                default_text="Este comando solo se puede usar dentro de un canal de texto.")
     invalid_channel_name: TranslationKey = TranslationKey(key="errors.channel_management.invalid_channel_name",
-                                                          default_text="Este comando solo se puede usar en canales con nombre tipo `\u300e\ud835\udddd\u300f1\ufe0f\u20e3\u300e\ud835\udde3\u300f4\ufe0f\u20e3\u30fb\u26bd`.")
+                                                          default_text="Este comando solo se puede usar en canales con nombre tipo `\u300e\ud835\udddd\u300f1\ufe0f\u20e3\u300e\ud835\udde3\u300f4\ufe0f\u20e3\u30fb\u26bd`, `\u300e\ud835\udddd\u300f1\ufe0f\u20e3\u300e\ud835\udde3\u300f4\ufe0f\u20e3\u30fb\u2705` o `\u300e\ud835\udddd\u300f1\ufe0f\u20e3\u300e\ud835\udde3\u300f4\ufe0f\u20e3\u30fb\ud83d\udd12`.")
     unauthorized_role: TranslationKey = TranslationKey(key="errors.channel_management.unauthorized_role",
                                                        default_text="Solo pueden usar este comando los roles: {protected_roles}.")
     protected_roles_missing: TranslationKey = TranslationKey(key="errors.channel_management.protected_roles_missing",
@@ -245,7 +236,6 @@ class _ErrorsChannelManagement:
                                                        default_text="No existe el rol de fin configurado para el selector: `{role_id}`.")
     range_empty: TranslationKey = TranslationKey(key="errors.channel_management.range_empty",
                                                  default_text="No hay roles seleccionables entre los separadores configurados.")
-
 
 class _ErrorsMatchChannelCreation:
     same_team_roles: TranslationKey = TranslationKey(key="errors.match_channel_creation.same_team_roles",
@@ -288,7 +278,6 @@ class _ActionsChannelManagement:
         default_text="Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal y se han anadido estos roles: {roles}.")
     add_roles_summary: TranslationKey = TranslationKey(key="actions.channel_management.add_roles_summary",
                                                        default_text="Se han anadido al canal estos roles: {roles}.")
-
 
 class _ActionsMatchChannelCreation:
     created_summary: TranslationKey = TranslationKey(key="actions.match_channel_creation.created_summary",

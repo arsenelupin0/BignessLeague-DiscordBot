@@ -62,9 +62,10 @@ python -m bigness_league_bot.main
 Opciones disponibles en `/cerrar_canal`:
 
 - `Partido jugado`: deja el canal en modo solo lectura para el resto de roles y mantiene escritura para `Staff`,
-  `Administrador` y `Ceo`.
-- `Jornada cerrada`: oculta el canal para los roles no protegidos y deja acceso solo a `Staff`, `Administrador` y `Ceo`.
-- `Reabrir partido`: restaura la escritura para los roles que ya tenian acceso al canal.
+  `Administrador` y `Ceo`. Tambien cambia el icono final del canal a `✅`.
+- `Jornada cerrada`: oculta el canal para los roles no protegidos, deja acceso solo a `Staff`, `Administrador` y `Ceo`
+  y cambia el icono final del canal a `🔒`.
+- `Reabrir partido`: restaura la escritura para los roles que ya tenian acceso al canal y devuelve el icono final a `⚽`.
 - `Eliminacion de canal`: pide confirmacion con botones y elimina el canal por completo.
 
 Restricciones de `/cerrar_canal`:

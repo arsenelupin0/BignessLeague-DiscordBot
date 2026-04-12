@@ -17,13 +17,23 @@ from enum import StrEnum
 from bigness_league_bot.core.localization import LocalizedText
 
 PROTECTED_ROLE_NAMES: tuple[str, ...] = ("Staff", "Administrador", "Ceo")
-MATCH_CHANNEL_NAME_SUFFIX = "\u30fb\u26bd"
+MATCH_CHANNEL_STATUS_SEPARATOR = "\u30fb"
+MATCH_CHANNEL_STATUS_OPEN = "\u26bd"
+MATCH_CHANNEL_STATUS_PLAYED = "\u2705"
+MATCH_CHANNEL_STATUS_CLOSED = "\U0001f512"
+MATCH_CHANNEL_STATUS_ICONS: tuple[str, ...] = (
+    MATCH_CHANNEL_STATUS_OPEN,
+    MATCH_CHANNEL_STATUS_PLAYED,
+    MATCH_CHANNEL_STATUS_CLOSED,
+)
+MATCH_CHANNEL_NAME_SUFFIX = f"{MATCH_CHANNEL_STATUS_SEPARATOR}{MATCH_CHANNEL_STATUS_OPEN}"
 MATCH_CHANNEL_LEGACY_NAME_PATTERN = re.compile(
-    r"^j[1-9][0-9]?-partido-[1-9][0-9]?(?:\u30fb\u26bd)?$"
+    r"^j[1-9][0-9]?-partido-[1-9][0-9]?(?:・[⚽✅🔒])?$"
 )
 MATCH_CHANNEL_EMOJI_NAME_PATTERN = re.compile(
-    r"^\u300e\U0001d5dd\u300f(?:[0-9]\ufe0f\u20e3){1,2}"
-    r"\u300e\U0001d5e3\u300f(?:[0-9]\ufe0f\u20e3){1,2}\u30fb\u26bd$"
+    r"^『𝗝』(?:[0-9]️⃣){1,2}"
+    r"『𝗣』(?:[0-9]️⃣){1,2}"
+    r"・[⚽✅🔒]$"
 )
 MATCH_CHANNEL_J_PREFIX = "\u300e\U0001d5dd\u300f"
 MATCH_CHANNEL_P_PREFIX = "\u300e\U0001d5e3\u300f"
@@ -56,6 +66,21 @@ def format_match_channel_name(jornada: int, partido: int) -> str:
 def legacy_match_channel_names(jornada: int, partido: int) -> tuple[str, str]:
     base_channel_name = f"j{jornada}-partido-{partido}"
     return base_channel_name, f"{base_channel_name}{MATCH_CHANNEL_NAME_SUFFIX}"
+
+
+def with_match_channel_status(channel_name: str, status_icon: str) -> str:
+    if status_icon not in MATCH_CHANNEL_STATUS_ICONS:
+        raise ValueError(f"Estado de canal no soportado: {status_icon}")
+
+    for current_icon in MATCH_CHANNEL_STATUS_ICONS:
+        current_suffix = f"{MATCH_CHANNEL_STATUS_SEPARATOR}{current_icon}"
+        if channel_name.endswith(current_suffix):
+            return (
+                f"{channel_name[:-len(current_suffix)]}"
+                f"{MATCH_CHANNEL_STATUS_SEPARATOR}{status_icon}"
+            )
+
+    return f"{channel_name}{MATCH_CHANNEL_STATUS_SEPARATOR}{status_icon}"
 
 
 def protected_role_names_label() -> str:

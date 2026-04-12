@@ -20,8 +20,12 @@ from bigness_league_bot.application.services.channel_closure import (
     ChannelActionResult,
     ChannelCloseMode,
     PROTECTED_ROLE_NAMES,
+    MATCH_CHANNEL_STATUS_CLOSED,
+    MATCH_CHANNEL_STATUS_OPEN,
+    MATCH_CHANNEL_STATUS_PLAYED,
     is_match_channel_name,
     protected_role_names_label,
+    with_match_channel_status,
 )
 from bigness_league_bot.core.localization import LocalizedText, localize
 from bigness_league_bot.infrastructure.i18n.keys import I18N
@@ -284,6 +288,10 @@ async def apply_match_played_lockdown(
     protected_roles = get_protected_roles(channel.guild)
     overwrites = _current_overwrites(channel)
     protected_role_ids = {role.id for role in protected_roles.as_tuple}
+    channel_name = with_match_channel_status(
+        channel.name,
+        MATCH_CHANNEL_STATUS_PLAYED,
+    )
 
     for role in _role_targets(channel, protected_roles):
         overwrite = channel.overwrites_for(role)
@@ -302,6 +310,7 @@ async def apply_match_played_lockdown(
         )
 
     await channel.edit(
+        name=channel_name,
         overwrites=overwrites,
         reason=(
             f"{actor} ({actor.id}) ejecuto /cerrar_canal "
@@ -328,6 +337,10 @@ async def apply_matchday_closed(
     protected_roles = get_protected_roles(channel.guild)
     protected_role_ids = {role.id for role in protected_roles.as_tuple}
     overwrites = _current_overwrites(channel)
+    channel_name = with_match_channel_status(
+        channel.name,
+        MATCH_CHANNEL_STATUS_CLOSED,
+    )
 
     for target in list(overwrites):
         if isinstance(target, discord.Role) and target.id not in protected_role_ids:
@@ -344,6 +357,7 @@ async def apply_matchday_closed(
         )
 
     await channel.edit(
+        name=channel_name,
         overwrites=overwrites,
         reason=(
             f"{actor} ({actor.id}) ejecuto /cerrar_canal "
@@ -371,6 +385,10 @@ async def apply_match_reopen(
     protected_roles = get_protected_roles(channel.guild)
     overwrites = _current_overwrites(channel)
     protected_role_ids = {role.id for role in protected_roles.as_tuple}
+    channel_name = with_match_channel_status(
+        channel.name,
+        MATCH_CHANNEL_STATUS_OPEN,
+    )
     _set_everyone_hidden_permissions(channel, overwrites)
 
     for role in _role_targets(channel, protected_roles):
@@ -401,6 +419,7 @@ async def apply_match_reopen(
         )
 
     await channel.edit(
+        name=channel_name,
         overwrites=overwrites,
         reason=(
             f"{actor} ({actor.id}) ejecuto /cerrar_canal "
