@@ -61,6 +61,12 @@
           "silver_division": "Silver Division"
         }
       }
+    },
+    "team_profile": {
+      "view_my_team": {
+        "name": "ver_mi_equipo",
+        "description": "Muestra la ficha de tu equipo segun tu rol y Google Sheets."
+      }
     }
   },
   "messages": {
@@ -75,6 +81,26 @@
       },
       "slash_status": {
         "result": "Estado local de slash commands: guild_id={guild_id} commands=[{commands}]"
+      }
+    },
+    "team_profile": {
+      "ansi": {
+        "headers": {
+          "position": "POS",
+          "player": "Jugador",
+          "discord": "Discord",
+          "epic_name": "Epic Name",
+          "rocket_name": "Rocket In-Game Name",
+          "mmr": "MMR"
+        },
+        "summary": {
+          "remaining_signings": "Fichajes restantes",
+          "team_average": "Media total del equipo (los 3 mejores)"
+        },
+        "tracker": {
+          "title": "Link directo al tracker",
+          "missing_value": "Sin enlace"
+        }
       }
     },
     "channel_management": {
@@ -173,6 +199,18 @@
       "category_missing": "No existe la categoria configurada para crear este canal: `{category_id}`.",
       "invalid_date_format": "La fecha no es valida. Usa `DD/MM/YYYY` o `YYYY-MM-DD`.",
       "invalid_time_format": "La hora no es valida. Usa el formato `HH:MM` en 24 horas."
+    },
+    "team_profile": {
+      "team_role_missing": "No tienes ningun rol de equipo dentro del rango configurado para este comando.",
+      "multiple_team_roles": "Tienes varios roles de equipo y no se puede decidir cual usar: {role_names}.",
+      "google_dependencies_missing": "Faltan las dependencias de Google Sheets en el entorno del bot.",
+      "google_service_account_missing": "Falta configurar `BOT_GOOGLE_SERVICE_ACCOUNT_FILE` para usar Google Sheets.",
+      "google_service_account_not_found": "No existe el fichero de credenciales configurado para Google Sheets: `{path}`.",
+      "google_spreadsheet_id_missing": "Falta configurar `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`.",
+      "google_request_failed": "Google Sheets ha rechazado la consulta: {details}.",
+      "team_sheet_empty": "La hoja `{sheet_name}` no tiene datos utilizables.",
+      "team_sheet_layout_invalid": "La hoja `{sheet_name}` no sigue el formato esperado para el equipo `{role_name}`.",
+      "team_not_found": "No se encontro ninguna fila en `{sheet_name}` para el rol `{role_name}`."
     },
     "slash": {
       "forbidden": "No tienes permisos para ejecutar este comando.",

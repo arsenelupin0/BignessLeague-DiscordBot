@@ -16,6 +16,7 @@ from dataclasses import dataclass
 import discord
 from discord import app_commands
 
+from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import LocalizedText, localize
 from bigness_league_bot.infrastructure.discord.channel_management import (
     ChannelManagementError,
@@ -43,7 +44,7 @@ def classify_app_command_error(
 ) -> AppCommandErrorDetails:
     original_error = unwrap_app_command_error(error)
 
-    if isinstance(original_error, ChannelManagementError):
+    if isinstance(original_error, (CommandUserError, ChannelManagementError)):
         return AppCommandErrorDetails(
             user_message=original_error.message,
             log_level=logging.WARNING,

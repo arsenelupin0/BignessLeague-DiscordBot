@@ -116,10 +116,21 @@ class _CommandsMatchChannelCreationCreateMatchChannel:
 class _CommandsMatchChannelCreation:
     create_match_channel: _CommandsMatchChannelCreationCreateMatchChannel = _CommandsMatchChannelCreationCreateMatchChannel()
 
+
+class _CommandsTeamProfileViewMyTeam:
+    name: TranslationKey = TranslationKey(key="commands.team_profile.view_my_team.name", default_text="ver_mi_equipo")
+    description: TranslationKey = TranslationKey(key="commands.team_profile.view_my_team.description",
+                                                 default_text="Muestra la ficha de tu equipo segun tu rol y Google Sheets.")
+
+
+class _CommandsTeamProfile:
+    view_my_team: _CommandsTeamProfileViewMyTeam = _CommandsTeamProfileViewMyTeam()
+
 class _Commands:
     channel_management: _CommandsChannelManagement = _CommandsChannelManagement()
     channel_access: _CommandsChannelAccess = _CommandsChannelAccess()
     match_channel_creation: _CommandsMatchChannelCreation = _CommandsMatchChannelCreation()
+    team_profile: _CommandsTeamProfile = _CommandsTeamProfile()
 
 class _MessagesAdminSync:
     invalid_scope: TranslationKey = TranslationKey(key="messages.admin.sync.invalid_scope",
@@ -142,6 +153,41 @@ class _MessagesAdminSlashStatus:
 class _MessagesAdmin:
     sync: _MessagesAdminSync = _MessagesAdminSync()
     slash_status: _MessagesAdminSlashStatus = _MessagesAdminSlashStatus()
+
+
+class _MessagesTeamProfileAnsiHeaders:
+    position: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.position", default_text="POS")
+    player: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.player", default_text="Jugador")
+    discord: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.discord", default_text="Discord")
+    epic_name: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.epic_name",
+                                               default_text="Epic Name")
+    rocket_name: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.rocket_name",
+                                                 default_text="Rocket In-Game Name")
+    mmr: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.mmr", default_text="MMR")
+
+
+class _MessagesTeamProfileAnsiSummary:
+    remaining_signings: TranslationKey = TranslationKey(key="messages.team_profile.ansi.summary.remaining_signings",
+                                                        default_text="Fichajes restantes")
+    team_average: TranslationKey = TranslationKey(key="messages.team_profile.ansi.summary.team_average",
+                                                  default_text="Media total del equipo (los 3 mejores)")
+
+
+class _MessagesTeamProfileAnsiTracker:
+    title: TranslationKey = TranslationKey(key="messages.team_profile.ansi.tracker.title",
+                                           default_text="Link directo al tracker")
+    missing_value: TranslationKey = TranslationKey(key="messages.team_profile.ansi.tracker.missing_value",
+                                                   default_text="Sin enlace")
+
+
+class _MessagesTeamProfileAnsi:
+    headers: _MessagesTeamProfileAnsiHeaders = _MessagesTeamProfileAnsiHeaders()
+    summary: _MessagesTeamProfileAnsiSummary = _MessagesTeamProfileAnsiSummary()
+    tracker: _MessagesTeamProfileAnsiTracker = _MessagesTeamProfileAnsiTracker()
+
+
+class _MessagesTeamProfile:
+    ansi: _MessagesTeamProfileAnsi = _MessagesTeamProfileAnsi()
 
 class _MessagesChannelManagement:
     delete_prompt: TranslationKey = TranslationKey(key="messages.channel_management.delete_prompt",
@@ -212,13 +258,11 @@ class _MessagesChannelDeleteConfirmation:
                                                default_text="Eliminacion cancelada.")
     buttons: _MessagesChannelDeleteConfirmationButtons = _MessagesChannelDeleteConfirmationButtons()
 
-
 class _MessagesChannelMatchdayCloseConfirmationButtons:
     confirm: TranslationKey = TranslationKey(key="messages.channel_matchday_close_confirmation.buttons.confirm",
                                              default_text="Confirmar cierre")
     cancel: TranslationKey = TranslationKey(key="messages.channel_matchday_close_confirmation.buttons.cancel",
                                             default_text="Cancelar")
-
 
 class _MessagesChannelMatchdayCloseConfirmation:
     only_actor: TranslationKey = TranslationKey(key="messages.channel_matchday_close_confirmation.only_actor",
@@ -274,6 +318,7 @@ class _MessagesMatchChannelCreation:
 
 class _Messages:
     admin: _MessagesAdmin = _MessagesAdmin()
+    team_profile: _MessagesTeamProfile = _MessagesTeamProfile()
     channel_management: _MessagesChannelManagement = _MessagesChannelManagement()
     channel_role_addition: _MessagesChannelRoleAddition = _MessagesChannelRoleAddition()
     channel_delete_confirmation: _MessagesChannelDeleteConfirmation = _MessagesChannelDeleteConfirmation()
@@ -322,6 +367,32 @@ class _ErrorsMatchChannelCreation:
     invalid_time_format: TranslationKey = TranslationKey(key="errors.match_channel_creation.invalid_time_format",
                                                          default_text="La hora no es valida. Usa el formato `HH:MM` en 24 horas.")
 
+
+class _ErrorsTeamProfile:
+    team_role_missing: TranslationKey = TranslationKey(key="errors.team_profile.team_role_missing",
+                                                       default_text="No tienes ningun rol de equipo dentro del rango configurado para este comando.")
+    multiple_team_roles: TranslationKey = TranslationKey(key="errors.team_profile.multiple_team_roles",
+                                                         default_text="Tienes varios roles de equipo y no se puede decidir cual usar: {role_names}.")
+    google_dependencies_missing: TranslationKey = TranslationKey(key="errors.team_profile.google_dependencies_missing",
+                                                                 default_text="Faltan las dependencias de Google Sheets en el entorno del bot.")
+    google_service_account_missing: TranslationKey = TranslationKey(
+        key="errors.team_profile.google_service_account_missing",
+        default_text="Falta configurar `BOT_GOOGLE_SERVICE_ACCOUNT_FILE` para usar Google Sheets.")
+    google_service_account_not_found: TranslationKey = TranslationKey(
+        key="errors.team_profile.google_service_account_not_found",
+        default_text="No existe el fichero de credenciales configurado para Google Sheets: `{path}`.")
+    google_spreadsheet_id_missing: TranslationKey = TranslationKey(
+        key="errors.team_profile.google_spreadsheet_id_missing",
+        default_text="Falta configurar `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`.")
+    google_request_failed: TranslationKey = TranslationKey(key="errors.team_profile.google_request_failed",
+                                                           default_text="Google Sheets ha rechazado la consulta: {details}.")
+    team_sheet_empty: TranslationKey = TranslationKey(key="errors.team_profile.team_sheet_empty",
+                                                      default_text="La hoja `{sheet_name}` no tiene datos utilizables.")
+    team_sheet_layout_invalid: TranslationKey = TranslationKey(key="errors.team_profile.team_sheet_layout_invalid",
+                                                               default_text="La hoja `{sheet_name}` no sigue el formato esperado para el equipo `{role_name}`.")
+    team_not_found: TranslationKey = TranslationKey(key="errors.team_profile.team_not_found",
+                                                    default_text="No se encontro ninguna fila en `{sheet_name}` para el rol `{role_name}`.")
+
 class _ErrorsSlash:
     forbidden: TranslationKey = TranslationKey(key="errors.slash.forbidden",
                                                default_text="No tienes permisos para ejecutar este comando.")
@@ -337,6 +408,7 @@ class _ErrorsSlash:
 class _Errors:
     channel_management: _ErrorsChannelManagement = _ErrorsChannelManagement()
     match_channel_creation: _ErrorsMatchChannelCreation = _ErrorsMatchChannelCreation()
+    team_profile: _ErrorsTeamProfile = _ErrorsTeamProfile()
     slash: _ErrorsSlash = _ErrorsSlash()
 
 class _ActionsChannelManagement:

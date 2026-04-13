@@ -28,6 +28,8 @@ pip install -e .
    Puedes usar `local`, un offset como `+02:00`, o una zona IANA valida si tu entorno dispone de datos de zona horaria.
 9. Si quieres cambiar los botones del mensaje inicial de los partidos, ajusta `BOT_MATCH_CHANNEL_TICKET_URL` y
    `BOT_MATCH_CHANNEL_RULES_URL`.
+10. Si quieres usar `/ver_mi_equipo`, configura `BOT_GOOGLE_SERVICE_ACCOUNT_FILE`
+    y `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`. `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME` es opcional.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
 dejas vacio, se sincronizan globalmente y Discord puede tardar en propagarlos.
@@ -62,6 +64,8 @@ python -m bigness_league_bot.main
 -
 `/canal_de_jornada jornada:<numero> partido:<numero> minutos_cortesia:<numero> fecha:<texto> hora:<texto> bo_x:<numero> categoria:<division> equipo_1:<rol> equipo_2:<rol>`:
 crea un canal de partido con permisos para ambos equipos.
+
+- `/ver_mi_equipo`: busca tu equipo en Google Sheets a partir de tu rol de Discord y muestra su ficha.
 
 Opciones disponibles en `/cerrar_canal`:
 
@@ -100,6 +104,26 @@ Restricciones de `/cerrar_canal`:
 - usa `BOT_GOLD_DIVISION_CATEGORY_ID` y `BOT_SILVER_DIVISION_CATEGORY_ID` para resolver las categorias reales
 - envia automaticamente un mensaje inicial con menciones a ambos equipos, tres embeds informativos y botones URL para
   ticket y normativa
+
+`/ver_mi_equipo`:
+
+- exige que tengas exactamente un rol de equipo dentro del rango configurado
+- `Staff`, `Administrador` y `Ceo` pasan la validacion general del comando, pero el bot sigue necesitando identificar un
+  unico rol de equipo para saber que bloque mostrar
+- busca el bloque de tu equipo en la hoja de Google Sheets configurada
+- toma la division directamente del nombre de la hoja
+- lee el tracker desde el hipervinculo de la celda `Jugador`
+- devuelve la ficha del equipo como tablas ANSI en varios mensajes si hace falta
+
+Configuracion de Google Sheets:
+
+- `BOT_GOOGLE_SERVICE_ACCOUNT_FILE`: ruta al JSON de la cuenta de servicio con acceso de lectura a la hoja
+- `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`: ID del documento de Google Sheets
+- `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME`: opcional. Si lo dejas vacio, el bot buscara en todas las sheets del documento.
+  Tambien admite varios nombres separados por comas si quieres limitar la busqueda.
+- la hoja debe estar organizada por bloques de equipo con este esquema: titulo del equipo, cabecera `Jugador`,
+  `Discord`, `Epic Name`, `Rocket In-Game Name`, `MMR`, hasta 6 jugadores y una fila de resumen con fichajes restantes
+  y media del equipo
 
 ## Localizacion
 

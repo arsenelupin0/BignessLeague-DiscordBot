@@ -27,6 +27,7 @@ from bigness_league_bot.application.services.channel_closure import (
     protected_role_names_label,
     with_match_channel_status,
 )
+from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import LocalizedText, localize
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 
@@ -42,15 +43,8 @@ READ_ONLY_PERMISSION_FIELDS: tuple[str, ...] = (
 )
 
 
-class ChannelManagementError(RuntimeError):
+class ChannelManagementError(CommandUserError):
     """Base error for channel management operations."""
-
-    def __init__(self, message: LocalizedText) -> None:
-        super().__init__(message.key)
-        self.message = message
-
-    def __str__(self) -> str:
-        return self.message.key
 
 
 class UnsupportedChannelError(ChannelManagementError):
@@ -75,6 +69,14 @@ class InvalidChannelAccessRoleError(ChannelManagementError):
 
 class ChannelAccessRoleRangeError(ChannelManagementError):
     """Raised when the configured role range for channel access is invalid."""
+
+
+class MemberTeamRoleMissingError(ChannelManagementError):
+    """Raised when the member does not have a team role in the configured range."""
+
+
+class MemberTeamRoleAmbiguousError(ChannelManagementError):
+    """Raised when the member has more than one team role in the configured range."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -279,6 +281,56 @@ def get_channel_access_role_catalog(
         range_end=range_end,
         roles=candidate_roles,
     )
+
+
+def get_member_team_roles(
+        member: discord.Member,
+        role_catalog: ChannelAccessRoleCatalog,
+) -> tuple[discord.Role, ...]:
+    allowed_role_ids = {role.id for role in role_catalog.roles}
+    return tuple(
+        sorted(
+            (
+                role
+                for role in member.roles
+                if role.id in allowed_role_ids
+            ),
+            key=lambda role: role.position,
+            reverse=True,
+        )
+    )
+
+
+def ensure_member_can_access_team_features(
+        member: discord.Member,
+        role_catalog: ChannelAccessRoleCatalog,
+) -> None:
+    if get_member_team_roles(member, role_catalog):
+        return
+
+    ensure_allowed_member(member)
+
+
+def resolve_member_team_role(
+        member: discord.Member,
+        role_catalog: ChannelAccessRoleCatalog,
+) -> discord.Role:
+    member_team_roles = get_member_team_roles(member, role_catalog)
+    if not member_team_roles:
+        raise MemberTeamRoleMissingError(
+            localize(I18N.errors.team_profile.team_role_missing)
+        )
+
+    if len(member_team_roles) > 1:
+        role_names = ", ".join(role.name for role in member_team_roles)
+        raise MemberTeamRoleAmbiguousError(
+            localize(
+                I18N.errors.team_profile.multiple_team_roles,
+                role_names=role_names,
+            )
+        )
+
+    return member_team_roles[0]
 
 
 async def apply_match_played_lockdown(

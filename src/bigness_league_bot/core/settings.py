@@ -54,6 +54,23 @@ def _read_str(name: str, default: str) -> str:
     return os.getenv(name, default).strip() or default
 
 
+def _read_optional_str(name: str) -> str | None:
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        return None
+
+    normalized_value = raw_value.strip()
+    return normalized_value or None
+
+
+def _resolve_optional_storage_path(name: str) -> Path | None:
+    raw_value = _read_optional_str(name)
+    if raw_value is None:
+        return None
+
+    return _resolve_storage_path(name, raw_value)
+
+
 def _resolve_storage_path(name: str, default: str) -> Path:
     raw_value = os.getenv(name, default).strip() or default
     path = Path(raw_value)
@@ -89,6 +106,9 @@ class Settings:
     timezone: str = "local"
     match_channel_ticket_url: str = "https://canary.discord.com/channels/1016819103555657851/1016824990949179512"
     match_channel_rules_url: str = "https://canary.discord.com/channels/1016819103555657851/1363537934665515351"
+    google_service_account_file: Path | None = None
+    google_sheets_spreadsheet_id: str = ""
+    google_sheets_team_sheet_name: str = ""
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -158,6 +178,17 @@ class Settings:
             "BOT_MATCH_CHANNEL_RULES_URL",
             "https://canary.discord.com/channels/1016819103555657851/1363537934665515351",
         )
+        google_service_account_file = _resolve_optional_storage_path(
+            "BOT_GOOGLE_SERVICE_ACCOUNT_FILE"
+        )
+        google_sheets_spreadsheet_id = _read_str(
+            "BOT_GOOGLE_SHEETS_SPREADSHEET_ID",
+            "",
+        )
+        google_sheets_team_sheet_name = _read_str(
+            "BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME",
+            "",
+        )
 
         return cls(
             token=token,
@@ -179,4 +210,7 @@ class Settings:
             timezone=timezone,
             match_channel_ticket_url=match_channel_ticket_url,
             match_channel_rules_url=match_channel_rules_url,
+            google_service_account_file=google_service_account_file,
+            google_sheets_spreadsheet_id=google_sheets_spreadsheet_id,
+            google_sheets_team_sheet_name=google_sheets_team_sheet_name,
         )
