@@ -53,7 +53,6 @@ python -m bigness_league_bot.main
 
 ## Slash command incluido
 
-- `/countchars text:<texto>`: devuelve cuantos caracteres tiene la cadena enviada.
 - `/cerrar_canal accion:<opcion>`: aplica acciones de cierre sobre el canal actual.
 - `/anadir_al_canal`: abre un selector filtrado para anadir roles al canal actual.
 - `/canal_de_jornada jornada:<numero> partido:<numero> categoria:<division> equipo_1:<rol> equipo_2:<rol>`: crea un
@@ -119,7 +118,7 @@ Las claves no se referencian ya como cadenas crudas en el codigo. El flujo recom
 python aa_scripts\i18n\generate_i18n_keys.py --catalog aa_resources\locales\es-ES.json --output src\bigness_league_bot\infrastructure\i18n\keys.py
 ```
 
-3. Usa las claves desde `I18N`, por ejemplo `I18N.messages.general.countchars.result`.
+3. Usa las claves desde `I18N`, por ejemplo `I18N.actions.channel_management.add_roles_summary`.
 
 Esto te da autocompletado en IntelliJ IDEA y evita typos en las rutas de traduccion.
 
@@ -127,6 +126,10 @@ Esto te da autocompletado en IntelliJ IDEA y evita typos en las rutas de traducc
 
 - `!sync guild`: fuerza la sincronizacion de slash commands en la guild configurada.
 - `!sync global`: fuerza la sincronizacion global.
+- `!sync prune guild`: elimina todos los slash commands remotos del scope guild configurado.
+- `!sync prune global`: elimina todos los slash commands remotos del scope global.
+- `!sync prune other`: elimina el scope opuesto al configurado en `BOT_SYNC_SCOPE`, util para limpiar duplicados entre
+  `guild` y `global`.
 - `!slashstatus`: muestra que comandos slash tiene cargados el bot localmente.
 
 Los comandos de desarrollo usan el prefijo definido en `BOT_PREFIX` y estan limitados al propietario de la aplicacion.

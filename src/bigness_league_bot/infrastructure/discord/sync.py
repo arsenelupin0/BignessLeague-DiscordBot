@@ -39,6 +39,28 @@ class SyncReport:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class PruneReport:
+    scope: str
+    deleted_command_names: tuple[str, ...]
+    guild_id: int | None = None
+
+    @property
+    def deleted_count(self) -> int:
+        return len(self.deleted_command_names)
+
+    def format_summary(self) -> str:
+        scope_label = "global"
+        if self.guild_id is not None:
+            scope_label = f"guild:{self.guild_id}"
+
+        commands_label = ", ".join(self.deleted_command_names) if self.deleted_command_names else "(sin comandos)"
+        return (
+            f"scope={scope_label} removed={self.deleted_count} "
+            f"commands=[{commands_label}]"
+        )
+
+
 def _local_command_name(
         command: app_commands.Command | app_commands.Group | app_commands.ContextMenu,
 ) -> str:
@@ -52,6 +74,14 @@ def _synced_command_name(command: app_commands.AppCommand) -> str:
 def get_local_command_names(tree: app_commands.CommandTree) -> tuple[str, ...]:
     commands = tree.get_commands()
     return tuple(sorted(_local_command_name(command) for command in commands))
+
+
+def _require_application_id(tree: app_commands.CommandTree) -> int:
+    application_id = tree.client.application_id
+    if application_id is None:
+        raise RuntimeError("La aplicacion aun no tiene application_id disponible.")
+
+    return application_id
 
 
 async def sync_command_tree(
@@ -76,4 +106,40 @@ async def sync_command_tree(
     return SyncReport(
         scope="global",
         command_names=tuple(_synced_command_name(command) for command in synced_commands),
+    )
+
+
+async def prune_command_scope(
+        tree: app_commands.CommandTree,
+        prune_scope: Literal["guild", "global"],
+        guild_id: int | None,
+) -> PruneReport:
+    application_id = _require_application_id(tree)
+
+    # Bulk overwrite with an empty payload to remove stale registrations in the target scope.
+    if prune_scope == "guild":
+        if guild_id is None:
+            raise ValueError("No se puede podar comandos de guild sin DISCORD_GUILD_ID.")
+
+        guild = discord.Object(id=guild_id)
+        existing_commands = await tree.fetch_commands(guild=guild)
+        await tree.client.http.bulk_upsert_guild_commands(
+            application_id,
+            guild_id,
+            payload=[],
+        )
+        return PruneReport(
+            scope="guild",
+            guild_id=guild_id,
+            deleted_command_names=tuple(command.name for command in existing_commands),
+        )
+
+    existing_commands = await tree.fetch_commands()
+    await tree.client.http.bulk_upsert_global_commands(
+        application_id,
+        payload=[],
+    )
+    return PruneReport(
+        scope="global",
+        deleted_command_names=tuple(command.name for command in existing_commands),
     )

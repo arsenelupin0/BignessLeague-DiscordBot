@@ -16,6 +16,7 @@ from discord.ext import commands
 
 from bigness_league_bot.infrastructure.discord.sync import (
     get_local_command_names,
+    prune_command_scope,
     sync_command_tree,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
@@ -33,12 +34,50 @@ class Admin(commands.Cog):
     async def sync_commands(
             self,
             ctx: commands.Context[BignessLeagueBot],
+            action: str | None = None,
             scope: str | None = None,
     ) -> None:
-        normalized_scope = (scope or self.bot.settings.sync_scope).lower().strip()
+        normalized_action = (action or "").lower().strip()
+        normalized_scope = (scope or "").lower().strip()
+
+        if normalized_action == "prune":
+            prune_scope = normalized_scope or "other"
+            if prune_scope == "other":
+                prune_scope = "global" if self.bot.settings.sync_scope == "guild" else "guild"
+
+            if prune_scope not in {"guild", "global"}:
+                await ctx.send(
+                    self.bot.localizer.translate(I18N.messages.admin.sync.invalid_usage)
+                )
+                return
+
+            try:
+                report = await prune_command_scope(
+                    self.bot.tree,
+                    prune_scope,
+                    self.bot.settings.guild_id,
+                )
+            except ValueError:
+                await ctx.send(
+                    self.bot.localizer.translate(
+                        I18N.messages.admin.sync.guild_id_required
+                    )
+                )
+                return
+
+            await ctx.send(
+                self.bot.localizer.translate(
+                    I18N.messages.admin.sync.pruned,
+                    summary=report.format_summary(),
+                )
+            )
+            return
+
+        normalized_scope = normalized_action or self.bot.settings.sync_scope
+        normalized_scope = normalized_scope.lower().strip()
         if normalized_scope not in {"guild", "global"}:
             await ctx.send(
-                self.bot.localizer.translate(I18N.messages.admin.sync.invalid_scope)
+                self.bot.localizer.translate(I18N.messages.admin.sync.invalid_usage)
             )
             return
 

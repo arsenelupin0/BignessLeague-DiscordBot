@@ -1,16 +1,5 @@
 {
   "commands": {
-    "general": {
-      "countchars": {
-        "name": "countchars",
-        "description": "Counts how many characters a text contains.",
-        "parameters": {
-          "text": {
-            "description": "Text you want to analyze"
-          }
-        }
-      }
-    },
     "channel_management": {
       "close_channel": {
         "name": "close_channel",
@@ -63,16 +52,14 @@
     }
   },
   "messages": {
-    "general": {
-      "countchars": {
-        "result": "The text has {total_characters} characters."
-      }
-    },
     "admin": {
       "sync": {
         "invalid_scope": "Use `!sync guild` or `!sync global`.",
+        "invalid_usage": "Use `!sync guild`, `!sync global`, `!sync prune guild`, `!sync prune global`, or `!sync prune other`.",
+        "guild_id_required": "Guild command operations require `DISCORD_GUILD_ID`.",
         "scope_locked": "The bot is configured with `BOT_SYNC_SCOPE={sync_scope}`. Change `.env` and restart if you want to use the other scope.",
-        "completed": "Sync completed: {summary}"
+        "completed": "Sync completed: {summary}",
+        "pruned": "Cleanup completed: {summary}"
       },
       "slash_status": {
         "result": "Local slash command state: guild_id={guild_id} commands=[{commands}]"

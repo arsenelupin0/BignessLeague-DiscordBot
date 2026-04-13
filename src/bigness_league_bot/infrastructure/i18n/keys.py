@@ -4,22 +4,6 @@ from __future__ import annotations
 from bigness_league_bot.core.localization import TranslationKey
 
 
-class _CommandsGeneralCountcharsParametersText:
-    description: TranslationKey = TranslationKey(key="commands.general.countchars.parameters.text.description",
-                                                 default_text="Texto que quieres analizar")
-
-class _CommandsGeneralCountcharsParameters:
-    text: _CommandsGeneralCountcharsParametersText = _CommandsGeneralCountcharsParametersText()
-
-class _CommandsGeneralCountchars:
-    name: TranslationKey = TranslationKey(key="commands.general.countchars.name", default_text="countchars")
-    description: TranslationKey = TranslationKey(key="commands.general.countchars.description",
-                                                 default_text="Cuenta cuantos caracteres tiene un texto.")
-    parameters: _CommandsGeneralCountcharsParameters = _CommandsGeneralCountcharsParameters()
-
-class _CommandsGeneral:
-    countchars: _CommandsGeneralCountchars = _CommandsGeneralCountchars()
-
 class _CommandsChannelManagementCloseChannelParametersAction:
     description: TranslationKey = TranslationKey(
         key="commands.channel_management.close_channel.parameters.action.description",
@@ -109,25 +93,23 @@ class _CommandsMatchChannelCreation:
     create_match_channel: _CommandsMatchChannelCreationCreateMatchChannel = _CommandsMatchChannelCreationCreateMatchChannel()
 
 class _Commands:
-    general: _CommandsGeneral = _CommandsGeneral()
     channel_management: _CommandsChannelManagement = _CommandsChannelManagement()
     channel_access: _CommandsChannelAccess = _CommandsChannelAccess()
     match_channel_creation: _CommandsMatchChannelCreation = _CommandsMatchChannelCreation()
 
-class _MessagesGeneralCountchars:
-    result: TranslationKey = TranslationKey(key="messages.general.countchars.result",
-                                            default_text="El texto tiene {total_characters} caracteres.")
-
-class _MessagesGeneral:
-    countchars: _MessagesGeneralCountchars = _MessagesGeneralCountchars()
-
 class _MessagesAdminSync:
     invalid_scope: TranslationKey = TranslationKey(key="messages.admin.sync.invalid_scope",
                                                    default_text="Usa `!sync guild` o `!sync global`.")
+    invalid_usage: TranslationKey = TranslationKey(key="messages.admin.sync.invalid_usage",
+                                                   default_text="Usa `!sync guild`, `!sync global`, `!sync prune guild`, `!sync prune global` o `!sync prune other`.")
+    guild_id_required: TranslationKey = TranslationKey(key="messages.admin.sync.guild_id_required",
+                                                       default_text="No se puede operar sobre comandos de guild sin `DISCORD_GUILD_ID`.")
     scope_locked: TranslationKey = TranslationKey(key="messages.admin.sync.scope_locked",
                                                   default_text="El bot esta configurado para `BOT_SYNC_SCOPE={sync_scope}`. Cambia el `.env` y reinicia si quieres usar el otro scope.")
     completed: TranslationKey = TranslationKey(key="messages.admin.sync.completed",
                                                default_text="Sincronizacion completada: {summary}")
+    pruned: TranslationKey = TranslationKey(key="messages.admin.sync.pruned",
+                                            default_text="Limpieza completada: {summary}")
 
 class _MessagesAdminSlashStatus:
     result: TranslationKey = TranslationKey(key="messages.admin.slash_status.result",
@@ -205,7 +187,6 @@ class _MessagesChannelDeleteConfirmation:
     buttons: _MessagesChannelDeleteConfirmationButtons = _MessagesChannelDeleteConfirmationButtons()
 
 class _Messages:
-    general: _MessagesGeneral = _MessagesGeneral()
     admin: _MessagesAdmin = _MessagesAdmin()
     channel_management: _MessagesChannelManagement = _MessagesChannelManagement()
     channel_role_addition: _MessagesChannelRoleAddition = _MessagesChannelRoleAddition()

@@ -19,7 +19,6 @@ LOGGER = logging.getLogger(__name__)
 
 INITIAL_EXTENSIONS: tuple[str, ...] = (
     "bigness_league_bot.presentation.discord.cogs.observability",
-    "bigness_league_bot.presentation.discord.cogs.general",
     "bigness_league_bot.presentation.discord.cogs.admin",
     "bigness_league_bot.presentation.discord.cogs.channel_management",
     "bigness_league_bot.presentation.discord.cogs.channel_access",
