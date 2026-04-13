@@ -57,7 +57,7 @@ class TranslationCatalog:
 
         catalogs: dict[str, dict[str, Any]] = {}
         for path in sorted(resolved_directory.glob("*.json")):
-            with path.open("r", encoding="utf-8") as file:
+            with path.open("r", encoding="utf-8-sig") as file:
                 loaded_payload = json.load(file)
 
             if not isinstance(loaded_payload, dict):

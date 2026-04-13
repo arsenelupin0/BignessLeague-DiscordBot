@@ -138,7 +138,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    with args.catalog.open("r", encoding="utf-8") as file:
+    with args.catalog.open("r", encoding="utf-8-sig") as file:
         payload = json.load(file)
 
     if not isinstance(payload, Mapping):

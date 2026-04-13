@@ -17,6 +17,8 @@ from typing import Literal
 
 from dotenv import load_dotenv
 
+from bigness_league_bot.core.timezones import resolve_timezone
+
 load_dotenv()
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -84,6 +86,7 @@ class Settings:
     channel_access_range_end_role_id: int = 1_364_336_738_323_009_796
     gold_division_category_id: int = 1_487_858_997_812_789_298
     silver_division_category_id: int = 1_487_859_192_256_790_630
+    timezone: str = "local"
     match_channel_ticket_url: str = "https://canary.discord.com/channels/1016819103555657851/1016824990949179512"
     match_channel_rules_url: str = "https://canary.discord.com/channels/1016819103555657851/1363537934665515351"
 
@@ -140,6 +143,13 @@ class Settings:
             "BOT_SILVER_DIVISION_CATEGORY_ID",
             1_487_859_192_256_790_630,
         )
+        timezone = _read_str("BOT_TIMEZONE", "local")
+        try:
+            resolve_timezone(timezone)
+        except ValueError as exc:
+            raise ValueError(
+                "BOT_TIMEZONE debe ser `local`, un offset como `+02:00`, o una zona IANA valida."
+            ) from exc
         match_channel_ticket_url = _read_str(
             "BOT_MATCH_CHANNEL_TICKET_URL",
             "https://canary.discord.com/channels/1016819103555657851/1016824990949179512",
@@ -166,6 +176,7 @@ class Settings:
             channel_access_range_end_role_id=channel_access_range_end_role_id,
             gold_division_category_id=gold_division_category_id,
             silver_division_category_id=silver_division_category_id,
+            timezone=timezone,
             match_channel_ticket_url=match_channel_ticket_url,
             match_channel_rules_url=match_channel_rules_url,
         )

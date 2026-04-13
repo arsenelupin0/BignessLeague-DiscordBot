@@ -41,6 +41,13 @@ def _welcome_template_params(
         "partido_emoji": format_match_channel_number(specification.partido),
         "team_one": team_one.mention,
         "team_two": team_two.mention,
+        "courtesy_minutes": str(specification.courtesy_minutes),
+        "match_date": f"<t:{specification.start_timestamp}:D>",
+        "match_time": f"<t:{specification.start_timestamp}:t>",
+        "best_of": str(specification.best_of),
+        "best_of_label": f"Bo{specification.best_of}",
+        "room_name": specification.room_name,
+        "room_password": specification.room_password,
     }
 
 

@@ -1,4 +1,4 @@
-{
+﻿{
   "commands": {
     "channel_management": {
       "close_channel": {
@@ -42,6 +42,18 @@
           },
           "equipo_2": {
             "description": "Rol del segundo equipo"
+          },
+          "courtesy_minutes": {
+            "description": "Minutos de cortesia antes de iniciar el partido"
+          },
+          "date": {
+            "description": "Fecha del partido en formato DD/MM/YYYY o YYYY-MM-DD"
+          },
+          "time": {
+            "description": "Hora del partido en formato HH:MM"
+          },
+          "best_of": {
+            "description": "Numero de partidas del mejor de X"
           }
         },
         "choices": {
@@ -85,9 +97,9 @@
       "modal": {
         "title": "Buscar roles",
         "query_label": "Nombre, ID o mencion del rol",
-        "query_placeholder": "Ejemplo: Dragons, 123456789 o <@&123456789>"
+        "query_placeholder": "Ejemplo: Dragons, 123456789 o \u003c@\u0026123456789\u003e"
       },
-      "render_content": "Selecciona los roles que quieres anadir a este canal.\nRango filtrado: `{range_start}` < roles < `{range_end}`.\nPagina {page}/{page_count} | Seleccionados: {selected_count} | Disponibles: {visible_count}/{candidate_count}.\nBusqueda: {search_query}.\nUsa Confirmar para aplicar los permisos al canal.",
+      "render_content": "Selecciona los roles que quieres anadir a este canal.\nRango filtrado: `{range_start}` \u003c roles \u003c `{range_end}`.\nPagina {page}/{page_count} | Seleccionados: {selected_count} | Disponibles: {visible_count}/{candidate_count}.\nBusqueda: {search_query}.\nUsa Confirmar para aplicar los permisos al canal.",
       "search_none": "sin filtro",
       "only_actor": "Solo quien ejecuto el comando puede usar este selector.",
       "timeout": "La seleccion de roles ha expirado. No se han aplicado cambios.",
@@ -106,19 +118,19 @@
     },
     "match_channel_creation": {
       "welcome": {
-        "content": "# Jornada {jornada_emoji}　Partido {partido_emoji}\n## Bienvenid@s\n### {team_one} 🆚 {team_two}\n\nEste es el canal privado y autogenerado de vuestro partido. Para acordar fechas, pruebas y todo lo relacionado de esta jornada, deberá hablarse únicamente y exclusivamente por este canal de texto. Si se acuerda el partido por medios externos y surge algún problema a futuro, no se tendrá en cuenta. Casos mas graves lo evaluará el Staff.\n\n🤝¡Mucha suerte a ambos equipos!\uD83E\uDD1D\n\n_ _",
+        "content": "# Jornada {jornada_emoji}　Partido {partido_emoji}\n## Bienvenid@s\n### {team_one} 🆚 {team_two}\n\nEste es el canal privado y autogenerado de vuestro partido. Para acordar fechas, pruebas y todo lo relacionado de esta jornada, deberá hablarse únicamente y exclusivamente por este canal de texto. Si se acuerda el partido por medios externos y surge algún problema a futuro, no se tendrá en cuenta. Casos mas graves lo evaluará el Staff.\n\n🤝¡Mucha suerte a ambos equipos!🤝\n　",
         "embeds": {
           "details": {
-            "title": "\ud83d\udd30 Detalles a tener en cuenta \ud83d\udd30",
+            "title": "🔰 Detalles a tener en cuenta 🔰",
             "description": "- Si nadie se pone **de acuerdo** y no hay una fecha por ninguno de los **dos equipos**, el partido se dara como **nulo**. Ninguno de los dos equipos aquí presentes sumará puntos esta jornada.\n- Pongamos todos de nuestra parte para poder **jugar el partido** y recordad **organizarlo** lo **antes posible**.\n- Intentad ser **flexibles ambos equipos**. Si alguno no puede, debe **proponer** otra **fecha** y así sucesivamente.\n- Habrá **minutos** de **cortesía** según la **hora del partido**. Si la fecha **esta puesta** a las **16:00**, como tarde deberá iniciarse a las **16:10**, salvo **acuerdo expreso** entre **ambos equipos**."
           },
           "issues": {
-            "title": "\ud83d\udd30 En caso de problemas \ud83d\udd30",
-            "description": "- Si se **cancela** el partido **1h antes** porque el equipo **rival** al final **no puede**, muy probablemente sea **Free Win**, salvo que el equipo rival acepte jugarlo en otra fecha. Esta situación la evaluará el **Staff**.\n- Cualquier **problema** relacionado con el **partido** (in-game):\n - Sacar **capturas** de incidentes.\n - Guardad evidencias de comportamientos **tóxicos**.\n - Registrad cualquier **incidencia del partido**.\n- El partido se dará como **finalizado** cuando alguien del Staff ponga el canal en **modo lectura**. Para cualquier **apelación** se deberá **abrir un ticket**."
+            "title": "🔰 En caso de problemas 🔰",
+            "description": "- Si se **cancela** el partido **1h antes** porque el equipo **rival** al final **no puede**, muy probablemente sea **Free Win**, salvo que el equipo rival acepte jugarlo en otra fecha. Esta situación la evaluará el **Staff**.\n- Cualquier **problema** relacionado con el **partido** (in-game):\n  - Sacar **capturas** de incidentes.\n  - Guardad evidencias de comportamientos **tóxicos**.\n  - Registrad cualquier **incidencia del partido**.\n- El partido se dará como **finalizado** cuando alguien del Staff ponga el canal en **modo lectura**. Para cualquier **apelación** se deberá **abrir un ticket**."
           },
           "match_data": {
-            "title": "\u26bd \ud83d\ude97 Datos del partido \ud83d\ude97 \u26bd",
-            "description": "- Información de sala\n - ⌛ 10 minutos de cortesía\n - \uD83D\uDDD3\uFE0F <t:1776348000:D>\n - ⏰ <t:1776348000:t>\n - ⚔\uFE0F Bo5 (al mejor de 5 partidos)\n- Sala privada\n - Nombre: ``staff``\n - Contraseña: ``staff``"
+            "title": "⚽ 🚗 Datos del partido 🚗 ⚽",
+            "description": "- Informacion de sala\n  - ⌛ {courtesy_minutes} minutos de cortesia\n  - 🗓️ {match_date}\n  - ⏰ {match_time}\n  - ⚔️ {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `{room_name}`\n  - Contrasena: `{room_password}` \n  - Crea: {team_one}"
           }
         },
         "buttons": {
@@ -145,9 +157,11 @@
     "match_channel_creation": {
       "same_team_roles": "No puedes crear un partido usando el mismo rol dos veces: `{role_name}`.",
       "invalid_team_role": "El rol `{role_name}` no se puede usar como equipo en un canal de partido.",
-      "team_role_out_of_range": "El rol `{role_name}` no esta dentro del rango de roles de equipos configurado: `{range_start}` < rol < `{range_end}`.",
+      "team_role_out_of_range": "El rol `{role_name}` no esta dentro del rango de roles de equipos configurado: `{range_start}` \u003c rol \u003c `{range_end}`.",
       "channel_already_exists": "Ya existe un canal para esa jornada y ese partido: `{channel_name}`.",
-      "category_missing": "No existe la categoria configurada para crear este canal: `{category_id}`."
+      "category_missing": "No existe la categoria configurada para crear este canal: `{category_id}`.",
+      "invalid_date_format": "La fecha no es valida. Usa `DD/MM/YYYY` o `YYYY-MM-DD`.",
+      "invalid_time_format": "La hora no es valida. Usa el formato `HH:MM` en 24 horas."
     },
     "slash": {
       "forbidden": "No tienes permisos para ejecutar este comando.",

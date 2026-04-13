@@ -17,10 +17,13 @@ from discord import app_commands
 from discord.ext import commands
 
 from bigness_league_bot.application.services.match_channel_creation import (
+    MATCH_BEST_OF_MAX,
+    MATCH_BEST_OF_MIN,
+    MATCH_COURTESY_MINUTES_MAX,
+    MATCH_COURTESY_MINUTES_MIN,
     MATCH_NUMBER_MAX,
     MATCH_NUMBER_MIN,
     MatchChannelDivision,
-    MatchChannelSpecification,
 )
 from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.discord.channel_management import (
@@ -31,6 +34,7 @@ from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
 )
 from bigness_league_bot.infrastructure.discord.match_channel_creation import (
+    build_match_channel_specification,
     create_match_channel,
     resolve_match_channel_category,
     validate_match_team_roles,
@@ -85,6 +89,18 @@ class MatchChannelCreation(commands.Cog):
         partido=localized_locale_str(
             I18N.commands.match_channel_creation.create_match_channel.parameters.partido.description
         ),
+        minutos_cortesia=localized_locale_str(
+            I18N.commands.match_channel_creation.create_match_channel.parameters.courtesy_minutes.description
+        ),
+        fecha=localized_locale_str(
+            I18N.commands.match_channel_creation.create_match_channel.parameters.date.description
+        ),
+        hora=localized_locale_str(
+            I18N.commands.match_channel_creation.create_match_channel.parameters.time.description
+        ),
+        bo_x=localized_locale_str(
+            I18N.commands.match_channel_creation.create_match_channel.parameters.best_of.description
+        ),
         categoria=localized_locale_str(
             I18N.commands.match_channel_creation.create_match_channel.parameters.categoria.description
         ),
@@ -101,6 +117,10 @@ class MatchChannelCreation(commands.Cog):
             interaction: discord.Interaction[BignessLeagueBot],
             jornada: app_commands.Range[int, MATCH_NUMBER_MIN, MATCH_NUMBER_MAX],
             partido: app_commands.Range[int, MATCH_NUMBER_MIN, MATCH_NUMBER_MAX],
+            minutos_cortesia: app_commands.Range[int, MATCH_COURTESY_MINUTES_MIN, MATCH_COURTESY_MINUTES_MAX],
+            fecha: str,
+            hora: str,
+            bo_x: app_commands.Range[int, MATCH_BEST_OF_MIN, MATCH_BEST_OF_MAX],
             categoria: app_commands.Choice[str],
             equipo_1: discord.Role,
             equipo_2: discord.Role,
@@ -126,9 +146,14 @@ class MatchChannelCreation(commands.Cog):
             gold_division_category_id=interaction.client.settings.gold_division_category_id,
             silver_division_category_id=interaction.client.settings.silver_division_category_id,
         )
-        specification = MatchChannelSpecification(
+        specification = build_match_channel_specification(
             jornada=jornada,
             partido=partido,
+            courtesy_minutes=minutos_cortesia,
+            date_value=fecha,
+            time_value=hora,
+            best_of=bo_x,
+            timezone_name=interaction.client.settings.timezone,
         )
 
         await interaction.response.defer(thinking=True)

@@ -24,7 +24,9 @@ pip install -e .
 5. Ajusta `BOT_ENV` y `BOT_SYNC_SCOPE` segun el entorno.
 6. Ajusta `BOT_DEFAULT_LOCALE` y `BOT_LOCALES_DIR` si quieres cambiar el idioma base o la carpeta de catalogos.
 7. Ajusta las variables `BOT_LOG_*` si quieres mas o menos verbosidad.
-8. Si quieres cambiar los botones del mensaje inicial de los partidos, ajusta `BOT_MATCH_CHANNEL_TICKET_URL` y
+8. Ajusta `BOT_TIMEZONE` si quieres interpretar las fechas y horas de los partidos en otra zona horaria.
+   Puedes usar `local`, un offset como `+02:00`, o una zona IANA valida si tu entorno dispone de datos de zona horaria.
+9. Si quieres cambiar los botones del mensaje inicial de los partidos, ajusta `BOT_MATCH_CHANNEL_TICKET_URL` y
    `BOT_MATCH_CHANNEL_RULES_URL`.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
@@ -57,8 +59,9 @@ python -m bigness_league_bot.main
 
 - `/cerrar_canal accion:<opcion>`: aplica acciones de cierre sobre el canal actual.
 - `/anadir_al_canal`: abre un selector filtrado para anadir roles al canal actual.
-- `/canal_de_jornada jornada:<numero> partido:<numero> categoria:<division> equipo_1:<rol> equipo_2:<rol>`: crea un
-  canal de partido con permisos para ambos equipos.
+-
+`/canal_de_jornada jornada:<numero> partido:<numero> minutos_cortesia:<numero> fecha:<texto> hora:<texto> bo_x:<numero> categoria:<division> equipo_1:<rol> equipo_2:<rol>`:
+crea un canal de partido con permisos para ambos equipos.
 
 Opciones disponibles en `/cerrar_canal`:
 
@@ -89,7 +92,10 @@ Restricciones de `/cerrar_canal`:
 - crea el canal con nombre `『𝗝』1️⃣『𝗣』2️⃣・⚽`
 - oculta el canal para `@everyone`
 - permite elegir la categoria de destino entre `Gold Division` y `Silver Division`
+- recibe minutos de cortesia, fecha, hora y formato `BoX`
 - da acceso de lectura y escritura a `Staff`, `Administrador`, `Ceo`, `equipo_1` y `equipo_2`
+- interpreta `fecha` como `DD/MM/YYYY` o `YYYY-MM-DD`, y `hora` como `HH:MM`
+- usa `BOT_TIMEZONE` para convertir fecha y hora al timestamp de Discord
 - valida que los dos roles de equipo sean distintos y esten dentro del rango de roles configurado
 - usa `BOT_GOLD_DIVISION_CATEGORY_ID` y `BOT_SILVER_DIVISION_CATEGORY_ID` para resolver las categorias reales
 - envia automaticamente un mensaje inicial con menciones a ambos equipos, tres embeds informativos y botones URL para

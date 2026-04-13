@@ -1,4 +1,4 @@
-{
+﻿{
   "commands": {
     "channel_management": {
       "close_channel": {
@@ -42,6 +42,18 @@
           },
           "equipo_2": {
             "description": "Second team role"
+          },
+          "courtesy_minutes": {
+            "description": "Courtesy minutes before the match starts"
+          },
+          "date": {
+            "description": "Match date in DD/MM/YYYY or YYYY-MM-DD format"
+          },
+          "time": {
+            "description": "Match time in HH:MM format"
+          },
+          "best_of": {
+            "description": "Number of games in the best of X series"
           }
         },
         "choices": {
@@ -85,9 +97,9 @@
       "modal": {
         "title": "Search roles",
         "query_label": "Role name, ID, or mention",
-        "query_placeholder": "Example: Dragons, 123456789, or <@&123456789>"
+        "query_placeholder": "Example: Dragons, 123456789, or \u003c@\u0026123456789\u003e"
       },
-      "render_content": "Select the roles you want to add to this channel.\nFiltered range: `{range_start}` < roles < `{range_end}`.\nPage {page}/{page_count} | Selected: {selected_count} | Available: {visible_count}/{candidate_count}.\nSearch: {search_query}.\nUse Confirm to apply the channel permissions.",
+      "render_content": "Select the roles you want to add to this channel.\nFiltered range: `{range_start}` \u003c roles \u003c `{range_end}`.\nPage {page}/{page_count} | Selected: {selected_count} | Available: {visible_count}/{candidate_count}.\nSearch: {search_query}.\nUse Confirm to apply the channel permissions.",
       "search_none": "no filter",
       "only_actor": "Only the user who ran the command can use this selector.",
       "timeout": "Role selection expired. No changes were applied.",
@@ -109,16 +121,16 @@
         "content": "# Matchday {jornada_emoji}  Match {partido_emoji}\n_ _\n## Welcome {team_one} and {team_two}\n\nThis is the private auto-generated channel for your match. Please use this text channel for scheduling, warmups, and anything related to this matchday. If the match is arranged through external channels and problems appear later, that information will not be considered. More serious cases will be reviewed by Staff.\n\nGood luck to both teams.\n\n_ _",
         "embeds": {
           "details": {
-            "title": "\ud83d\udd30 Important details \ud83d\udd30",
+            "title": "🔰 Important details 🔰",
             "description": "- If nobody reaches an **agreement** and neither team sets a **date**, the match will be marked as **void**. Neither team will receive points for this matchday.\n- Everyone should do their part to **play the match** and **organize it** as **soon as possible**.\n- Try to stay **flexible on both sides**. If one team cannot play, it should **propose** another **date** and continue from there.\n- There are **grace minutes** depending on the scheduled **match time**. If the match is set for **16:00**, it should start no later than **16:10**, unless both teams explicitly agree otherwise."
           },
           "issues": {
-            "title": "\ud83d\udd30 In case of issues \ud83d\udd30",
+            "title": "🔰 In case of issues 🔰",
             "description": "- If the match is **cancelled** **1 hour before** because the **opponent** can no longer play, it will most likely be considered a **free win**, unless the opposing team agrees to reschedule. A **Staff** member will evaluate the situation.\n- Any **problem** related to the **match** should be documented with evidence:\n - Take **screenshots** of incidents.\n - Save proof of **toxic** behaviour.\n - Record any **match incident**.\n- The match will be considered **finished** once a Staff member switches the channel to **read-only**. Any **appeal** must be handled by **opening a ticket**."
           },
           "match_data": {
-            "title": "\u26bd \ud83d\ude97 Match data \ud83d\ude97 \u26bd",
-            "description": "- Match information\n - Matchday: {jornada_emoji}\n - Match: {partido_emoji}\n - Teams: {team_one} vs {team_two}\n - Format: Bo5 (best of 5)\n - Date and time: To be agreed by both teams\n- Private lobby\n - Name: `staff`\n - Password: `staff`"
+            "title": "⚽ 🚗 Match data 🚗 ⚽",
+            "description": "- Match information\n - ⌛ {courtesy_minutes} courtesy minutes\n - 🗓️ {match_date}\n - ⏰ {match_time}\n - ⚔️ {best_of_label} (best of {best_of})\n- Private lobby\n - Name: `{room_name}`\n - Password: `{room_password}`"
           }
         },
         "buttons": {
@@ -145,9 +157,11 @@
     "match_channel_creation": {
       "same_team_roles": "You cannot create a match using the same role twice: `{role_name}`.",
       "invalid_team_role": "The role `{role_name}` cannot be used as a team role for a match channel.",
-      "team_role_out_of_range": "The role `{role_name}` is not inside the configured team role range: `{range_start}` < role < `{range_end}`.",
+      "team_role_out_of_range": "The role `{role_name}` is not inside the configured team role range: `{range_start}` \u003c role \u003c `{range_end}`.",
       "channel_already_exists": "A channel for that matchday and match already exists: `{channel_name}`.",
-      "category_missing": "The configured category for this channel does not exist: `{category_id}`."
+      "category_missing": "The configured category for this channel does not exist: `{category_id}`.",
+      "invalid_date_format": "The date is invalid. Use `DD/MM/YYYY` or `YYYY-MM-DD`.",
+      "invalid_time_format": "The time is invalid. Use `HH:MM` in 24-hour format."
     },
     "slash": {
       "forbidden": "You do not have permission to run this command.",

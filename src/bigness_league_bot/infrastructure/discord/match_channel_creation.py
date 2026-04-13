@@ -19,6 +19,7 @@ from bigness_league_bot.application.services.channel_closure import PROTECTED_RO
 from bigness_league_bot.application.services.match_channel_creation import (
     MatchChannelDivision,
     MatchChannelSpecification,
+    build_match_start_at,
 )
 from bigness_league_bot.core.localization import LocalizedText, localize
 from bigness_league_bot.infrastructure.discord.channel_management import (
@@ -43,6 +44,10 @@ class InvalidMatchTeamRoleError(ChannelManagementError):
 
 class MatchChannelCategoryNotFoundError(ChannelManagementError):
     """Raised when the configured destination category cannot be resolved."""
+
+
+class InvalidMatchScheduleError(ChannelManagementError):
+    """Raised when the match date or time input is invalid."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -193,6 +198,45 @@ def resolve_match_channel_category(
         )
 
     return category
+
+
+def build_match_channel_specification(
+        *,
+        jornada: int,
+        partido: int,
+        courtesy_minutes: int,
+        date_value: str,
+        time_value: str,
+        best_of: int,
+        timezone_name: str,
+) -> MatchChannelSpecification:
+    try:
+        start_at = build_match_start_at(
+            date_value=date_value,
+            time_value=time_value,
+            timezone_name=timezone_name,
+        )
+    except ValueError as exc:
+        error_code = exc.args[0] if exc.args else ""
+        if error_code == "invalid_date":
+            raise InvalidMatchScheduleError(
+                localize(I18N.errors.match_channel_creation.invalid_date_format)
+            ) from exc
+
+        if error_code == "invalid_time":
+            raise InvalidMatchScheduleError(
+                localize(I18N.errors.match_channel_creation.invalid_time_format)
+            ) from exc
+
+        raise
+
+    return MatchChannelSpecification(
+        jornada=jornada,
+        partido=partido,
+        courtesy_minutes=courtesy_minutes,
+        start_at=start_at,
+        best_of=best_of,
+    )
 
 
 async def create_match_channel(
