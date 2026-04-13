@@ -39,6 +39,9 @@ from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
 from bigness_league_bot.presentation.discord.views.channel_delete_confirmation import (
     ChannelDeleteConfirmationView,
 )
+from bigness_league_bot.presentation.discord.views.channel_matchday_close_confirmation import (
+    ChannelMatchdayCloseConfirmationView,
+)
 
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
@@ -112,6 +115,10 @@ class ChannelManagement(commands.Cog):
             await self._prompt_channel_deletion(interaction, channel)
             return
 
+        if selected_action is ChannelCloseMode.MATCHDAY_CLOSED:
+            await self._prompt_matchday_close(interaction, channel)
+            return
+
         await interaction.response.defer(thinking=True)
         action_result = await self._execute_channel_action(
             channel=channel,
@@ -145,6 +152,34 @@ class ChannelManagement(commands.Cog):
         await interaction.response.send_message(
             interaction.client.localizer.translate(
                 I18N.messages.channel_management.delete_prompt,
+                locale=interaction.locale,
+                channel_name=channel.name,
+                protected_roles=protected_roles,
+            ),
+            view=view,
+        )
+        view.message = await interaction.original_response()
+
+    @staticmethod
+    async def _prompt_matchday_close(
+            interaction: discord.Interaction[BignessLeagueBot],
+            channel: discord.TextChannel,
+    ) -> None:
+        if not isinstance(interaction.user, discord.Member):
+            raise UnsupportedChannelError(
+                localize(I18N.errors.channel_management.server_only)
+            )
+
+        protected_roles = protected_role_names_label()
+        view = ChannelMatchdayCloseConfirmationView(
+            channel=channel,
+            actor=interaction.user,
+            localizer=interaction.client.localizer,
+            locale=interaction.locale,
+        )
+        await interaction.response.send_message(
+            interaction.client.localizer.translate(
+                I18N.messages.channel_management.matchday_close_prompt,
                 locale=interaction.locale,
                 channel_name=channel.name,
                 protected_roles=protected_roles,
