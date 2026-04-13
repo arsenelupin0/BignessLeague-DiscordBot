@@ -103,6 +103,29 @@
         "confirm": "Confirmar eliminacion",
         "cancel": "Cancelar"
       }
+    },
+    "match_channel_creation": {
+      "welcome": {
+        "content": "# Jornada {jornada_emoji}　Partido {partido_emoji}\n## Bienvenid@s\n### {team_one} 🆚 {team_two}\n\nEste es el canal privado y autogenerado de vuestro partido. Para acordar fechas, pruebas y todo lo relacionado de esta jornada, deberá hablarse únicamente y exclusivamente por este canal de texto. Si se acuerda el partido por medios externos y surge algún problema a futuro, no se tendrá en cuenta. Casos mas graves lo evaluará el Staff.\n\n🤝¡Mucha suerte a ambos equipos!\uD83E\uDD1D\n\n_ _",
+        "embeds": {
+          "details": {
+            "title": "\ud83d\udd30 Detalles a tener en cuenta \ud83d\udd30",
+            "description": "- Si nadie se pone **de acuerdo** y no hay una fecha por ninguno de los **dos equipos**, el partido se dara como **nulo**. Ninguno de los dos equipos aquí presentes sumará puntos esta jornada.\n- Pongamos todos de nuestra parte para poder **jugar el partido** y recordad **organizarlo** lo **antes posible**.\n- Intentad ser **flexibles ambos equipos**. Si alguno no puede, debe **proponer** otra **fecha** y así sucesivamente.\n- Habrá **minutos** de **cortesía** según la **hora del partido**. Si la fecha **esta puesta** a las **16:00**, como tarde deberá iniciarse a las **16:10**, salvo **acuerdo expreso** entre **ambos equipos**."
+          },
+          "issues": {
+            "title": "\ud83d\udd30 En caso de problemas \ud83d\udd30",
+            "description": "- Si se **cancela** el partido **1h antes** porque el equipo **rival** al final **no puede**, muy probablemente sea **Free Win**, salvo que el equipo rival acepte jugarlo en otra fecha. Esta situación la evaluará el **Staff**.\n- Cualquier **problema** relacionado con el **partido** (in-game):\n - Sacar **capturas** de incidentes.\n - Guardad evidencias de comportamientos **tóxicos**.\n - Registrad cualquier **incidencia del partido**.\n- El partido se dará como **finalizado** cuando alguien del Staff ponga el canal en **modo lectura**. Para cualquier **apelación** se deberá **abrir un ticket**."
+          },
+          "match_data": {
+            "title": "\u26bd \ud83d\ude97 Datos del partido \ud83d\ude97 \u26bd",
+            "description": "- Información de sala\n - ⌛ 10 minutos de cortesía\n - \uD83D\uDDD3\uFE0F <t:1776348000:D>\n - ⏰ <t:1776348000:t>\n - ⚔\uFE0F Bo5 (al mejor de 5 partidos)\n- Sala privada\n - Nombre: ``staff``\n - Contraseña: ``staff``"
+          }
+        },
+        "buttons": {
+          "create_ticket": "Apelación",
+          "rules": "Normativa - Bigness League"
+        }
+      }
     }
   },
   "errors": {
@@ -143,7 +166,7 @@
       "add_roles_summary": "Se han anadido al canal estos roles: {roles}."
     },
     "match_channel_creation": {
-      "created_summary": "Se ha creado {channel} en `{category}` para la jornada {jornada}, partido {partido}, entre {team_one} y {team_two}."
+      "created_summary": "Se ha creado {channel} en `{category}` para la jornada {jornada}, partido {partido}, entre {team_one} y {team_two}, y se ha enviado el mensaje inicial del canal."
     }
   }
 }

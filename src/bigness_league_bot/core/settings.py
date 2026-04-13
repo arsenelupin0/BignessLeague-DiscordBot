@@ -48,6 +48,10 @@ def _read_int(name: str, default: int) -> int:
         raise ValueError(f"{name} debe ser un entero valido.") from exc
 
 
+def _read_str(name: str, default: str) -> str:
+    return os.getenv(name, default).strip() or default
+
+
 def _resolve_storage_path(name: str, default: str) -> Path:
     raw_value = os.getenv(name, default).strip() or default
     path = Path(raw_value)
@@ -80,6 +84,8 @@ class Settings:
     channel_access_range_end_role_id: int = 1_364_336_738_323_009_796
     gold_division_category_id: int = 1_487_858_997_812_789_298
     silver_division_category_id: int = 1_487_859_192_256_790_630
+    match_channel_ticket_url: str = "https://canary.discord.com/channels/1016819103555657851/1016824990949179512"
+    match_channel_rules_url: str = "https://canary.discord.com/channels/1016819103555657851/1363537934665515351"
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -96,13 +102,13 @@ class Settings:
             except ValueError as exc:
                 raise ValueError("DISCORD_GUILD_ID debe ser un entero valido.") from exc
 
-        command_prefix = os.getenv("BOT_PREFIX", "!").strip() or "!"
-        environment_raw = os.getenv("BOT_ENV", "development").strip().lower() or "development"
+        command_prefix = _read_str("BOT_PREFIX", "!")
+        environment_raw = _read_str("BOT_ENV", "development").lower()
         if environment_raw not in {"development", "production"}:
             raise ValueError("BOT_ENV debe ser `development` o `production`.")
 
         default_sync_scope = "guild" if environment_raw == "development" else "global"
-        sync_scope_raw = os.getenv("BOT_SYNC_SCOPE", default_sync_scope).strip().lower() or default_sync_scope
+        sync_scope_raw = _read_str("BOT_SYNC_SCOPE", default_sync_scope).lower()
         if sync_scope_raw not in {"guild", "global"}:
             raise ValueError("BOT_SYNC_SCOPE debe ser `guild` o `global`.")
 
@@ -111,9 +117,9 @@ class Settings:
                 "BOT_SYNC_SCOPE=guild requiere que DISCORD_GUILD_ID este configurado."
             )
 
-        default_locale = os.getenv("BOT_DEFAULT_LOCALE", "es-ES").strip() or "es-ES"
+        default_locale = _read_str("BOT_DEFAULT_LOCALE", "es-ES")
         locales_dir = _resolve_storage_path("BOT_LOCALES_DIR", "aa_resources/locales")
-        log_level = os.getenv("BOT_LOG_LEVEL", "INFO").strip().upper() or "INFO"
+        log_level = _read_str("BOT_LOG_LEVEL", "INFO").upper()
         log_dir = _resolve_storage_path("BOT_LOG_DIR", "aa_var/logs")
         log_max_bytes = _read_int("BOT_LOG_MAX_BYTES", 1_048_576)
         log_backup_count = _read_int("BOT_LOG_BACKUP_COUNT", 5)
@@ -134,6 +140,14 @@ class Settings:
             "BOT_SILVER_DIVISION_CATEGORY_ID",
             1_487_859_192_256_790_630,
         )
+        match_channel_ticket_url = _read_str(
+            "BOT_MATCH_CHANNEL_TICKET_URL",
+            "https://canary.discord.com/channels/1016819103555657851/1016824990949179512",
+        )
+        match_channel_rules_url = _read_str(
+            "BOT_MATCH_CHANNEL_RULES_URL",
+            "https://canary.discord.com/channels/1016819103555657851/1363537934665515351",
+        )
 
         return cls(
             token=token,
@@ -152,4 +166,6 @@ class Settings:
             channel_access_range_end_role_id=channel_access_range_end_role_id,
             gold_division_category_id=gold_division_category_id,
             silver_division_category_id=silver_division_category_id,
+            match_channel_ticket_url=match_channel_ticket_url,
+            match_channel_rules_url=match_channel_rules_url,
         )

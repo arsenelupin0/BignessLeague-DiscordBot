@@ -24,6 +24,8 @@ pip install -e .
 5. Ajusta `BOT_ENV` y `BOT_SYNC_SCOPE` segun el entorno.
 6. Ajusta `BOT_DEFAULT_LOCALE` y `BOT_LOCALES_DIR` si quieres cambiar el idioma base o la carpeta de catalogos.
 7. Ajusta las variables `BOT_LOG_*` si quieres mas o menos verbosidad.
+8. Si quieres cambiar los botones del mensaje inicial de los partidos, ajusta `BOT_MATCH_CHANNEL_TICKET_URL` y
+   `BOT_MATCH_CHANNEL_RULES_URL`.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
 dejas vacio, se sincronizan globalmente y Discord puede tardar en propagarlos.
@@ -90,6 +92,8 @@ Restricciones de `/cerrar_canal`:
 - da acceso de lectura y escritura a `Staff`, `Administrador`, `Ceo`, `equipo_1` y `equipo_2`
 - valida que los dos roles de equipo sean distintos y esten dentro del rango de roles configurado
 - usa `BOT_GOLD_DIVISION_CATEGORY_ID` y `BOT_SILVER_DIVISION_CATEGORY_ID` para resolver las categorias reales
+- envia automaticamente un mensaje inicial con menciones a ambos equipos, tres embeds informativos y botones URL para
+  ticket y normativa
 
 ## Localizacion
 

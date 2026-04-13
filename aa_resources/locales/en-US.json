@@ -103,6 +103,29 @@
         "confirm": "Confirm deletion",
         "cancel": "Cancel"
       }
+    },
+    "match_channel_creation": {
+      "welcome": {
+        "content": "# Matchday {jornada_emoji}  Match {partido_emoji}\n_ _\n## Welcome {team_one} and {team_two}\n\nThis is the private auto-generated channel for your match. Please use this text channel for scheduling, warmups, and anything related to this matchday. If the match is arranged through external channels and problems appear later, that information will not be considered. More serious cases will be reviewed by Staff.\n\nGood luck to both teams.\n\n_ _",
+        "embeds": {
+          "details": {
+            "title": "\ud83d\udd30 Important details \ud83d\udd30",
+            "description": "- If nobody reaches an **agreement** and neither team sets a **date**, the match will be marked as **void**. Neither team will receive points for this matchday.\n- Everyone should do their part to **play the match** and **organize it** as **soon as possible**.\n- Try to stay **flexible on both sides**. If one team cannot play, it should **propose** another **date** and continue from there.\n- There are **grace minutes** depending on the scheduled **match time**. If the match is set for **16:00**, it should start no later than **16:10**, unless both teams explicitly agree otherwise."
+          },
+          "issues": {
+            "title": "\ud83d\udd30 In case of issues \ud83d\udd30",
+            "description": "- If the match is **cancelled** **1 hour before** because the **opponent** can no longer play, it will most likely be considered a **free win**, unless the opposing team agrees to reschedule. A **Staff** member will evaluate the situation.\n- Any **problem** related to the **match** should be documented with evidence:\n - Take **screenshots** of incidents.\n - Save proof of **toxic** behaviour.\n - Record any **match incident**.\n- The match will be considered **finished** once a Staff member switches the channel to **read-only**. Any **appeal** must be handled by **opening a ticket**."
+          },
+          "match_data": {
+            "title": "\u26bd \ud83d\ude97 Match data \ud83d\ude97 \u26bd",
+            "description": "- Match information\n - Matchday: {jornada_emoji}\n - Match: {partido_emoji}\n - Teams: {team_one} vs {team_two}\n - Format: Bo5 (best of 5)\n - Date and time: To be agreed by both teams\n- Private lobby\n - Name: `staff`\n - Password: `staff`"
+          }
+        },
+        "buttons": {
+          "create_ticket": "Create ticket",
+          "rules": "Rules - Bigness League"
+        }
+      }
     }
   },
   "errors": {
@@ -143,7 +166,7 @@
       "add_roles_summary": "These roles were added to the channel: {roles}."
     },
     "match_channel_creation": {
-      "created_summary": "Created {channel} in `{category}` for matchday {jornada}, match {partido}, between {team_one} and {team_two}."
+      "created_summary": "Created {channel} in `{category}` for matchday {jornada}, match {partido}, between {team_one} and {team_two}, and posted the channel welcome message."
     }
   }
 }

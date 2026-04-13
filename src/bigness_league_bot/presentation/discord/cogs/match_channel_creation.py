@@ -35,6 +35,9 @@ from bigness_league_bot.infrastructure.discord.match_channel_creation import (
     resolve_match_channel_category,
     validate_match_team_roles,
 )
+from bigness_league_bot.infrastructure.discord.match_channel_welcome import (
+    send_match_channel_welcome_message,
+)
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
 
@@ -123,16 +126,26 @@ class MatchChannelCreation(commands.Cog):
             gold_division_category_id=interaction.client.settings.gold_division_category_id,
             silver_division_category_id=interaction.client.settings.silver_division_category_id,
         )
+        specification = MatchChannelSpecification(
+            jornada=jornada,
+            partido=partido,
+        )
 
         await interaction.response.defer(thinking=True)
         creation_result = await create_match_channel(
             guild=guild,
             actor=interaction.user,
             category=category,
-            specification=MatchChannelSpecification(
-                jornada=jornada,
-                partido=partido,
-            ),
+            specification=specification,
+            team_one=equipo_1,
+            team_two=equipo_2,
+        )
+        await send_match_channel_welcome_message(
+            channel=creation_result.channel,
+            localizer=interaction.client.localizer,
+            locale=interaction.locale,
+            settings=interaction.client.settings,
+            specification=specification,
             team_one=equipo_1,
             team_two=equipo_2,
         )
