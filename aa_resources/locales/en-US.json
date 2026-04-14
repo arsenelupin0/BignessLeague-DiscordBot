@@ -82,6 +82,15 @@
             "description": "Discord message link containing the signing template."
           }
         }
+      },
+      "remove_signing": {
+        "name": "remove_signing",
+        "description": "Removes a player by Discord name from Google Sheets.",
+        "parameters": {
+          "discord_name": {
+            "description": "Discord name of the player you want to remove from the roster."
+          }
+        }
       }
     },
     "team_role_assignment": {
@@ -274,6 +283,8 @@
       "division_not_found": "No sheet matches the division `{division_name}`.",
       "team_sheet_layout_invalid": "The sheet `{sheet_name}` does not follow the expected layout for signing imports.",
       "no_free_team_block": "There is no free team block left in `{sheet_name}` for `{team_name}`.",
+      "player_not_found": "No player with Discord `{discord_name}` was found in Google Sheets.",
+      "player_duplicate": "There are multiple players with Discord `{discord_name}` in Google Sheets: {locations}. Fix it manually before continuing.",
       "remaining_signings_invalid": "The remaining signings cell is invalid for `{team_name}` in `{sheet_name}`.",
       "remaining_signings_exceeded": "There are not enough remaining signings in `{team_name}`. Remaining: {remaining_signings}. Requested: {requested_signings}.",
       "team_roster_full": "There is not enough room in `{team_name}` for these signings. Free slots: {available_slots}. Requested signings: {requested_slots}.",
@@ -282,6 +293,10 @@
     "team_role_assignment": {
       "participant_role_missing": "The configured participant role does not exist: `{role_id}`.",
       "player_role_missing": "The configured player role does not exist: `{role_id}`.",
+      "staff_ceo_role_missing": "The configured staff `CEO` role does not exist: `{role_id}`.",
+      "staff_coach_role_missing": "The configured staff `COACH` role does not exist: `{role_id}`.",
+      "staff_manager_role_missing": "The configured staff `MANAGER` role does not exist: `{role_id}`.",
+      "staff_captain_role_missing": "The configured staff `CAPTAIN` role does not exist: `{role_id}`.",
       "team_role_not_found": "No Discord team role matches `{team_name}`."
     },
     "slash": {
@@ -305,6 +320,12 @@
     },
     "team_signing": {
       "completed": "Registered {inserted_count} signings in `{team_name}` within `{division_name}`. Current roster: {total_players}/6.",
+      "removed": "Removed `{player_name}` (`{discord_name}`) from `{team_name}` in `{division_name}`. Current roster: {total_players}/6.",
+      "role_removal_completed": "Removed Discord roles from `{member_name}`: {roles}.",
+      "role_removal_no_changes": "There were no Discord roles to remove for `{member_name}`.",
+      "role_removal_unresolved": "No Discord member was found to remove roles for `{discord_name}`.",
+      "role_removal_ambiguous": "There are multiple Discord matches for `{discord_name}`. Roles were not removed automatically.",
+      "role_removal_failed": "The Google Sheets removal was applied, but Discord roles could not be removed: {details}.",
       "role_assignment_summary": "Role assignment: new={assigned_count}, already_set={already_count}, unresolved={unresolved_count}, ambiguous={ambiguous_count}.",
       "role_assignment_unresolved": "No Discord match found for: {names}.",
       "role_assignment_ambiguous": "Ambiguous Discord matches for: {names}."

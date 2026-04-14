@@ -147,8 +147,26 @@ class _CommandsTeamSigningMakeSigning:
                                                  default_text="Importa fichajes desde un mensaje enlazado de Discord hacia Google Sheets.")
     parameters: _CommandsTeamSigningMakeSigningParameters = _CommandsTeamSigningMakeSigningParameters()
 
+
+class _CommandsTeamSigningRemoveSigningParametersDiscordName:
+    description: TranslationKey = TranslationKey(
+        key="commands.team_signing.remove_signing.parameters.discord_name.description",
+        default_text="Nombre de Discord del jugador que quieres eliminar del roster.")
+
+
+class _CommandsTeamSigningRemoveSigningParameters:
+    discord_name: _CommandsTeamSigningRemoveSigningParametersDiscordName = _CommandsTeamSigningRemoveSigningParametersDiscordName()
+
+
+class _CommandsTeamSigningRemoveSigning:
+    name: TranslationKey = TranslationKey(key="commands.team_signing.remove_signing.name", default_text="dar_de_baja")
+    description: TranslationKey = TranslationKey(key="commands.team_signing.remove_signing.description",
+                                                 default_text="Da de baja a un jugador buscandolo por su nombre de Discord en Google Sheets.")
+    parameters: _CommandsTeamSigningRemoveSigningParameters = _CommandsTeamSigningRemoveSigningParameters()
+
 class _CommandsTeamSigning:
     make_signing: _CommandsTeamSigningMakeSigning = _CommandsTeamSigningMakeSigning()
+    remove_signing: _CommandsTeamSigningRemoveSigning = _CommandsTeamSigningRemoveSigning()
 
 class _CommandsTeamRoleAssignmentSyncTeamRoleParametersTeamRole:
     description: TranslationKey = TranslationKey(
@@ -490,6 +508,10 @@ class _ErrorsTeamSigning:
                                                                default_text="La hoja `{sheet_name}` no sigue el formato esperado para registrar fichajes.")
     no_free_team_block: TranslationKey = TranslationKey(key="errors.team_signing.no_free_team_block",
                                                         default_text="No hay ningun bloque de equipo libre en `{sheet_name}` para registrar a `{team_name}`.")
+    player_not_found: TranslationKey = TranslationKey(key="errors.team_signing.player_not_found",
+                                                      default_text="No se encontro ningun jugador con el Discord `{discord_name}` en Google Sheets.")
+    player_duplicate: TranslationKey = TranslationKey(key="errors.team_signing.player_duplicate",
+                                                      default_text="Hay varios jugadores con el Discord `{discord_name}` en Google Sheets: {locations}. Corrigelo manualmente antes de continuar.")
     remaining_signings_invalid: TranslationKey = TranslationKey(key="errors.team_signing.remaining_signings_invalid",
                                                                 default_text="La celda de fichajes restantes no es valida para `{team_name}` en `{sheet_name}`.")
     remaining_signings_exceeded: TranslationKey = TranslationKey(key="errors.team_signing.remaining_signings_exceeded",
@@ -505,6 +527,17 @@ class _ErrorsTeamRoleAssignment:
         default_text="No existe el rol de participante configurado: `{role_id}`.")
     player_role_missing: TranslationKey = TranslationKey(key="errors.team_role_assignment.player_role_missing",
                                                          default_text="No existe el rol de jugador configurado: `{role_id}`.")
+    staff_ceo_role_missing: TranslationKey = TranslationKey(key="errors.team_role_assignment.staff_ceo_role_missing",
+                                                            default_text="No existe el rol de staff `CEO` configurado: `{role_id}`.")
+    staff_coach_role_missing: TranslationKey = TranslationKey(
+        key="errors.team_role_assignment.staff_coach_role_missing",
+        default_text="No existe el rol de staff `COACH` configurado: `{role_id}`.")
+    staff_manager_role_missing: TranslationKey = TranslationKey(
+        key="errors.team_role_assignment.staff_manager_role_missing",
+        default_text="No existe el rol de staff `MANAGER` configurado: `{role_id}`.")
+    staff_captain_role_missing: TranslationKey = TranslationKey(
+        key="errors.team_role_assignment.staff_captain_role_missing",
+        default_text="No existe el rol de staff `CAPIT\u00c1N` configurado: `{role_id}`.")
     team_role_not_found: TranslationKey = TranslationKey(key="errors.team_role_assignment.team_role_not_found",
                                                          default_text="No existe un rol de equipo en Discord que coincida con `{team_name}`.")
 
@@ -548,6 +581,18 @@ class _ActionsMatchChannelCreation:
 class _ActionsTeamSigning:
     completed: TranslationKey = TranslationKey(key="actions.team_signing.completed",
                                                default_text="Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.")
+    removed: TranslationKey = TranslationKey(key="actions.team_signing.removed",
+                                             default_text="Se ha dado de baja a `{player_name}` (`{discord_name}`) de `{team_name}` en `{division_name}`. Plantilla actual: {total_players}/6.")
+    role_removal_completed: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_completed",
+                                                            default_text="Roles retirados en Discord a `{member_name}`: {roles}.")
+    role_removal_no_changes: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_no_changes",
+                                                             default_text="No habia roles que retirar en Discord para `{member_name}`.")
+    role_removal_unresolved: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_unresolved",
+                                                             default_text="No se encontro ningun miembro de Discord para retirar roles a `{discord_name}`.")
+    role_removal_ambiguous: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_ambiguous",
+                                                            default_text="Hay varias coincidencias en Discord para `{discord_name}`. No se retiraron roles automaticamente.")
+    role_removal_failed: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_failed",
+                                                         default_text="La baja en Google Sheets se aplico, pero no se pudieron retirar roles en Discord: {details}.")
     role_assignment_summary: TranslationKey = TranslationKey(key="actions.team_signing.role_assignment_summary",
                                                              default_text="Asignacion de roles: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
     role_assignment_unresolved: TranslationKey = TranslationKey(key="actions.team_signing.role_assignment_unresolved",

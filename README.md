@@ -32,7 +32,9 @@ pip install -e .
     y `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`. `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME` es opcional.
 11. Si quieres sincronizar roles automaticamente desde `/hacer_fichaje` o `/asignar_rol_equipo_automatico`,
     ajusta `BOT_PARTICIPANT_ROLE_ID` y `BOT_PLAYER_ROLE_ID` con los roles base que deben recibir todos los jugadores.
-12. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
+12. Si quieres que `/dar_de_baja` retire tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
+    `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID` y `BOT_STAFF_CAPTAIN_ROLE_ID`.
+13. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
     Lo recomendado es colocar la fuente dentro de `aa_resources/fonts/`.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
@@ -74,6 +76,7 @@ crea un canal de partido con permisos para ambos equipos.
 
 - `/ver_mi_equipo`: busca tu equipo en Google Sheets a partir de tu rol de Discord y muestra su ficha.
 - `/hacer_fichaje enlace_mensaje:<url>`: importa fichajes desde un mensaje de Discord hacia Google Sheets.
+- `/dar_de_baja discord_jugador:<texto>`: elimina un jugador buscandolo globalmente por su Discord en Google Sheets.
 - `/asignar_rol_equipo_automatico equipo:<rol>`: revisa la hoja del equipo y sincroniza los roles en Discord.
 
 Opciones disponibles en `/cerrar_canal`:
@@ -140,6 +143,17 @@ Restricciones de `/cerrar_canal`:
 - despues de escribir, intenta asignar automaticamente el rol general de participante y el rol del equipo a los
   miembros que ya esten en Discord, junto con el rol general de jugador
 
+`/dar_de_baja`:
+
+- solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
+- busca el jugador por el valor de la columna `Discord` en todas las hojas configuradas
+- si encuentra mas de una coincidencia, rechaza la operacion y muestra donde estan los duplicados
+- si encuentra una unica coincidencia, reescribe el roster del bloque sin ese jugador y rellena con `-`
+- intenta retirar en Discord el rol del equipo, `Participante`, `Jugador` y, si ese mismo Discord figura en
+  `STAFF TÉCNICO`,
+  tambien los roles extra configurados de `CEO`, `COACH`, `MANAGER` y `CAPITÁN`
+- no modifica automaticamente la celda de fichajes restantes
+
 `/asignar_rol_equipo_automatico`:
 
 - solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
@@ -155,6 +169,8 @@ Configuracion de Google Sheets:
 - `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`: ID del documento de Google Sheets
 - `BOT_PARTICIPANT_ROLE_ID`: rol general que se anade junto al rol del equipo cuando se sincronizan miembros
 - `BOT_PLAYER_ROLE_ID`: rol general de jugador que tambien se anade junto al rol del equipo
+- `BOT_STAFF_CEO_ROLE_ID`, `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID`, `BOT_STAFF_CAPTAIN_ROLE_ID`:
+  roles extra que `/dar_de_baja` puede retirar si el Discord tambien aparece en `STAFF TÉCNICO`
 - `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME`: opcional. Si lo dejas vacio, el bot buscara en todas las sheets del documento.
   Tambien admite varios nombres separados por comas si quieres limitar la busqueda.
 - la hoja debe estar organizada por bloques de equipo con este esquema: titulo del equipo, cabecera `Jugador`,

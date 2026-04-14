@@ -82,6 +82,15 @@
             "description": "Enlace al mensaje de Discord que contiene la plantilla de fichajes."
           }
         }
+      },
+      "remove_signing": {
+        "name": "dar_de_baja",
+        "description": "Da de baja a un jugador buscandolo por su nombre de Discord en Google Sheets.",
+        "parameters": {
+          "discord_name": {
+            "description": "Nombre de Discord del jugador que quieres eliminar del roster."
+          }
+        }
       }
     },
     "team_role_assignment": {
@@ -274,6 +283,8 @@
       "division_not_found": "No existe ninguna hoja que coincida con la division `{division_name}`.",
       "team_sheet_layout_invalid": "La hoja `{sheet_name}` no sigue el formato esperado para registrar fichajes.",
       "no_free_team_block": "No hay ningun bloque de equipo libre en `{sheet_name}` para registrar a `{team_name}`.",
+      "player_not_found": "No se encontro ningun jugador con el Discord `{discord_name}` en Google Sheets.",
+      "player_duplicate": "Hay varios jugadores con el Discord `{discord_name}` en Google Sheets: {locations}. Corrigelo manualmente antes de continuar.",
       "remaining_signings_invalid": "La celda de fichajes restantes no es valida para `{team_name}` en `{sheet_name}`.",
       "remaining_signings_exceeded": "No quedan fichajes suficientes en `{team_name}`. Restantes: {remaining_signings}. Solicitados: {requested_signings}.",
       "team_roster_full": "No hay hueco suficiente en `{team_name}` para estos fichajes. Huecos libres: {available_slots}. Fichajes solicitados: {requested_slots}.",
@@ -282,6 +293,10 @@
     "team_role_assignment": {
       "participant_role_missing": "No existe el rol de participante configurado: `{role_id}`.",
       "player_role_missing": "No existe el rol de jugador configurado: `{role_id}`.",
+      "staff_ceo_role_missing": "No existe el rol de staff `CEO` configurado: `{role_id}`.",
+      "staff_coach_role_missing": "No existe el rol de staff `COACH` configurado: `{role_id}`.",
+      "staff_manager_role_missing": "No existe el rol de staff `MANAGER` configurado: `{role_id}`.",
+      "staff_captain_role_missing": "No existe el rol de staff `CAPITÁN` configurado: `{role_id}`.",
       "team_role_not_found": "No existe un rol de equipo en Discord que coincida con `{team_name}`."
     },
     "slash": {
@@ -305,6 +320,12 @@
     },
     "team_signing": {
       "completed": "Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.",
+      "removed": "Se ha dado de baja a `{player_name}` (`{discord_name}`) de `{team_name}` en `{division_name}`. Plantilla actual: {total_players}/6.",
+      "role_removal_completed": "Roles retirados en Discord a `{member_name}`: {roles}.",
+      "role_removal_no_changes": "No habia roles que retirar en Discord para `{member_name}`.",
+      "role_removal_unresolved": "No se encontro ningun miembro de Discord para retirar roles a `{discord_name}`.",
+      "role_removal_ambiguous": "Hay varias coincidencias en Discord para `{discord_name}`. No se retiraron roles automaticamente.",
+      "role_removal_failed": "La baja en Google Sheets se aplico, pero no se pudieron retirar roles en Discord: {details}.",
       "role_assignment_summary": "Asignacion de roles: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
       "role_assignment_unresolved": "Sin coincidencia en Discord: {names}.",
       "role_assignment_ambiguous": "Coincidencias ambiguas en Discord: {names}."

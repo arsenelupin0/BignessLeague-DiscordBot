@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import discord
+import unicodedata
 
 from bigness_league_bot.application.services.team_profile import (
     TeamProfile,
@@ -30,6 +31,9 @@ from bigness_league_bot.application.services.team_signing import (
     TeamSigningCapacityError,
     TeamSigningPlayer,
     merge_team_signing_players,
+)
+from bigness_league_bot.application.services.team_signing import (
+    sort_team_signing_players,
 )
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import localize
@@ -116,6 +120,14 @@ class TeamSheetRemainingSigningsExceededError(TeamSheetError):
     """Raised when the requested signings exceed the remaining signing quota."""
 
 
+class TeamSheetPlayerNotFoundError(TeamSheetError):
+    """Raised when a player cannot be found by Discord name."""
+
+
+class TeamSheetDuplicatePlayerError(TeamSheetError):
+    """Raised when more than one player matches the same Discord name."""
+
+
 def _normalize_cell_value(value: Any) -> str:
     if value is None:
         return ""
@@ -188,6 +200,22 @@ class TeamSigningWriteResult:
     total_players: int
 
 
+@dataclass(frozen=True, slots=True)
+class TeamSigningRemovalResult:
+    worksheet_title: str
+    team_name: str
+    removed_player_name: str
+    total_players: int
+    technical_staff_role_names: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class TeamPlayerMatch:
+    worksheet_title: str
+    block: TeamBlockAnchor
+    player: TeamProfilePlayer
+
+
 class GoogleSheetsTeamRepository:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
@@ -206,6 +234,15 @@ class GoogleSheetsTeamRepository:
         return await asyncio.to_thread(
             self._register_team_signings_sync,
             signing_batch,
+        )
+
+    async def remove_team_player_by_discord(
+            self,
+            discord_name: str,
+    ) -> TeamSigningRemovalResult:
+        return await asyncio.to_thread(
+            self._remove_team_player_by_discord_sync,
+            discord_name,
         )
 
     def _find_team_profile_for_role_sync(
@@ -395,6 +432,98 @@ class GoogleSheetsTeamRepository:
             team_name=signing_batch.team_name,
             inserted_count=len(signing_batch.players),
             total_players=len(merged_players),
+        )
+
+    def _remove_team_player_by_discord_sync(
+            self,
+            discord_name: str,
+    ) -> TeamSigningRemovalResult:
+        normalized_discord_name = _normalize_member_lookup_text(discord_name)
+        if not normalized_discord_name:
+            raise TeamSheetPlayerNotFoundError(
+                localize(
+                    I18N.errors.team_signing.player_not_found,
+                    discord_name=discord_name,
+                )
+            )
+
+        service = self._build_google_sheets_service(read_only=False)
+        sheet_scope, sheet_grids = self._fetch_sheet_grids(service)
+        matches = self._find_player_matches(normalized_discord_name, sheet_grids)
+        if not matches:
+            raise TeamSheetPlayerNotFoundError(
+                localize(
+                    I18N.errors.team_signing.player_not_found,
+                    discord_name=discord_name,
+                )
+            )
+        if len(matches) > 1:
+            duplicate_locations = ", ".join(
+                f"{match.worksheet_title}/{match.block.title}"
+                for match in matches
+            )
+            raise TeamSheetDuplicatePlayerError(
+                localize(
+                    I18N.errors.team_signing.player_duplicate,
+                    discord_name=discord_name,
+                    locations=duplicate_locations,
+                )
+            )
+
+        player_match = matches[0]
+        target_sheet_grid = next(
+            cell_grid
+            for worksheet_title, cell_grid in sheet_grids
+            if worksheet_title == player_match.worksheet_title
+        )
+        remaining_players = tuple(
+            self._to_team_signing_player(player)
+            for player in self._parse_players(target_sheet_grid, player_match.block)
+            if _normalize_member_lookup_text(player.discord_name) != normalized_discord_name
+        )
+        sorted_remaining_players = sort_team_signing_players(remaining_players)
+        technical_staff_role_names = self._find_technical_staff_role_names_by_discord(
+            target_sheet_grid,
+            player_match.block,
+            normalized_discord_name,
+        )
+
+        try:
+            service.spreadsheets().values().batchUpdate(
+                spreadsheetId=self.config.spreadsheet_id,
+                body={
+                    "valueInputOption": "USER_ENTERED",
+                    "data": [
+                        {
+                            "range": _build_a1_range(
+                                player_match.worksheet_title,
+                                player_match.block.title_row + TEAM_BLOCK_PLAYERS_ROW_OFFSET,
+                                player_match.block.start_column,
+                                TEAM_BLOCK_MAX_PLAYERS,
+                                TEAM_BLOCK_COLUMN_COUNT,
+                            ),
+                            "values": self._build_player_values_grid(sorted_remaining_players),
+                        }
+                    ],
+                },
+            ).execute()
+        except Exception as exc:
+            http_error = _maybe_wrap_google_http_error(exc)
+            if http_error is not None:
+                raise TeamSheetWriteError(
+                    localize(
+                        I18N.errors.team_signing.google_write_failed,
+                        details=_extract_http_error_message(http_error),
+                    )
+                ) from exc
+            raise
+
+        return TeamSigningRemovalResult(
+            worksheet_title=player_match.worksheet_title,
+            team_name=player_match.block.title,
+            removed_player_name=player_match.player.player_name,
+            total_players=len(sorted_remaining_players),
+            technical_staff_role_names=technical_staff_role_names,
         )
 
     def _build_google_sheets_service(
@@ -614,6 +743,31 @@ class GoogleSheetsTeamRepository:
                 sheet_name=worksheet_title,
             )
         )
+
+    @staticmethod
+    def _find_player_matches(
+            normalized_discord_name: str,
+            sheet_grids: tuple[tuple[str, dict[int, dict[int, SheetCell]]], ...],
+    ) -> tuple[TeamPlayerMatch, ...]:
+        matches: list[TeamPlayerMatch] = []
+        for worksheet_title, cell_grid in sheet_grids:
+            for block in GoogleSheetsTeamRepository._collect_team_blocks(cell_grid):
+                if _is_free_block_title(block.title):
+                    continue
+
+                for player in GoogleSheetsTeamRepository._parse_players(cell_grid, block):
+                    if _normalize_member_lookup_text(player.discord_name) != normalized_discord_name:
+                        continue
+
+                    matches.append(
+                        TeamPlayerMatch(
+                            worksheet_title=worksheet_title,
+                            block=block,
+                            player=player,
+                        )
+                    )
+
+        return tuple(matches)
 
     @staticmethod
     def _extract_block_title(
@@ -863,6 +1017,22 @@ class GoogleSheetsTeamRepository:
         return None
 
     @staticmethod
+    def _find_technical_staff_role_names_by_discord(
+            cell_grid: dict[int, dict[int, SheetCell]],
+            block: TeamBlockAnchor,
+            normalized_discord_name: str,
+    ) -> tuple[str, ...]:
+        technical_staff = GoogleSheetsTeamRepository._parse_technical_staff(
+            cell_grid,
+            block,
+        )
+        return tuple(
+            member.role_name
+            for member in technical_staff
+            if _normalize_member_lookup_text(member.discord_name) == normalized_discord_name
+        )
+
+    @staticmethod
     def _get_cell(
             cell_grid: dict[int, dict[int, SheetCell]],
             row_index: int,
@@ -1024,6 +1194,17 @@ def _parse_integer_cell_value(
         raise TeamSheetLayoutError(error_message)
 
     return int(match.group(0))
+
+
+def _normalize_member_lookup_text(value: str | None) -> str:
+    if value is None:
+        return ""
+
+    normalized = " ".join(str(value).split()).strip()
+    if normalized.startswith("@"):
+        normalized = normalized[1:]
+
+    return unicodedata.normalize("NFKC", normalized).casefold()
 
 
 def _is_placeholder_cell_value(value: str) -> bool:

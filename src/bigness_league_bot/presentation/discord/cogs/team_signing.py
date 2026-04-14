@@ -22,8 +22,11 @@ from bigness_league_bot.infrastructure.discord.error_handling import (
 )
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     TeamRoleAssignmentSummary,
+    TeamRoleRemovalSummary,
     assign_team_roles_by_names,
     collect_team_profile_member_names,
+    remove_roles_from_member_by_name,
+    resolve_optional_team_staff_roles,
     resolve_participant_role,
     resolve_player_role,
     resolve_team_role_by_name,
@@ -116,6 +119,56 @@ class TeamSigningCog(commands.Cog):
                 total_players=result.total_players,
                 assignment_summary=assignment_summary,
             ),
+            allowed_mentions=discord.AllowedMentions.none(),
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.team_signing.remove_signing.name),
+        description=localized_locale_str(
+            I18N.commands.team_signing.remove_signing.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        discord_jugador=localized_locale_str(
+            I18N.commands.team_signing.remove_signing.parameters.discord_name.description
+        )
+    )
+    async def remove_signing(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            discord_jugador: str,
+    ) -> None:
+        guild = interaction.guild
+        if guild is None or not isinstance(interaction.user, discord.Member):
+            raise UnsupportedChannelError(
+                localize(I18N.errors.channel_management.server_only)
+            )
+
+        ensure_allowed_member(interaction.user)
+        await interaction.response.defer(thinking=True)
+        repository = GoogleSheetsTeamRepository(interaction.client.settings)
+        result = await repository.remove_team_player_by_discord(discord_jugador)
+        role_removal_message = await self._remove_discord_roles_after_signing_removal(
+            interaction,
+            discord_name=discord_jugador,
+            team_name=result.team_name,
+            technical_staff_role_names=result.technical_staff_role_names,
+        )
+        followup_message = interaction.client.localizer.translate(
+            I18N.actions.team_signing.removed,
+            locale=interaction.locale,
+            discord_name=discord_jugador,
+            player_name=result.removed_player_name,
+            team_name=result.team_name,
+            division_name=result.worksheet_title,
+            total_players=str(result.total_players),
+        )
+        if role_removal_message:
+            followup_message = f"{followup_message}\n{role_removal_message}"
+
+        await interaction.followup.send(
+            followup_message,
             allowed_mentions=discord.AllowedMentions.none(),
         )
 
@@ -284,6 +337,103 @@ class TeamSigningCog(commands.Cog):
                 )
             )
         return message_lines
+
+    @staticmethod
+    async def _remove_discord_roles_after_signing_removal(
+            interaction: discord.Interaction[BignessLeagueBot],
+            *,
+            discord_name: str,
+            team_name: str,
+            technical_staff_role_names: tuple[str, ...],
+    ) -> str | None:
+        guild = interaction.guild
+        if guild is None:
+            return None
+
+        settings = interaction.client.settings
+        role_catalog = get_channel_access_role_catalog(
+            guild,
+            settings.channel_access_range_start_role_id,
+            settings.channel_access_range_end_role_id,
+        )
+        localizer = interaction.client.localizer
+        locale = interaction.locale
+        try:
+            team_role = resolve_team_role_by_name(team_name, role_catalog)
+            participant_role = resolve_participant_role(
+                guild,
+                settings.participant_role_id,
+            )
+            player_role = resolve_player_role(
+                guild,
+                settings.player_role_id,
+            )
+            staff_roles = resolve_optional_team_staff_roles(
+                guild,
+                ceo_role_id=settings.staff_ceo_role_id,
+                coach_role_id=settings.staff_coach_role_id,
+                manager_role_id=settings.staff_manager_role_id,
+                captain_role_id=settings.staff_captain_role_id,
+                staff_role_names=technical_staff_role_names,
+            )
+            removal_summary = await remove_roles_from_member_by_name(
+                guild,
+                actor=interaction.user,
+                member_name=discord_name,
+                roles_to_remove=(participant_role, player_role, team_role, *staff_roles),
+            )
+        except (CommandUserError, discord.Forbidden, discord.HTTPException) as exc:
+            return localizer.translate(
+                I18N.actions.team_signing.role_removal_failed,
+                locale=locale,
+                details=str(exc),
+            )
+
+        return TeamSigningCog._format_role_removal_message(
+            interaction,
+            discord_name=discord_name,
+            removal_summary=removal_summary,
+        )
+
+    @staticmethod
+    def _format_role_removal_message(
+            interaction: discord.Interaction[BignessLeagueBot],
+            *,
+            discord_name: str,
+            removal_summary: TeamRoleRemovalSummary,
+    ) -> str:
+        localizer = interaction.client.localizer
+        locale = interaction.locale
+        if removal_summary.unresolved:
+            return localizer.translate(
+                I18N.actions.team_signing.role_removal_unresolved,
+                locale=locale,
+                discord_name=discord_name,
+            )
+        if removal_summary.ambiguous:
+            return localizer.translate(
+                I18N.actions.team_signing.role_removal_ambiguous,
+                locale=locale,
+                discord_name=discord_name,
+            )
+        if not removal_summary.removed_roles:
+            member_label = (
+                str(removal_summary.member)
+                if removal_summary.member is not None
+                else discord_name
+            )
+            return localizer.translate(
+                I18N.actions.team_signing.role_removal_no_changes,
+                locale=locale,
+                member_name=member_label,
+            )
+
+        return localizer.translate(
+            I18N.actions.team_signing.role_removal_completed,
+            locale=locale,
+            member_name=str(removal_summary.member),
+            roles=", ".join(role.name for role in removal_summary.removed_roles),
+        )
 
     async def cog_app_command_error(
             self,
