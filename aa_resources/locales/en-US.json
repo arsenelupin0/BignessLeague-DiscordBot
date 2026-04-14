@@ -83,6 +83,17 @@
           }
         }
       }
+    },
+    "team_role_assignment": {
+      "sync_team_role": {
+        "name": "assign_team_role_automatically",
+        "description": "Synchronizes Discord team roles from the current Google Sheets roster.",
+        "parameters": {
+          "team_role": {
+            "description": "Team role you want to reload from Google Sheets."
+          }
+        }
+      }
     }
   },
   "messages": {
@@ -266,6 +277,11 @@
       "team_roster_full": "There is not enough room in `{team_name}` for these signings. Free slots: {available_slots}. Requested signings: {requested_slots}.",
       "google_write_failed": "Google Sheets rejected the signing write request: {details}."
     },
+    "team_role_assignment": {
+      "participant_role_missing": "The configured participant role does not exist: `{role_id}`.",
+      "player_role_missing": "The configured player role does not exist: `{role_id}`.",
+      "team_role_not_found": "No Discord team role matches `{team_name}`."
+    },
     "slash": {
       "forbidden": "You do not have permission to run this command.",
       "bot_missing_permissions": "The bot needs enough permissions to manage the channel.",
@@ -286,7 +302,15 @@
       "created_summary": "Created {channel} in `{category}` for matchday {jornada}, match {partido}, between {team_one} and {team_two}, and posted the channel welcome message."
     },
     "team_signing": {
-      "completed": "Registered {inserted_count} signings in `{team_name}` within `{division_name}`. Current roster: {total_players}/6."
+      "completed": "Registered {inserted_count} signings in `{team_name}` within `{division_name}`. Current roster: {total_players}/6.",
+      "role_assignment_summary": "Role assignment: new={assigned_count}, already_set={already_count}, unresolved={unresolved_count}, ambiguous={ambiguous_count}.",
+      "role_assignment_unresolved": "No Discord match found for: {names}.",
+      "role_assignment_ambiguous": "Ambiguous Discord matches for: {names}."
+    },
+    "team_role_assignment": {
+      "completed": "Role synchronization completed for `{team_name}`: new={assigned_count}, already_set={already_count}, unresolved={unresolved_count}, ambiguous={ambiguous_count}.",
+      "unresolved": "No Discord match found for: {names}.",
+      "ambiguous": "Ambiguous Discord matches for: {names}."
     }
   }
 }

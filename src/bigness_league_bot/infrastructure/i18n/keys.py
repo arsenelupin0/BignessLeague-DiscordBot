@@ -133,16 +133,13 @@ class _CommandsTeamProfileViewMyTeam:
 class _CommandsTeamProfile:
     view_my_team: _CommandsTeamProfileViewMyTeam = _CommandsTeamProfileViewMyTeam()
 
-
 class _CommandsTeamSigningMakeSigningParametersMessageLink:
     description: TranslationKey = TranslationKey(
         key="commands.team_signing.make_signing.parameters.message_link.description",
         default_text="Enlace al mensaje de Discord que contiene la plantilla de fichajes.")
 
-
 class _CommandsTeamSigningMakeSigningParameters:
     message_link: _CommandsTeamSigningMakeSigningParametersMessageLink = _CommandsTeamSigningMakeSigningParametersMessageLink()
-
 
 class _CommandsTeamSigningMakeSigning:
     name: TranslationKey = TranslationKey(key="commands.team_signing.make_signing.name", default_text="hacer_fichaje")
@@ -150,9 +147,30 @@ class _CommandsTeamSigningMakeSigning:
                                                  default_text="Importa fichajes desde un mensaje enlazado de Discord hacia Google Sheets.")
     parameters: _CommandsTeamSigningMakeSigningParameters = _CommandsTeamSigningMakeSigningParameters()
 
-
 class _CommandsTeamSigning:
     make_signing: _CommandsTeamSigningMakeSigning = _CommandsTeamSigningMakeSigning()
+
+
+class _CommandsTeamRoleAssignmentSyncTeamRoleParametersTeamRole:
+    description: TranslationKey = TranslationKey(
+        key="commands.team_role_assignment.sync_team_role.parameters.team_role.description",
+        default_text="Rol del equipo que quieres recargar desde Google Sheets.")
+
+
+class _CommandsTeamRoleAssignmentSyncTeamRoleParameters:
+    team_role: _CommandsTeamRoleAssignmentSyncTeamRoleParametersTeamRole = _CommandsTeamRoleAssignmentSyncTeamRoleParametersTeamRole()
+
+
+class _CommandsTeamRoleAssignmentSyncTeamRole:
+    name: TranslationKey = TranslationKey(key="commands.team_role_assignment.sync_team_role.name",
+                                          default_text="asignar_rol_equipo_automatico")
+    description: TranslationKey = TranslationKey(key="commands.team_role_assignment.sync_team_role.description",
+                                                 default_text="Sincroniza en Discord los roles del equipo a partir de la hoja actual.")
+    parameters: _CommandsTeamRoleAssignmentSyncTeamRoleParameters = _CommandsTeamRoleAssignmentSyncTeamRoleParameters()
+
+
+class _CommandsTeamRoleAssignment:
+    sync_team_role: _CommandsTeamRoleAssignmentSyncTeamRole = _CommandsTeamRoleAssignmentSyncTeamRole()
 
 class _Commands:
     channel_management: _CommandsChannelManagement = _CommandsChannelManagement()
@@ -160,6 +178,7 @@ class _Commands:
     match_channel_creation: _CommandsMatchChannelCreation = _CommandsMatchChannelCreation()
     team_profile: _CommandsTeamProfile = _CommandsTeamProfile()
     team_signing: _CommandsTeamSigning = _CommandsTeamSigning()
+    team_role_assignment: _CommandsTeamRoleAssignment = _CommandsTeamRoleAssignment()
 
 class _MessagesAdminSync:
     invalid_scope: TranslationKey = TranslationKey(key="messages.admin.sync.invalid_scope",
@@ -452,7 +471,6 @@ class _ErrorsTeamProfile:
     team_not_found: TranslationKey = TranslationKey(key="errors.team_profile.team_not_found",
                                                     default_text="No se encontro ninguna fila en `{sheet_name}` para el rol `{role_name}`.")
 
-
 class _ErrorsTeamSigning:
     invalid_message_link: TranslationKey = TranslationKey(key="errors.team_signing.invalid_message_link",
                                                           default_text="El enlace del mensaje no es valido. Debe ser un enlace de Discord con servidor, canal y mensaje.")
@@ -481,6 +499,16 @@ class _ErrorsTeamSigning:
     google_write_failed: TranslationKey = TranslationKey(key="errors.team_signing.google_write_failed",
                                                          default_text="Google Sheets ha rechazado la escritura de fichajes: {details}.")
 
+
+class _ErrorsTeamRoleAssignment:
+    participant_role_missing: TranslationKey = TranslationKey(
+        key="errors.team_role_assignment.participant_role_missing",
+        default_text="No existe el rol de participante configurado: `{role_id}`.")
+    player_role_missing: TranslationKey = TranslationKey(key="errors.team_role_assignment.player_role_missing",
+                                                         default_text="No existe el rol de jugador configurado: `{role_id}`.")
+    team_role_not_found: TranslationKey = TranslationKey(key="errors.team_role_assignment.team_role_not_found",
+                                                         default_text="No existe un rol de equipo en Discord que coincida con `{team_name}`.")
+
 class _ErrorsSlash:
     forbidden: TranslationKey = TranslationKey(key="errors.slash.forbidden",
                                                default_text="No tienes permisos para ejecutar este comando.")
@@ -498,6 +526,7 @@ class _Errors:
     match_channel_creation: _ErrorsMatchChannelCreation = _ErrorsMatchChannelCreation()
     team_profile: _ErrorsTeamProfile = _ErrorsTeamProfile()
     team_signing: _ErrorsTeamSigning = _ErrorsTeamSigning()
+    team_role_assignment: _ErrorsTeamRoleAssignment = _ErrorsTeamRoleAssignment()
     slash: _ErrorsSlash = _ErrorsSlash()
 
 class _ActionsChannelManagement:
@@ -517,15 +546,30 @@ class _ActionsMatchChannelCreation:
     created_summary: TranslationKey = TranslationKey(key="actions.match_channel_creation.created_summary",
                                                      default_text="Se ha creado {channel} en `{category}` para la jornada {jornada}, partido {partido}, entre {team_one} y {team_two}, y se ha enviado el mensaje inicial del canal.")
 
-
 class _ActionsTeamSigning:
     completed: TranslationKey = TranslationKey(key="actions.team_signing.completed",
                                                default_text="Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.")
+    role_assignment_summary: TranslationKey = TranslationKey(key="actions.team_signing.role_assignment_summary",
+                                                             default_text="Asignacion de roles: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
+    role_assignment_unresolved: TranslationKey = TranslationKey(key="actions.team_signing.role_assignment_unresolved",
+                                                                default_text="Sin coincidencia en Discord: {names}.")
+    role_assignment_ambiguous: TranslationKey = TranslationKey(key="actions.team_signing.role_assignment_ambiguous",
+                                                               default_text="Coincidencias ambiguas en Discord: {names}.")
+
+
+class _ActionsTeamRoleAssignment:
+    completed: TranslationKey = TranslationKey(key="actions.team_role_assignment.completed",
+                                               default_text="Sincronizacion de roles completada para `{team_name}`: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
+    unresolved: TranslationKey = TranslationKey(key="actions.team_role_assignment.unresolved",
+                                                default_text="Sin coincidencia en Discord: {names}.")
+    ambiguous: TranslationKey = TranslationKey(key="actions.team_role_assignment.ambiguous",
+                                               default_text="Coincidencias ambiguas en Discord: {names}.")
 
 class _Actions:
     channel_management: _ActionsChannelManagement = _ActionsChannelManagement()
     match_channel_creation: _ActionsMatchChannelCreation = _ActionsMatchChannelCreation()
     team_signing: _ActionsTeamSigning = _ActionsTeamSigning()
+    team_role_assignment: _ActionsTeamRoleAssignment = _ActionsTeamRoleAssignment()
 
 class I18nKeys:
     commands: _Commands = _Commands()

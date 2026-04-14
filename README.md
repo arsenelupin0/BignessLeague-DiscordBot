@@ -30,7 +30,9 @@ pip install -e .
    `BOT_MATCH_CHANNEL_RULES_URL`.
 10. Si quieres usar `/ver_mi_equipo`, configura `BOT_GOOGLE_SERVICE_ACCOUNT_FILE`
     y `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`. `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME` es opcional.
-11. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
+11. Si quieres sincronizar roles automaticamente desde `/hacer_fichaje` o `/asignar_rol_equipo_automatico`,
+    ajusta `BOT_PARTICIPANT_ROLE_ID` y `BOT_PLAYER_ROLE_ID` con los roles base que deben recibir todos los jugadores.
+12. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
     Lo recomendado es colocar la fuente dentro de `aa_resources/fonts/`.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
@@ -38,6 +40,9 @@ dejas vacio, se sincronizan globalmente y Discord puede tardar en propagarlos.
 
 Para usar el comando de texto `!sync`, activa tambien `Message Content Intent` en el Developer Portal, dentro de la
 seccion `Bot`.
+
+Para usar la asignacion automatica de roles por nombre de miembro, activa tambien `Server Members Intent` en el
+Developer Portal.
 
 La sincronizacion ahora sigue una politica fija por proceso:
 
@@ -69,6 +74,7 @@ crea un canal de partido con permisos para ambos equipos.
 
 - `/ver_mi_equipo`: busca tu equipo en Google Sheets a partir de tu rol de Discord y muestra su ficha.
 - `/hacer_fichaje enlace_mensaje:<url>`: importa fichajes desde un mensaje de Discord hacia Google Sheets.
+- `/asignar_rol_equipo_automatico equipo:<rol>`: revisa la hoja del equipo y sincroniza los roles en Discord.
 
 Opciones disponibles en `/cerrar_canal`:
 
@@ -131,12 +137,24 @@ Restricciones de `/cerrar_canal`:
 - ordena la plantilla resultante de mayor a menor `MMR` antes de escribir
 - rellena las filas sobrantes del bloque con `-`
 - si no hay bloque libre o no caben todos los fichajes, rechaza la operacion
+- despues de escribir, intenta asignar automaticamente el rol general de participante y el rol del equipo a los
+  miembros que ya esten en Discord, junto con el rol general de jugador
+
+`/asignar_rol_equipo_automatico`:
+
+- solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
+- recibe un rol de equipo dentro del rango configurado
+- lee la plantilla actual del equipo desde Google Sheets
+- intenta asignar en Discord el rol general de participante y el rol del equipo a jugadores y staff tecnico
+- informa de miembros asignados, ya configurados, sin coincidencia y coincidencias ambiguas
 
 Configuracion de Google Sheets:
 
 - `BOT_GOOGLE_SERVICE_ACCOUNT_FILE`: ruta al JSON de la cuenta de servicio con acceso de lectura a la hoja
 - para `/hacer_fichaje`, esa misma cuenta de servicio necesita tambien acceso de escritura
 - `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`: ID del documento de Google Sheets
+- `BOT_PARTICIPANT_ROLE_ID`: rol general que se anade junto al rol del equipo cuando se sincronizan miembros
+- `BOT_PLAYER_ROLE_ID`: rol general de jugador que tambien se anade junto al rol del equipo
 - `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME`: opcional. Si lo dejas vacio, el bot buscara en todas las sheets del documento.
   Tambien admite varios nombres separados por comas si quieres limitar la busqueda.
 - la hoja debe estar organizada por bloques de equipo con este esquema: titulo del equipo, cabecera `Jugador`,

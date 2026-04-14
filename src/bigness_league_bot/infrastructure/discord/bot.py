@@ -34,6 +34,7 @@ LOGGER = logging.getLogger(__name__)
 class BignessLeagueBot(commands.Bot):
     def __init__(self, settings: Settings) -> None:
         intents = discord.Intents.default()
+        intents.members = True
         intents.message_content = True
 
         super().__init__(

@@ -101,6 +101,8 @@ class Settings:
     log_all_messages: bool = False
     channel_access_range_start_role_id: int = 1_364_338_457_106_845_717
     channel_access_range_end_role_id: int = 1_364_336_738_323_009_796
+    participant_role_id: int = 1_409_540_956_809_859_112
+    player_role_id: int = 1_376_297_465_220_825_108
     gold_division_category_id: int = 1_487_858_997_812_789_298
     silver_division_category_id: int = 1_487_859_192_256_790_630
     timezone: str = "local"
@@ -156,6 +158,14 @@ class Settings:
             "BOT_CHANNEL_ACCESS_RANGE_END_ROLE_ID",
             1_364_336_738_323_009_796,
         )
+        participant_role_id = _read_int(
+            "BOT_PARTICIPANT_ROLE_ID",
+            1_409_540_956_809_859_112,
+        )
+        player_role_id = _read_int(
+            "BOT_PLAYER_ROLE_ID",
+            1_376_297_465_220_825_108,
+        )
         gold_division_category_id = _read_int(
             "BOT_GOLD_DIVISION_CATEGORY_ID",
             1_487_858_997_812_789_298,
@@ -209,6 +219,8 @@ class Settings:
             log_all_messages=log_all_messages,
             channel_access_range_start_role_id=channel_access_range_start_role_id,
             channel_access_range_end_role_id=channel_access_range_end_role_id,
+            participant_role_id=participant_role_id,
+            player_role_id=player_role_id,
             gold_division_category_id=gold_division_category_id,
             silver_division_category_id=silver_division_category_id,
             timezone=timezone,

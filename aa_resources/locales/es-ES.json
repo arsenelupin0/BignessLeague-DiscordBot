@@ -83,6 +83,17 @@
           }
         }
       }
+    },
+    "team_role_assignment": {
+      "sync_team_role": {
+        "name": "asignar_rol_equipo_automatico",
+        "description": "Sincroniza en Discord los roles del equipo a partir de la hoja actual.",
+        "parameters": {
+          "team_role": {
+            "description": "Rol del equipo que quieres recargar desde Google Sheets."
+          }
+        }
+      }
     }
   },
   "messages": {
@@ -266,6 +277,11 @@
       "team_roster_full": "No hay hueco suficiente en `{team_name}` para estos fichajes. Huecos libres: {available_slots}. Fichajes solicitados: {requested_slots}.",
       "google_write_failed": "Google Sheets ha rechazado la escritura de fichajes: {details}."
     },
+    "team_role_assignment": {
+      "participant_role_missing": "No existe el rol de participante configurado: `{role_id}`.",
+      "player_role_missing": "No existe el rol de jugador configurado: `{role_id}`.",
+      "team_role_not_found": "No existe un rol de equipo en Discord que coincida con `{team_name}`."
+    },
     "slash": {
       "forbidden": "No tienes permisos para ejecutar este comando.",
       "bot_missing_permissions": "El bot necesita permisos suficientes para gestionar el canal.",
@@ -286,7 +302,15 @@
       "created_summary": "Se ha creado {channel} en `{category}` para la jornada {jornada}, partido {partido}, entre {team_one} y {team_two}, y se ha enviado el mensaje inicial del canal."
     },
     "team_signing": {
-      "completed": "Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6."
+      "completed": "Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.",
+      "role_assignment_summary": "Asignacion de roles: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
+      "role_assignment_unresolved": "Sin coincidencia en Discord: {names}.",
+      "role_assignment_ambiguous": "Coincidencias ambiguas en Discord: {names}."
+    },
+    "team_role_assignment": {
+      "completed": "Sincronizacion de roles completada para `{team_name}`: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
+      "unresolved": "Sin coincidencia en Discord: {names}.",
+      "ambiguous": "Coincidencias ambiguas en Discord: {names}."
     }
   }
 }
