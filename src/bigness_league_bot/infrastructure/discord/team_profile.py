@@ -10,10 +10,12 @@
 
 from __future__ import annotations
 
+import html
 import math
 import re
 from io import BytesIO
 from pathlib import Path
+from urllib.parse import unquote
 
 import discord
 import unicodedata
@@ -647,10 +649,22 @@ def _display_tracker_value(url: str | None, missing_value: str) -> str:
             break
 
     normalized_url = normalized_url.rstrip("/")
+    if normalized_url.endswith("/overview"):
+        normalized_url = normalized_url[: -len("/overview")]
+
     if "/" in normalized_url:
-        normalized_url = normalized_url.rsplit("/", 1)[0]
+        base_path, tracker_identifier = normalized_url.rsplit("/", 1)
+        normalized_url = (
+            f"{base_path}/"
+            f"{_decode_tracker_identifier(tracker_identifier)}"
+        )
 
     return normalized_url or missing_value
+
+
+def _decode_tracker_identifier(value: str) -> str:
+    decoded_value = html.unescape(unquote(value))
+    return decoded_value.replace("/", "%2F")
 
 
 def _build_team_profile_file_name(team_name: str) -> str:

@@ -167,7 +167,7 @@ class _MessagesTeamProfileAnsiSummary:
     remaining_signings: TranslationKey = TranslationKey(key="messages.team_profile.ansi.summary.remaining_signings",
                                                         default_text="Fichajes restantes")
     team_average: TranslationKey = TranslationKey(key="messages.team_profile.ansi.summary.team_average",
-                                                  default_text="Media total del equipo (los 3 mejores)")
+                                                  default_text="Media total del equipo (los 3 \"mejores\")")
 
 class _MessagesTeamProfileAnsiTracker:
     title: TranslationKey = TranslationKey(key="messages.team_profile.ansi.tracker.title",
