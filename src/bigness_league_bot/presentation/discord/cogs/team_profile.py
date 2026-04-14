@@ -119,6 +119,7 @@ class TeamProfileCog(commands.Cog):
 
             team_role = member_team_roles[0]
 
+        await interaction.response.defer(thinking=True)
         repository = GoogleSheetsTeamRepository(settings)
         team_profile = await repository.find_team_profile_for_role(team_role)
         image_file = build_team_profile_image_file(
@@ -133,8 +134,12 @@ class TeamProfileCog(commands.Cog):
             localizer=interaction.client.localizer,
             locale=interaction.locale,
         )
-        await interaction.response.send_message(file=image_file, view=view)
-        view.message = await interaction.original_response()
+        message = await interaction.followup.send(
+            file=image_file,
+            view=view,
+            wait=True,
+        )
+        view.message = message
 
     async def cog_app_command_error(
             self,

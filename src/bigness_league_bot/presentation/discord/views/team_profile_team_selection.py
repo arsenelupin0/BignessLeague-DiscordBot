@@ -141,12 +141,10 @@ class TeamProfileTeamSelectionView(discord.ui.View):
             role: discord.Role,
     ) -> None:
         self.locale = interaction.locale
+        await interaction.response.defer()
         repository = GoogleSheetsTeamRepository(interaction.client.settings)
         team_profile = await repository.find_team_profile_for_role(role)
-        await self._edit_message_with_team_profile(
-            interaction,
-            team_profile=team_profile,
-        )
+        await self._edit_message_with_team_profile(interaction, team_profile=team_profile)
         self.stop()
 
     async def cancel(
@@ -175,7 +173,7 @@ class TeamProfileTeamSelectionView(discord.ui.View):
             localizer=interaction.client.localizer,
             locale=interaction.locale,
         )
-        await interaction.response.edit_message(
+        await interaction.message.edit(
             content=None,
             attachments=[image_file],
             view=tracker_view,
