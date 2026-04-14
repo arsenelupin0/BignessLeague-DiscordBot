@@ -100,6 +100,9 @@
         "tracker": {
           "title": "Link directo al tracker",
           "missing_value": "Sin enlace"
+        },
+        "fallback": {
+          "file_notice": "La ficha completa supera el limite visible de Discord y se adjunta en un unico fichero ANSI."
         }
       }
     },
@@ -208,6 +211,7 @@
       "google_service_account_not_found": "No existe el fichero de credenciales configurado para Google Sheets: `{path}`.",
       "google_spreadsheet_id_missing": "Falta configurar `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`.",
       "google_request_failed": "Google Sheets ha rechazado la consulta: {details}.",
+      "image_dependencies_missing": "Falta la dependencia `Pillow` para renderizar la ficha del equipo como imagen. Ejecuta `pip install -e .` para instalarla.",
       "team_sheet_empty": "La hoja `{sheet_name}` no tiene datos utilizables.",
       "team_sheet_layout_invalid": "La hoja `{sheet_name}` no sigue el formato esperado para el equipo `{role_name}`.",
       "team_not_found": "No se encontro ninguna fila en `{sheet_name}` para el rol `{role_name}`."

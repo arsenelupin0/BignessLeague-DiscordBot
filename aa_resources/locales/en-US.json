@@ -100,6 +100,9 @@
         "tracker": {
           "title": "Direct tracker link",
           "missing_value": "No link"
+        },
+        "fallback": {
+          "file_notice": "The full profile exceeds Discord's visible message limit and is attached as a single ANSI file."
         }
       }
     },
@@ -208,6 +211,7 @@
       "google_service_account_not_found": "The configured Google Sheets credentials file does not exist: `{path}`.",
       "google_spreadsheet_id_missing": "You must configure `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`.",
       "google_request_failed": "Google Sheets rejected the request: {details}.",
+      "image_dependencies_missing": "The `Pillow` dependency is missing to render the team profile as an image. Run `pip install -e .` to install it.",
       "team_sheet_empty": "The sheet `{sheet_name}` has no usable data.",
       "team_sheet_layout_invalid": "The sheet `{sheet_name}` does not match the expected format for team `{role_name}`.",
       "team_not_found": "No row was found in `{sheet_name}` for role `{role_name}`."

@@ -113,7 +113,7 @@ Restricciones de `/cerrar_canal`:
 - busca el bloque de tu equipo en la hoja de Google Sheets configurada
 - toma la division directamente del nombre de la hoja
 - lee el tracker desde el hipervinculo de la celda `Jugador`
-- devuelve la ficha del equipo como tablas ANSI en varios mensajes si hace falta
+- devuelve la ficha del equipo como una imagen PNG en un unico mensaje del bot
 
 Configuracion de Google Sheets:
 
@@ -124,6 +124,7 @@ Configuracion de Google Sheets:
 - la hoja debe estar organizada por bloques de equipo con este esquema: titulo del equipo, cabecera `Jugador`,
   `Discord`, `Epic Name`, `Rocket In-Game Name`, `MMR`, hasta 6 jugadores y una fila de resumen con fichajes restantes
   y media del equipo
+- el render de imagen usa `Pillow`, asi que tras actualizar dependencias conviene ejecutar `pip install -e .`
 
 ## Localizacion
 

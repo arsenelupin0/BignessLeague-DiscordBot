@@ -116,12 +116,10 @@ class _CommandsMatchChannelCreationCreateMatchChannel:
 class _CommandsMatchChannelCreation:
     create_match_channel: _CommandsMatchChannelCreationCreateMatchChannel = _CommandsMatchChannelCreationCreateMatchChannel()
 
-
 class _CommandsTeamProfileViewMyTeam:
     name: TranslationKey = TranslationKey(key="commands.team_profile.view_my_team.name", default_text="ver_mi_equipo")
     description: TranslationKey = TranslationKey(key="commands.team_profile.view_my_team.description",
                                                  default_text="Muestra la ficha de tu equipo segun tu rol y Google Sheets.")
-
 
 class _CommandsTeamProfile:
     view_my_team: _CommandsTeamProfileViewMyTeam = _CommandsTeamProfileViewMyTeam()
@@ -154,7 +152,6 @@ class _MessagesAdmin:
     sync: _MessagesAdminSync = _MessagesAdminSync()
     slash_status: _MessagesAdminSlashStatus = _MessagesAdminSlashStatus()
 
-
 class _MessagesTeamProfileAnsiHeaders:
     position: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.position", default_text="POS")
     player: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.player", default_text="Jugador")
@@ -165,13 +162,11 @@ class _MessagesTeamProfileAnsiHeaders:
                                                  default_text="Rocket In-Game Name")
     mmr: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.mmr", default_text="MMR")
 
-
 class _MessagesTeamProfileAnsiSummary:
     remaining_signings: TranslationKey = TranslationKey(key="messages.team_profile.ansi.summary.remaining_signings",
                                                         default_text="Fichajes restantes")
     team_average: TranslationKey = TranslationKey(key="messages.team_profile.ansi.summary.team_average",
                                                   default_text="Media total del equipo (los 3 mejores)")
-
 
 class _MessagesTeamProfileAnsiTracker:
     title: TranslationKey = TranslationKey(key="messages.team_profile.ansi.tracker.title",
@@ -180,11 +175,15 @@ class _MessagesTeamProfileAnsiTracker:
                                                    default_text="Sin enlace")
 
 
+class _MessagesTeamProfileAnsiFallback:
+    file_notice: TranslationKey = TranslationKey(key="messages.team_profile.ansi.fallback.file_notice",
+                                                 default_text="La ficha completa supera el limite visible de Discord y se adjunta en un unico fichero ANSI.")
+
 class _MessagesTeamProfileAnsi:
     headers: _MessagesTeamProfileAnsiHeaders = _MessagesTeamProfileAnsiHeaders()
     summary: _MessagesTeamProfileAnsiSummary = _MessagesTeamProfileAnsiSummary()
     tracker: _MessagesTeamProfileAnsiTracker = _MessagesTeamProfileAnsiTracker()
-
+    fallback: _MessagesTeamProfileAnsiFallback = _MessagesTeamProfileAnsiFallback()
 
 class _MessagesTeamProfile:
     ansi: _MessagesTeamProfileAnsi = _MessagesTeamProfileAnsi()
@@ -367,7 +366,6 @@ class _ErrorsMatchChannelCreation:
     invalid_time_format: TranslationKey = TranslationKey(key="errors.match_channel_creation.invalid_time_format",
                                                          default_text="La hora no es valida. Usa el formato `HH:MM` en 24 horas.")
 
-
 class _ErrorsTeamProfile:
     team_role_missing: TranslationKey = TranslationKey(key="errors.team_profile.team_role_missing",
                                                        default_text="No tienes ningun rol de equipo dentro del rango configurado para este comando.")
@@ -386,6 +384,8 @@ class _ErrorsTeamProfile:
         default_text="Falta configurar `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`.")
     google_request_failed: TranslationKey = TranslationKey(key="errors.team_profile.google_request_failed",
                                                            default_text="Google Sheets ha rechazado la consulta: {details}.")
+    image_dependencies_missing: TranslationKey = TranslationKey(key="errors.team_profile.image_dependencies_missing",
+                                                                default_text="Falta la dependencia `Pillow` para renderizar la ficha del equipo como imagen. Ejecuta `pip install -e .` para instalarla.")
     team_sheet_empty: TranslationKey = TranslationKey(key="errors.team_profile.team_sheet_empty",
                                                       default_text="La hoja `{sheet_name}` no tiene datos utilizables.")
     team_sheet_layout_invalid: TranslationKey = TranslationKey(key="errors.team_profile.team_sheet_layout_invalid",

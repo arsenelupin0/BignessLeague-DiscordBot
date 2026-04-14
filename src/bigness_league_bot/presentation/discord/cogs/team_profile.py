@@ -27,7 +27,7 @@ from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
 )
 from bigness_league_bot.infrastructure.discord.team_profile import (
-    build_team_profile_ansi_sections,
+    build_team_profile_image_file,
 )
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     GoogleSheetsTeamRepository,
@@ -68,14 +68,12 @@ class TeamProfileCog(commands.Cog):
 
         repository = GoogleSheetsTeamRepository(settings)
         team_profile = await repository.find_team_profile_for_role(team_role)
-        ansi_sections = build_team_profile_ansi_sections(
+        image_file = build_team_profile_image_file(
             team_profile=team_profile,
             localizer=interaction.client.localizer,
             locale=interaction.locale,
         )
-        await interaction.response.send_message(ansi_sections[0])
-        for section in ansi_sections[1:]:
-            await interaction.followup.send(section)
+        await interaction.response.send_message(file=image_file)
 
     async def cog_app_command_error(
             self,

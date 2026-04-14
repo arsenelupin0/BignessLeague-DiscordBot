@@ -10,10 +10,12 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
 MAX_TEAM_PROFILE_PLAYERS = 6
+MMR_DIGITS_PATTERN = re.compile(r"\d+")
 
 
 def _normalize_value(value: str | None) -> str:
@@ -26,6 +28,14 @@ def _normalize_value(value: str | None) -> str:
 def _normalize_optional_value(value: str | None) -> str | None:
     normalized_value = _normalize_value(value)
     return normalized_value or None
+
+
+def _parse_mmr_sort_value(value: str) -> int:
+    matches = MMR_DIGITS_PATTERN.findall(value)
+    if not matches:
+        return -1
+
+    return int("".join(matches))
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,10 +79,10 @@ def build_team_profile(
         top_three_average: str,
         players: Iterable[TeamProfilePlayer],
 ) -> TeamProfile:
-    normalized_players: list[TeamProfilePlayer] = []
-    for index, player in enumerate(players, start=1):
+    collected_players: list[TeamProfilePlayer] = []
+    for player in players:
         normalized_player = TeamProfilePlayer(
-            position=player.position or index,
+            position=player.position,
             player_name=_normalize_value(player.player_name),
             discord_name=_normalize_value(player.discord_name),
             epic_name=_normalize_value(player.epic_name),
@@ -83,9 +93,31 @@ def build_team_profile(
         if not normalized_player.has_content:
             continue
 
-        normalized_players.append(normalized_player)
-        if len(normalized_players) >= MAX_TEAM_PROFILE_PLAYERS:
-            break
+        collected_players.append(normalized_player)
+
+    sorted_players = sorted(
+        collected_players,
+        key=lambda player: (
+            _parse_mmr_sort_value(player.mmr),
+            player.player_name.casefold(),
+        ),
+        reverse=True,
+    )
+    normalized_players = [
+        TeamProfilePlayer(
+            position=index,
+            player_name=player.player_name,
+            discord_name=player.discord_name,
+            epic_name=player.epic_name,
+            rocket_name=player.rocket_name,
+            mmr=player.mmr,
+            tracker_url=player.tracker_url,
+        )
+        for index, player in enumerate(
+            sorted_players[:MAX_TEAM_PROFILE_PLAYERS],
+            start=1,
+        )
+    ]
 
     return TeamProfile(
         team_name=_normalize_value(team_name),
