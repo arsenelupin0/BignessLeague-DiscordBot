@@ -109,6 +109,7 @@ class Settings:
     google_service_account_file: Path | None = None
     google_sheets_spreadsheet_id: str = ""
     google_sheets_team_sheet_name: str = ""
+    team_profile_font_path: Path | None = None
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -189,6 +190,9 @@ class Settings:
             "BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME",
             "",
         )
+        team_profile_font_path = _resolve_optional_storage_path(
+            "BOT_TEAM_PROFILE_FONT_PATH"
+        )
 
         return cls(
             token=token,
@@ -213,4 +217,5 @@ class Settings:
             google_service_account_file=google_service_account_file,
             google_sheets_spreadsheet_id=google_sheets_spreadsheet_id,
             google_sheets_team_sheet_name=google_sheets_team_sheet_name,
+            team_profile_font_path=team_profile_font_path,
         )

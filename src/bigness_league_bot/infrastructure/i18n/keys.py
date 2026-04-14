@@ -155,6 +155,7 @@ class _MessagesAdmin:
 class _MessagesTeamProfileAnsiHeaders:
     position: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.position", default_text="POS")
     player: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.player", default_text="Jugador")
+    role: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.role", default_text="ROL")
     discord: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.discord", default_text="Discord")
     epic_name: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.epic_name",
                                                default_text="Epic Name")
@@ -175,6 +176,10 @@ class _MessagesTeamProfileAnsiTracker:
                                                    default_text="Sin enlace")
 
 
+class _MessagesTeamProfileAnsiTechnicalStaff:
+    title: TranslationKey = TranslationKey(key="messages.team_profile.ansi.technical_staff.title",
+                                           default_text="STAFF T\u00c9CNICO")
+
 class _MessagesTeamProfileAnsiFallback:
     file_notice: TranslationKey = TranslationKey(key="messages.team_profile.ansi.fallback.file_notice",
                                                  default_text="La ficha completa supera el limite visible de Discord y se adjunta en un unico fichero ANSI.")
@@ -183,6 +188,7 @@ class _MessagesTeamProfileAnsi:
     headers: _MessagesTeamProfileAnsiHeaders = _MessagesTeamProfileAnsiHeaders()
     summary: _MessagesTeamProfileAnsiSummary = _MessagesTeamProfileAnsiSummary()
     tracker: _MessagesTeamProfileAnsiTracker = _MessagesTeamProfileAnsiTracker()
+    technical_staff: _MessagesTeamProfileAnsiTechnicalStaff = _MessagesTeamProfileAnsiTechnicalStaff()
     fallback: _MessagesTeamProfileAnsiFallback = _MessagesTeamProfileAnsiFallback()
 
 class _MessagesTeamProfile:

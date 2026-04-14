@@ -88,6 +88,7 @@
         "headers": {
           "position": "POS",
           "player": "Player",
+          "role": "ROLE",
           "discord": "Discord",
           "epic_name": "Epic Name",
           "rocket_name": "Rocket In-Game Name",
@@ -100,6 +101,9 @@
         "tracker": {
           "title": "Direct tracker link",
           "missing_value": "No link"
+        },
+        "technical_staff": {
+          "title": "TECHNICAL STAFF"
         },
         "fallback": {
           "file_notice": "The full profile exceeds Discord's visible message limit and is attached as a single ANSI file."

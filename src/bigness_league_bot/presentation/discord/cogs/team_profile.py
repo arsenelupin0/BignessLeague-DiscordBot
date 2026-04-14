@@ -72,6 +72,7 @@ class TeamProfileCog(commands.Cog):
             team_profile=team_profile,
             localizer=interaction.client.localizer,
             locale=interaction.locale,
+            font_path=settings.team_profile_font_path,
         )
         await interaction.response.send_message(file=image_file)
 

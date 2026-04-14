@@ -88,6 +88,7 @@
         "headers": {
           "position": "POS",
           "player": "Jugador",
+          "role": "ROL",
           "discord": "Discord",
           "epic_name": "Epic Name",
           "rocket_name": "Rocket In-Game Name",
@@ -100,6 +101,9 @@
         "tracker": {
           "title": "Link directo al tracker",
           "missing_value": "Sin enlace"
+        },
+        "technical_staff": {
+          "title": "STAFF TÉCNICO"
         },
         "fallback": {
           "file_notice": "La ficha completa supera el limite visible de Discord y se adjunta en un unico fichero ANSI."

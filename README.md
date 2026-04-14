@@ -30,6 +30,8 @@ pip install -e .
    `BOT_MATCH_CHANNEL_RULES_URL`.
 10. Si quieres usar `/ver_mi_equipo`, configura `BOT_GOOGLE_SERVICE_ACCOUNT_FILE`
     y `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`. `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME` es opcional.
+11. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
+    Lo recomendado es colocar la fuente dentro de `aa_resources/fonts/`.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
 dejas vacio, se sincronizan globalmente y Discord puede tardar en propagarlos.
@@ -114,6 +116,8 @@ Restricciones de `/cerrar_canal`:
 - toma la division directamente del nombre de la hoja
 - lee el tracker desde el hipervinculo de la celda `Jugador`
 - devuelve la ficha del equipo como una imagen PNG en un unico mensaje del bot
+- permite fijar una fuente propia con `BOT_TEAM_PROFILE_FONT_PATH`, por ejemplo
+  `aa_resources/fonts/MapleMono-NF-CN-Regular.ttf`
 
 Configuracion de Google Sheets:
 
@@ -125,6 +129,8 @@ Configuracion de Google Sheets:
   `Discord`, `Epic Name`, `Rocket In-Game Name`, `MMR`, hasta 6 jugadores y una fila de resumen con fichajes restantes
   y media del equipo
 - el render de imagen usa `Pillow`, asi que tras actualizar dependencias conviene ejecutar `pip install -e .`
+- si quieres una fuente concreta para ese render, deja el archivo `.ttf`, `.ttc` u `.otf` dentro de
+  `aa_resources/fonts/` y apunta `BOT_TEAM_PROFILE_FONT_PATH` a esa ruta relativa
 
 ## Localizacion
 

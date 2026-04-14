@@ -20,6 +20,7 @@ import discord
 from bigness_league_bot.application.services.team_profile import (
     TeamProfile,
     TeamProfilePlayer,
+    TeamProfileStaffMember,
     build_team_profile,
 )
 from bigness_league_bot.core.errors import CommandUserError
@@ -40,7 +41,16 @@ TEAM_BLOCK_HEADER_ROW_OFFSET = 1
 TEAM_BLOCK_PLAYERS_ROW_OFFSET = 2
 TEAM_BLOCK_MAX_PLAYERS = 6
 TEAM_BLOCK_SUMMARY_ROW_OFFSET = TEAM_BLOCK_PLAYERS_ROW_OFFSET + TEAM_BLOCK_MAX_PLAYERS
+TEAM_BLOCK_TECHNICAL_STAFF_ROW_OFFSET = TEAM_BLOCK_SUMMARY_ROW_OFFSET + 1
+TEAM_BLOCK_MAX_TECHNICAL_STAFF = 6
 TEAM_BLOCK_COLUMN_COUNT = len(TEAM_BLOCK_HEADERS)
+TECHNICAL_STAFF_TITLE_NORMALIZED = "staff tecnico"
+TECHNICAL_STAFF_HEADERS_NORMALIZED = (
+    "rol",
+    "discord",
+    "epic name",
+    "rocket in-game name",
+)
 
 
 class TeamSheetError(CommandUserError):
@@ -75,6 +85,17 @@ def _normalize_cell_value(value: Any) -> str:
     if value is None:
         return ""
     return str(value).strip()
+
+
+def _normalize_lookup_text(value: str) -> str:
+    normalized = _normalize_cell_value(value).casefold()
+    return (
+        normalized.replace("á", "a")
+        .replace("é", "e")
+        .replace("í", "i")
+        .replace("ó", "o")
+        .replace("ú", "u")
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -170,6 +191,10 @@ class GoogleSheetsTeamRepository:
                 team_block,
                 worksheet_name=worksheet_title,
             )
+            technical_staff = self._parse_technical_staff(
+                cell_grid,
+                team_block,
+            )
 
             return build_team_profile(
                 team_name=team_block.title,
@@ -177,6 +202,7 @@ class GoogleSheetsTeamRepository:
                 remaining_signings=remaining_signings,
                 top_three_average=top_three_average,
                 players=players,
+                technical_staff=technical_staff,
             )
 
         raise TeamSheetRowNotFoundError(
@@ -414,6 +440,99 @@ class GoogleSheetsTeamRepository:
             )
 
         return remaining_signings, top_three_average
+
+    @staticmethod
+    def _parse_technical_staff(
+            cell_grid: dict[int, dict[int, SheetCell]],
+            block: TeamBlockAnchor,
+    ) -> tuple[TeamProfileStaffMember, ...]:
+        start_row = GoogleSheetsTeamRepository._find_technical_staff_start_row(
+            cell_grid,
+            block,
+        )
+        if start_row is None:
+            return ()
+
+        members: list[TeamProfileStaffMember] = []
+        for offset in range(TEAM_BLOCK_MAX_TECHNICAL_STAFF):
+            row_index = start_row + offset
+            role_cell = GoogleSheetsTeamRepository._get_cell(
+                cell_grid,
+                row_index,
+                block.start_column,
+            )
+            discord_cell = GoogleSheetsTeamRepository._get_cell(
+                cell_grid,
+                row_index,
+                block.start_column + 1,
+            )
+            epic_cell = GoogleSheetsTeamRepository._get_cell(
+                cell_grid,
+                row_index,
+                block.start_column + 2,
+            )
+            rocket_cell = GoogleSheetsTeamRepository._get_cell(
+                cell_grid,
+                row_index,
+                block.start_column + 3,
+            )
+
+            if not any(
+                    (
+                            role_cell.value,
+                            discord_cell.value,
+                            epic_cell.value,
+                            rocket_cell.value,
+                    )
+            ):
+                continue
+
+            members.append(
+                TeamProfileStaffMember(
+                    role_name=role_cell.value,
+                    discord_name=discord_cell.value,
+                    epic_name=epic_cell.value,
+                    rocket_name=rocket_cell.value,
+                )
+            )
+
+        return tuple(members)
+
+    @staticmethod
+    def _find_technical_staff_start_row(
+            cell_grid: dict[int, dict[int, SheetCell]],
+            block: TeamBlockAnchor,
+    ) -> int | None:
+        search_start_row = block.title_row + TEAM_BLOCK_TECHNICAL_STAFF_ROW_OFFSET
+        search_end_row = search_start_row + TEAM_BLOCK_MAX_TECHNICAL_STAFF + 4
+        for row_index in range(search_start_row, search_end_row):
+            title_value = _normalize_lookup_text(
+                GoogleSheetsTeamRepository._get_cell_value(
+                    cell_grid,
+                    row_index,
+                    block.start_column,
+                )
+            )
+            if title_value != TECHNICAL_STAFF_TITLE_NORMALIZED:
+                continue
+
+            headers_row = row_index + 1
+            header_values = tuple(
+                _normalize_lookup_text(
+                    GoogleSheetsTeamRepository._get_cell_value(
+                        cell_grid,
+                        headers_row,
+                        block.start_column + offset,
+                    )
+                )
+                for offset in range(len(TECHNICAL_STAFF_HEADERS_NORMALIZED))
+            )
+            if header_values == TECHNICAL_STAFF_HEADERS_NORMALIZED:
+                return headers_row + 1
+
+            return row_index + 1
+
+        return None
 
     @staticmethod
     def _get_cell(

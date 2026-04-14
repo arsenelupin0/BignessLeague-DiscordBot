@@ -63,12 +63,32 @@ class TeamProfilePlayer:
 
 
 @dataclass(frozen=True, slots=True)
+class TeamProfileStaffMember:
+    role_name: str
+    discord_name: str
+    epic_name: str
+    rocket_name: str
+
+    @property
+    def has_content(self) -> bool:
+        return any(
+            (
+                self.role_name,
+                self.discord_name,
+                self.epic_name,
+                self.rocket_name,
+            )
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class TeamProfile:
     team_name: str
     division_name: str
     remaining_signings: str
     top_three_average: str
     players: tuple[TeamProfilePlayer, ...]
+    technical_staff: tuple[TeamProfileStaffMember, ...]
 
 
 def build_team_profile(
@@ -78,6 +98,7 @@ def build_team_profile(
         remaining_signings: str,
         top_three_average: str,
         players: Iterable[TeamProfilePlayer],
+        technical_staff: Iterable[TeamProfileStaffMember] = (),
 ) -> TeamProfile:
     collected_players: list[TeamProfilePlayer] = []
     for player in players:
@@ -118,6 +139,18 @@ def build_team_profile(
             start=1,
         )
     ]
+    normalized_staff: list[TeamProfileStaffMember] = []
+    for member in technical_staff:
+        normalized_member = TeamProfileStaffMember(
+            role_name=_normalize_value(member.role_name),
+            discord_name=_normalize_value(member.discord_name),
+            epic_name=_normalize_value(member.epic_name),
+            rocket_name=_normalize_value(member.rocket_name),
+        )
+        if not normalized_member.has_content:
+            continue
+
+        normalized_staff.append(normalized_member)
 
     return TeamProfile(
         team_name=_normalize_value(team_name),
@@ -125,4 +158,5 @@ def build_team_profile(
         remaining_signings=_normalize_value(remaining_signings),
         top_three_average=_normalize_value(top_three_average),
         players=tuple(normalized_players),
+        technical_staff=tuple(normalized_staff),
     )
