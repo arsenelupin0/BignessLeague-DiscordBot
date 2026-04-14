@@ -116,6 +116,7 @@ Restricciones de `/cerrar_canal`:
 - toma la division directamente del nombre de la hoja
 - lee el tracker desde el hipervinculo de la celda `Jugador`
 - devuelve la ficha del equipo como una imagen PNG en un unico mensaje del bot
+- adjunta botones para listar los trackers en un mensaje aparte o quitar la botonera
 - permite fijar una fuente propia con `BOT_TEAM_PROFILE_FONT_PATH`, por ejemplo
   `aa_resources/fonts/MapleMono-NF-CN-Regular.ttf`
 

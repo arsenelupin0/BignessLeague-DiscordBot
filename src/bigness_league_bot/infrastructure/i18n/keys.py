@@ -175,7 +175,6 @@ class _MessagesTeamProfileAnsiTracker:
     missing_value: TranslationKey = TranslationKey(key="messages.team_profile.ansi.tracker.missing_value",
                                                    default_text="Sin enlace")
 
-
 class _MessagesTeamProfileAnsiTechnicalStaff:
     title: TranslationKey = TranslationKey(key="messages.team_profile.ansi.technical_staff.title",
                                            default_text="STAFF T\u00c9CNICO")
@@ -191,8 +190,26 @@ class _MessagesTeamProfileAnsi:
     technical_staff: _MessagesTeamProfileAnsiTechnicalStaff = _MessagesTeamProfileAnsiTechnicalStaff()
     fallback: _MessagesTeamProfileAnsiFallback = _MessagesTeamProfileAnsiFallback()
 
+
+class _MessagesTeamProfileButtons:
+    list_trackers: TranslationKey = TranslationKey(key="messages.team_profile.buttons.list_trackers",
+                                                   default_text="Listar trackers")
+    cancel: TranslationKey = TranslationKey(key="messages.team_profile.buttons.cancel", default_text="Cancelar")
+
+
+class _MessagesTeamProfileTrackers:
+    title: TranslationKey = TranslationKey(key="messages.team_profile.trackers.title", default_text="# Trackers")
+    entry: TranslationKey = TranslationKey(key="messages.team_profile.trackers.entry",
+                                           default_text="{emoji} -> [{display_url}]({destination_url})")
+    empty: TranslationKey = TranslationKey(key="messages.team_profile.trackers.empty", default_text="-")
+    missing_value: TranslationKey = TranslationKey(key="messages.team_profile.trackers.missing_value", default_text="-")
+
 class _MessagesTeamProfile:
     ansi: _MessagesTeamProfileAnsi = _MessagesTeamProfileAnsi()
+    buttons: _MessagesTeamProfileButtons = _MessagesTeamProfileButtons()
+    trackers: _MessagesTeamProfileTrackers = _MessagesTeamProfileTrackers()
+    only_actor: TranslationKey = TranslationKey(key="messages.team_profile.only_actor",
+                                                default_text="Solo quien ejecuto el comando puede usar estos botones.")
 
 class _MessagesChannelManagement:
     delete_prompt: TranslationKey = TranslationKey(key="messages.channel_management.delete_prompt",

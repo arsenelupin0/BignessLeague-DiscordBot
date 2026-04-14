@@ -108,7 +108,18 @@
         "fallback": {
           "file_notice": "La ficha completa supera el limite visible de Discord y se adjunta en un unico fichero ANSI."
         }
-      }
+      },
+      "buttons": {
+        "list_trackers": "Listar trackers",
+        "cancel": "Cancelar"
+      },
+      "trackers": {
+        "title": "# Trackers",
+        "entry": "{emoji} -> [{display_url}]({destination_url})",
+        "empty": "-",
+        "missing_value": "-"
+      },
+      "only_actor": "Solo quien ejecuto el comando puede usar estos botones."
     },
     "channel_management": {
       "delete_prompt": "Vas a eliminar el canal `{channel_name}` de forma permanente.\nRoles protegidos del sistema: {protected_roles}.\nConfirma solo si estas completamente seguro.",

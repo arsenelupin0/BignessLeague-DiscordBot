@@ -299,6 +299,49 @@ def build_team_profile_image_file(
     )
 
 
+def build_team_profile_tracker_markdown(
+        *,
+        team_profile: TeamProfile,
+        localizer: LocalizationService,
+        locale: str | discord.Locale | None,
+) -> str:
+    title = localizer.translate(
+        I18N.messages.team_profile.trackers.title,
+        locale=locale,
+    )
+    empty_message = localizer.translate(
+        I18N.messages.team_profile.trackers.empty,
+        locale=locale,
+    )
+    entries: list[str] = []
+    for player in team_profile.players:
+        destination_url = _normalize_tracker_destination_url(player.tracker_url)
+        if destination_url is None:
+            continue
+
+        display_url = _display_tracker_value(
+            player.tracker_url,
+            localizer.translate(
+                I18N.messages.team_profile.trackers.missing_value,
+                locale=locale,
+            ),
+        )
+        entries.append(
+            localizer.translate(
+                I18N.messages.team_profile.trackers.entry,
+                locale=locale,
+                emoji=_position_emoji(player.position),
+                display_url=_escape_markdown_link_label(display_url),
+                destination_url=destination_url,
+            )
+        )
+
+    if not entries:
+        return f"{title}\n{empty_message}"
+
+    return "\n".join([title, *entries])
+
+
 def _wrap_ansi_blocks(lines: list[str]) -> tuple[str, ...]:
     if not lines:
         return ()
@@ -332,17 +375,12 @@ def _build_team_profile_ansi_lines(
         localizer=localizer,
         locale=locale,
     )
-    tracker_lines = _build_tracker_lines(
-        team_profile,
-        localizer=localizer,
-        locale=locale,
-    )
     technical_staff_lines = _build_technical_staff_lines(
         team_profile,
         localizer=localizer,
         locale=locale,
     )
-    lines = title_lines + roster_lines + [""] + tracker_lines
+    lines = title_lines + roster_lines
     if technical_staff_lines:
         lines += [""] + technical_staff_lines
 
@@ -639,18 +677,15 @@ def _header(
 
 
 def _display_tracker_value(url: str | None, missing_value: str) -> str:
-    if not url:
+    destination_url = _normalize_tracker_destination_url(url)
+    if destination_url is None:
         return missing_value
 
-    normalized_url = _sanitize_text(url)
+    normalized_url = destination_url
     for prefix in ("https://", "http://"):
         if normalized_url.startswith(prefix):
             normalized_url = normalized_url[len(prefix):]
             break
-
-    normalized_url = normalized_url.rstrip("/")
-    if normalized_url.endswith("/overview"):
-        normalized_url = normalized_url[: -len("/overview")]
 
     if "/" in normalized_url:
         base_path, tracker_identifier = normalized_url.rsplit("/", 1)
@@ -665,6 +700,40 @@ def _display_tracker_value(url: str | None, missing_value: str) -> str:
 def _decode_tracker_identifier(value: str) -> str:
     decoded_value = html.unescape(unquote(value))
     return decoded_value.replace("/", "%2F")
+
+
+def _normalize_tracker_destination_url(url: str | None) -> str | None:
+    if not url:
+        return None
+
+    normalized_url = _sanitize_text(url)
+    if normalized_url.endswith("/overview"):
+        normalized_url = normalized_url[: -len("/overview")]
+
+    normalized_url = normalized_url.rstrip("/")
+    if not normalized_url:
+        return None
+
+    if not normalized_url.startswith(("https://", "http://")):
+        normalized_url = f"https://{normalized_url}"
+
+    return normalized_url
+
+
+def _position_emoji(position: int) -> str:
+    mapping = {
+        1: ":one:",
+        2: ":two:",
+        3: ":three:",
+        4: ":four:",
+        5: ":five:",
+        6: ":six:",
+    }
+    return mapping.get(position, f"`{position}`")
+
+
+def _escape_markdown_link_label(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("[", "\\[").replace("]", "\\]")
 
 
 def _build_team_profile_file_name(team_name: str) -> str:
@@ -718,10 +787,6 @@ def _render_team_profile_image(
         mmr_width,
     )
     main_table_width = sum(main_column_widths)
-    tracker_column_widths = (
-        position_width,
-        main_table_width - position_width,
-    )
     technical_staff_extra_width = main_table_width - (
             role_width + discord_width + epic_width + rocket_width
     )
@@ -734,13 +799,11 @@ def _render_team_profile_image(
         rocket_width,
     )
 
-    tracker_table_width = sum(tracker_column_widths)
     technical_staff_table_width = sum(technical_staff_column_widths)
     title_block_width = position_width + player_width + discord_width
 
     title_height = row_height * 2
     main_table_height = row_height * (1 + len(team_profile.players) + 1)
-    tracker_table_height = row_height * (1 + len(team_profile.players))
     technical_staff_table_height = 0
     if team_profile.technical_staff:
         technical_staff_table_height = row_height * (
@@ -749,15 +812,12 @@ def _render_team_profile_image(
 
     image_width = TEAM_PROFILE_IMAGE_PADDING_X * 2 + max(
         main_table_width,
-        tracker_table_width,
         technical_staff_table_width,
     )
     image_height = (
             TEAM_PROFILE_IMAGE_PADDING_Y * 2
             + title_height
             + main_table_height
-            + TEAM_PROFILE_IMAGE_SECTION_SPACING
-            + tracker_table_height
     )
     if technical_staff_table_height:
         image_height += (
@@ -808,14 +868,6 @@ def _render_team_profile_image(
         localizer,
         locale,
         I18N.messages.team_profile.ansi.headers.role,
-    )
-    tracker_title = localizer.translate(
-        I18N.messages.team_profile.ansi.tracker.title,
-        locale=locale,
-    )
-    missing_tracker = localizer.translate(
-        I18N.messages.team_profile.ansi.tracker.missing_value,
-        locale=locale,
     )
     remaining_signings_label = localizer.translate(
         I18N.messages.team_profile.ansi.summary.remaining_signings,
@@ -1050,79 +1102,8 @@ def _render_team_profile_image(
         right_padding=mmr_right_padding_px,
     )
 
-    tracker_y = main_table_y + main_table_height + TEAM_PROFILE_IMAGE_SECTION_SPACING
-    tracker_height = tracker_table_height
-    _draw_box(draw, x_origin, tracker_y, tracker_table_width, tracker_height)
-    _draw_horizontal_line(
-        draw,
-        x_origin,
-        x_origin + tracker_table_width,
-        tracker_y + row_height,
-    )
-    tracker_boundary = x_origin + position_width
-    _draw_vertical_line(
-        draw,
-        tracker_boundary,
-        tracker_y,
-        tracker_y + tracker_height,
-    )
-    for row_index in range(2, 1 + len(team_profile.players)):
-        _draw_horizontal_line(
-            draw,
-            x_origin,
-            x_origin + tracker_table_width,
-            tracker_y + row_height * row_index,
-        )
-
-    tracker_header_rects = _build_row_rects(
-        x_origin,
-        tracker_y,
-        tracker_column_widths,
-        row_height,
-    )
-    _draw_cell_text(
-        draw,
-        font,
-        tracker_header_rects[0],
-        position_header,
-        fill=ANSI_COLOR_TO_RGB[ANSI_WHITE],
-        align="center",
-    )
-    _draw_cell_text(
-        draw,
-        font,
-        tracker_header_rects[1],
-        tracker_title,
-        fill=ANSI_COLOR_TO_RGB[ANSI_WHITE],
-        align="center",
-    )
-    for row_index, player in enumerate(team_profile.players, start=1):
-        tracker_rects = _build_row_rects(
-            x_origin,
-            tracker_y + row_height * row_index,
-            tracker_column_widths,
-            row_height,
-        )
-        _draw_cell_text(
-            draw,
-            font,
-            tracker_rects[0],
-            str(player.position),
-            fill=ANSI_COLOR_TO_RGB[ANSI_RED],
-            align="center",
-        )
-        _draw_cell_text(
-            draw,
-            font,
-            tracker_rects[1],
-            _display_tracker_value(player.tracker_url, "-"),
-            fill=ANSI_COLOR_TO_RGB[ANSI_GREEN],
-            left_padding=left_padding_px,
-            dash_center=True,
-        )
-
     if technical_staff_table_height:
-        staff_y = tracker_y + tracker_height + TEAM_PROFILE_IMAGE_SECTION_SPACING
+        staff_y = main_table_y + main_table_height + TEAM_PROFILE_IMAGE_SECTION_SPACING
         _draw_box(
             draw,
             x_origin,

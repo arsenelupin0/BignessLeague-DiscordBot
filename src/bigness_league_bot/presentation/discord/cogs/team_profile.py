@@ -34,6 +34,9 @@ from bigness_league_bot.infrastructure.google.team_sheet_repository import (
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
+from bigness_league_bot.presentation.discord.views.team_profile_tracker_actions import (
+    TeamProfileTrackerActionsView,
+)
 
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
@@ -74,7 +77,14 @@ class TeamProfileCog(commands.Cog):
             locale=interaction.locale,
             font_path=settings.team_profile_font_path,
         )
-        await interaction.response.send_message(file=image_file)
+        view = TeamProfileTrackerActionsView(
+            actor=interaction.user,
+            team_profile=team_profile,
+            localizer=interaction.client.localizer,
+            locale=interaction.locale,
+        )
+        await interaction.response.send_message(file=image_file, view=view)
+        view.message = await interaction.original_response()
 
     async def cog_app_command_error(
             self,

@@ -108,7 +108,18 @@
         "fallback": {
           "file_notice": "The full profile exceeds Discord's visible message limit and is attached as a single ANSI file."
         }
-      }
+      },
+      "buttons": {
+        "list_trackers": "List trackers",
+        "cancel": "Cancel"
+      },
+      "trackers": {
+        "title": "# Trackers",
+        "entry": "{emoji} -> [{display_url}]({destination_url})",
+        "empty": "-",
+        "missing_value": "-"
+      },
+      "only_actor": "Only the user who ran the command can use these buttons."
     },
     "channel_management": {
       "delete_prompt": "You are about to permanently delete `{channel_name}`.\nProtected system roles: {protected_roles}.\nConfirm only if you are completely sure.",
