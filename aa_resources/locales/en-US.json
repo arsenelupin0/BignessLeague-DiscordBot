@@ -65,7 +65,12 @@
     "team_profile": {
       "view_my_team": {
         "name": "view_my_team",
-        "description": "Shows your team profile based on your role and Google Sheets."
+        "description": "Shows your team profile based on your role and Google Sheets.",
+        "parameters": {
+          "team_role": {
+            "description": "Team role to query. Only available to Staff, Administrador, and CEO."
+          }
+        }
       }
     }
   },

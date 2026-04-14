@@ -116,10 +116,21 @@ class _CommandsMatchChannelCreationCreateMatchChannel:
 class _CommandsMatchChannelCreation:
     create_match_channel: _CommandsMatchChannelCreationCreateMatchChannel = _CommandsMatchChannelCreationCreateMatchChannel()
 
+
+class _CommandsTeamProfileViewMyTeamParametersTeamRole:
+    description: TranslationKey = TranslationKey(
+        key="commands.team_profile.view_my_team.parameters.team_role.description",
+        default_text="Rol de equipo a consultar. Solo disponible para Staff, Administrador y CEO.")
+
+
+class _CommandsTeamProfileViewMyTeamParameters:
+    team_role: _CommandsTeamProfileViewMyTeamParametersTeamRole = _CommandsTeamProfileViewMyTeamParametersTeamRole()
+
 class _CommandsTeamProfileViewMyTeam:
     name: TranslationKey = TranslationKey(key="commands.team_profile.view_my_team.name", default_text="ver_mi_equipo")
     description: TranslationKey = TranslationKey(key="commands.team_profile.view_my_team.description",
                                                  default_text="Muestra la ficha de tu equipo segun tu rol y Google Sheets.")
+    parameters: _CommandsTeamProfileViewMyTeamParameters = _CommandsTeamProfileViewMyTeamParameters()
 
 class _CommandsTeamProfile:
     view_my_team: _CommandsTeamProfileViewMyTeam = _CommandsTeamProfileViewMyTeam()
@@ -194,7 +205,6 @@ class _MessagesTeamProfileButtons:
     list_trackers: TranslationKey = TranslationKey(key="messages.team_profile.buttons.list_trackers",
                                                    default_text="Listar trackers")
     cancel: TranslationKey = TranslationKey(key="messages.team_profile.buttons.cancel", default_text="Cancelar")
-
 
 class _MessagesTeamProfileRoleSelection:
     prompt: TranslationKey = TranslationKey(key="messages.team_profile.role_selection.prompt",

@@ -109,15 +109,14 @@ Restricciones de `/cerrar_canal`:
 
 `/ver_mi_equipo`:
 
-- exige que tengas exactamente un rol de equipo dentro del rango configurado
-- `Staff`, `Administrador` y `Ceo` pasan la validacion general del comando, pero el bot sigue necesitando identificar un
-  unico rol de equipo para saber que bloque mostrar
+- sin parametros, usa tu rol de equipo dentro del rango configurado
+- `Staff`, `Administrador` y `Ceo` pueden ademas pasar un rol de equipo explicito como parametro opcional
 - si tienes varios roles de equipo, el bot muestra una botonera para que elijas cual consultar
 - busca el bloque de tu equipo en la hoja de Google Sheets configurada
 - toma la division directamente del nombre de la hoja
 - lee el tracker desde el hipervinculo de la celda `Jugador`
 - devuelve la ficha del equipo como una imagen PNG en un unico mensaje del bot
-- adjunta botones para listar los trackers en un mensaje aparte o quitar la botonera
+- adjunta botones para listar los trackers en el mismo mensaje o quitar la botonera
 - permite fijar una fuente propia con `BOT_TEAM_PROFILE_FONT_PATH`, por ejemplo
   `aa_resources/fonts/MapleMono-NF-CN-Regular.ttf`
 

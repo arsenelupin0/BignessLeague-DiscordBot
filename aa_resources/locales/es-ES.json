@@ -65,7 +65,12 @@
     "team_profile": {
       "view_my_team": {
         "name": "ver_mi_equipo",
-        "description": "Muestra la ficha de tu equipo segun tu rol y Google Sheets."
+        "description": "Muestra la ficha de tu equipo segun tu rol y Google Sheets.",
+        "parameters": {
+          "team_role": {
+            "description": "Rol de equipo a consultar. Solo disponible para Staff, Administrador y CEO."
+          }
+        }
       }
     }
   },
