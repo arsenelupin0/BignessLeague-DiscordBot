@@ -65,6 +65,7 @@ HYPERLINK_FORMULA_PATTERN = re.compile(
     r'^=HYPERLINK\("((?:[^"]|"")*)"\s*[,;]\s*"((?:[^"]|"")*)"\)$',
     re.IGNORECASE,
 )
+INTEGER_VALUE_PATTERN = re.compile(r"-?\d+")
 
 
 class TeamSheetError(CommandUserError):
@@ -109,6 +110,10 @@ class TeamSheetWriteError(TeamSheetError):
 
 class TeamSheetRosterFullError(TeamSheetError):
     """Raised when the target team block does not have enough free slots."""
+
+
+class TeamSheetRemainingSigningsExceededError(TeamSheetError):
+    """Raised when the requested signings exceed the remaining signing quota."""
 
 
 def _normalize_cell_value(value: Any) -> str:
@@ -286,10 +291,14 @@ class GoogleSheetsTeamRepository:
             team_blocks,
             worksheet_title=worksheet_title,
         )
-        existing_players = tuple(
-            self._to_team_signing_player(player)
-            for player in self._parse_players(cell_grid, target_block)
-        )
+        is_new_team_block = _is_free_block_title(target_block.title)
+        if is_new_team_block:
+            existing_players: tuple[TeamSigningPlayer, ...] = ()
+        else:
+            existing_players = tuple(
+                self._to_team_signing_player(player)
+                for player in self._parse_players(cell_grid, target_block)
+            )
         try:
             merged_players = merge_team_signing_players(
                 existing_players,
@@ -318,7 +327,7 @@ class GoogleSheetsTeamRepository:
                 "values": self._build_player_values_grid(merged_players),
             }
         ]
-        if _is_free_block_title(target_block.title):
+        if is_new_team_block:
             update_data.insert(
                 0,
                 {
@@ -331,6 +340,35 @@ class GoogleSheetsTeamRepository:
                     ),
                     "values": [[signing_batch.team_name]],
                 },
+            )
+        else:
+            remaining_signings = self._parse_remaining_signings_count(
+                cell_grid,
+                target_block,
+                worksheet_name=worksheet_title,
+            )
+            requested_signings = len(signing_batch.players)
+            if requested_signings > remaining_signings:
+                raise TeamSheetRemainingSigningsExceededError(
+                    localize(
+                        I18N.errors.team_signing.remaining_signings_exceeded,
+                        team_name=signing_batch.team_name,
+                        remaining_signings=str(remaining_signings),
+                        requested_signings=str(requested_signings),
+                    )
+                )
+
+            update_data.append(
+                {
+                    "range": _build_a1_range(
+                        worksheet_title,
+                        target_block.title_row + TEAM_BLOCK_SUMMARY_ROW_OFFSET,
+                        target_block.start_column,
+                        1,
+                        1,
+                    ),
+                    "values": [[str(remaining_signings - requested_signings)]],
+                }
             )
 
         try:
@@ -711,6 +749,28 @@ class GoogleSheetsTeamRepository:
         return remaining_signings, top_three_average
 
     @staticmethod
+    def _parse_remaining_signings_count(
+            cell_grid: dict[int, dict[int, SheetCell]],
+            block: TeamBlockAnchor,
+            *,
+            worksheet_name: str,
+    ) -> int:
+        summary_row = block.title_row + TEAM_BLOCK_SUMMARY_ROW_OFFSET
+        remaining_signings_value = GoogleSheetsTeamRepository._get_cell_value(
+            cell_grid,
+            summary_row,
+            block.start_column,
+        )
+        return _parse_integer_cell_value(
+            remaining_signings_value,
+            error_message=localize(
+                I18N.errors.team_signing.remaining_signings_invalid,
+                team_name=block.title,
+                sheet_name=worksheet_name,
+            ),
+        )
+
+    @staticmethod
     def _parse_technical_staff(
             cell_grid: dict[int, dict[int, SheetCell]],
             block: TeamBlockAnchor,
@@ -951,6 +1011,19 @@ def _column_to_letter(column_index: int) -> str:
         letters.append(chr(ord("A") + remainder))
 
     return "".join(reversed(letters))
+
+
+def _parse_integer_cell_value(
+        value: str,
+        *,
+        error_message: CommandUserError | Any,
+) -> int:
+    normalized_value = _normalize_cell_value(value)
+    match = INTEGER_VALUE_PATTERN.search(normalized_value)
+    if match is None:
+        raise TeamSheetLayoutError(error_message)
+
+    return int(match.group(0))
 
 
 def _is_placeholder_cell_value(value: str) -> bool:

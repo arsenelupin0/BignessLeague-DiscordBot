@@ -274,6 +274,8 @@
       "division_not_found": "No existe ninguna hoja que coincida con la division `{division_name}`.",
       "team_sheet_layout_invalid": "La hoja `{sheet_name}` no sigue el formato esperado para registrar fichajes.",
       "no_free_team_block": "No hay ningun bloque de equipo libre en `{sheet_name}` para registrar a `{team_name}`.",
+      "remaining_signings_invalid": "La celda de fichajes restantes no es valida para `{team_name}` en `{sheet_name}`.",
+      "remaining_signings_exceeded": "No quedan fichajes suficientes en `{team_name}`. Restantes: {remaining_signings}. Solicitados: {requested_signings}.",
       "team_roster_full": "No hay hueco suficiente en `{team_name}` para estos fichajes. Huecos libres: {available_slots}. Fichajes solicitados: {requested_slots}.",
       "google_write_failed": "Google Sheets ha rechazado la escritura de fichajes: {details}."
     },

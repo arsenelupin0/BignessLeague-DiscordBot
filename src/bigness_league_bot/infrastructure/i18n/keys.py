@@ -150,16 +150,13 @@ class _CommandsTeamSigningMakeSigning:
 class _CommandsTeamSigning:
     make_signing: _CommandsTeamSigningMakeSigning = _CommandsTeamSigningMakeSigning()
 
-
 class _CommandsTeamRoleAssignmentSyncTeamRoleParametersTeamRole:
     description: TranslationKey = TranslationKey(
         key="commands.team_role_assignment.sync_team_role.parameters.team_role.description",
         default_text="Rol del equipo que quieres recargar desde Google Sheets.")
 
-
 class _CommandsTeamRoleAssignmentSyncTeamRoleParameters:
     team_role: _CommandsTeamRoleAssignmentSyncTeamRoleParametersTeamRole = _CommandsTeamRoleAssignmentSyncTeamRoleParametersTeamRole()
-
 
 class _CommandsTeamRoleAssignmentSyncTeamRole:
     name: TranslationKey = TranslationKey(key="commands.team_role_assignment.sync_team_role.name",
@@ -167,7 +164,6 @@ class _CommandsTeamRoleAssignmentSyncTeamRole:
     description: TranslationKey = TranslationKey(key="commands.team_role_assignment.sync_team_role.description",
                                                  default_text="Sincroniza en Discord los roles del equipo a partir de la hoja actual.")
     parameters: _CommandsTeamRoleAssignmentSyncTeamRoleParameters = _CommandsTeamRoleAssignmentSyncTeamRoleParameters()
-
 
 class _CommandsTeamRoleAssignment:
     sync_team_role: _CommandsTeamRoleAssignmentSyncTeamRole = _CommandsTeamRoleAssignmentSyncTeamRole()
@@ -494,11 +490,14 @@ class _ErrorsTeamSigning:
                                                                default_text="La hoja `{sheet_name}` no sigue el formato esperado para registrar fichajes.")
     no_free_team_block: TranslationKey = TranslationKey(key="errors.team_signing.no_free_team_block",
                                                         default_text="No hay ningun bloque de equipo libre en `{sheet_name}` para registrar a `{team_name}`.")
+    remaining_signings_invalid: TranslationKey = TranslationKey(key="errors.team_signing.remaining_signings_invalid",
+                                                                default_text="La celda de fichajes restantes no es valida para `{team_name}` en `{sheet_name}`.")
+    remaining_signings_exceeded: TranslationKey = TranslationKey(key="errors.team_signing.remaining_signings_exceeded",
+                                                                 default_text="No quedan fichajes suficientes en `{team_name}`. Restantes: {remaining_signings}. Solicitados: {requested_signings}.")
     team_roster_full: TranslationKey = TranslationKey(key="errors.team_signing.team_roster_full",
                                                       default_text="No hay hueco suficiente en `{team_name}` para estos fichajes. Huecos libres: {available_slots}. Fichajes solicitados: {requested_slots}.")
     google_write_failed: TranslationKey = TranslationKey(key="errors.team_signing.google_write_failed",
                                                          default_text="Google Sheets ha rechazado la escritura de fichajes: {details}.")
-
 
 class _ErrorsTeamRoleAssignment:
     participant_role_missing: TranslationKey = TranslationKey(
@@ -555,7 +554,6 @@ class _ActionsTeamSigning:
                                                                 default_text="Sin coincidencia en Discord: {names}.")
     role_assignment_ambiguous: TranslationKey = TranslationKey(key="actions.team_signing.role_assignment_ambiguous",
                                                                default_text="Coincidencias ambiguas en Discord: {names}.")
-
 
 class _ActionsTeamRoleAssignment:
     completed: TranslationKey = TranslationKey(key="actions.team_role_assignment.completed",

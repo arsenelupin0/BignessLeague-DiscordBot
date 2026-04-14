@@ -274,6 +274,8 @@
       "division_not_found": "No sheet matches the division `{division_name}`.",
       "team_sheet_layout_invalid": "The sheet `{sheet_name}` does not follow the expected layout for signing imports.",
       "no_free_team_block": "There is no free team block left in `{sheet_name}` for `{team_name}`.",
+      "remaining_signings_invalid": "The remaining signings cell is invalid for `{team_name}` in `{sheet_name}`.",
+      "remaining_signings_exceeded": "There are not enough remaining signings in `{team_name}`. Remaining: {remaining_signings}. Requested: {requested_signings}.",
       "team_roster_full": "There is not enough room in `{team_name}` for these signings. Free slots: {available_slots}. Requested signings: {requested_slots}.",
       "google_write_failed": "Google Sheets rejected the signing write request: {details}."
     },
