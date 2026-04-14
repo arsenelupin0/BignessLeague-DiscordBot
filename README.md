@@ -68,6 +68,7 @@ python -m bigness_league_bot.main
 crea un canal de partido con permisos para ambos equipos.
 
 - `/ver_mi_equipo`: busca tu equipo en Google Sheets a partir de tu rol de Discord y muestra su ficha.
+- `/hacer_fichaje enlace_mensaje:<url>`: importa fichajes desde un mensaje de Discord hacia Google Sheets.
 
 Opciones disponibles en `/cerrar_canal`:
 
@@ -120,9 +121,21 @@ Restricciones de `/cerrar_canal`:
 - permite fijar una fuente propia con `BOT_TEAM_PROFILE_FONT_PATH`, por ejemplo
   `aa_resources/fonts/MapleMono-NF-CN-Regular.ttf`
 
+`/hacer_fichaje`:
+
+- solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
+- recibe el enlace a un mensaje de Discord con el formato `Division`, `Equipo` y bloques repetidos de jugador
+- resuelve la hoja destino por el nombre de la division
+- si el equipo ya existe, mezcla la plantilla actual con los nuevos fichajes
+- si el equipo no existe, usa el primer bloque de equipo libre en esa hoja
+- ordena la plantilla resultante de mayor a menor `MMR` antes de escribir
+- rellena las filas sobrantes del bloque con `-`
+- si no hay bloque libre o no caben todos los fichajes, rechaza la operacion
+
 Configuracion de Google Sheets:
 
 - `BOT_GOOGLE_SERVICE_ACCOUNT_FILE`: ruta al JSON de la cuenta de servicio con acceso de lectura a la hoja
+- para `/hacer_fichaje`, esa misma cuenta de servicio necesita tambien acceso de escritura
 - `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`: ID del documento de Google Sheets
 - `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME`: opcional. Si lo dejas vacio, el bot buscara en todas las sheets del documento.
   Tambien admite varios nombres separados por comas si quieres limitar la busqueda.

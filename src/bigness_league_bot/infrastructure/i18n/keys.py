@@ -116,12 +116,10 @@ class _CommandsMatchChannelCreationCreateMatchChannel:
 class _CommandsMatchChannelCreation:
     create_match_channel: _CommandsMatchChannelCreationCreateMatchChannel = _CommandsMatchChannelCreationCreateMatchChannel()
 
-
 class _CommandsTeamProfileViewMyTeamParametersTeamRole:
     description: TranslationKey = TranslationKey(
         key="commands.team_profile.view_my_team.parameters.team_role.description",
         default_text="Rol de equipo a consultar. Solo disponible para Staff, Administrador y CEO.")
-
 
 class _CommandsTeamProfileViewMyTeamParameters:
     team_role: _CommandsTeamProfileViewMyTeamParametersTeamRole = _CommandsTeamProfileViewMyTeamParametersTeamRole()
@@ -135,11 +133,33 @@ class _CommandsTeamProfileViewMyTeam:
 class _CommandsTeamProfile:
     view_my_team: _CommandsTeamProfileViewMyTeam = _CommandsTeamProfileViewMyTeam()
 
+
+class _CommandsTeamSigningMakeSigningParametersMessageLink:
+    description: TranslationKey = TranslationKey(
+        key="commands.team_signing.make_signing.parameters.message_link.description",
+        default_text="Enlace al mensaje de Discord que contiene la plantilla de fichajes.")
+
+
+class _CommandsTeamSigningMakeSigningParameters:
+    message_link: _CommandsTeamSigningMakeSigningParametersMessageLink = _CommandsTeamSigningMakeSigningParametersMessageLink()
+
+
+class _CommandsTeamSigningMakeSigning:
+    name: TranslationKey = TranslationKey(key="commands.team_signing.make_signing.name", default_text="hacer_fichaje")
+    description: TranslationKey = TranslationKey(key="commands.team_signing.make_signing.description",
+                                                 default_text="Importa fichajes desde un mensaje enlazado de Discord hacia Google Sheets.")
+    parameters: _CommandsTeamSigningMakeSigningParameters = _CommandsTeamSigningMakeSigningParameters()
+
+
+class _CommandsTeamSigning:
+    make_signing: _CommandsTeamSigningMakeSigning = _CommandsTeamSigningMakeSigning()
+
 class _Commands:
     channel_management: _CommandsChannelManagement = _CommandsChannelManagement()
     channel_access: _CommandsChannelAccess = _CommandsChannelAccess()
     match_channel_creation: _CommandsMatchChannelCreation = _CommandsMatchChannelCreation()
     team_profile: _CommandsTeamProfile = _CommandsTeamProfile()
+    team_signing: _CommandsTeamSigning = _CommandsTeamSigning()
 
 class _MessagesAdminSync:
     invalid_scope: TranslationKey = TranslationKey(key="messages.admin.sync.invalid_scope",
@@ -432,6 +452,35 @@ class _ErrorsTeamProfile:
     team_not_found: TranslationKey = TranslationKey(key="errors.team_profile.team_not_found",
                                                     default_text="No se encontro ninguna fila en `{sheet_name}` para el rol `{role_name}`.")
 
+
+class _ErrorsTeamSigning:
+    invalid_message_link: TranslationKey = TranslationKey(key="errors.team_signing.invalid_message_link",
+                                                          default_text="El enlace del mensaje no es valido. Debe ser un enlace de Discord con servidor, canal y mensaje.")
+    foreign_guild_message_link: TranslationKey = TranslationKey(key="errors.team_signing.foreign_guild_message_link",
+                                                                default_text="El enlace apunta a otro servidor. Guild actual: `{expected_guild_id}`. Guild enlazada: `{linked_guild_id}`.")
+    message_channel_not_found: TranslationKey = TranslationKey(key="errors.team_signing.message_channel_not_found",
+                                                               default_text="No se encontro el canal del mensaje enlazado: `{channel_id}`.")
+    unsupported_message_channel: TranslationKey = TranslationKey(key="errors.team_signing.unsupported_message_channel",
+                                                                 default_text="El mensaje enlazado debe pertenecer a un canal de texto o a un hilo.")
+    message_not_found: TranslationKey = TranslationKey(key="errors.team_signing.message_not_found",
+                                                       default_text="No se encontro el mensaje enlazado: `{message_id}`.")
+    message_fetch_forbidden: TranslationKey = TranslationKey(key="errors.team_signing.message_fetch_forbidden",
+                                                             default_text="El bot no puede acceder al mensaje enlazado. Revisa sus permisos en ese canal.")
+    message_fetch_failed: TranslationKey = TranslationKey(key="errors.team_signing.message_fetch_failed",
+                                                          default_text="No se pudo recuperar el mensaje enlazado desde Discord: {details}.")
+    invalid_message_format: TranslationKey = TranslationKey(key="errors.team_signing.invalid_message_format",
+                                                            default_text="El mensaje enlazado no sigue el formato esperado para importar fichajes: {details}.")
+    division_not_found: TranslationKey = TranslationKey(key="errors.team_signing.division_not_found",
+                                                        default_text="No existe ninguna hoja que coincida con la division `{division_name}`.")
+    team_sheet_layout_invalid: TranslationKey = TranslationKey(key="errors.team_signing.team_sheet_layout_invalid",
+                                                               default_text="La hoja `{sheet_name}` no sigue el formato esperado para registrar fichajes.")
+    no_free_team_block: TranslationKey = TranslationKey(key="errors.team_signing.no_free_team_block",
+                                                        default_text="No hay ningun bloque de equipo libre en `{sheet_name}` para registrar a `{team_name}`.")
+    team_roster_full: TranslationKey = TranslationKey(key="errors.team_signing.team_roster_full",
+                                                      default_text="No hay hueco suficiente en `{team_name}` para estos fichajes. Huecos libres: {available_slots}. Fichajes solicitados: {requested_slots}.")
+    google_write_failed: TranslationKey = TranslationKey(key="errors.team_signing.google_write_failed",
+                                                         default_text="Google Sheets ha rechazado la escritura de fichajes: {details}.")
+
 class _ErrorsSlash:
     forbidden: TranslationKey = TranslationKey(key="errors.slash.forbidden",
                                                default_text="No tienes permisos para ejecutar este comando.")
@@ -448,6 +497,7 @@ class _Errors:
     channel_management: _ErrorsChannelManagement = _ErrorsChannelManagement()
     match_channel_creation: _ErrorsMatchChannelCreation = _ErrorsMatchChannelCreation()
     team_profile: _ErrorsTeamProfile = _ErrorsTeamProfile()
+    team_signing: _ErrorsTeamSigning = _ErrorsTeamSigning()
     slash: _ErrorsSlash = _ErrorsSlash()
 
 class _ActionsChannelManagement:
@@ -467,9 +517,15 @@ class _ActionsMatchChannelCreation:
     created_summary: TranslationKey = TranslationKey(key="actions.match_channel_creation.created_summary",
                                                      default_text="Se ha creado {channel} en `{category}` para la jornada {jornada}, partido {partido}, entre {team_one} y {team_two}, y se ha enviado el mensaje inicial del canal.")
 
+
+class _ActionsTeamSigning:
+    completed: TranslationKey = TranslationKey(key="actions.team_signing.completed",
+                                               default_text="Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.")
+
 class _Actions:
     channel_management: _ActionsChannelManagement = _ActionsChannelManagement()
     match_channel_creation: _ActionsMatchChannelCreation = _ActionsMatchChannelCreation()
+    team_signing: _ActionsTeamSigning = _ActionsTeamSigning()
 
 class I18nKeys:
     commands: _Commands = _Commands()

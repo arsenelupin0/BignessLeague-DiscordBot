@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -23,12 +24,20 @@ from bigness_league_bot.application.services.team_profile import (
     TeamProfileStaffMember,
     build_team_profile,
 )
+from bigness_league_bot.application.services.team_signing import (
+    MAX_TEAM_SIGNING_PLAYERS,
+    TeamSigningBatch,
+    TeamSigningCapacityError,
+    TeamSigningPlayer,
+    merge_team_signing_players,
+)
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import localize
 from bigness_league_bot.core.settings import Settings
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 
 GOOGLE_SHEETS_READ_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly"
+GOOGLE_SHEETS_WRITE_SCOPE = "https://www.googleapis.com/auth/spreadsheets"
 TEAM_BLOCK_HEADERS = (
     "Jugador",
     "Discord",
@@ -50,6 +59,11 @@ TECHNICAL_STAFF_HEADERS_NORMALIZED = (
     "discord",
     "epic name",
     "rocket in-game name",
+)
+PLACEHOLDER_CELL_VALUE = "-"
+HYPERLINK_FORMULA_PATTERN = re.compile(
+    r'^=HYPERLINK\("((?:[^"]|"")*)"\s*[,;]\s*"((?:[^"]|"")*)"\)$',
+    re.IGNORECASE,
 )
 
 
@@ -79,6 +93,22 @@ class TeamSheetRowNotFoundError(TeamSheetError):
 
 class TeamSheetRequestError(TeamSheetError):
     """Raised when Google Sheets rejects the request."""
+
+
+class TeamSheetDivisionNotFoundError(TeamSheetError):
+    """Raised when the requested division sheet cannot be found."""
+
+
+class TeamSheetNoFreeBlockError(TeamSheetError):
+    """Raised when there is no free team block left in the selected sheet."""
+
+
+class TeamSheetWriteError(TeamSheetError):
+    """Raised when Google Sheets rejects a write operation."""
+
+
+class TeamSheetRosterFullError(TeamSheetError):
+    """Raised when the target team block does not have enough free slots."""
 
 
 def _normalize_cell_value(value: Any) -> str:
@@ -135,6 +165,7 @@ class TeamSheetLookupConfig:
 class SheetCell:
     value: str = ""
     hyperlink: str | None = None
+    formula: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,6 +173,14 @@ class TeamBlockAnchor:
     title_row: int
     start_column: int
     title: str
+
+
+@dataclass(frozen=True, slots=True)
+class TeamSigningWriteResult:
+    worksheet_title: str
+    team_name: str
+    inserted_count: int
+    total_players: int
 
 
 class GoogleSheetsTeamRepository:
@@ -155,11 +194,21 @@ class GoogleSheetsTeamRepository:
     ) -> TeamProfile:
         return await asyncio.to_thread(self._find_team_profile_for_role_sync, role)
 
+    async def register_team_signings(
+            self,
+            signing_batch: TeamSigningBatch,
+    ) -> TeamSigningWriteResult:
+        return await asyncio.to_thread(
+            self._register_team_signings_sync,
+            signing_batch,
+        )
+
     def _find_team_profile_for_role_sync(
             self,
             role: discord.Role,
     ) -> TeamProfile:
-        sheet_scope, sheet_grids = self._fetch_sheet_grids()
+        service = self._build_google_sheets_service(read_only=True)
+        sheet_scope, sheet_grids = self._fetch_sheet_grids(service)
         if not sheet_grids:
             raise TeamSheetEmptyError(
                 localize(
@@ -213,35 +262,146 @@ class GoogleSheetsTeamRepository:
             )
         )
 
-    def _fetch_sheet_grids(
+    def _register_team_signings_sync(
             self,
-    ) -> tuple[str, tuple[tuple[str, dict[int, dict[int, SheetCell]]], ...]]:
+            signing_batch: TeamSigningBatch,
+    ) -> TeamSigningWriteResult:
+        service = self._build_google_sheets_service(read_only=False)
+        _, sheet_grids = self._fetch_sheet_grids(service)
+        worksheet_title, cell_grid = self._find_division_sheet(
+            signing_batch.division_name,
+            sheet_grids,
+        )
+        team_blocks = self._collect_team_blocks(cell_grid)
+        if not team_blocks:
+            raise TeamSheetLayoutError(
+                localize(
+                    I18N.errors.team_signing.team_sheet_layout_invalid,
+                    sheet_name=worksheet_title,
+                )
+            )
+
+        target_block = self._resolve_target_team_block(
+            signing_batch.team_name,
+            team_blocks,
+            worksheet_title=worksheet_title,
+        )
+        existing_players = tuple(
+            self._to_team_signing_player(player)
+            for player in self._parse_players(cell_grid, target_block)
+        )
+        try:
+            merged_players = merge_team_signing_players(
+                existing_players,
+                signing_batch.players,
+                capacity=MAX_TEAM_SIGNING_PLAYERS,
+            )
+        except TeamSigningCapacityError as exc:
+            raise TeamSheetRosterFullError(
+                localize(
+                    I18N.errors.team_signing.team_roster_full,
+                    team_name=signing_batch.team_name,
+                    available_slots=str(exc.available_slots),
+                    requested_slots=str(exc.requested_count),
+                )
+            ) from exc
+
+        update_data: list[dict[str, Any]] = [
+            {
+                "range": _build_a1_range(
+                    worksheet_title,
+                    target_block.title_row + TEAM_BLOCK_PLAYERS_ROW_OFFSET,
+                    target_block.start_column,
+                    TEAM_BLOCK_MAX_PLAYERS,
+                    TEAM_BLOCK_COLUMN_COUNT,
+                ),
+                "values": self._build_player_values_grid(merged_players),
+            }
+        ]
+        if _is_free_block_title(target_block.title):
+            update_data.insert(
+                0,
+                {
+                    "range": _build_a1_range(
+                        worksheet_title,
+                        target_block.title_row,
+                        target_block.start_column,
+                        1,
+                        1,
+                    ),
+                    "values": [[signing_batch.team_name]],
+                },
+            )
+
+        try:
+            service.spreadsheets().values().batchUpdate(
+                spreadsheetId=self.config.spreadsheet_id,
+                body={
+                    "valueInputOption": "USER_ENTERED",
+                    "data": update_data,
+                },
+            ).execute()
+        except Exception as exc:
+            http_error = _maybe_wrap_google_http_error(exc)
+            if http_error is not None:
+                raise TeamSheetWriteError(
+                    localize(
+                        I18N.errors.team_signing.google_write_failed,
+                        details=_extract_http_error_message(http_error),
+                    )
+                ) from exc
+            raise
+
+        return TeamSigningWriteResult(
+            worksheet_title=worksheet_title,
+            team_name=signing_batch.team_name,
+            inserted_count=len(signing_batch.players),
+            total_players=len(merged_players),
+        )
+
+    def _build_google_sheets_service(
+            self,
+            *,
+            read_only: bool,
+    ) -> Any:
         try:
             from google.oauth2 import service_account
             from googleapiclient.discovery import build
+        except ImportError as exc:
+            raise GoogleSheetsDependencyError(
+                localize(I18N.errors.team_profile.google_dependencies_missing)
+            ) from exc
+
+        scopes = [GOOGLE_SHEETS_READ_SCOPE] if read_only else [GOOGLE_SHEETS_WRITE_SCOPE]
+        credentials = service_account.Credentials.from_service_account_file(
+            str(self.config.service_account_file),
+            scopes=scopes,
+        )
+        return build(
+            "sheets",
+            "v4",
+            credentials=credentials,
+            cache_discovery=False,
+        )
+
+    def _fetch_sheet_grids(
+            self,
+            service: Any,
+    ) -> tuple[str, tuple[tuple[str, dict[int, dict[int, SheetCell]]], ...]]:
+        try:
             from googleapiclient.errors import HttpError
         except ImportError as exc:
             raise GoogleSheetsDependencyError(
                 localize(I18N.errors.team_profile.google_dependencies_missing)
             ) from exc
 
-        credentials = service_account.Credentials.from_service_account_file(
-            str(self.config.service_account_file),
-            scopes=[GOOGLE_SHEETS_READ_SCOPE],
-        )
-        service = build(
-            "sheets",
-            "v4",
-            credentials=credentials,
-            cache_discovery=False,
-        )
         try:
             response = service.spreadsheets().get(
                 spreadsheetId=self.config.spreadsheet_id,
                 includeGridData=True,
                 fields=(
                     "sheets(properties(title),"
-                    "data(startRow,startColumn,rowData(values(formattedValue,hyperlink))))"
+                    "data(startRow,startColumn,rowData(values(formattedValue,hyperlink,userEnteredValue))))"
                 ),
             ).execute()
         except HttpError as exc:
@@ -304,7 +464,7 @@ class GoogleSheetsTeamRepository:
             cell_grid: dict[int, dict[int, SheetCell]],
     ) -> TeamBlockAnchor | None:
         normalized_role_name = role_name.casefold()
-        for row_index, row_cells in sorted(cell_grid.items()):
+        for row_index, _row_cells in sorted(cell_grid.items()):
             header_row = cell_grid.get(row_index + TEAM_BLOCK_HEADER_ROW_OFFSET)
             if not header_row:
                 continue
@@ -340,6 +500,84 @@ class GoogleSheetsTeamRepository:
         return None
 
     @staticmethod
+    def _collect_team_blocks(
+            cell_grid: dict[int, dict[int, SheetCell]],
+    ) -> tuple[TeamBlockAnchor, ...]:
+        blocks: list[TeamBlockAnchor] = []
+        for row_index, row_cells in sorted(cell_grid.items()):
+            header_row = cell_grid.get(row_index + TEAM_BLOCK_HEADER_ROW_OFFSET)
+            if not header_row:
+                continue
+
+            for start_column in sorted(header_row):
+                header_values = tuple(
+                    GoogleSheetsTeamRepository._get_cell_value(
+                        cell_grid,
+                        row_index + TEAM_BLOCK_HEADER_ROW_OFFSET,
+                        start_column + offset,
+                    )
+                    .casefold()
+                    for offset in range(TEAM_BLOCK_COLUMN_COUNT)
+                )
+                if header_values != TEAM_BLOCK_HEADERS_NORMALIZED:
+                    continue
+
+                blocks.append(
+                    TeamBlockAnchor(
+                        title_row=row_index,
+                        start_column=start_column,
+                        title=GoogleSheetsTeamRepository._extract_block_title(
+                            cell_grid,
+                            row_index,
+                            start_column,
+                        ),
+                    )
+                )
+
+        return tuple(blocks)
+
+    @staticmethod
+    def _find_division_sheet(
+            division_name: str,
+            sheet_grids: tuple[tuple[str, dict[int, dict[int, SheetCell]]], ...],
+    ) -> tuple[str, dict[int, dict[int, SheetCell]]]:
+        normalized_division = _normalize_lookup_text(division_name)
+        for worksheet_title, cell_grid in sheet_grids:
+            if _normalize_lookup_text(worksheet_title) == normalized_division:
+                return worksheet_title, cell_grid
+
+        raise TeamSheetDivisionNotFoundError(
+            localize(
+                I18N.errors.team_signing.division_not_found,
+                division_name=division_name,
+            )
+        )
+
+    @staticmethod
+    def _resolve_target_team_block(
+            team_name: str,
+            team_blocks: tuple[TeamBlockAnchor, ...],
+            *,
+            worksheet_title: str,
+    ) -> TeamBlockAnchor:
+        normalized_team_name = _normalize_lookup_text(team_name)
+        for block in team_blocks:
+            if _normalize_lookup_text(block.title) == normalized_team_name:
+                return block
+
+        for block in team_blocks:
+            if _is_free_block_title(block.title):
+                return block
+
+        raise TeamSheetNoFreeBlockError(
+            localize(
+                I18N.errors.team_signing.no_free_team_block,
+                team_name=team_name,
+                sheet_name=worksheet_title,
+            )
+        )
+
+    @staticmethod
     def _extract_block_title(
             cell_grid: dict[int, dict[int, SheetCell]],
             row_index: int,
@@ -352,6 +590,38 @@ class GoogleSheetsTeamRepository:
                 return value
 
         return ""
+
+    @staticmethod
+    def _build_player_values_grid(
+            players: tuple[TeamSigningPlayer, ...],
+    ) -> list[list[str]]:
+        rows: list[list[str]] = []
+        for player in players:
+            rows.append(
+                [
+                    _build_player_cell_value(player.player_name, player.tracker_url),
+                    player.discord_name,
+                    player.epic_name,
+                    player.rocket_name,
+                    player.mmr,
+                ]
+            )
+
+        while len(rows) < TEAM_BLOCK_MAX_PLAYERS:
+            rows.append([PLACEHOLDER_CELL_VALUE] * TEAM_BLOCK_COLUMN_COUNT)
+
+        return rows
+
+    @staticmethod
+    def _to_team_signing_player(player: TeamProfilePlayer) -> TeamSigningPlayer:
+        return TeamSigningPlayer(
+            player_name=player.player_name,
+            tracker_url=player.tracker_url or "",
+            discord_name=player.discord_name,
+            epic_name=player.epic_name,
+            rocket_name=player.rocket_name,
+            mmr=player.mmr,
+        )
 
     @staticmethod
     def _parse_players(
@@ -387,15 +657,14 @@ class GoogleSheetsTeamRepository:
                 block.start_column + 4,
             )
 
-            if not any(
-                    (
-                            player_cell.value,
-                            discord_cell.value,
-                            epic_cell.value,
-                            rocket_cell.value,
-                            mmr_cell.value,
-                    )
-            ):
+            row_values = (
+                player_cell.value,
+                discord_cell.value,
+                epic_cell.value,
+                rocket_cell.value,
+                mmr_cell.value,
+            )
+            if _is_placeholder_row(*row_values):
                 continue
 
             players.append(
@@ -477,14 +746,13 @@ class GoogleSheetsTeamRepository:
                 block.start_column + 3,
             )
 
-            if not any(
-                    (
-                            role_cell.value,
-                            discord_cell.value,
-                            epic_cell.value,
-                            rocket_cell.value,
-                    )
-            ):
+            row_values = (
+                role_cell.value,
+                discord_cell.value,
+                epic_cell.value,
+                rocket_cell.value,
+            )
+            if _is_placeholder_row(*row_values):
                 continue
 
             members.append(
@@ -596,16 +864,118 @@ def _build_sheet_grid(sheet: dict[str, Any]) -> dict[int, dict[int, SheetCell]]:
                     continue
 
                 value = _normalize_cell_value(raw_cell.get("formattedValue"))
-                hyperlink = _normalize_cell_value(raw_cell.get("hyperlink")) or None
-                if not value and hyperlink is None:
+                formula = _extract_formula_value(raw_cell)
+                hyperlink = _extract_hyperlink_value(raw_cell, formula)
+                if not value and hyperlink is None and formula is None:
                     continue
 
                 row_cells[start_column + column_offset] = SheetCell(
                     value=value,
                     hyperlink=hyperlink,
+                    formula=formula,
                 )
 
     return grid
+
+
+def _extract_formula_value(raw_cell: dict[str, Any]) -> str | None:
+    user_entered_value = raw_cell.get("userEnteredValue")
+    if not isinstance(user_entered_value, dict):
+        return None
+
+    formula = _normalize_cell_value(user_entered_value.get("formulaValue"))
+    return formula or None
+
+
+def _extract_hyperlink_value(
+        raw_cell: dict[str, Any],
+        formula: str | None,
+) -> str | None:
+    hyperlink = _normalize_cell_value(raw_cell.get("hyperlink")) or None
+    if hyperlink is not None:
+        return hyperlink
+
+    if formula is None:
+        return None
+
+    return _extract_hyperlink_from_formula(formula)
+
+
+def _extract_hyperlink_from_formula(formula: str) -> str | None:
+    match = HYPERLINK_FORMULA_PATTERN.match(formula.strip())
+    if match is None:
+        return None
+
+    return _unescape_formula_string(match.group(1))
+
+
+def _unescape_formula_string(value: str) -> str:
+    return value.replace('""', '"')
+
+
+def _build_player_cell_value(player_name: str, tracker_url: str) -> str:
+    normalized_tracker_url = _normalize_cell_value(tracker_url)
+    if not normalized_tracker_url:
+        return player_name
+
+    escaped_url = _escape_formula_string(normalized_tracker_url)
+    escaped_player_name = _escape_formula_string(player_name)
+    return f'=HYPERLINK("{escaped_url}";"{escaped_player_name}")'
+
+
+def _escape_formula_string(value: str) -> str:
+    return value.replace('"', '""')
+
+
+def _build_a1_range(
+        worksheet_title: str,
+        start_row: int,
+        start_column: int,
+        row_count: int,
+        column_count: int,
+) -> str:
+    start_cell = f"{_column_to_letter(start_column)}{start_row + 1}"
+    end_cell = (
+        f"{_column_to_letter(start_column + column_count - 1)}"
+        f"{start_row + row_count}"
+    )
+    escaped_title = worksheet_title.replace("'", "''")
+    return f"'{escaped_title}'!{start_cell}:{end_cell}"
+
+
+def _column_to_letter(column_index: int) -> str:
+    value = column_index + 1
+    letters: list[str] = []
+    while value > 0:
+        value, remainder = divmod(value - 1, 26)
+        letters.append(chr(ord("A") + remainder))
+
+    return "".join(reversed(letters))
+
+
+def _is_placeholder_cell_value(value: str) -> bool:
+    normalized = _normalize_cell_value(value)
+    return not normalized or normalized == PLACEHOLDER_CELL_VALUE
+
+
+def _is_placeholder_row(*values: str) -> bool:
+    return all(_is_placeholder_cell_value(value) for value in values)
+
+
+def _is_free_block_title(title: str) -> bool:
+    return _is_placeholder_cell_value(title)
+
+
+def _maybe_wrap_google_http_error(exc: Exception) -> Exception | None:
+    try:
+        from googleapiclient.errors import HttpError
+    except ImportError:
+        return None
+
+    if isinstance(exc, HttpError):
+        return exc
+
+    return None
 
 
 def _extract_http_error_message(exc: Exception) -> str:

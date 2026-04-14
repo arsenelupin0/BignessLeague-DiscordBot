@@ -72,6 +72,17 @@
           }
         }
       }
+    },
+    "team_signing": {
+      "make_signing": {
+        "name": "make_signing",
+        "description": "Imports signings from a linked Discord message into Google Sheets.",
+        "parameters": {
+          "message_link": {
+            "description": "Discord message link containing the signing template."
+          }
+        }
+      }
     }
   },
   "messages": {
@@ -240,6 +251,21 @@
       "team_sheet_layout_invalid": "The sheet `{sheet_name}` does not match the expected format for team `{role_name}`.",
       "team_not_found": "No row was found in `{sheet_name}` for role `{role_name}`."
     },
+    "team_signing": {
+      "invalid_message_link": "The message link is invalid. It must be a Discord link with guild, channel, and message IDs.",
+      "foreign_guild_message_link": "The link points to a different server. Current guild: `{expected_guild_id}`. Linked guild: `{linked_guild_id}`.",
+      "message_channel_not_found": "The linked message channel was not found: `{channel_id}`.",
+      "unsupported_message_channel": "The linked message must belong to a text channel or thread.",
+      "message_not_found": "The linked message was not found: `{message_id}`.",
+      "message_fetch_forbidden": "The bot cannot access the linked message. Check its permissions in that channel.",
+      "message_fetch_failed": "The linked message could not be fetched from Discord: {details}.",
+      "invalid_message_format": "The linked message does not follow the expected signing import format: {details}.",
+      "division_not_found": "No sheet matches the division `{division_name}`.",
+      "team_sheet_layout_invalid": "The sheet `{sheet_name}` does not follow the expected layout for signing imports.",
+      "no_free_team_block": "There is no free team block left in `{sheet_name}` for `{team_name}`.",
+      "team_roster_full": "There is not enough room in `{team_name}` for these signings. Free slots: {available_slots}. Requested signings: {requested_slots}.",
+      "google_write_failed": "Google Sheets rejected the signing write request: {details}."
+    },
     "slash": {
       "forbidden": "You do not have permission to run this command.",
       "bot_missing_permissions": "The bot needs enough permissions to manage the channel.",
@@ -258,6 +284,9 @@
     },
     "match_channel_creation": {
       "created_summary": "Created {channel} in `{category}` for matchday {jornada}, match {partido}, between {team_one} and {team_two}, and posted the channel welcome message."
+    },
+    "team_signing": {
+      "completed": "Registered {inserted_count} signings in `{team_name}` within `{division_name}`. Current roster: {total_players}/6."
     }
   }
 }

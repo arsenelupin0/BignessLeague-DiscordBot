@@ -72,6 +72,17 @@
           }
         }
       }
+    },
+    "team_signing": {
+      "make_signing": {
+        "name": "hacer_fichaje",
+        "description": "Importa fichajes desde un mensaje enlazado de Discord hacia Google Sheets.",
+        "parameters": {
+          "message_link": {
+            "description": "Enlace al mensaje de Discord que contiene la plantilla de fichajes."
+          }
+        }
+      }
     }
   },
   "messages": {
@@ -240,6 +251,21 @@
       "team_sheet_layout_invalid": "La hoja `{sheet_name}` no sigue el formato esperado para el equipo `{role_name}`.",
       "team_not_found": "No se encontro ninguna fila en `{sheet_name}` para el rol `{role_name}`."
     },
+    "team_signing": {
+      "invalid_message_link": "El enlace del mensaje no es valido. Debe ser un enlace de Discord con servidor, canal y mensaje.",
+      "foreign_guild_message_link": "El enlace apunta a otro servidor. Guild actual: `{expected_guild_id}`. Guild enlazada: `{linked_guild_id}`.",
+      "message_channel_not_found": "No se encontro el canal del mensaje enlazado: `{channel_id}`.",
+      "unsupported_message_channel": "El mensaje enlazado debe pertenecer a un canal de texto o a un hilo.",
+      "message_not_found": "No se encontro el mensaje enlazado: `{message_id}`.",
+      "message_fetch_forbidden": "El bot no puede acceder al mensaje enlazado. Revisa sus permisos en ese canal.",
+      "message_fetch_failed": "No se pudo recuperar el mensaje enlazado desde Discord: {details}.",
+      "invalid_message_format": "El mensaje enlazado no sigue el formato esperado para importar fichajes: {details}.",
+      "division_not_found": "No existe ninguna hoja que coincida con la division `{division_name}`.",
+      "team_sheet_layout_invalid": "La hoja `{sheet_name}` no sigue el formato esperado para registrar fichajes.",
+      "no_free_team_block": "No hay ningun bloque de equipo libre en `{sheet_name}` para registrar a `{team_name}`.",
+      "team_roster_full": "No hay hueco suficiente en `{team_name}` para estos fichajes. Huecos libres: {available_slots}. Fichajes solicitados: {requested_slots}.",
+      "google_write_failed": "Google Sheets ha rechazado la escritura de fichajes: {details}."
+    },
     "slash": {
       "forbidden": "No tienes permisos para ejecutar este comando.",
       "bot_missing_permissions": "El bot necesita permisos suficientes para gestionar el canal.",
@@ -258,6 +284,9 @@
     },
     "match_channel_creation": {
       "created_summary": "Se ha creado {channel} en `{category}` para la jornada {jornada}, partido {partido}, entre {team_one} y {team_two}, y se ha enviado el mensaje inicial del canal."
+    },
+    "team_signing": {
+      "completed": "Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6."
     }
   }
 }
