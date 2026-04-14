@@ -113,6 +113,10 @@
         "list_trackers": "List trackers",
         "cancel": "Cancel"
       },
+      "role_selection": {
+        "prompt": "You have multiple team roles and the bot cannot decide which one to use: {role_names}. Select the team you want to view.",
+        "timeout": "Team selection expired."
+      },
       "trackers": {
         "title": "# Trackers",
         "entry": "{emoji} -> [{display_url}]({destination_url})",

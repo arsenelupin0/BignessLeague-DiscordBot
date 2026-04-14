@@ -18,10 +18,11 @@ from discord.ext import commands
 
 from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.discord.channel_management import (
+    MemberTeamRoleMissingError,
     UnsupportedChannelError,
     ensure_member_can_access_team_features,
     get_channel_access_role_catalog,
-    resolve_member_team_role,
+    get_member_team_roles,
 )
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
@@ -34,6 +35,9 @@ from bigness_league_bot.infrastructure.google.team_sheet_repository import (
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
+from bigness_league_bot.presentation.discord.views.team_profile_team_selection import (
+    TeamProfileTeamSelectionView,
+)
 from bigness_league_bot.presentation.discord.views.team_profile_tracker_actions import (
     TeamProfileTrackerActionsView,
 )
@@ -67,7 +71,32 @@ class TeamProfileCog(commands.Cog):
             settings.channel_access_range_end_role_id,
         )
         ensure_member_can_access_team_features(interaction.user, role_catalog)
-        team_role = resolve_member_team_role(interaction.user, role_catalog)
+        member_team_roles = get_member_team_roles(interaction.user, role_catalog)
+        if not member_team_roles:
+            raise MemberTeamRoleMissingError(
+                localize(I18N.errors.team_profile.team_role_missing)
+            )
+
+        if len(member_team_roles) > 1:
+            role_names = ", ".join(role.name for role in member_team_roles)
+            view = TeamProfileTeamSelectionView(
+                actor=interaction.user,
+                team_roles=member_team_roles,
+                localizer=interaction.client.localizer,
+                locale=interaction.locale,
+            )
+            await interaction.response.send_message(
+                interaction.client.localizer.translate(
+                    I18N.messages.team_profile.role_selection.prompt,
+                    locale=interaction.locale,
+                    role_names=role_names,
+                ),
+                view=view,
+            )
+            view.message = await interaction.original_response()
+            return
+
+        team_role = member_team_roles[0]
 
         repository = GoogleSheetsTeamRepository(settings)
         team_profile = await repository.find_team_profile_for_role(team_role)

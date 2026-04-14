@@ -113,6 +113,10 @@
         "list_trackers": "Listar trackers",
         "cancel": "Cancelar"
       },
+      "role_selection": {
+        "prompt": "Tienes varios roles de equipo y no se puede decidir cual usar: {role_names}. Selecciona el equipo que quieres consultar.",
+        "timeout": "La seleccion de equipo ha expirado."
+      },
       "trackers": {
         "title": "# Trackers",
         "entry": "{emoji} -> [{display_url}]({destination_url})",

@@ -112,6 +112,7 @@ Restricciones de `/cerrar_canal`:
 - exige que tengas exactamente un rol de equipo dentro del rango configurado
 - `Staff`, `Administrador` y `Ceo` pasan la validacion general del comando, pero el bot sigue necesitando identificar un
   unico rol de equipo para saber que bloque mostrar
+- si tienes varios roles de equipo, el bot muestra una botonera para que elijas cual consultar
 - busca el bloque de tu equipo en la hoja de Google Sheets configurada
 - toma la division directamente del nombre de la hoja
 - lee el tracker desde el hipervinculo de la celda `Jugador`

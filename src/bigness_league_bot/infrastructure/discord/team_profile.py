@@ -15,7 +15,7 @@ import math
 import re
 from io import BytesIO
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import unquote, urlsplit, urlunsplit
 
 import discord
 import unicodedata
@@ -707,17 +707,36 @@ def _normalize_tracker_destination_url(url: str | None) -> str | None:
         return None
 
     normalized_url = _sanitize_text(url)
-    if normalized_url.endswith("/overview"):
-        normalized_url = normalized_url[: -len("/overview")]
-
-    normalized_url = normalized_url.rstrip("/")
-    if not normalized_url:
-        return None
-
     if not normalized_url.startswith(("https://", "http://")):
         normalized_url = f"https://{normalized_url}"
 
-    return normalized_url
+    split_url = urlsplit(normalized_url)
+    path_segments = [segment for segment in split_url.path.split("/") if segment]
+    if not path_segments:
+        return None
+
+    canonical_segments = path_segments
+    if (
+            len(path_segments) >= 4
+            and path_segments[0].casefold() == "rocket-league"
+            and path_segments[1].casefold() == "profile"
+    ):
+        canonical_segments = path_segments[:4]
+    elif len(path_segments) > 1:
+        canonical_segments = path_segments[:-1]
+
+    canonical_path = "/" + "/".join(canonical_segments)
+    canonical_url = urlunsplit(
+        (
+            split_url.scheme or "https",
+            split_url.netloc,
+            canonical_path,
+            "",
+            "",
+        )
+    ).rstrip("/")
+
+    return canonical_url or None
 
 
 def _position_emoji(position: int) -> str:

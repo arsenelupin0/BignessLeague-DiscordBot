@@ -190,12 +190,17 @@ class _MessagesTeamProfileAnsi:
     technical_staff: _MessagesTeamProfileAnsiTechnicalStaff = _MessagesTeamProfileAnsiTechnicalStaff()
     fallback: _MessagesTeamProfileAnsiFallback = _MessagesTeamProfileAnsiFallback()
 
-
 class _MessagesTeamProfileButtons:
     list_trackers: TranslationKey = TranslationKey(key="messages.team_profile.buttons.list_trackers",
                                                    default_text="Listar trackers")
     cancel: TranslationKey = TranslationKey(key="messages.team_profile.buttons.cancel", default_text="Cancelar")
 
+
+class _MessagesTeamProfileRoleSelection:
+    prompt: TranslationKey = TranslationKey(key="messages.team_profile.role_selection.prompt",
+                                            default_text="Tienes varios roles de equipo y no se puede decidir cual usar: {role_names}. Selecciona el equipo que quieres consultar.")
+    timeout: TranslationKey = TranslationKey(key="messages.team_profile.role_selection.timeout",
+                                             default_text="La seleccion de equipo ha expirado.")
 
 class _MessagesTeamProfileTrackers:
     title: TranslationKey = TranslationKey(key="messages.team_profile.trackers.title", default_text="# Trackers")
@@ -207,6 +212,7 @@ class _MessagesTeamProfileTrackers:
 class _MessagesTeamProfile:
     ansi: _MessagesTeamProfileAnsi = _MessagesTeamProfileAnsi()
     buttons: _MessagesTeamProfileButtons = _MessagesTeamProfileButtons()
+    role_selection: _MessagesTeamProfileRoleSelection = _MessagesTeamProfileRoleSelection()
     trackers: _MessagesTeamProfileTrackers = _MessagesTeamProfileTrackers()
     only_actor: TranslationKey = TranslationKey(key="messages.team_profile.only_actor",
                                                 default_text="Solo quien ejecuto el comando puede usar estos botones.")
