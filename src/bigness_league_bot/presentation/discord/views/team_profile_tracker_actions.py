@@ -138,4 +138,7 @@ class TeamProfileTrackerActionsView(discord.ui.View):
         if self.message is None:
             return
 
-        await self.message.edit(view=None)
+        try:
+            await self.message.edit(view=None)
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            return
