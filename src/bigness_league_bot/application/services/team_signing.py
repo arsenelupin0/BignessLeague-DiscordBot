@@ -40,8 +40,6 @@ REQUIRED_PLAYER_FIELDS = (
 REQUIRED_TECHNICAL_STAFF_FIELDS = (
     "role_name",
     "discord_name",
-    "epic_name",
-    "rocket_name",
 )
 
 
@@ -88,6 +86,18 @@ def _parse_mmr_sort_value(value: str) -> int:
     return int("".join(matches))
 
 
+def _unwrap_discord_code_block(content: str) -> str:
+    lines = content.strip().splitlines()
+    if (
+            len(lines) >= 2
+            and lines[0].strip().startswith("```")
+            and lines[-1].strip() == "```"
+    ):
+        return "\n".join(lines[1:-1])
+
+    return content
+
+
 @dataclass(frozen=True, slots=True)
 class TeamSigningPlayer:
     player_name: str
@@ -125,11 +135,13 @@ class TeamTechnicalStaffBatch:
 
 
 def parse_team_signing_message(content: str) -> TeamSigningBatch:
+    content = _unwrap_discord_code_block(content)
+    content_lines = content.splitlines()
     metadata: dict[str, str] = {}
     current_player: dict[str, str] | None = None
     players: list[TeamSigningPlayer] = []
 
-    for line_number, raw_line in enumerate(content.splitlines(), start=1):
+    for line_number, raw_line in enumerate(content_lines, start=1):
         line = raw_line.strip()
         if not line:
             continue
@@ -182,7 +194,7 @@ def parse_team_signing_message(content: str) -> TeamSigningBatch:
         current_player[field_name] = value
 
     if current_player is not None:
-        players.append(_build_team_signing_player(current_player, len(content.splitlines())))
+        players.append(_build_team_signing_player(current_player, len(content_lines)))
 
     division_name = metadata.get("division_name", "")
     team_name = metadata.get("team_name", "")
@@ -201,11 +213,13 @@ def parse_team_signing_message(content: str) -> TeamSigningBatch:
 
 
 def parse_team_technical_staff_message(content: str) -> TeamTechnicalStaffBatch:
+    content = _unwrap_discord_code_block(content)
+    content_lines = content.splitlines()
     metadata: dict[str, str] = {}
     current_member: dict[str, str] | None = None
     members: list[TeamTechnicalStaffMember] = []
 
-    for line_number, raw_line in enumerate(content.splitlines(), start=1):
+    for line_number, raw_line in enumerate(content_lines, start=1):
         line = raw_line.strip()
         if not line:
             continue
@@ -261,7 +275,7 @@ def parse_team_technical_staff_message(content: str) -> TeamTechnicalStaffBatch:
 
     if current_member is not None:
         members.append(
-            _build_team_technical_staff_member(current_member, len(content.splitlines()))
+            _build_team_technical_staff_member(current_member, len(content_lines))
         )
 
     division_name = metadata.get("division_name", "")
@@ -365,6 +379,6 @@ def _build_team_technical_staff_member(
     return TeamTechnicalStaffMember(
         role_name=payload["role_name"],
         discord_name=payload["discord_name"],
-        epic_name=payload["epic_name"],
-        rocket_name=payload["rocket_name"],
+        epic_name=payload.get("epic_name", ""),
+        rocket_name=payload.get("rocket_name", ""),
     )

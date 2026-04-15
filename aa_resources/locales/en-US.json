@@ -290,6 +290,8 @@
       "team_sheet_layout_invalid": "The sheet `{sheet_name}` does not follow the expected layout for signing imports.",
       "no_free_team_block": "There is no free team block left in `{sheet_name}` for `{team_name}`.",
       "technical_staff_role_not_found": "The technical staff row `{role_name}` does not exist for `{team_name}` in `{sheet_name}`.",
+      "technical_staff_player_not_found": "Technical staff `{role_name}` could not be completed because Discord `{discord_name}` does not exist in the player roster for `{team_name}` in `{sheet_name}`.",
+      "technical_staff_player_duplicate": "Technical staff `{role_name}` could not be completed because Discord `{discord_name}` appears more than once in the player roster for `{team_name}` in `{sheet_name}`.",
       "player_not_found": "No player with Discord `{discord_name}` was found in Google Sheets.",
       "player_duplicate": "There are multiple players with Discord `{discord_name}` in Google Sheets: {locations}. Fix it manually before continuing.",
       "remaining_signings_invalid": "The remaining signings cell is invalid for `{team_name}` in `{sheet_name}`.",

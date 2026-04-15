@@ -136,10 +136,14 @@ Restricciones de `/cerrar_canal`:
 - solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
 - recibe `enlace_jugadores` y `enlace_staff_tecnico` como enlaces opcionales; debes indicar al menos uno
 - ambos mensajes enlazados deben incluir siempre las cabeceras `Division:` y `Equipo:`
+- ambos mensajes enlazados pueden venir encerrados en un bloque de codigo de Discord con triple backtick
 - si indicas ambos enlaces, ambos deben apuntar a la misma `Division` y al mismo `Equipo`
 - `enlace_jugadores` usa el formato `Division`, `Equipo` y bloques repetidos de jugador
-- `enlace_staff_tecnico` usa el formato `Division`, `Equipo` y bloques repetidos de `Rol`, `Discord`, `Epic Name` y
-  `Rocket In-Game Name`
+- `enlace_staff_tecnico` usa el formato `Division`, `Equipo` y bloques repetidos de `Rol` y `Discord`
+- en `enlace_staff_tecnico`, `Epic Name` y `Rocket In-Game Name` son opcionales; si faltan, el bot los copia desde el
+  jugador con ese mismo `Discord` dentro del bloque del equipo
+- si el `Discord` del staff no existe en la plantilla de jugadores del equipo, o aparece duplicado, el comando rechaza
+  la operacion
 - resuelve la hoja destino por el nombre de la division
 - si el equipo ya existe, mezcla la plantilla actual con los nuevos fichajes
 - si el equipo no existe, usa el primer bloque de equipo libre en esa hoja

@@ -290,6 +290,8 @@
       "team_sheet_layout_invalid": "La hoja `{sheet_name}` no sigue el formato esperado para registrar fichajes.",
       "no_free_team_block": "No hay ningun bloque de equipo libre en `{sheet_name}` para registrar a `{team_name}`.",
       "technical_staff_role_not_found": "No existe la fila de staff tecnico `{role_name}` para `{team_name}` en `{sheet_name}`.",
+      "technical_staff_player_not_found": "No se pudo completar el staff tecnico `{role_name}` porque el Discord `{discord_name}` no existe en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.",
+      "technical_staff_player_duplicate": "No se pudo completar el staff tecnico `{role_name}` porque el Discord `{discord_name}` aparece duplicado en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.",
       "player_not_found": "No se encontro ningun jugador con el Discord `{discord_name}` en Google Sheets.",
       "player_duplicate": "Hay varios jugadores con el Discord `{discord_name}` en Google Sheets: {locations}. Corrigelo manualmente antes de continuar.",
       "remaining_signings_invalid": "La celda de fichajes restantes no es valida para `{team_name}` en `{sheet_name}`.",

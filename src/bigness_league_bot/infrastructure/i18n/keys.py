@@ -138,7 +138,6 @@ class _CommandsTeamSigningMakeSigningParametersMessageLink:
         key="commands.team_signing.make_signing.parameters.message_link.description",
         default_text="Enlace al mensaje de Discord que contiene la plantilla de jugadores.")
 
-
 class _CommandsTeamSigningMakeSigningParametersTechnicalStaffMessageLink:
     description: TranslationKey = TranslationKey(
         key="commands.team_signing.make_signing.parameters.technical_staff_message_link.description",
@@ -522,6 +521,12 @@ class _ErrorsTeamSigning:
     technical_staff_role_not_found: TranslationKey = TranslationKey(
         key="errors.team_signing.technical_staff_role_not_found",
         default_text="No existe la fila de staff tecnico `{role_name}` para `{team_name}` en `{sheet_name}`.")
+    technical_staff_player_not_found: TranslationKey = TranslationKey(
+        key="errors.team_signing.technical_staff_player_not_found",
+        default_text="No se pudo completar el staff tecnico `{role_name}` porque el Discord `{discord_name}` no existe en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.")
+    technical_staff_player_duplicate: TranslationKey = TranslationKey(
+        key="errors.team_signing.technical_staff_player_duplicate",
+        default_text="No se pudo completar el staff tecnico `{role_name}` porque el Discord `{discord_name}` aparece duplicado en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.")
     player_not_found: TranslationKey = TranslationKey(key="errors.team_signing.player_not_found",
                                                       default_text="No se encontro ningun jugador con el Discord `{discord_name}` en Google Sheets.")
     player_duplicate: TranslationKey = TranslationKey(key="errors.team_signing.player_duplicate",

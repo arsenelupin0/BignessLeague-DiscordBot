@@ -133,6 +133,14 @@ class TeamSheetTechnicalStaffRoleNotFoundError(TeamSheetError):
     """Raised when a requested technical staff role does not exist in the block."""
 
 
+class TeamSheetTechnicalStaffPlayerNotFoundError(TeamSheetError):
+    """Raised when staff data cannot be completed from the roster."""
+
+
+class TeamSheetTechnicalStaffPlayerDuplicateError(TeamSheetError):
+    """Raised when staff data completion finds multiple roster players."""
+
+
 def _normalize_cell_value(value: Any) -> str:
     if value is None:
         return ""
@@ -591,6 +599,10 @@ class GoogleSheetsTeamRepository:
             target_block,
             worksheet_name=worksheet_title,
         )
+        players_by_discord = self._collect_players_by_discord(
+            cell_grid,
+            target_block,
+        )
         for member in technical_staff_batch.members:
             target_row = technical_staff_rows.get(
                 _normalize_technical_staff_role_name(member.role_name)
@@ -605,6 +617,12 @@ class GoogleSheetsTeamRepository:
                     )
                 )
 
+            discord_name, epic_name, rocket_name = self._resolve_technical_staff_values(
+                member,
+                players_by_discord,
+                team_name=technical_staff_batch.team_name,
+                worksheet_name=worksheet_title,
+            )
             update_data.append(
                 {
                     "range": _build_a1_range(
@@ -615,9 +633,9 @@ class GoogleSheetsTeamRepository:
                         3,
                     ),
                     "values": [[
-                        member.discord_name,
-                        member.epic_name,
-                        member.rocket_name,
+                        discord_name,
+                        epic_name,
+                        rocket_name,
                     ]],
                 }
             )
@@ -1151,6 +1169,65 @@ class GoogleSheetsTeamRepository:
             member.role_name
             for member in technical_staff
             if _normalize_member_lookup_text(member.discord_name) == normalized_discord_name
+        )
+
+    @staticmethod
+    def _collect_players_by_discord(
+            cell_grid: dict[int, dict[int, SheetCell]],
+            block: TeamBlockAnchor,
+    ) -> dict[str, tuple[TeamProfilePlayer, ...]]:
+        players_by_discord: dict[str, list[TeamProfilePlayer]] = {}
+        for player in GoogleSheetsTeamRepository._parse_players(cell_grid, block):
+            normalized_discord_name = _normalize_member_lookup_text(player.discord_name)
+            if not normalized_discord_name:
+                continue
+
+            players_by_discord.setdefault(normalized_discord_name, []).append(player)
+
+        return {
+            discord_name: tuple(players)
+            for discord_name, players in players_by_discord.items()
+        }
+
+    @staticmethod
+    def _resolve_technical_staff_values(
+            member: TeamTechnicalStaffMember,
+            players_by_discord: dict[str, tuple[TeamProfilePlayer, ...]],
+            *,
+            team_name: str,
+            worksheet_name: str,
+    ) -> tuple[str, str, str]:
+        if member.epic_name and member.rocket_name:
+            return member.discord_name, member.epic_name, member.rocket_name
+
+        normalized_discord_name = _normalize_member_lookup_text(member.discord_name)
+        matching_players = players_by_discord.get(normalized_discord_name, ())
+        if not matching_players:
+            raise TeamSheetTechnicalStaffPlayerNotFoundError(
+                localize(
+                    I18N.errors.team_signing.technical_staff_player_not_found,
+                    discord_name=member.discord_name,
+                    role_name=member.role_name,
+                    team_name=team_name,
+                    sheet_name=worksheet_name,
+                )
+            )
+        if len(matching_players) > 1:
+            raise TeamSheetTechnicalStaffPlayerDuplicateError(
+                localize(
+                    I18N.errors.team_signing.technical_staff_player_duplicate,
+                    discord_name=member.discord_name,
+                    role_name=member.role_name,
+                    team_name=team_name,
+                    sheet_name=worksheet_name,
+                )
+            )
+
+        player = matching_players[0]
+        return (
+            member.discord_name,
+            member.epic_name or player.epic_name,
+            member.rocket_name or player.rocket_name,
         )
 
     @staticmethod
