@@ -22,6 +22,12 @@ MESSAGE_PLAYER_KEYS = {
     "rocket in-game name": "rocket_name",
     "mmr": "mmr",
 }
+MESSAGE_TECHNICAL_STAFF_KEYS = {
+    "rol": "role_name",
+    "discord": "discord_name",
+    "epic name": "epic_name",
+    "rocket in-game name": "rocket_name",
+}
 REQUIRED_PLAYER_FIELDS = (
     "position",
     "player_name",
@@ -30,6 +36,12 @@ REQUIRED_PLAYER_FIELDS = (
     "epic_name",
     "rocket_name",
     "mmr",
+)
+REQUIRED_TECHNICAL_STAFF_FIELDS = (
+    "role_name",
+    "discord_name",
+    "epic_name",
+    "rocket_name",
 )
 
 
@@ -95,6 +107,21 @@ class TeamSigningBatch:
     division_name: str
     team_name: str
     players: tuple[TeamSigningPlayer, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class TeamTechnicalStaffMember:
+    role_name: str
+    discord_name: str
+    epic_name: str
+    rocket_name: str
+
+
+@dataclass(frozen=True, slots=True)
+class TeamTechnicalStaffBatch:
+    division_name: str
+    team_name: str
+    members: tuple[TeamTechnicalStaffMember, ...]
 
 
 def parse_team_signing_message(content: str) -> TeamSigningBatch:
@@ -173,6 +200,88 @@ def parse_team_signing_message(content: str) -> TeamSigningBatch:
     )
 
 
+def parse_team_technical_staff_message(content: str) -> TeamTechnicalStaffBatch:
+    metadata: dict[str, str] = {}
+    current_member: dict[str, str] | None = None
+    members: list[TeamTechnicalStaffMember] = []
+
+    for line_number, raw_line in enumerate(content.splitlines(), start=1):
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        if ":" not in line:
+            raise TeamSigningParseError(
+                f"La linea {line_number} no sigue el formato `Campo: Valor`."
+            )
+
+        raw_key, raw_value = line.split(":", 1)
+        key = _normalize_key(raw_key)
+        value = _normalize_value(raw_value)
+        if not value:
+            raise TeamSigningParseError(
+                f"La linea {line_number} no contiene un valor valido para `{raw_key.strip()}`."
+            )
+
+        if key in MESSAGE_METADATA_KEYS:
+            if current_member is not None:
+                raise TeamSigningParseError(
+                    f"La linea {line_number} aparece despues del bloque de staff tecnico."
+                )
+
+            metadata[MESSAGE_METADATA_KEYS[key]] = value
+            continue
+
+        if key == "rol":
+            if current_member is not None:
+                members.append(
+                    _build_team_technical_staff_member(current_member, line_number - 1)
+                )
+
+            current_member = {"role_name": value}
+            continue
+
+        if key not in MESSAGE_TECHNICAL_STAFF_KEYS:
+            raise TeamSigningParseError(
+                f"La linea {line_number} usa un campo no reconocido: `{raw_key.strip()}`."
+            )
+
+        if current_member is None:
+            raise TeamSigningParseError(
+                f"La linea {line_number} aparece antes de definir `Rol:`."
+            )
+
+        field_name = MESSAGE_TECHNICAL_STAFF_KEYS[key]
+        if field_name in current_member:
+            raise TeamSigningParseError(
+                f"El campo `{raw_key.strip()}` esta repetido en el bloque actual."
+            )
+
+        current_member[field_name] = value
+
+    if current_member is not None:
+        members.append(
+            _build_team_technical_staff_member(current_member, len(content.splitlines()))
+        )
+
+    division_name = metadata.get("division_name", "")
+    team_name = metadata.get("team_name", "")
+    if not division_name:
+        raise TeamSigningParseError("Falta la cabecera `Division:` en el mensaje enlazado.")
+    if not team_name:
+        raise TeamSigningParseError("Falta la cabecera `Equipo:` en el mensaje enlazado.")
+    if not members:
+        raise TeamSigningParseError(
+            "El mensaje enlazado no contiene ningun bloque de staff tecnico."
+        )
+
+    return TeamTechnicalStaffBatch(
+        division_name=division_name,
+        team_name=team_name,
+        members=tuple(members),
+    )
+
+
 def sort_team_signing_players(
         players: Iterable[TeamSigningPlayer],
 ) -> tuple[TeamSigningPlayer, ...]:
@@ -235,4 +344,27 @@ def _build_team_signing_player(
         epic_name=payload["epic_name"],
         rocket_name=payload["rocket_name"],
         mmr=mmr_value,
+    )
+
+
+def _build_team_technical_staff_member(
+        payload: dict[str, str],
+        line_number: int,
+) -> TeamTechnicalStaffMember:
+    missing_fields = [
+        field_name
+        for field_name in REQUIRED_TECHNICAL_STAFF_FIELDS
+        if not payload.get(field_name)
+    ]
+    if missing_fields:
+        missing_fields_label = ", ".join(missing_fields)
+        raise TeamSigningParseError(
+            f"Faltan campos obligatorios en el bloque de staff tecnico cerca de la linea {line_number}: {missing_fields_label}."
+        )
+
+    return TeamTechnicalStaffMember(
+        role_name=payload["role_name"],
+        discord_name=payload["discord_name"],
+        epic_name=payload["epic_name"],
+        rocket_name=payload["rocket_name"],
     )

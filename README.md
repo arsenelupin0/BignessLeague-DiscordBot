@@ -75,7 +75,8 @@ python -m bigness_league_bot.main
 crea un canal de partido con permisos para ambos equipos.
 
 - `/ver_mi_equipo`: busca tu equipo en Google Sheets a partir de tu rol de Discord y muestra su ficha.
-- `/hacer_fichaje enlace_mensaje:<url>`: importa fichajes desde un mensaje de Discord hacia Google Sheets.
+- `/hacer_fichaje enlace_jugadores:<url> enlace_staff_tecnico:<url>`: importa jugadores, staff tecnico o ambos desde
+  mensajes de Discord hacia Google Sheets.
 - `/dar_de_baja discord_jugador:<texto>`: elimina un jugador buscandolo globalmente por su Discord en Google Sheets.
 - `/asignar_rol_equipo_automatico equipo:<rol>`: revisa la hoja del equipo y sincroniza los roles en Discord.
 
@@ -133,13 +134,20 @@ Restricciones de `/cerrar_canal`:
 `/hacer_fichaje`:
 
 - solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
-- recibe el enlace a un mensaje de Discord con el formato `Division`, `Equipo` y bloques repetidos de jugador
+- recibe `enlace_jugadores` y `enlace_staff_tecnico` como enlaces opcionales; debes indicar al menos uno
+- ambos mensajes enlazados deben incluir siempre las cabeceras `Division:` y `Equipo:`
+- si indicas ambos enlaces, ambos deben apuntar a la misma `Division` y al mismo `Equipo`
+- `enlace_jugadores` usa el formato `Division`, `Equipo` y bloques repetidos de jugador
+- `enlace_staff_tecnico` usa el formato `Division`, `Equipo` y bloques repetidos de `Rol`, `Discord`, `Epic Name` y
+  `Rocket In-Game Name`
 - resuelve la hoja destino por el nombre de la division
 - si el equipo ya existe, mezcla la plantilla actual con los nuevos fichajes
 - si el equipo no existe, usa el primer bloque de equipo libre en esa hoja
 - ordena la plantilla resultante de mayor a menor `MMR` antes de escribir
 - rellena las filas sobrantes del bloque con `-`
 - si no hay bloque libre o no caben todos los fichajes, rechaza la operacion
+- para `staff tecnico`, localiza la fila por el valor de `Rol` dentro del bloque `STAFF TÉCNICO` y solo actualiza las
+  columnas `Discord`, `Epic Name` y `Rocket In-Game Name`
 - despues de escribir, intenta asignar automaticamente el rol general de participante y el rol del equipo a los
   miembros que ya esten en Discord, junto con el rol general de jugador
 

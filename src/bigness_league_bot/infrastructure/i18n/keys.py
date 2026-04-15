@@ -136,10 +136,17 @@ class _CommandsTeamProfile:
 class _CommandsTeamSigningMakeSigningParametersMessageLink:
     description: TranslationKey = TranslationKey(
         key="commands.team_signing.make_signing.parameters.message_link.description",
-        default_text="Enlace al mensaje de Discord que contiene la plantilla de fichajes.")
+        default_text="Enlace al mensaje de Discord que contiene la plantilla de jugadores.")
+
+
+class _CommandsTeamSigningMakeSigningParametersTechnicalStaffMessageLink:
+    description: TranslationKey = TranslationKey(
+        key="commands.team_signing.make_signing.parameters.technical_staff_message_link.description",
+        default_text="Enlace al mensaje de Discord que contiene la plantilla de staff tecnico.")
 
 class _CommandsTeamSigningMakeSigningParameters:
     message_link: _CommandsTeamSigningMakeSigningParametersMessageLink = _CommandsTeamSigningMakeSigningParametersMessageLink()
+    technical_staff_message_link: _CommandsTeamSigningMakeSigningParametersTechnicalStaffMessageLink = _CommandsTeamSigningMakeSigningParametersTechnicalStaffMessageLink()
 
 class _CommandsTeamSigningMakeSigning:
     name: TranslationKey = TranslationKey(key="commands.team_signing.make_signing.name", default_text="hacer_fichaje")
@@ -147,16 +154,13 @@ class _CommandsTeamSigningMakeSigning:
                                                  default_text="Importa fichajes desde un mensaje enlazado de Discord hacia Google Sheets.")
     parameters: _CommandsTeamSigningMakeSigningParameters = _CommandsTeamSigningMakeSigningParameters()
 
-
 class _CommandsTeamSigningRemoveSigningParametersDiscordName:
     description: TranslationKey = TranslationKey(
         key="commands.team_signing.remove_signing.parameters.discord_name.description",
         default_text="Nombre de Discord del jugador que quieres eliminar del roster.")
 
-
 class _CommandsTeamSigningRemoveSigningParameters:
     discord_name: _CommandsTeamSigningRemoveSigningParametersDiscordName = _CommandsTeamSigningRemoveSigningParametersDiscordName()
-
 
 class _CommandsTeamSigningRemoveSigning:
     name: TranslationKey = TranslationKey(key="commands.team_signing.remove_signing.name", default_text="dar_de_baja")
@@ -502,12 +506,22 @@ class _ErrorsTeamSigning:
                                                           default_text="No se pudo recuperar el mensaje enlazado desde Discord: {details}.")
     invalid_message_format: TranslationKey = TranslationKey(key="errors.team_signing.invalid_message_format",
                                                             default_text="El mensaje enlazado no sigue el formato esperado para importar fichajes: {details}.")
+    invalid_technical_staff_message_format: TranslationKey = TranslationKey(
+        key="errors.team_signing.invalid_technical_staff_message_format",
+        default_text="El mensaje enlazado no sigue el formato esperado para importar staff tecnico: {details}.")
+    no_import_payload_provided: TranslationKey = TranslationKey(key="errors.team_signing.no_import_payload_provided",
+                                                                default_text="Debes indicar al menos un enlace de jugadores o un enlace de staff tecnico.")
+    import_payload_mismatch: TranslationKey = TranslationKey(key="errors.team_signing.import_payload_mismatch",
+                                                             default_text="Los mensajes enlazados no coinciden en Division/Equipo. Jugadores: `{player_division}` / `{player_team}`. Staff: `{staff_division}` / `{staff_team}`.")
     division_not_found: TranslationKey = TranslationKey(key="errors.team_signing.division_not_found",
                                                         default_text="No existe ninguna hoja que coincida con la division `{division_name}`.")
     team_sheet_layout_invalid: TranslationKey = TranslationKey(key="errors.team_signing.team_sheet_layout_invalid",
                                                                default_text="La hoja `{sheet_name}` no sigue el formato esperado para registrar fichajes.")
     no_free_team_block: TranslationKey = TranslationKey(key="errors.team_signing.no_free_team_block",
                                                         default_text="No hay ningun bloque de equipo libre en `{sheet_name}` para registrar a `{team_name}`.")
+    technical_staff_role_not_found: TranslationKey = TranslationKey(
+        key="errors.team_signing.technical_staff_role_not_found",
+        default_text="No existe la fila de staff tecnico `{role_name}` para `{team_name}` en `{sheet_name}`.")
     player_not_found: TranslationKey = TranslationKey(key="errors.team_signing.player_not_found",
                                                       default_text="No se encontro ningun jugador con el Discord `{discord_name}` en Google Sheets.")
     player_duplicate: TranslationKey = TranslationKey(key="errors.team_signing.player_duplicate",
@@ -581,6 +595,8 @@ class _ActionsMatchChannelCreation:
 class _ActionsTeamSigning:
     completed: TranslationKey = TranslationKey(key="actions.team_signing.completed",
                                                default_text="Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.")
+    technical_staff_completed: TranslationKey = TranslationKey(key="actions.team_signing.technical_staff_completed",
+                                                               default_text="Se ha actualizado el staff tecnico de `{team_name}` en `{division_name}`. Filas actualizadas: {updated_count}.")
     removed: TranslationKey = TranslationKey(key="actions.team_signing.removed",
                                              default_text="Se ha dado de baja a `{player_name}` (`{discord_name}`) de `{team_name}` en `{division_name}`. Plantilla actual: {total_players}/6.")
     role_removal_completed: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_completed",

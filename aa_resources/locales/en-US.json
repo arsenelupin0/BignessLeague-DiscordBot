@@ -79,7 +79,10 @@
         "description": "Imports signings from a linked Discord message into Google Sheets.",
         "parameters": {
           "message_link": {
-            "description": "Discord message link containing the signing template."
+            "description": "Discord message link containing the player template."
+          },
+          "technical_staff_message_link": {
+            "description": "Discord message link containing the technical staff template."
           }
         }
       },
@@ -280,9 +283,13 @@
       "message_fetch_forbidden": "The bot cannot access the linked message. Check its permissions in that channel.",
       "message_fetch_failed": "The linked message could not be fetched from Discord: {details}.",
       "invalid_message_format": "The linked message does not follow the expected signing import format: {details}.",
+      "invalid_technical_staff_message_format": "The linked message does not follow the expected technical staff import format: {details}.",
+      "no_import_payload_provided": "You must provide at least a player message link or a technical staff message link.",
+      "import_payload_mismatch": "The linked messages do not match on Division/Team. Players: `{player_division}` / `{player_team}`. Staff: `{staff_division}` / `{staff_team}`.",
       "division_not_found": "No sheet matches the division `{division_name}`.",
       "team_sheet_layout_invalid": "The sheet `{sheet_name}` does not follow the expected layout for signing imports.",
       "no_free_team_block": "There is no free team block left in `{sheet_name}` for `{team_name}`.",
+      "technical_staff_role_not_found": "The technical staff row `{role_name}` does not exist for `{team_name}` in `{sheet_name}`.",
       "player_not_found": "No player with Discord `{discord_name}` was found in Google Sheets.",
       "player_duplicate": "There are multiple players with Discord `{discord_name}` in Google Sheets: {locations}. Fix it manually before continuing.",
       "remaining_signings_invalid": "The remaining signings cell is invalid for `{team_name}` in `{sheet_name}`.",
@@ -320,6 +327,7 @@
     },
     "team_signing": {
       "completed": "Registered {inserted_count} signings in `{team_name}` within `{division_name}`. Current roster: {total_players}/6.",
+      "technical_staff_completed": "Updated technical staff for `{team_name}` in `{division_name}`. Updated rows: {updated_count}.",
       "removed": "Removed `{player_name}` (`{discord_name}`) from `{team_name}` in `{division_name}`. Current roster: {total_players}/6.",
       "role_removal_completed": "Removed Discord roles from `{member_name}`: {roles}.",
       "role_removal_no_changes": "There were no Discord roles to remove for `{member_name}`.",

@@ -8,7 +8,10 @@ from discord.ext import commands
 
 from bigness_league_bot.application.services.team_signing import (
     TeamSigningParseError,
+    TeamTechnicalStaffBatch,
+    TeamSigningBatch,
     parse_team_signing_message,
+    parse_team_technical_staff_message,
 )
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import TranslationKeyLike, localize
@@ -36,6 +39,8 @@ from bigness_league_bot.infrastructure.discord.team_signing import (
 )
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     GoogleSheetsTeamRepository,
+    TeamSigningWriteResult,
+    TeamTechnicalStaffWriteResult,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
@@ -53,14 +58,18 @@ class TeamSigningCog(commands.Cog):
     )
     @app_commands.guild_only()
     @app_commands.describe(
-        enlace_mensaje=localized_locale_str(
+        enlace_jugadores=localized_locale_str(
             I18N.commands.team_signing.make_signing.parameters.message_link.description
+        ),
+        enlace_staff_tecnico=localized_locale_str(
+            I18N.commands.team_signing.make_signing.parameters.technical_staff_message_link.description
         )
     )
     async def make_signing(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
-            enlace_mensaje: str,
+            enlace_jugadores: str | None = None,
+            enlace_staff_tecnico: str | None = None,
     ) -> None:
         guild = interaction.guild
         if guild is None or not isinstance(interaction.user, discord.Member):
@@ -69,6 +78,10 @@ class TeamSigningCog(commands.Cog):
             )
 
         ensure_allowed_member(interaction.user)
+        if enlace_jugadores is None and enlace_staff_tecnico is None:
+            raise CommandUserError(
+                localize(I18N.errors.team_signing.no_import_payload_provided)
+            )
 
         await interaction.response.defer(thinking=True)
         settings = interaction.client.settings
@@ -77,46 +90,52 @@ class TeamSigningCog(commands.Cog):
             settings.channel_access_range_start_role_id,
             settings.channel_access_range_end_role_id,
         )
-        linked_message = await fetch_linked_message(
-            interaction.client,
-            guild,
-            enlace_mensaje,
+        signing_batch = await self._parse_player_signing_batch(
+            interaction,
+            guild=guild,
+            message_link=enlace_jugadores,
         )
-        try:
-            signing_batch = parse_team_signing_message(linked_message.content)
-        except TeamSigningParseError as exc:
-            raise CommandUserError(
-                localize(
-                    I18N.errors.team_signing.invalid_message_format,
-                    details=str(exc),
-                )
-            ) from exc
+        technical_staff_batch = await self._parse_technical_staff_batch(
+            interaction,
+            guild=guild,
+            message_link=enlace_staff_tecnico,
+        )
+        division_name, team_name = self._resolve_import_target(
+            signing_batch=signing_batch,
+            technical_staff_batch=technical_staff_batch,
+        )
 
-        team_role = resolve_team_role_by_name(signing_batch.team_name, role_catalog)
-        participant_role = resolve_participant_role(
-            guild,
-            settings.participant_role_id,
-        )
-        player_role = resolve_player_role(
-            guild,
-            settings.player_role_id,
-        )
         repository = GoogleSheetsTeamRepository(interaction.client.settings)
-        result = await repository.register_team_signings(signing_batch)
-        assignment_summary = await assign_team_roles_by_names(
-            guild,
-            team_role=team_role,
-            common_roles=(participant_role, player_role),
-            actor=interaction.user,
-            member_names=(player.discord_name for player in signing_batch.players),
-        )
+        player_result = None
+        assignment_summary = None
+        if signing_batch is not None:
+            team_role = resolve_team_role_by_name(team_name, role_catalog)
+            participant_role = resolve_participant_role(guild, settings.participant_role_id)
+            player_role = resolve_player_role(guild, settings.player_role_id)
+            player_result = await repository.register_team_signings(signing_batch)
+            assignment_summary = await assign_team_roles_by_names(
+                guild,
+                team_role=team_role,
+                common_roles=(participant_role, player_role),
+                actor=interaction.user,
+                member_names=(player.discord_name for player in signing_batch.players),
+            )
+
+        technical_staff_result = None
+        if technical_staff_batch is not None:
+            technical_staff_result = await repository.register_team_technical_staff(
+                technical_staff_batch
+            )
+
         await interaction.followup.send(
-            self._build_signing_completed_message(
+            self._build_import_completed_message(
                 interaction,
-                division_name=result.worksheet_title,
-                team_name=result.team_name,
-                inserted_count=result.inserted_count,
-                total_players=result.total_players,
+                division_name=division_name,
+                team_name=team_name,
+                signing_batch=signing_batch,
+                technical_staff_batch=technical_staff_batch,
+                player_result=player_result,
+                technical_staff_result=technical_staff_result,
                 assignment_summary=assignment_summary,
             ),
             allowed_mentions=discord.AllowedMentions.none(),
@@ -240,43 +259,145 @@ class TeamSigningCog(commands.Cog):
         )
 
     @staticmethod
-    def _build_signing_completed_message(
+    async def _parse_player_signing_batch(
+            interaction: discord.Interaction[BignessLeagueBot],
+            *,
+            guild: discord.Guild,
+            message_link: str | None,
+    ) -> TeamSigningBatch | None:
+        if message_link is None:
+            return None
+
+        linked_message = await fetch_linked_message(
+            interaction.client,
+            guild,
+            message_link,
+        )
+        try:
+            return parse_team_signing_message(linked_message.content)
+        except TeamSigningParseError as exc:
+            raise CommandUserError(
+                localize(
+                    I18N.errors.team_signing.invalid_message_format,
+                    details=str(exc),
+                )
+            ) from exc
+
+    @staticmethod
+    async def _parse_technical_staff_batch(
+            interaction: discord.Interaction[BignessLeagueBot],
+            *,
+            guild: discord.Guild,
+            message_link: str | None,
+    ) -> TeamTechnicalStaffBatch | None:
+        if message_link is None:
+            return None
+
+        linked_message = await fetch_linked_message(
+            interaction.client,
+            guild,
+            message_link,
+        )
+        try:
+            return parse_team_technical_staff_message(linked_message.content)
+        except TeamSigningParseError as exc:
+            raise CommandUserError(
+                localize(
+                    I18N.errors.team_signing.invalid_technical_staff_message_format,
+                    details=str(exc),
+                )
+            ) from exc
+
+    @staticmethod
+    def _resolve_import_target(
+            *,
+            signing_batch: TeamSigningBatch | None,
+            technical_staff_batch: TeamTechnicalStaffBatch | None,
+    ) -> tuple[str, str]:
+        primary_batch = signing_batch or technical_staff_batch
+        if primary_batch is None:
+            raise CommandUserError(
+                localize(I18N.errors.team_signing.no_import_payload_provided)
+            )
+
+        division_name = primary_batch.division_name
+        team_name = primary_batch.team_name
+        if (
+                signing_batch is not None
+                and technical_staff_batch is not None
+                and (
+                signing_batch.division_name != technical_staff_batch.division_name
+                or signing_batch.team_name != technical_staff_batch.team_name
+        )
+        ):
+            raise CommandUserError(
+                localize(
+                    I18N.errors.team_signing.import_payload_mismatch,
+                    player_division=signing_batch.division_name,
+                    player_team=signing_batch.team_name,
+                    staff_division=technical_staff_batch.division_name,
+                    staff_team=technical_staff_batch.team_name,
+                )
+            )
+
+        return division_name, team_name
+
+    @staticmethod
+    def _build_import_completed_message(
             interaction: discord.Interaction[BignessLeagueBot],
             *,
             division_name: str,
             team_name: str,
-            inserted_count: int,
-            total_players: int,
-            assignment_summary: TeamRoleAssignmentSummary,
+            signing_batch: TeamSigningBatch | None,
+            technical_staff_batch: TeamTechnicalStaffBatch | None,
+            player_result: TeamSigningWriteResult | None,
+            technical_staff_result: TeamTechnicalStaffWriteResult | None,
+            assignment_summary: TeamRoleAssignmentSummary | None,
     ) -> str:
         localizer = interaction.client.localizer
         locale = interaction.locale
-        message_lines = [
-            localizer.translate(
-                I18N.actions.team_signing.completed,
-                locale=locale,
-                division_name=division_name,
-                team_name=team_name,
-                inserted_count=str(inserted_count),
-                total_players=str(total_players),
-            ),
-            localizer.translate(
-                I18N.actions.team_signing.role_assignment_summary,
-                locale=locale,
-                assigned_count=str(len(assignment_summary.assigned_members)),
-                already_count=str(len(assignment_summary.already_configured_members)),
-                unresolved_count=str(len(assignment_summary.unresolved_names)),
-                ambiguous_count=str(len(assignment_summary.ambiguous_names)),
-            ),
-        ]
-        message_lines.extend(
-            TeamSigningCog._build_assignment_detail_lines(
-                interaction,
-                assignment_summary=assignment_summary,
-                unresolved_key=I18N.actions.team_signing.role_assignment_unresolved,
-                ambiguous_key=I18N.actions.team_signing.role_assignment_ambiguous,
+        message_lines: list[str] = []
+        if player_result is not None and signing_batch is not None and assignment_summary is not None:
+            message_lines.append(
+                localizer.translate(
+                    I18N.actions.team_signing.completed,
+                    locale=locale,
+                    division_name=division_name,
+                    team_name=team_name,
+                    inserted_count=str(player_result.inserted_count),
+                    total_players=str(player_result.total_players),
+                )
             )
-        )
+            message_lines.append(
+                localizer.translate(
+                    I18N.actions.team_signing.role_assignment_summary,
+                    locale=locale,
+                    assigned_count=str(len(assignment_summary.assigned_members)),
+                    already_count=str(len(assignment_summary.already_configured_members)),
+                    unresolved_count=str(len(assignment_summary.unresolved_names)),
+                    ambiguous_count=str(len(assignment_summary.ambiguous_names)),
+                )
+            )
+            message_lines.extend(
+                TeamSigningCog._build_assignment_detail_lines(
+                    interaction,
+                    assignment_summary=assignment_summary,
+                    unresolved_key=I18N.actions.team_signing.role_assignment_unresolved,
+                    ambiguous_key=I18N.actions.team_signing.role_assignment_ambiguous,
+                )
+            )
+
+        if technical_staff_result is not None and technical_staff_batch is not None:
+            message_lines.append(
+                localizer.translate(
+                    I18N.actions.team_signing.technical_staff_completed,
+                    locale=locale,
+                    division_name=division_name,
+                    team_name=team_name,
+                    updated_count=str(technical_staff_result.updated_count),
+                )
+            )
+
         return "\n".join(message_lines)
 
     @staticmethod

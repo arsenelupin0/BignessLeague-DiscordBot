@@ -30,6 +30,7 @@ from bigness_league_bot.application.services.team_signing import (
     TeamSigningBatch,
     TeamSigningCapacityError,
     TeamSigningPlayer,
+    TeamTechnicalStaffBatch,
     merge_team_signing_players,
 )
 from bigness_league_bot.application.services.team_signing import (
@@ -128,6 +129,10 @@ class TeamSheetDuplicatePlayerError(TeamSheetError):
     """Raised when more than one player matches the same Discord name."""
 
 
+class TeamSheetTechnicalStaffRoleNotFoundError(TeamSheetError):
+    """Raised when a requested technical staff role does not exist in the block."""
+
+
 def _normalize_cell_value(value: Any) -> str:
     if value is None:
         return ""
@@ -216,6 +221,13 @@ class TeamPlayerMatch:
     player: TeamProfilePlayer
 
 
+@dataclass(frozen=True, slots=True)
+class TeamTechnicalStaffWriteResult:
+    worksheet_title: str
+    team_name: str
+    updated_count: int
+
+
 class GoogleSheetsTeamRepository:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
@@ -234,6 +246,15 @@ class GoogleSheetsTeamRepository:
         return await asyncio.to_thread(
             self._register_team_signings_sync,
             signing_batch,
+        )
+
+    async def register_team_technical_staff(
+            self,
+            technical_staff_batch: TeamTechnicalStaffBatch,
+    ) -> TeamTechnicalStaffWriteResult:
+        return await asyncio.to_thread(
+            self._register_team_technical_staff_sync,
+            technical_staff_batch,
         )
 
     async def remove_team_player_by_discord(
@@ -524,6 +545,106 @@ class GoogleSheetsTeamRepository:
             removed_player_name=player_match.player.player_name,
             total_players=len(sorted_remaining_players),
             technical_staff_role_names=technical_staff_role_names,
+        )
+
+    def _register_team_technical_staff_sync(
+            self,
+            technical_staff_batch: TeamTechnicalStaffBatch,
+    ) -> TeamTechnicalStaffWriteResult:
+        service = self._build_google_sheets_service(read_only=False)
+        _, sheet_grids = self._fetch_sheet_grids(service)
+        worksheet_title, cell_grid = self._find_division_sheet(
+            technical_staff_batch.division_name,
+            sheet_grids,
+        )
+        team_blocks = self._collect_team_blocks(cell_grid)
+        if not team_blocks:
+            raise TeamSheetLayoutError(
+                localize(
+                    I18N.errors.team_signing.team_sheet_layout_invalid,
+                    sheet_name=worksheet_title,
+                )
+            )
+
+        target_block = self._resolve_target_team_block(
+            technical_staff_batch.team_name,
+            team_blocks,
+            worksheet_title=worksheet_title,
+        )
+        update_data: list[dict[str, Any]] = []
+        if _is_free_block_title(target_block.title):
+            update_data.append(
+                {
+                    "range": _build_a1_range(
+                        worksheet_title,
+                        target_block.title_row,
+                        target_block.start_column,
+                        1,
+                        1,
+                    ),
+                    "values": [[technical_staff_batch.team_name]],
+                }
+            )
+
+        technical_staff_rows = self._collect_technical_staff_rows(
+            cell_grid,
+            target_block,
+            worksheet_name=worksheet_title,
+        )
+        for member in technical_staff_batch.members:
+            target_row = technical_staff_rows.get(
+                _normalize_technical_staff_role_name(member.role_name)
+            )
+            if target_row is None:
+                raise TeamSheetTechnicalStaffRoleNotFoundError(
+                    localize(
+                        I18N.errors.team_signing.technical_staff_role_not_found,
+                        team_name=technical_staff_batch.team_name,
+                        role_name=member.role_name,
+                        sheet_name=worksheet_title,
+                    )
+                )
+
+            update_data.append(
+                {
+                    "range": _build_a1_range(
+                        worksheet_title,
+                        target_row,
+                        target_block.start_column + 1,
+                        1,
+                        3,
+                    ),
+                    "values": [[
+                        member.discord_name,
+                        member.epic_name,
+                        member.rocket_name,
+                    ]],
+                }
+            )
+
+        try:
+            service.spreadsheets().values().batchUpdate(
+                spreadsheetId=self.config.spreadsheet_id,
+                body={
+                    "valueInputOption": "USER_ENTERED",
+                    "data": update_data,
+                },
+            ).execute()
+        except Exception as exc:
+            http_error = _maybe_wrap_google_http_error(exc)
+            if http_error is not None:
+                raise TeamSheetWriteError(
+                    localize(
+                        I18N.errors.team_signing.google_write_failed,
+                        details=_extract_http_error_message(http_error),
+                    )
+                ) from exc
+            raise
+
+        return TeamTechnicalStaffWriteResult(
+            worksheet_title=worksheet_title,
+            team_name=technical_staff_batch.team_name,
+            updated_count=len(technical_staff_batch.members),
         )
 
     def _build_google_sheets_service(
@@ -1033,6 +1154,49 @@ class GoogleSheetsTeamRepository:
         )
 
     @staticmethod
+    def _collect_technical_staff_rows(
+            cell_grid: dict[int, dict[int, SheetCell]],
+            block: TeamBlockAnchor,
+            *,
+            worksheet_name: str,
+    ) -> dict[str, int]:
+        start_row = GoogleSheetsTeamRepository._find_technical_staff_start_row(
+            cell_grid,
+            block,
+        )
+        if start_row is None:
+            raise TeamSheetLayoutError(
+                localize(
+                    I18N.errors.team_signing.team_sheet_layout_invalid,
+                    sheet_name=worksheet_name,
+                )
+            )
+
+        technical_staff_rows: dict[str, int] = {}
+        for offset in range(TEAM_BLOCK_MAX_TECHNICAL_STAFF):
+            row_index = start_row + offset
+            role_name = GoogleSheetsTeamRepository._get_cell_value(
+                cell_grid,
+                row_index,
+                block.start_column,
+            )
+            normalized_role_name = _normalize_technical_staff_role_name(role_name)
+            if not normalized_role_name or normalized_role_name == _normalize_lookup_text(PLACEHOLDER_CELL_VALUE):
+                continue
+
+            technical_staff_rows[normalized_role_name] = row_index
+
+        if not technical_staff_rows:
+            raise TeamSheetLayoutError(
+                localize(
+                    I18N.errors.team_signing.team_sheet_layout_invalid,
+                    sheet_name=worksheet_name,
+                )
+            )
+
+        return technical_staff_rows
+
+    @staticmethod
     def _get_cell(
             cell_grid: dict[int, dict[int, SheetCell]],
             row_index: int,
@@ -1205,6 +1369,15 @@ def _normalize_member_lookup_text(value: str | None) -> str:
         normalized = normalized[1:]
 
     return unicodedata.normalize("NFKC", normalized).casefold()
+
+
+def _normalize_technical_staff_role_name(value: str | None) -> str:
+    normalized = _normalize_member_lookup_text(value)
+    return "".join(
+        character
+        for character in unicodedata.normalize("NFKD", normalized)
+        if not unicodedata.combining(character)
+    )
 
 
 def _is_placeholder_cell_value(value: str) -> bool:
