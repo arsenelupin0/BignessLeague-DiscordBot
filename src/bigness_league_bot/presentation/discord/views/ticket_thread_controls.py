@@ -44,11 +44,12 @@ class _ResolvedTicketCloseContext:
 
 
 class _CloseTicketButton(discord.ui.Button["TicketThreadControlsView"]):
-    def __init__(self) -> None:
+    def __init__(self, *, disabled: bool = False) -> None:
         super().__init__(
             label=I18N.messages.tickets.buttons.close_ticket.default,
             style=discord.ButtonStyle.secondary,
             custom_id="bigness_league:tickets:close",
+            disabled=disabled,
         )
 
     async def callback(
@@ -66,11 +67,12 @@ class _CloseTicketButton(discord.ui.Button["TicketThreadControlsView"]):
 
 
 class _CloseWithReasonButton(discord.ui.Button["TicketThreadControlsView"]):
-    def __init__(self) -> None:
+    def __init__(self, *, disabled: bool = False) -> None:
         super().__init__(
             label=I18N.messages.tickets.buttons.close_with_reason.default,
             style=discord.ButtonStyle.danger,
             custom_id="bigness_league:tickets:close_with_reason",
+            disabled=disabled,
         )
 
     async def callback(
@@ -153,8 +155,8 @@ class TicketCloseReasonModal(discord.ui.Modal):
             self,
             interaction: discord.Interaction[BignessLeagueBot],
     ) -> None:
-        await interaction.response.defer(ephemeral=interaction.guild is not None)
-        await self.confirmation_view.mark_processing(locale=interaction.locale)
+        await interaction.response.defer()
+        await self.confirmation_view.delete_prompt()
         self.confirmation_view.stop()
         await _execute_ticket_close(
             store=self.store,
@@ -245,14 +247,8 @@ class TicketCloseConfirmationView(discord.ui.View):
             )
             return
 
-        self._disable_children()
-        await interaction.response.edit_message(
-            content=self.localizer.translate(
-                I18N.messages.tickets.close.confirm_processing,
-                locale=interaction.locale,
-            ),
-            view=self,
-        )
+        await interaction.response.defer()
+        await self.delete_prompt(interaction)
         self.stop()
         await _execute_ticket_close(
             store=self.store,
@@ -265,34 +261,37 @@ class TicketCloseConfirmationView(discord.ui.View):
             interaction: discord.Interaction[BignessLeagueBot],
     ) -> None:
         self.locale = interaction.locale
-        self._disable_children()
-        await interaction.response.edit_message(
-            content=self.localizer.translate(
-                I18N.messages.tickets.close.confirm_cancelled,
-                locale=interaction.locale,
-            ),
-            view=self,
-        )
+        await interaction.response.defer()
+        await self.delete_prompt(interaction)
         self.stop()
 
-    async def mark_processing(
+    async def delete_prompt(
             self,
-            *,
-            locale: str | discord.Locale | None,
+            interaction: discord.Interaction[BignessLeagueBot] | None = None,
     ) -> None:
-        self.locale = locale
         self._disable_children()
-        if self.message is None:
+        try:
+            if self.message is not None:
+                await self.message.delete()
+                return
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            pass
+
+        if interaction is None:
             return
 
         try:
-            await self.message.edit(
-                content=self.localizer.translate(
-                    I18N.messages.tickets.close.confirm_processing,
-                    locale=locale,
-                ),
-                view=self,
-            )
+            await interaction.delete_original_response()
+            return
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            pass
+
+        message = interaction.message
+        if message is None:
+            return
+
+        try:
+            await message.delete()
         except (discord.NotFound, discord.Forbidden, discord.HTTPException):
             return
 
@@ -302,11 +301,11 @@ class TicketCloseConfirmationView(discord.ui.View):
 
 
 class TicketThreadControlsView(discord.ui.View):
-    def __init__(self, store: TicketStateStore) -> None:
+    def __init__(self, store: TicketStateStore, *, disabled: bool = False) -> None:
         super().__init__(timeout=None)
         self.store = store
-        self.add_item(_CloseTicketButton())
-        self.add_item(_CloseWithReasonButton())
+        self.add_item(_CloseTicketButton(disabled=disabled))
+        self.add_item(_CloseWithReasonButton(disabled=disabled))
 
     async def prompt_close_confirmation(
             self,
@@ -406,6 +405,12 @@ async def _execute_ticket_close(
         guild=resolved_context.thread.guild,
         is_dm_interaction=resolved_context.is_dm_interaction,
         close_reason=close_reason,
+    )
+    await _disable_ticket_start_controls(
+        store=store,
+        interaction=interaction,
+        record=closed_record,
+        thread=resolved_context.thread,
     )
 
     await resolved_context.thread.edit(
@@ -550,6 +555,65 @@ async def _send_close_dm(
         ticket_user = await interaction.client.fetch_user(record.user_id)
         await ticket_user.send(embed=close_embed)
     except discord.HTTPException:
+        return
+
+
+async def _disable_ticket_start_controls(
+        *,
+        store: TicketStateStore,
+        interaction: discord.Interaction[BignessLeagueBot],
+        record: TicketRecord,
+        thread: discord.Thread,
+) -> None:
+    await _disable_message_controls(
+        channel=thread,
+        message_id=record.thread_start_message_id,
+        store=store,
+    )
+    dm_channel = await _resolve_dm_channel(
+        interaction=interaction,
+        record=record,
+    )
+    if dm_channel is None:
+        return
+
+    await _disable_message_controls(
+        channel=dm_channel,
+        message_id=record.dm_start_message_id,
+        store=store,
+    )
+
+
+async def _resolve_dm_channel(
+        *,
+        interaction: discord.Interaction[BignessLeagueBot],
+        record: TicketRecord,
+) -> discord.DMChannel | None:
+    if record.dm_channel_id is not None:
+        cached_channel = interaction.client.get_channel(record.dm_channel_id)
+        if isinstance(cached_channel, discord.DMChannel):
+            return cached_channel
+
+    try:
+        ticket_user = await interaction.client.fetch_user(record.user_id)
+        return await ticket_user.create_dm()
+    except discord.HTTPException:
+        return None
+
+
+async def _disable_message_controls(
+        *,
+        channel: discord.abc.Messageable,
+        message_id: int | None,
+        store: TicketStateStore,
+) -> None:
+    if message_id is None:
+        return
+
+    try:
+        message = await channel.fetch_message(message_id)
+        await message.edit(view=TicketThreadControlsView(store, disabled=True))
+    except (discord.NotFound, discord.Forbidden, discord.HTTPException, AttributeError):
         return
 
 
