@@ -210,7 +210,8 @@
         "dm_failed_for_staff": "No he podido enviar este mensaje por DM al usuario `{user_id}`."
       },
       "buttons": {
-        "close_ticket": "Cerrar ticket"
+        "close_ticket": "🔒 Cerrar ticket",
+        "close_with_reason": "🔏 Cerrar con razón"
       },
       "close": {
         "not_ticket_thread": "Este boton solo se puede usar dentro de un hilo de ticket.",
@@ -218,6 +219,23 @@
         "thread_closed": "Ticket cerrado por {actor}.",
         "dm_closed": "Tu ticket ha sido cerrado por {actor}.",
         "closed_ephemeral": "Ticket cerrado.",
+        "only_actor": "Solo quien ha iniciado esta confirmacion puede usar estos botones.",
+        "confirm_prompt": "Vas a cerrar este ticket. Confirma la accion si quieres continuar.",
+        "confirm_reason_prompt": "Vas a cerrar este ticket con una razon. Confirma para abrir el formulario de cierre.",
+        "confirm_processing": "Cerrando ticket...",
+        "confirm_cancelled": "Cierre cancelado.",
+        "confirm": {
+          "buttons": {
+            "confirm": "Confirmar cierre",
+            "add_reason": "Añadir razon",
+            "cancel": "Cancelar"
+          }
+        },
+        "reason_modal": {
+          "title": "Cerrar ticket con razon",
+          "label": "Razon de cierre",
+          "placeholder": "Ejemplo: Problema resuelto o ticket abierto por error."
+        },
         "embed": {
           "title": "🔒 Ticket Cerrado",
           "description": "Tu ticket de soporte ha sido cerrado con exito. Si necesitas ayuda adicional, puedes abrir un nuevo ticket.\n \n_ _",

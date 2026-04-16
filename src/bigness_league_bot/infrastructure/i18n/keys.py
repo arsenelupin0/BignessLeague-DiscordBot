@@ -42,13 +42,11 @@ class _CommandsChannelAccessAddToChannel:
 class _CommandsChannelAccess:
     add_to_channel: _CommandsChannelAccessAddToChannel = _CommandsChannelAccessAddToChannel()
 
-
 class _CommandsTicketsPublishPanel:
     name: TranslationKey = TranslationKey(key="commands.tickets.publish_panel.name",
                                           default_text="integracion_de_tickets")
     description: TranslationKey = TranslationKey(key="commands.tickets.publish_panel.description",
                                                  default_text="Publica el panel de soporte para abrir tickets.")
-
 
 class _CommandsTickets:
     publish_panel: _CommandsTicketsPublishPanel = _CommandsTicketsPublishPanel()
@@ -301,7 +299,6 @@ class _MessagesChannelManagement:
     matchday_close_prompt: TranslationKey = TranslationKey(key="messages.channel_management.matchday_close_prompt",
                                                            default_text="Vas a cerrar la jornada en `{channel_name}`.\nSe eliminaran los permisos de los roles no protegidos y solo conservaran acceso: {protected_roles}.\nConfirma solo si quieres aplicar este cierre.")
 
-
 class _MessagesTicketsPanel:
     content: TranslationKey = TranslationKey(key="messages.tickets.panel.content",
                                              default_text="# \ud83d\udd30 Soporte \ud83d\udd30\n\u27a1\ufe0f Selecciona **una** de las siguientes **opciones** en el **men\u00fa desplegable** abajo de este mensaje. Si necesitas **ayuda** sobre que **tema** quieres abrir el **ticket**, **lee** atentamente **aqu\u00ed debajo**.\n\n## 1\ufe0f\u20e3 Soporte general\n- En caso de que tu duda no est\u00e9 en ninguna de las otras categor\u00edas. Esta es tu categor\u00eda.\n## 2\ufe0f\u20e3 Competici\u00f3n Bigness League\n- Reglamento\n- C\u00f3digo de conducta\n- C\u00f3mo funciona la liga (divisiones, inscripci\u00f3n, max rango, etc)\n- Pricepool\n- \u00bfTengo que pagar para entrar?\n## 3\ufe0f\u20e3 Mercado de jugadores\n- Inscribir a un nuevo jugador\n- Quitar a un jugador de mi equipo\n- Modificaci\u00f3n de rol (ceo, manager, segundo manager, coach o analista)\n## 4\ufe0f\u20e3 \u00bfQuieres hacer stream de tu partido?\n- Quiero retrasmitir mi partido\n- Que tengo que hacer para poder retrasmitir una jornada de la liga\n- \u00bfPuedo castear un partido?\n## 5\ufe0f\u20e3 Apelaciones, problemas con alg\u00fan equipo, jugador, etc\n- Sanciones sobre jugadores\n- Problemas con equipos externos\n- Problemas con X jugador ajeno a la liga\n- Apelaci\u00f3n sobre decisi\u00f3n de la liga inapropiada\n## 6\ufe0f\u20e3 Bot de la Bigness League\n- Como funciona el bot de la bigness\n- Que comandos puedo hacer\n- No funciona o hay alg\u00fan error\n- Quiero reportar un error\n## 7\ufe0f\u20e3 Social\n- Dudas del servidor de discord\n- Colaboraciones\n- Sugerencias")
@@ -309,7 +306,6 @@ class _MessagesTicketsPanel:
                                                         default_text="Soporte General")
     published: TranslationKey = TranslationKey(key="messages.tickets.panel.published",
                                                default_text="Panel de tickets publicado.")
-
 
 class _MessagesTicketsOpenEmbedFields:
     ticket_number: TranslationKey = TranslationKey(key="messages.tickets.open.embed.fields.ticket_number",
@@ -323,7 +319,6 @@ class _MessagesTicketsOpenEmbedFields:
     instructions: TranslationKey = TranslationKey(key="messages.tickets.open.embed.fields.instructions",
                                                   default_text="\u2139\ufe0f Instrucciones")
 
-
 class _MessagesTicketsOpenEmbed:
     title: TranslationKey = TranslationKey(key="messages.tickets.open.embed.title",
                                            default_text="\ud83d\udd13 Nuevo Ticket Creado")
@@ -334,7 +329,6 @@ class _MessagesTicketsOpenEmbed:
                                                   default_text="- Describe tu problema en detalle\n- Ten paciencia mientras esperas una respuesta\n- Usa los botones de abajo para cerrar el ticket cuando se resuelva")
     footer: TranslationKey = TranslationKey(key="messages.tickets.open.embed.footer",
                                             default_text="Desarrollado por el equipo de la Bigness League")
-
 
 class _MessagesTicketsOpen:
     embed: _MessagesTicketsOpenEmbed = _MessagesTicketsOpenEmbed()
@@ -351,7 +345,6 @@ class _MessagesTicketsOpen:
     dm_failed_thread: TranslationKey = TranslationKey(key="messages.tickets.open.dm_failed_thread",
                                                       default_text="No se pudo abrir DM con {user}. El ticket se cierra automaticamente.")
 
-
 class _MessagesTicketsRelay:
     from_user: TranslationKey = TranslationKey(key="messages.tickets.relay.from_user",
                                                default_text="**Mensaje del usuario {author}:**\n{body}")
@@ -366,11 +359,33 @@ class _MessagesTicketsRelay:
     dm_failed_for_staff: TranslationKey = TranslationKey(key="messages.tickets.relay.dm_failed_for_staff",
                                                          default_text="No he podido enviar este mensaje por DM al usuario `{user_id}`.")
 
-
 class _MessagesTicketsButtons:
     close_ticket: TranslationKey = TranslationKey(key="messages.tickets.buttons.close_ticket",
-                                                  default_text="Cerrar ticket")
+                                                  default_text="\ud83d\udd12 Cerrar ticket")
+    close_with_reason: TranslationKey = TranslationKey(key="messages.tickets.buttons.close_with_reason",
+                                                       default_text="\ud83d\udd0f Cerrar con raz\u00f3n")
 
+
+class _MessagesTicketsCloseConfirmButtons:
+    confirm: TranslationKey = TranslationKey(key="messages.tickets.close.confirm.buttons.confirm",
+                                             default_text="Confirmar cierre")
+    add_reason: TranslationKey = TranslationKey(key="messages.tickets.close.confirm.buttons.add_reason",
+                                                default_text="A\u00f1adir razon")
+    cancel: TranslationKey = TranslationKey(key="messages.tickets.close.confirm.buttons.cancel",
+                                            default_text="Cancelar")
+
+
+class _MessagesTicketsCloseConfirm:
+    buttons: _MessagesTicketsCloseConfirmButtons = _MessagesTicketsCloseConfirmButtons()
+
+
+class _MessagesTicketsCloseReasonModal:
+    title: TranslationKey = TranslationKey(key="messages.tickets.close.reason_modal.title",
+                                           default_text="Cerrar ticket con razon")
+    label: TranslationKey = TranslationKey(key="messages.tickets.close.reason_modal.label",
+                                           default_text="Razon de cierre")
+    placeholder: TranslationKey = TranslationKey(key="messages.tickets.close.reason_modal.placeholder",
+                                                 default_text="Ejemplo: Problema resuelto o ticket abierto por error.")
 
 class _MessagesTicketsCloseEmbedFields:
     ticket_number: TranslationKey = TranslationKey(key="messages.tickets.close.embed.fields.ticket_number",
@@ -390,7 +405,6 @@ class _MessagesTicketsCloseEmbedFields:
     close_reason: TranslationKey = TranslationKey(key="messages.tickets.close.embed.fields.close_reason",
                                                   default_text="\ud83d\udccc Razon de cierre")
 
-
 class _MessagesTicketsCloseEmbed:
     title: TranslationKey = TranslationKey(key="messages.tickets.close.embed.title",
                                            default_text="\ud83d\udd12 Ticket Cerrado")
@@ -404,7 +418,6 @@ class _MessagesTicketsCloseEmbed:
     footer: TranslationKey = TranslationKey(key="messages.tickets.close.embed.footer",
                                             default_text="Desarrollado por el equipo de la Bigness League")
 
-
 class _MessagesTicketsClose:
     not_ticket_thread: TranslationKey = TranslationKey(key="messages.tickets.close.not_ticket_thread",
                                                        default_text="Este boton solo se puede usar dentro de un hilo de ticket.")
@@ -416,8 +429,19 @@ class _MessagesTicketsClose:
                                                default_text="Tu ticket ha sido cerrado por {actor}.")
     closed_ephemeral: TranslationKey = TranslationKey(key="messages.tickets.close.closed_ephemeral",
                                                       default_text="Ticket cerrado.")
+    only_actor: TranslationKey = TranslationKey(key="messages.tickets.close.only_actor",
+                                                default_text="Solo quien ha iniciado esta confirmacion puede usar estos botones.")
+    confirm_prompt: TranslationKey = TranslationKey(key="messages.tickets.close.confirm_prompt",
+                                                    default_text="Vas a cerrar este ticket. Confirma la accion si quieres continuar.")
+    confirm_reason_prompt: TranslationKey = TranslationKey(key="messages.tickets.close.confirm_reason_prompt",
+                                                           default_text="Vas a cerrar este ticket con una razon. Confirma para abrir el formulario de cierre.")
+    confirm_processing: TranslationKey = TranslationKey(key="messages.tickets.close.confirm_processing",
+                                                        default_text="Cerrando ticket...")
+    confirm_cancelled: TranslationKey = TranslationKey(key="messages.tickets.close.confirm_cancelled",
+                                                       default_text="Cierre cancelado.")
+    confirm: _MessagesTicketsCloseConfirm = _MessagesTicketsCloseConfirm()
+    reason_modal: _MessagesTicketsCloseReasonModal = _MessagesTicketsCloseReasonModal()
     embed: _MessagesTicketsCloseEmbed = _MessagesTicketsCloseEmbed()
-
 
 class _MessagesTickets:
     panel: _MessagesTicketsPanel = _MessagesTicketsPanel()
@@ -582,7 +606,6 @@ class _ErrorsChannelManagement:
                                                        default_text="No existe el rol de fin configurado para el selector: `{role_id}`.")
     range_empty: TranslationKey = TranslationKey(key="errors.channel_management.range_empty",
                                                  default_text="No hay roles seleccionables entre los separadores configurados.")
-
 
 class _ErrorsTickets:
     ceo_only: TranslationKey = TranslationKey(key="errors.tickets.ceo_only",
