@@ -24,15 +24,19 @@ from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
 )
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
+    TeamStaffRoleEntry,
+    TeamStaffRoleSyncSummary,
     TeamRoleAssignmentSummary,
     TeamRoleRemovalSummary,
     assign_team_roles_by_names,
-    collect_team_profile_member_names,
+    collect_team_profile_player_names,
+    collect_team_profile_staff_role_entries,
     remove_roles_from_member_by_name,
     resolve_optional_team_staff_roles,
     resolve_participant_role,
     resolve_player_role,
     resolve_team_role_by_name,
+    sync_team_staff_roles_by_names,
 )
 from bigness_league_bot.infrastructure.discord.team_signing import (
     fetch_linked_message,
@@ -106,10 +110,10 @@ class TeamSigningCog(commands.Cog):
         )
 
         repository = GoogleSheetsTeamRepository(interaction.client.settings)
+        team_role = resolve_team_role_by_name(team_name, role_catalog)
         player_result = None
         assignment_summary = None
         if signing_batch is not None:
-            team_role = resolve_team_role_by_name(team_name, role_catalog)
             participant_role = resolve_participant_role(guild, settings.participant_role_id)
             player_role = resolve_player_role(guild, settings.player_role_id)
             player_result = await repository.register_team_signings(signing_batch)
@@ -122,9 +126,22 @@ class TeamSigningCog(commands.Cog):
             )
 
         technical_staff_result = None
+        staff_role_sync_summary = None
         if technical_staff_batch is not None:
             technical_staff_result = await repository.register_team_technical_staff(
                 technical_staff_batch
+            )
+            staff_role_sync_summary = await sync_team_staff_roles_by_names(
+                guild,
+                team_role=team_role,
+                ceo_role_id=settings.staff_ceo_role_id,
+                coach_role_id=settings.staff_coach_role_id,
+                manager_role_id=settings.staff_manager_role_id,
+                captain_role_id=settings.staff_captain_role_id,
+                actor=interaction.user,
+                staff_entries=self._collect_technical_staff_role_entries(
+                    technical_staff_batch
+                ),
             )
 
         await interaction.followup.send(
@@ -137,6 +154,7 @@ class TeamSigningCog(commands.Cog):
                 player_result=player_result,
                 technical_staff_result=technical_staff_result,
                 assignment_summary=assignment_summary,
+                staff_role_sync_summary=staff_role_sync_summary,
             ),
             allowed_mentions=discord.AllowedMentions.none(),
         )
@@ -247,13 +265,24 @@ class TeamSigningCog(commands.Cog):
             team_role=equipo,
             common_roles=(participant_role, player_role),
             actor=interaction.user,
-            member_names=collect_team_profile_member_names(team_profile),
+            member_names=collect_team_profile_player_names(team_profile),
+        )
+        staff_role_sync_summary = await sync_team_staff_roles_by_names(
+            guild,
+            team_role=equipo,
+            ceo_role_id=settings.staff_ceo_role_id,
+            coach_role_id=settings.staff_coach_role_id,
+            manager_role_id=settings.staff_manager_role_id,
+            captain_role_id=settings.staff_captain_role_id,
+            actor=interaction.user,
+            staff_entries=collect_team_profile_staff_role_entries(team_profile),
         )
         await interaction.followup.send(
             self._build_team_role_sync_message(
                 interaction,
                 team_name=equipo.name,
                 assignment_summary=assignment_summary,
+                staff_role_sync_summary=staff_role_sync_summary,
             ),
             allowed_mentions=discord.AllowedMentions.none(),
         )
@@ -353,6 +382,7 @@ class TeamSigningCog(commands.Cog):
             player_result: TeamSigningWriteResult | None,
             technical_staff_result: TeamTechnicalStaffWriteResult | None,
             assignment_summary: TeamRoleAssignmentSummary | None,
+            staff_role_sync_summary: TeamStaffRoleSyncSummary | None,
     ) -> str:
         localizer = interaction.client.localizer
         locale = interaction.locale
@@ -397,6 +427,26 @@ class TeamSigningCog(commands.Cog):
                     updated_count=str(technical_staff_result.updated_count),
                 )
             )
+            if staff_role_sync_summary is not None:
+                message_lines.append(
+                    localizer.translate(
+                        I18N.actions.team_signing.staff_role_sync_summary,
+                        locale=locale,
+                        assigned_count=str(len(staff_role_sync_summary.assigned_members)),
+                        removed_count=str(len(staff_role_sync_summary.removed_members)),
+                        already_count=str(len(staff_role_sync_summary.already_configured_members)),
+                        unresolved_count=str(len(staff_role_sync_summary.unresolved_names)),
+                        ambiguous_count=str(len(staff_role_sync_summary.ambiguous_names)),
+                    )
+                )
+                message_lines.extend(
+                    TeamSigningCog._build_assignment_detail_lines(
+                        interaction,
+                        assignment_summary=staff_role_sync_summary,
+                        unresolved_key=I18N.actions.team_signing.role_assignment_unresolved,
+                        ambiguous_key=I18N.actions.team_signing.role_assignment_ambiguous,
+                    )
+                )
 
         return "\n".join(message_lines)
 
@@ -406,6 +456,7 @@ class TeamSigningCog(commands.Cog):
             *,
             team_name: str,
             assignment_summary: TeamRoleAssignmentSummary,
+            staff_role_sync_summary: TeamStaffRoleSyncSummary,
     ) -> str:
         localizer = interaction.client.localizer
         locale = interaction.locale
@@ -428,13 +479,32 @@ class TeamSigningCog(commands.Cog):
                 ambiguous_key=I18N.actions.team_role_assignment.ambiguous,
             )
         )
+        message_lines.append(
+            localizer.translate(
+                I18N.actions.team_role_assignment.staff_role_sync_summary,
+                locale=locale,
+                assigned_count=str(len(staff_role_sync_summary.assigned_members)),
+                removed_count=str(len(staff_role_sync_summary.removed_members)),
+                already_count=str(len(staff_role_sync_summary.already_configured_members)),
+                unresolved_count=str(len(staff_role_sync_summary.unresolved_names)),
+                ambiguous_count=str(len(staff_role_sync_summary.ambiguous_names)),
+            )
+        )
+        message_lines.extend(
+            TeamSigningCog._build_assignment_detail_lines(
+                interaction,
+                assignment_summary=staff_role_sync_summary,
+                unresolved_key=I18N.actions.team_role_assignment.unresolved,
+                ambiguous_key=I18N.actions.team_role_assignment.ambiguous,
+            )
+        )
         return "\n".join(message_lines)
 
     @staticmethod
     def _build_assignment_detail_lines(
             interaction: discord.Interaction[BignessLeagueBot],
             *,
-            assignment_summary: TeamRoleAssignmentSummary,
+            assignment_summary: TeamRoleAssignmentSummary | TeamStaffRoleSyncSummary,
             unresolved_key: TranslationKeyLike,
             ambiguous_key: TranslationKeyLike,
     ) -> list[str]:
@@ -458,6 +528,18 @@ class TeamSigningCog(commands.Cog):
                 )
             )
         return message_lines
+
+    @staticmethod
+    def _collect_technical_staff_role_entries(
+            technical_staff_batch: TeamTechnicalStaffBatch,
+    ) -> tuple[TeamStaffRoleEntry, ...]:
+        return tuple(
+            TeamStaffRoleEntry(
+                role_name=member.role_name,
+                member_name=member.discord_name,
+            )
+            for member in technical_staff_batch.members
+        )
 
     @staticmethod
     async def _remove_discord_roles_after_signing_removal(

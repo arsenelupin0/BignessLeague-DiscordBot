@@ -330,6 +330,7 @@
     "team_signing": {
       "completed": "Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.",
       "technical_staff_completed": "Se ha actualizado el staff tecnico de `{team_name}` en `{division_name}`. Filas actualizadas: {updated_count}.",
+      "staff_role_sync_summary": "Roles de staff tecnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
       "removed": "Se ha dado de baja a `{player_name}` (`{discord_name}`) de `{team_name}` en `{division_name}`. Plantilla actual: {total_players}/6.",
       "role_removal_completed": "Roles retirados en Discord a `{member_name}`: {roles}.",
       "role_removal_no_changes": "No habia roles que retirar en Discord para `{member_name}`.",
@@ -342,6 +343,7 @@
     },
     "team_role_assignment": {
       "completed": "Sincronizacion de roles completada para `{team_name}`: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
+      "staff_role_sync_summary": "Sincronizacion de staff tecnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
       "unresolved": "Sin coincidencia en Discord: {names}.",
       "ambiguous": "Coincidencias ambiguas en Discord: {names}."
     }

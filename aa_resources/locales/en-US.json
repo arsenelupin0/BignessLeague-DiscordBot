@@ -330,6 +330,7 @@
     "team_signing": {
       "completed": "Registered {inserted_count} signings in `{team_name}` within `{division_name}`. Current roster: {total_players}/6.",
       "technical_staff_completed": "Updated technical staff for `{team_name}` in `{division_name}`. Updated rows: {updated_count}.",
+      "staff_role_sync_summary": "Technical staff roles: new={assigned_count}, removed={removed_count}, already_set={already_count}, unresolved={unresolved_count}, ambiguous={ambiguous_count}.",
       "removed": "Removed `{player_name}` (`{discord_name}`) from `{team_name}` in `{division_name}`. Current roster: {total_players}/6.",
       "role_removal_completed": "Removed Discord roles from `{member_name}`: {roles}.",
       "role_removal_no_changes": "There were no Discord roles to remove for `{member_name}`.",
@@ -342,6 +343,7 @@
     },
     "team_role_assignment": {
       "completed": "Role synchronization completed for `{team_name}`: new={assigned_count}, already_set={already_count}, unresolved={unresolved_count}, ambiguous={ambiguous_count}.",
+      "staff_role_sync_summary": "Technical staff role synchronization: new={assigned_count}, removed={removed_count}, already_set={already_count}, unresolved={unresolved_count}, ambiguous={ambiguous_count}.",
       "unresolved": "No Discord match found for: {names}.",
       "ambiguous": "Ambiguous Discord matches for: {names}."
     }

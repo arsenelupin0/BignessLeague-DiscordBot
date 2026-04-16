@@ -152,6 +152,9 @@ Restricciones de `/cerrar_canal`:
 - si no hay bloque libre o no caben todos los fichajes, rechaza la operacion
 - para `staff tecnico`, localiza la fila por el valor de `Rol` dentro del bloque `STAFF TÉCNICO` y solo actualiza las
   columnas `Discord`, `Epic Name` y `Rocket In-Game Name`
+- para `staff tecnico`, intenta asignar el rol de equipo y el rol tecnico que corresponda:
+  `CEO`, `Mánager`/`Segundo Mánager`, `Coach`/`Analista` o `Capitán`
+- si un miembro de staff cambia de rol tecnico, el bot retira los roles tecnicos configurados que ya no correspondan
 - despues de escribir, intenta asignar automaticamente el rol general de participante y el rol del equipo a los
   miembros que ya esten en Discord, junto con el rol general de jugador
 
@@ -171,7 +174,9 @@ Restricciones de `/cerrar_canal`:
 - solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
 - recibe un rol de equipo dentro del rango configurado
 - lee la plantilla actual del equipo desde Google Sheets
-- intenta asignar en Discord el rol general de participante y el rol del equipo a jugadores y staff tecnico
+- intenta asignar en Discord `Participante`, `Jugador` y el rol de equipo a los jugadores
+- intenta asignar el rol de equipo y los roles tecnicos correspondientes a `STAFF TÉCNICO`
+- si un miembro de staff cambia de rol tecnico, retira los roles tecnicos configurados que ya no correspondan
 - informa de miembros asignados, ya configurados, sin coincidencia y coincidencias ambiguas
 
 Configuracion de Google Sheets:

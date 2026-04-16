@@ -602,6 +602,8 @@ class _ActionsTeamSigning:
                                                default_text="Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.")
     technical_staff_completed: TranslationKey = TranslationKey(key="actions.team_signing.technical_staff_completed",
                                                                default_text="Se ha actualizado el staff tecnico de `{team_name}` en `{division_name}`. Filas actualizadas: {updated_count}.")
+    staff_role_sync_summary: TranslationKey = TranslationKey(key="actions.team_signing.staff_role_sync_summary",
+                                                             default_text="Roles de staff tecnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
     removed: TranslationKey = TranslationKey(key="actions.team_signing.removed",
                                              default_text="Se ha dado de baja a `{player_name}` (`{discord_name}`) de `{team_name}` en `{division_name}`. Plantilla actual: {total_players}/6.")
     role_removal_completed: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_completed",
@@ -624,6 +626,8 @@ class _ActionsTeamSigning:
 class _ActionsTeamRoleAssignment:
     completed: TranslationKey = TranslationKey(key="actions.team_role_assignment.completed",
                                                default_text="Sincronizacion de roles completada para `{team_name}`: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
+    staff_role_sync_summary: TranslationKey = TranslationKey(key="actions.team_role_assignment.staff_role_sync_summary",
+                                                             default_text="Sincronizacion de staff tecnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
     unresolved: TranslationKey = TranslationKey(key="actions.team_role_assignment.unresolved",
                                                 default_text="Sin coincidencia en Discord: {names}.")
     ambiguous: TranslationKey = TranslationKey(key="actions.team_role_assignment.ambiguous",
