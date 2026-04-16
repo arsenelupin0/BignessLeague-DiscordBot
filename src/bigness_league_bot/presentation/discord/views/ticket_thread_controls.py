@@ -24,6 +24,11 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
     ChannelManagementError,
     ensure_allowed_member,
 )
+from bigness_league_bot.infrastructure.discord.tickets import (
+    TicketIntegrationError,
+    build_thread_tags_with_status,
+    resolve_ticket_status_tag,
+)
 from bigness_league_bot.infrastructure.discord.tickets import TicketStateStore
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import LocalizationService
@@ -414,6 +419,7 @@ async def _execute_ticket_close(
     )
 
     await resolved_context.thread.edit(
+        applied_tags=_build_closed_thread_tags(resolved_context.thread),
         archived=True,
         locked=True,
         reason=(
@@ -615,6 +621,27 @@ async def _disable_message_controls(
         await message.edit(view=TicketThreadControlsView(store, disabled=True))
     except (discord.NotFound, discord.Forbidden, discord.HTTPException, AttributeError):
         return
+
+
+def _build_closed_thread_tags(
+        thread: discord.Thread,
+):
+    forum_channel = thread.parent
+    if not isinstance(forum_channel, discord.ForumChannel):
+        return discord.utils.MISSING
+
+    try:
+        closed_status_tag = resolve_ticket_status_tag(
+            forum_channel,
+            is_closed=True,
+        )
+    except TicketIntegrationError:
+        return discord.utils.MISSING
+
+    return build_thread_tags_with_status(
+        thread,
+        status_tag=closed_status_tag,
+    )
 
 
 def _resolve_category_label(record: TicketRecord) -> str:

@@ -25,8 +25,10 @@ from bigness_league_bot.application.services.tickets import (
 from bigness_league_bot.infrastructure.discord.tickets import (
     TicketIntegrationError,
     TicketStateStore,
+    build_thread_tags_with_status,
     build_ticket_thread_name,
     resolve_forum_tag,
+    resolve_ticket_status_tag,
     resolve_ticket_forum_channel,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
@@ -138,10 +140,15 @@ class TicketPanelView(discord.ui.View):
                     interaction.guild,
                 )
                 forum_tag = resolve_forum_tag(forum_channel, category)
+                open_status_tag = resolve_ticket_status_tag(
+                    forum_channel,
+                    is_closed=False,
+                )
                 ticket_thread, thread_start_message_id = await self._create_ticket_thread(
                     interaction=interaction,
                     forum_channel=forum_channel,
                     forum_tag=forum_tag,
+                    open_status_tag=open_status_tag,
                     category=category,
                     ticket_number=ticket_number,
                     created_at=created_at,
@@ -206,6 +213,7 @@ class TicketPanelView(discord.ui.View):
                     ),
                 )
                 await ticket_thread.edit(
+                    applied_tags=self._build_closed_thread_tags(ticket_thread),
                     archived=True,
                     locked=True,
                     reason=(
@@ -223,6 +231,7 @@ class TicketPanelView(discord.ui.View):
                 return
             except discord.HTTPException:
                 await ticket_thread.edit(
+                    applied_tags=self._build_closed_thread_tags(ticket_thread),
                     archived=True,
                     locked=True,
                     reason=(
@@ -274,6 +283,7 @@ class TicketPanelView(discord.ui.View):
             interaction: discord.Interaction[BignessLeagueBot],
             forum_channel: discord.ForumChannel,
             forum_tag: discord.ForumTag,
+            open_status_tag: discord.ForumTag,
             category,
             ticket_number: int,
             created_at: str,
@@ -294,7 +304,7 @@ class TicketPanelView(discord.ui.View):
                 ticket_number=ticket_number,
                 created_at=created_at,
             ),
-            applied_tags=[forum_tag],
+            applied_tags=[forum_tag, open_status_tag],
             view=TicketThreadControlsView(self.store),
             allowed_mentions=discord.AllowedMentions(
                 users=True,
@@ -308,6 +318,27 @@ class TicketPanelView(discord.ui.View):
             ),
         )
         return result.thread, result.message.id
+
+    @staticmethod
+    def _build_closed_thread_tags(
+            thread: discord.Thread,
+    ):
+        forum_channel = thread.parent
+        if not isinstance(forum_channel, discord.ForumChannel):
+            return discord.utils.MISSING
+
+        try:
+            closed_status_tag = resolve_ticket_status_tag(
+                forum_channel,
+                is_closed=True,
+            )
+        except TicketIntegrationError:
+            return discord.utils.MISSING
+
+        return build_thread_tags_with_status(
+            thread,
+            status_tag=closed_status_tag,
+        )
 
     @staticmethod
     async def _resolve_existing_ticket_thread(

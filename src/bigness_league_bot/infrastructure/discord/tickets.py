@@ -33,6 +33,8 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 TICKET_STATE_VERSION = 1
+TICKET_OPEN_STATUS_TAG_NAME = "Abierto"
+TICKET_CLOSED_STATUS_TAG_NAME = "Cerrado"
 
 
 class TicketIntegrationError(CommandUserError):
@@ -175,21 +177,61 @@ def resolve_forum_tag(
         forum_channel: discord.ForumChannel,
         category: TicketCategory,
 ) -> discord.ForumTag:
-    expected_labels = {
-        _normalized_label(category.tag_name),
-        _normalized_label(category.label),
-    }
-    for tag in forum_channel.available_tags:
-        if _normalized_label(tag.name) in expected_labels:
-            return tag
-
-    raise TicketIntegrationError(
-        localize(
-            I18N.errors.tickets.forum_tag_missing,
-            tag_name=category.tag_name,
-            forum_name=forum_channel.name,
-        )
+    return _resolve_forum_tag(
+        forum_channel,
+        expected_labels={
+            category.tag_name,
+            category.label,
+        },
+        missing_tag_name=category.tag_name,
     )
+
+
+def resolve_ticket_status_tag(
+        forum_channel: discord.ForumChannel,
+        *,
+        is_closed: bool,
+) -> discord.ForumTag:
+    tag_name = (
+        TICKET_CLOSED_STATUS_TAG_NAME
+        if is_closed
+        else TICKET_OPEN_STATUS_TAG_NAME
+    )
+    return _resolve_forum_tag(
+        forum_channel,
+        expected_labels={tag_name},
+        missing_tag_name=tag_name,
+    )
+
+
+def build_thread_tags_with_status(
+        thread: discord.Thread,
+        *,
+        status_tag: discord.ForumTag,
+) -> list[discord.ForumTag]:
+    forum_channel = thread.parent
+    if not isinstance(forum_channel, discord.ForumChannel):
+        return [status_tag]
+
+    available_tags_by_id = {
+        tag.id: tag
+        for tag in forum_channel.available_tags
+    }
+    status_labels = {
+        _normalized_label(TICKET_OPEN_STATUS_TAG_NAME),
+        _normalized_label(TICKET_CLOSED_STATUS_TAG_NAME),
+    }
+    updated_tags: list[discord.ForumTag] = []
+    for tag_id in _resolve_thread_applied_tag_ids(thread):
+        tag = available_tags_by_id.get(tag_id)
+        if tag is None:
+            continue
+        if _normalized_label(tag.name) in status_labels:
+            continue
+        updated_tags.append(tag)
+
+    updated_tags.append(status_tag)
+    return _deduplicate_forum_tags(updated_tags)
 
 
 async def resolve_ticket_forum_channel(
@@ -233,3 +275,51 @@ async def resolve_ticket_forum_channel(
         )
 
     return channel
+
+
+def _resolve_forum_tag(
+        forum_channel: discord.ForumChannel,
+        *,
+        expected_labels: set[str],
+        missing_tag_name: str,
+) -> discord.ForumTag:
+    normalized_expected_labels = {
+        _normalized_label(label)
+        for label in expected_labels
+    }
+    for tag in forum_channel.available_tags:
+        if _normalized_label(tag.name) in normalized_expected_labels:
+            return tag
+
+    raise TicketIntegrationError(
+        localize(
+            I18N.errors.tickets.forum_tag_missing,
+            tag_name=missing_tag_name,
+            forum_name=forum_channel.name,
+        )
+    )
+
+
+def _resolve_thread_applied_tag_ids(thread: discord.Thread) -> list[int]:
+    resolved_tag_ids: list[int] = []
+    for tag in thread.applied_tags:
+        try:
+            resolved_tag_ids.append(tag.id)
+        except AttributeError:
+            resolved_tag_ids.append(int(tag))
+
+    return resolved_tag_ids
+
+
+def _deduplicate_forum_tags(
+        tags: list[discord.ForumTag],
+) -> list[discord.ForumTag]:
+    unique_tags: list[discord.ForumTag] = []
+    seen_ids: set[int] = set()
+    for tag in tags:
+        if tag.id in seen_ids:
+            continue
+        seen_ids.add(tag.id)
+        unique_tags.append(tag)
+
+    return unique_tags
