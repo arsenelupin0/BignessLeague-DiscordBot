@@ -48,8 +48,15 @@ class _CommandsTicketsPublishPanel:
     description: TranslationKey = TranslationKey(key="commands.tickets.publish_panel.description",
                                                  default_text="Publica el panel de soporte para abrir tickets.")
 
+
+class _CommandsTicketsAiStatus:
+    name: TranslationKey = TranslationKey(key="commands.tickets.ai_status.name", default_text="ai_estado")
+    description: TranslationKey = TranslationKey(key="commands.tickets.ai_status.description",
+                                                 default_text="Muestra el estado actual de la IA local para tickets.")
+
 class _CommandsTickets:
     publish_panel: _CommandsTicketsPublishPanel = _CommandsTicketsPublishPanel()
+    ai_status: _CommandsTicketsAiStatus = _CommandsTicketsAiStatus()
 
 class _CommandsMatchChannelCreationCreateMatchChannelParametersJornada:
     description: TranslationKey = TranslationKey(
@@ -359,12 +366,26 @@ class _MessagesTicketsRelay:
     dm_failed_for_staff: TranslationKey = TranslationKey(key="messages.tickets.relay.dm_failed_for_staff",
                                                          default_text="No he podido enviar este mensaje por DM al usuario `{user_id}`.")
 
+
+class _MessagesTicketsAiStatus:
+    result: TranslationKey = TranslationKey(key="messages.tickets.ai.status.result",
+                                            default_text="## Estado de la IA de tickets\n- Cargada en runtime: `{loaded}`\n- Activada por configuracion: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Proveedor: `{provider}`\n- Modelo: `{model}`\n- Base URL: `{base_url}`\n- Backend accesible: `{backend_reachable}`\n- Categorias con auto-reply: `{categories}`\n- Base de conocimiento: `{knowledge_base_file}`\n- Prompt del sistema: `{system_prompt_file}`")
+
+
+class _MessagesTicketsAi:
+    thread_response: TranslationKey = TranslationKey(key="messages.tickets.ai.thread_response",
+                                                     default_text="**Respuesta IA local:**\n{answer}\n\nConfianza: `{confidence}` | Escalar: `{should_escalate}`\nMotivo: {reason}\nBase de conocimiento: {used_entry_ids}")
+    user_fallback: TranslationKey = TranslationKey(key="messages.tickets.ai.user_fallback",
+                                                   default_text="He recibido tu mensaje. Un miembro del staff revisara tu caso en cuanto sea posible.")
+    unavailable_thread: TranslationKey = TranslationKey(key="messages.tickets.ai.unavailable_thread",
+                                                        default_text="La IA local no ha podido responder a este mensaje: {details}")
+    status: _MessagesTicketsAiStatus = _MessagesTicketsAiStatus()
+
 class _MessagesTicketsButtons:
     close_ticket: TranslationKey = TranslationKey(key="messages.tickets.buttons.close_ticket",
                                                   default_text="\ud83d\udd12 Cerrar ticket")
     close_with_reason: TranslationKey = TranslationKey(key="messages.tickets.buttons.close_with_reason",
                                                        default_text="\ud83d\udd0f Cerrar con raz\u00f3n")
-
 
 class _MessagesTicketsCloseConfirmButtons:
     confirm: TranslationKey = TranslationKey(key="messages.tickets.close.confirm.buttons.confirm",
@@ -374,10 +395,8 @@ class _MessagesTicketsCloseConfirmButtons:
     cancel: TranslationKey = TranslationKey(key="messages.tickets.close.confirm.buttons.cancel",
                                             default_text="Cancelar")
 
-
 class _MessagesTicketsCloseConfirm:
     buttons: _MessagesTicketsCloseConfirmButtons = _MessagesTicketsCloseConfirmButtons()
-
 
 class _MessagesTicketsCloseReasonModal:
     title: TranslationKey = TranslationKey(key="messages.tickets.close.reason_modal.title",
@@ -447,6 +466,7 @@ class _MessagesTickets:
     panel: _MessagesTicketsPanel = _MessagesTicketsPanel()
     open: _MessagesTicketsOpen = _MessagesTicketsOpen()
     relay: _MessagesTicketsRelay = _MessagesTicketsRelay()
+    ai: _MessagesTicketsAi = _MessagesTicketsAi()
     buttons: _MessagesTicketsButtons = _MessagesTicketsButtons()
     close: _MessagesTicketsClose = _MessagesTicketsClose()
 

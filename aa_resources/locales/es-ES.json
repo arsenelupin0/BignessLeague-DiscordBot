@@ -27,6 +27,10 @@
       "publish_panel": {
         "name": "integracion_de_tickets",
         "description": "Publica el panel de soporte para abrir tickets."
+      },
+      "ai_status": {
+        "name": "ai_estado",
+        "description": "Muestra el estado actual de la IA local para tickets."
       }
     },
     "match_channel_creation": {
@@ -208,6 +212,14 @@
         "empty_body": "(mensaje sin texto)",
         "thread_missing_for_user": "No he encontrado el hilo interno de tu ticket. Se ha cerrado el registro activo; vuelve a abrirlo desde el panel si necesitas continuar.",
         "dm_failed_for_staff": "No he podido enviar este mensaje por DM al usuario `{user_id}`."
+      },
+      "ai": {
+        "thread_response": "**Respuesta IA local:**\n{answer}\n\nConfianza: `{confidence}` | Escalar: `{should_escalate}`\nMotivo: {reason}\nBase de conocimiento: {used_entry_ids}",
+        "user_fallback": "He recibido tu mensaje. Un miembro del staff revisara tu caso en cuanto sea posible.",
+        "unavailable_thread": "La IA local no ha podido responder a este mensaje: {details}",
+        "status": {
+          "result": "## Estado de la IA de tickets\n- Cargada en runtime: `{loaded}`\n- Activada por configuracion: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Proveedor: `{provider}`\n- Modelo: `{model}`\n- Base URL: `{base_url}`\n- Backend accesible: `{backend_reachable}`\n- Categorias con auto-reply: `{categories}`\n- Base de conocimiento: `{knowledge_base_file}`\n- Prompt del sistema: `{system_prompt_file}`"
+        }
       },
       "buttons": {
         "close_ticket": "🔒 Cerrar ticket",

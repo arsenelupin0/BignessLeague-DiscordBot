@@ -1,0 +1,1170 @@
+{
+  "version": "1.0.0",
+  "locale": "es-ES",
+  "generated_at": "2026-04-16",
+  "knowledge_base_name": "Bigness League Ticket KB (sanitized)",
+  "purpose": "Base de conocimiento pública y sanitizada para respuestas de tickets en español.",
+  "sanitization_policy": {
+    "included": [
+      "Normativa de liga y reglas públicas",
+      "Flujo visible del sistema de tickets",
+      "Comandos slash y ayuda orientada a usuarios/staff",
+      "Mensajes visibles y comportamiento funcional útil para soporte"
+    ],
+    "excluded": [
+      "Tokens, credenciales, service accounts, IDs internos y variables .env",
+      "Rutas de despliegue, detalles de backend y configuración sensible",
+      "Mensajes puramente internos de debug que no aportan ayuda al usuario",
+      "Cualquier dato que permita inferir secretos operativos del bot"
+    ],
+    "notes": [
+      "Cuando la documentación entra en conflicto, se marca la entrada con menor confianza y se recomienda escalar a staff.",
+      "La KB prioriza respuestas útiles para tickets; no es un volcado literal de los archivos fuente."
+    ]
+  },
+  "category_routing_hints": {
+    "Soporte general": [
+      "dudas generales",
+      "tickets",
+      "DM",
+      "cierre de ticket",
+      "qué categoría elegir"
+    ],
+    "Competicion": [
+      "reglamento",
+      "formato",
+      "divisiones",
+      "partidos",
+      "fechas",
+      "prizepool"
+    ],
+    "Mercado": [
+      "fichajes",
+      "bajas",
+      "mmr",
+      "staff técnico",
+      "plantilla"
+    ],
+    "Streaming": [
+      "retransmisión",
+      "cast",
+      "stream",
+      "emitir partido"
+    ],
+    "Apelaciones": [
+      "sanción",
+      "toxicidad",
+      "free win discutido",
+      "reportes",
+      "conducta"
+    ],
+    "Bot": [
+      "comandos",
+      "slash commands",
+      "errores del bot",
+      "ver_mi_equipo",
+      "tickets"
+    ],
+    "Social": [
+      "servidor discord",
+      "sugerencias",
+      "colaboraciones"
+    ]
+  },
+  "entries": [
+    {
+      "id": "competicion_formato_general",
+      "category": "Competicion",
+      "topic": "formato general de la liga",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "liga",
+        "formato",
+        "divisiones",
+        "gold",
+        "silver",
+        "bo5",
+        "final four",
+        "cup junior",
+        "rocket league",
+        "3vs3"
+      ],
+      "question_examples": [
+        "¿Cómo funciona la liga?",
+        "¿Cuántas divisiones hay?",
+        "¿La Gold tiene Final Four?",
+        "¿Qué formato se juega?"
+      ],
+      "answer": "La Bigness League es una liga amateur española de Rocket League 3vs3. Tiene dos divisiones de 8 equipos y 7 jornadas por división. En Gold hay liga regular Bo5, Final Four para los 4 mejores y clasificación de esos 4 equipos a la Bigness Cup Junior. En Silver hay liga regular Bo5, ascenso directo para los 2 primeros y clasificación de los 3 mejores a la Bigness Cup Junior.",
+      "bullets": [
+        "Gold División: liga regular Bo5 a una sola vuelta.",
+        "Gold División: Final Four entre los 4 mejores.",
+        "Silver División: liga regular Bo5 a una sola vuelta.",
+        "Bigness Cup Junior: clasifican 4 de Gold y 3 de Silver."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "reglamento",
+        "liga",
+        "divisiones"
+      ]
+    },
+    {
+      "id": "competicion_inscripciones_requisitos",
+      "category": "Competicion",
+      "topic": "inscripciones y requisitos",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "inscripción",
+        "inscribirse",
+        "registro",
+        "tracker",
+        "cuenta principal",
+        "discord",
+        "logo",
+        "epic",
+        "jugadores"
+      ],
+      "question_examples": [
+        "¿Qué necesito para inscribirme?",
+        "¿Todos los jugadores deben estar en Discord?",
+        "¿Qué datos lleva la inscripción?"
+      ],
+      "answer": "Para inscribirse, ningún jugador puede estar en dos equipos a la vez, los trackers deben ser de las cuentas principales y todos los jugadores deben estar en el Discord de Bigness League. La inscripción debe incluir nombre del club, logo sin fondo, redes opcionales, Discord del CEO/manager/coach, Discord del capitán, Discord de todos los jugadores, trackers, nombre de Epic y nombre dentro del juego.",
+      "bullets": [
+        "No se permite inscribir al mismo jugador en dos equipos.",
+        "Los trackers deben ser principales; si no lo son, hay que justificarlo.",
+        "Una vez comenzada la liga no se puede cambiar nombre ni logo del equipo."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "inscripciones",
+        "requisitos"
+      ]
+    },
+    {
+      "id": "competicion_inscripciones_rechazo",
+      "category": "Competicion",
+      "topic": "motivos de rechazo de inscripción",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "rechazo",
+        "rechazar inscripción",
+        "smurf",
+        "datos incorrectos",
+        "antideportivo",
+        "mmr"
+      ],
+      "question_examples": [
+        "¿Por qué pueden rechazar una inscripción?",
+        "¿Se permiten smurfs?",
+        "¿Qué pasa si los datos están mal?"
+      ],
+      "answer": "Una inscripción puede rechazarse si la media del equipo supera el límite permitido, si los datos son incorrectos, si algún jugador tiene pasado antideportivo que afecte a la experiencia competitiva o si se detectan smurfs o cuentas secundarias.",
+      "bullets": [
+        "La media del equipo no puede superar el máximo aplicable.",
+        "Smurfs y cuentas secundarias pueden motivar rechazo o sanción."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "inscripciones",
+        "sanciones"
+      ]
+    },
+    {
+      "id": "mercado_mmr_y_fichajes",
+      "category": "Mercado",
+      "topic": "mmr y límites de fichajes",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "mmr",
+        "1400",
+        "1430",
+        "fichajes",
+        "6 jugadores",
+        "plantilla",
+        "s34",
+        "peak",
+        "mercado"
+      ],
+      "question_examples": [
+        "¿Cuál es el MMR máximo?",
+        "¿Cuántos fichajes se pueden hacer?",
+        "¿Cuántos jugadores puede tener un equipo?"
+      ],
+      "answer": "La media máxima general del equipo es 1400 MMR, calculada con los peaks de los 3 mejores jugadores desde la S34. Los equipos con plaza reservada pueden llegar hasta 1430 MMR. Cada equipo puede tener hasta 6 jugadores. Durante la liga se permiten 4 fichajes más 1 opcional para la Final Four. Si un fichaje entra entre los 3 mejores del equipo, se recalcula la media y no puede superar el límite.",
+      "bullets": [
+        "Media base: 1400 MMR.",
+        "Con plaza reservada: hasta 1430 MMR.",
+        "Máximo 6 jugadores por equipo.",
+        "4 fichajes en liga + 1 opcional para Final Four."
+      ],
+      "related_commands": [
+        "hacer_fichaje",
+        "dar_de_baja"
+      ],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "mercado",
+        "mmr",
+        "fichajes"
+      ]
+    },
+    {
+      "id": "mercado_fichajes_ticket_24h",
+      "category": "Mercado",
+      "topic": "aviso previo para fichajes",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "24 horas",
+        "ticket",
+        "nuevo jugador",
+        "aviso",
+        "próximo partido",
+        "hacer fichaje"
+      ],
+      "question_examples": [
+        "¿Con cuánto tiempo hay que avisar un fichaje?",
+        "¿Puede jugar un fichaje de última hora?",
+        "¿Tengo que abrir ticket para fichar?"
+      ],
+      "answer": "Para hacer un fichaje hay que abrir un ticket con la información del nuevo jugador y avisar con al menos 24 horas de antelación respecto al próximo partido del equipo. Si se notifica con menos de 24 horas, el fichaje puede tramitarse, pero ese jugador no podrá jugar el siguiente partido.",
+      "bullets": [
+        "El aviso se hace por ticket.",
+        "Menos de 24 horas: el fichaje puede hacerse, pero no puede jugar ese partido."
+      ],
+      "related_commands": [
+        "hacer_fichaje"
+      ],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "mercado",
+        "ticket",
+        "fichajes"
+      ]
+    },
+    {
+      "id": "competicion_ascensos_descensos_plazas",
+      "category": "Competicion",
+      "topic": "ascensos, descensos y plazas",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "ascenso",
+        "descenso",
+        "plaza",
+        "gold",
+        "silver",
+        "club",
+        "jugadores",
+        "bigness cup junior"
+      ],
+      "question_examples": [
+        "¿Quién asciende?",
+        "¿Quién desciende?",
+        "¿Las plazas son del club o de los jugadores?"
+      ],
+      "answer": "En Gold, los 2 últimos bajan directamente a Silver y el sexto juega una eliminatoria contra el tercero de Silver para decidir la plaza. En Silver, los 2 primeros ascienden directamente y el tercero también obtiene plaza para la Bigness Cup Junior. Los 3 últimos de Silver pierden la plaza. Las plazas pertenecen al club, no a los jugadores, y un club solo puede tener una plaza por división.",
+      "bullets": [
+        "Gold: descienden 2, y el 6.º juega promoción contra el 3.º de Silver.",
+        "Silver: ascienden 2; el 3.º también obtiene plaza para la Bigness Cup Junior.",
+        "Las plazas son del club."
+      ],
+      "related_commands": [],
+      "escalate_when": [
+        "Si preguntan por el formato exacto de la promoción, porque el documento usa 'Bo5' y también 'al mejor de 3 partidos' en la misma frase."
+      ],
+      "confidence": "medium",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "clasificacion",
+        "plazas"
+      ]
+    },
+    {
+      "id": "competicion_horarios_y_acuerdo_partido",
+      "category": "Competicion",
+      "topic": "organización de partidos",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "jornada",
+        "lunes 15:00",
+        "canal oficial",
+        "acuerdo",
+        "free win",
+        "partido nulo",
+        "domingo 2 AM"
+      ],
+      "question_examples": [
+        "¿Dónde se acuerda la hora del partido?",
+        "¿Qué pasa si no llegamos a un acuerdo?",
+        "¿Cuándo salen los enfrentamientos?"
+      ],
+      "answer": "Los enfrentamientos se publican cada lunes a las 15:00. A partir de ahí, ambos equipos deben acordar la hora únicamente por el canal oficial de texto de esa jornada. Si el acuerdo se hace por medios externos, no cuenta como prueba válida. Si un equipo no puede jugar en toda la semana, como máximo hasta el domingo a las 2 AM, se le da Free Win al rival. Si ambos equipos no llegan a un acuerdo, el partido puede declararse nulo tras revisión del Staff.",
+      "bullets": [
+        "El canal oficial de la jornada es el único medio válido para acordar hora.",
+        "Sin disponibilidad de un equipo: posible Free Win al rival.",
+        "Sin acuerdo entre ambos: posible partido nulo tras revisión."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "partidos",
+        "horarios",
+        "free win"
+      ]
+    },
+    {
+      "id": "competicion_cortesia_y_retrasos",
+      "category": "Competicion",
+      "topic": "minutos de cortesía",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "cortesía",
+        "10 minutos",
+        "retraso",
+        "late",
+        "free win",
+        "aplazar"
+      ],
+      "question_examples": [
+        "¿Cuántos minutos de cortesía hay?",
+        "¿Qué pasa si llegamos tarde?",
+        "¿Se puede aplazar el partido?"
+      ],
+      "answer": "El tiempo de cortesía estándar antes del partido es de 10 minutos desde la hora acordada. Superado ese tiempo, puede darse Free Win al rival. Si ambos equipos aceptan aplazar, el partido puede moverse a otra fecha dentro de la misma semana de la jornada.",
+      "bullets": [
+        "Cortesía estándar: 10 minutos.",
+        "Si ambos equipos aceptan, puede aplazarse dentro de la semana."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "partidos",
+        "cortesia"
+      ]
+    },
+    {
+      "id": "competicion_incidencias_partido",
+      "category": "Competicion",
+      "topic": "incidencias dentro del partido",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "desconexión",
+        "dc",
+        "cambio de jugador",
+        "jugador extra",
+        "reiniciar",
+        "pruebas",
+        "capturas",
+        "reserva",
+        "free win"
+      ],
+      "question_examples": [
+        "¿Qué pasa si entra otro jugador?",
+        "¿Qué ocurre si alguien se cae al principio?",
+        "¿Necesito pruebas para reportar?"
+      ],
+      "answer": "Si entra un jugador extra o se hace un cambio mientras se está jugando, el partido puede darse por perdido al equipo infractor si hay pruebas. Si un jugador se desconecta antes de que pase 1 minuto, el partido se reinicia con el marcador reconstruido; si ya pasó 1 minuto, el equipo debe terminar con uno menos. Si después no entra un reserva, se pueden conceder Free Wins sucesivos con esperas extra de 5 minutos. Siempre se deben guardar capturas y evidencias.",
+      "bullets": [
+        "Con pruebas, un cambio indebido puede suponer partido perdido.",
+        "Desconexión antes de 1 minuto: se reinicia el partido.",
+        "Después de 1 minuto: se termina con uno menos.",
+        "Las pruebas y capturas son obligatorias para reportes."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "partidos",
+        "incidencias",
+        "pruebas"
+      ]
+    },
+    {
+      "id": "streaming_retransmisiones",
+      "category": "Streaming",
+      "topic": "retransmisiones y cast",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "stream",
+        "retransmisión",
+        "cast",
+        "emitir",
+        "ticket",
+        "gold",
+        "ascensos",
+        "descensos",
+        "logo de la liga"
+      ],
+      "question_examples": [
+        "¿Puedo hacer stream de mi partido?",
+        "¿Cómo solicito retransmitir?",
+        "¿La liga retransmite todos los partidos?"
+      ],
+      "answer": "La liga retransmite principalmente partidos de Gold División y partidos importantes como ascensos y descensos, cuando haya disponibilidad. Si un equipo o club quiere retransmitir un partido, debe abrir un ticket y enviar la información de la retransmisión para cada jornada o partido que quiera emitir. Además, el stream debe mencionar a la liga, ya sea en el título con el nombre de la liga y jornada o mostrando el logo de la liga en directo.",
+      "bullets": [
+        "Hay que abrir un ticket por cada partido/jornada que se quiera retransmitir.",
+        "El stream debe mencionar a la liga."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "streaming",
+        "retransmisiones"
+      ]
+    },
+    {
+      "id": "competicion_prizepool",
+      "category": "Competicion",
+      "topic": "premios",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "prizepool",
+        "premios",
+        "20€",
+        "10€",
+        "5€",
+        "gold",
+        "silver"
+      ],
+      "question_examples": [
+        "¿Cuál es el prizepool?",
+        "¿Qué premios hay en la liga?"
+      ],
+      "answer": "El prizepool indicado en la normativa es: Gold División 1.º puesto 20€, 2.º puesto 10€; Silver División 1.º puesto 5€.",
+      "bullets": [
+        "Gold: 20€ al 1.º y 10€ al 2.º.",
+        "Silver: 5€ al 1.º."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "premios",
+        "prizepool"
+      ]
+    },
+    {
+      "id": "apelaciones_sanciones_toxicidad",
+      "category": "Apelaciones",
+      "topic": "sanciones y conducta",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "sanción",
+        "toxicidad",
+        "baneo",
+        "abandono",
+        "smurf",
+        "comportamiento",
+        "apelación",
+        "chat rápido"
+      ],
+      "question_examples": [
+        "¿Qué sanción hay por abandonar?",
+        "¿La toxicidad se sanciona?",
+        "¿Qué pasa con los smurfs?"
+      ],
+      "answer": "Abandonar la liga una vez comenzada puede suponer 2 seasons de baneo. Abandonar partidos puede implicar pérdida de puntos o baneo permanente según la gravedad. La toxicidad reiterada o grave, el spam de chat rápido y otras conductas inapropiadas pueden conllevar sanción, y en casos graves incluso baneo permanente para el club o el jugador. También se sanciona el uso de smurfs.",
+      "bullets": [
+        "Abandonar la liga: posible baneo de 2 seasons.",
+        "Abandonar partidos: pérdida de puntos o baneo según gravedad.",
+        "Smurfs: posible baneo de 2 seasons o permanente."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "sanciones",
+        "conducta",
+        "apelaciones"
+      ]
+    },
+    {
+      "id": "competicion_fechas_conflictivas",
+      "category": "Competicion",
+      "topic": "fechas oficiales y conflicto detectado",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "fechas",
+        "calendario",
+        "inscripciones",
+        "5 de abril",
+        "22 de marzo",
+        "conflicto",
+        "temporada"
+      ],
+      "question_examples": [
+        "¿Cuándo cierran las inscripciones?",
+        "¿Cuál es la fecha exacta del cierre?"
+      ],
+      "answer": "La normativa incluye varias fechas de temporada, pero hay una inconsistencia interna sobre el cierre de inscripciones: en una sección se indica 5 de abril y en la sección final de fechas se indica 22 de marzo. Ante esa duda, el bot debe advertir del conflicto y derivar a staff para confirmación antes de dar una fecha cerrada.",
+      "bullets": [
+        "Comienzo de inscripciones: 23 de febrero.",
+        "Hay conflicto entre '5 de abril' y '22 de marzo' para el cierre.",
+        "El resto de fechas de fase regular, ascenso/descenso y Final Four están listadas en la normativa."
+      ],
+      "related_commands": [],
+      "escalate_when": [
+        "Siempre que pregunten por la fecha exacta de cierre de inscripciones."
+      ],
+      "confidence": "low",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "fechas",
+        "conflicto",
+        "staff"
+      ]
+    },
+    {
+      "id": "tickets_como_funcionan",
+      "category": "Soporte general",
+      "topic": "flujo de tickets",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "ticket",
+        "abrir ticket",
+        "dm",
+        "mensaje privado",
+        "hilo",
+        "foro",
+        "categoría",
+        "ticket activo"
+      ],
+      "question_examples": [
+        "¿Cómo abro un ticket?",
+        "¿Por dónde responde el staff?",
+        "¿Puedo tener varios tickets a la vez?"
+      ],
+      "answer": "El panel de tickets permite elegir una categoría y abrir un ticket. Al hacerlo, el bot crea el hilo interno correspondiente y la conversación con el usuario continúa por mensaje privado. Los mensajes del usuario se reenvían al hilo interno y las respuestas del staff vuelven al usuario por DM. Cada usuario solo puede tener un ticket activo a la vez.",
+      "bullets": [
+        "La conversación del ticket sigue por DM con el bot.",
+        "Solo se permite un ticket activo por usuario."
+      ],
+      "related_commands": [
+        "integracion_de_tickets"
+      ],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "tickets",
+        "dm",
+        "soporte"
+      ]
+    },
+    {
+      "id": "tickets_categorias_panel",
+      "category": "Soporte general",
+      "topic": "categorías del panel de tickets",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "categorías",
+        "panel",
+        "soporte general",
+        "competición",
+        "mercado",
+        "streaming",
+        "apelaciones",
+        "bot",
+        "social"
+      ],
+      "question_examples": [
+        "¿Qué categoría elijo?",
+        "¿Dónde abro una duda de mercado?",
+        "¿Qué hago si no sé qué categoría usar?"
+      ],
+      "answer": "Las categorías visibles del panel son: Soporte general, Competición, Mercado, Streaming, Apelaciones, Bot y Social. Si el tema no encaja claramente en otra categoría, debe usarse Soporte general.",
+      "bullets": [
+        "Soporte general se usa como categoría por defecto.",
+        "Competición cubre reglas, formato y prizepool.",
+        "Mercado cubre fichajes, bajas y cambios de staff técnico."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "tickets",
+        "categorias"
+      ]
+    },
+    {
+      "id": "tickets_dm_obligatorio",
+      "category": "Soporte general",
+      "topic": "necesidad de tener DM abiertos",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "dm",
+        "privados",
+        "ticket cerrado",
+        "no puedo abrir ticket",
+        "mensajes privados",
+        "dm failed"
+      ],
+      "question_examples": [
+        "¿Por qué se cerró mi ticket al abrirlo?",
+        "¿Necesito tener los DM abiertos?"
+      ],
+      "answer": "Si el bot no puede abrir o usar el DM con el usuario, el ticket se cierra automáticamente. Por eso, para usar el sistema de tickets, el usuario debe tener habilitados los mensajes privados del servidor.",
+      "bullets": [
+        "Si el bot no puede enviar DM, el ticket se cierra automáticamente."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "tickets",
+        "dm",
+        "errores"
+      ]
+    },
+    {
+      "id": "tickets_cierre_ticket",
+      "category": "Soporte general",
+      "topic": "cierre de tickets",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "cerrar ticket",
+        "razón de cierre",
+        "ticket cerrado",
+        "confirmar cierre"
+      ],
+      "question_examples": [
+        "¿Cómo cierro mi ticket?",
+        "¿Puedo cerrar el ticket con motivo?"
+      ],
+      "answer": "Los tickets incluyen opciones para cerrarlos y también para cerrarlos indicando una razón. Cuando un ticket se cierra, el usuario recibe confirmación y puede abrir otro ticket nuevo si necesita ayuda adicional.",
+      "bullets": [
+        "Hay cierre normal y cierre con razón.",
+        "Tras cerrarlo, se puede abrir otro ticket nuevo."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "tickets",
+        "cierre"
+      ]
+    },
+    {
+      "id": "bot_comandos_disponibles",
+      "category": "Bot",
+      "topic": "resumen de comandos disponibles",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "comandos",
+        "slash commands",
+        "bot",
+        "ayuda",
+        "lista de comandos",
+        "ai_estado",
+        "ver_mi_equipo",
+        "hacer_fichaje"
+      ],
+      "question_examples": [
+        "¿Qué comandos tiene el bot?",
+        "¿Qué puedo hacer con el bot?"
+      ],
+      "answer": "Los comandos principales del bot son: `/ai_estado`, `/anadir_al_canal`, `/asignar_rol_equipo_automatico`, `/canal_de_jornada`, `/cerrar_canal`, `/dar_de_baja`, `/hacer_fichaje`, `/integracion_de_tickets` y `/ver_mi_equipo`. Algunos son de uso administrativo y otros están orientados a consulta o soporte.",
+      "bullets": [
+        "No todos los comandos son para todos los usuarios.",
+        "Varios comandos requieren Staff, Administrador o CEO."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "comandos",
+        "bot"
+      ]
+    },
+    {
+      "id": "bot_comando_ver_mi_equipo",
+      "category": "Bot",
+      "topic": "comando ver_mi_equipo",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "ver_mi_equipo",
+        "mi equipo",
+        "ficha",
+        "google sheets",
+        "rol de equipo",
+        "trackers"
+      ],
+      "question_examples": [
+        "¿Para qué sirve `/ver_mi_equipo`?",
+        "¿Cómo veo la ficha de mi equipo?",
+        "¿Qué pasa si tengo varios roles de equipo?"
+      ],
+      "answer": "El comando `/ver_mi_equipo` muestra la ficha del equipo asociada al rol del usuario en Google Sheets. Si el usuario tiene varios roles de equipo, el bot permite elegir cuál consultar. Staff, Administrador y CEO también pueden indicar explícitamente qué rol de equipo consultar.",
+      "bullets": [
+        "La respuesta del bot se devuelve como imagen con la ficha del equipo.",
+        "Puede mostrar trackers y datos del staff técnico."
+      ],
+      "related_commands": [
+        "ver_mi_equipo"
+      ],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "comandos",
+        "equipos"
+      ]
+    },
+    {
+      "id": "bot_comando_hacer_fichaje",
+      "category": "Bot",
+      "topic": "comando hacer_fichaje",
+      "audience": [
+        "usuarios",
+        "staff"
+      ],
+      "keywords": [
+        "hacer_fichaje",
+        "fichaje",
+        "importar",
+        "google sheets",
+        "enlace de discord",
+        "staff técnico"
+      ],
+      "question_examples": [
+        "¿Cómo uso `/hacer_fichaje`?",
+        "¿Sirve para meter jugadores nuevos?",
+        "¿También vale para staff técnico?"
+      ],
+      "answer": "El comando `/hacer_fichaje` importa jugadores y/o staff técnico desde mensajes enlazados de Discord hacia Google Sheets. Requiere al menos un enlace y está pensado para uso de Staff, Administrador o CEO. Además, la normativa exige que los fichajes se tramiten por ticket con 24 horas de antelación respecto al siguiente partido.",
+      "bullets": [
+        "Admite enlace de jugadores y enlace de staff técnico.",
+        "Está orientado a roles de staff/administración."
+      ],
+      "related_commands": [
+        "hacer_fichaje"
+      ],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "comandos",
+        "mercado",
+        "fichajes"
+      ]
+    },
+    {
+      "id": "bot_comando_dar_de_baja",
+      "category": "Bot",
+      "topic": "comando dar_de_baja",
+      "audience": [
+        "usuarios",
+        "staff"
+      ],
+      "keywords": [
+        "dar_de_baja",
+        "baja",
+        "eliminar jugador",
+        "discord",
+        "google sheets",
+        "roles"
+      ],
+      "question_examples": [
+        "¿Cómo quito a un jugador del equipo?",
+        "¿Para qué sirve `/dar_de_baja`?"
+      ],
+      "answer": "El comando `/dar_de_baja` elimina a un jugador buscándolo por su Discord dentro de Google Sheets y, si corresponde, intenta retirar roles asociados en Discord. Está pensado para uso de Staff, Administrador o CEO.",
+      "bullets": [
+        "Busca por el nombre o valor de Discord del jugador.",
+        "También intenta retirar roles vinculados si procede."
+      ],
+      "related_commands": [
+        "dar_de_baja"
+      ],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "comandos",
+        "mercado",
+        "bajas"
+      ]
+    },
+    {
+      "id": "bot_comando_asignar_rol_equipo_automatico",
+      "category": "Bot",
+      "topic": "comando asignar_rol_equipo_automatico",
+      "audience": [
+        "usuarios",
+        "staff"
+      ],
+      "keywords": [
+        "asignar_rol_equipo_automatico",
+        "sincronizar roles",
+        "rol de equipo",
+        "google sheets",
+        "staff técnico"
+      ],
+      "question_examples": [
+        "¿Cómo sincronizo roles del equipo?",
+        "¿Para qué sirve `/asignar_rol_equipo_automatico`?"
+      ],
+      "answer": "El comando `/asignar_rol_equipo_automatico` sincroniza en Discord los roles del equipo a partir de la hoja actual de Google Sheets. También puede sincronizar roles de staff técnico. Está pensado para Staff, Administrador o CEO.",
+      "bullets": [
+        "Lee la plantilla desde Google Sheets.",
+        "Sincroniza roles de jugadores y staff técnico."
+      ],
+      "related_commands": [
+        "asignar_rol_equipo_automatico"
+      ],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "comandos",
+        "roles"
+      ]
+    },
+    {
+      "id": "bot_comando_canal_de_jornada",
+      "category": "Bot",
+      "topic": "comando canal_de_jornada",
+      "audience": [
+        "usuarios",
+        "staff"
+      ],
+      "keywords": [
+        "canal_de_jornada",
+        "crear canal",
+        "jornada",
+        "partido",
+        "bo5",
+        "fecha",
+        "hora",
+        "cortesía"
+      ],
+      "question_examples": [
+        "¿Cómo se crea el canal de un partido?",
+        "¿Para qué sirve `/canal_de_jornada`?"
+      ],
+      "answer": "El comando `/canal_de_jornada` crea un canal privado de partido para una jornada concreta, con fecha, hora, minutos de cortesía, formato BoX y permisos para ambos equipos y el staff. Está pensado para Staff, Administrador o CEO.",
+      "bullets": [
+        "Crea el canal del enfrentamiento y publica un mensaje inicial con información útil.",
+        "Permite elegir Gold Division o Silver Division."
+      ],
+      "related_commands": [
+        "canal_de_jornada"
+      ],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "comandos",
+        "partidos",
+        "canales"
+      ]
+    },
+    {
+      "id": "bot_comando_cerrar_canal",
+      "category": "Bot",
+      "topic": "comando cerrar_canal",
+      "audience": [
+        "usuarios",
+        "staff"
+      ],
+      "keywords": [
+        "cerrar_canal",
+        "partido jugado",
+        "jornada cerrada",
+        "reabrir partido",
+        "eliminar canal"
+      ],
+      "question_examples": [
+        "¿Qué hace `/cerrar_canal`?",
+        "¿Cómo se cierra una jornada?",
+        "¿Se puede reabrir un canal de partido?"
+      ],
+      "answer": "El comando `/cerrar_canal` aplica acciones de cierre sobre el canal actual: marcar partido jugado, cerrar jornada, reabrir partido o eliminar el canal. Solo funciona en canales de partido y está pensado para Staff, Administrador o CEO.",
+      "bullets": [
+        "Acciones: Partido jugado, Jornada cerrada, Reabrir partido, Eliminación de canal."
+      ],
+      "related_commands": [
+        "cerrar_canal"
+      ],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "comandos",
+        "canales",
+        "moderacion"
+      ]
+    },
+    {
+      "id": "bot_comando_anadir_al_canal",
+      "category": "Bot",
+      "topic": "comando anadir_al_canal",
+      "audience": [
+        "usuarios",
+        "staff"
+      ],
+      "keywords": [
+        "anadir_al_canal",
+        "añadir roles",
+        "selector",
+        "canal actual",
+        "roles"
+      ],
+      "question_examples": [
+        "¿Para qué sirve `/anadir_al_canal`?",
+        "¿Cómo meto más roles en un canal de partido?"
+      ],
+      "answer": "El comando `/anadir_al_canal` abre un selector filtrado para añadir roles al canal actual. Solo funciona en canales de partido y está pensado para Staff, Administrador o CEO.",
+      "bullets": [
+        "Muestra un selector con búsqueda para añadir roles al canal."
+      ],
+      "related_commands": [
+        "anadir_al_canal"
+      ],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "comandos",
+        "roles",
+        "canales"
+      ]
+    },
+    {
+      "id": "bot_comando_integracion_de_tickets",
+      "category": "Bot",
+      "topic": "comando integracion_de_tickets",
+      "audience": [
+        "usuarios",
+        "staff"
+      ],
+      "keywords": [
+        "integracion_de_tickets",
+        "panel de tickets",
+        "publicar panel",
+        "CEO",
+        "foro"
+      ],
+      "question_examples": [
+        "¿Cómo se publica el panel de tickets?",
+        "¿Para qué sirve `/integracion_de_tickets`?"
+      ],
+      "answer": "El comando `/integracion_de_tickets` publica el panel persistente para abrir tickets desde un menú desplegable. Según la documentación, está reservado a miembros con rol CEO o Ceo.",
+      "bullets": [
+        "Publica el panel que usan los usuarios para abrir tickets.",
+        "La documentación lo reserva al rol CEO/Ceo."
+      ],
+      "related_commands": [
+        "integracion_de_tickets"
+      ],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "comandos",
+        "tickets",
+        "panel"
+      ]
+    },
+    {
+      "id": "bot_comando_ai_estado",
+      "category": "Bot",
+      "topic": "comando ai_estado",
+      "audience": [
+        "usuarios",
+        "staff"
+      ],
+      "keywords": [
+        "ai_estado",
+        "estado ia",
+        "diagnóstico",
+        "modelo",
+        "backend",
+        "tickets"
+      ],
+      "question_examples": [
+        "¿Qué hace `/ai_estado`?",
+        "¿Sirve para comprobar la IA del bot?"
+      ],
+      "answer": "El comando `/ai_estado` muestra el estado actual de la IA local para tickets. Es un comando orientado a diagnóstico y normalmente es más útil para staff o para quien administre el bot que para usuarios finales.",
+      "bullets": [
+        "Muestra el estado de carga, proveedor, modelo y accesibilidad del backend de IA."
+      ],
+      "related_commands": [
+        "ai_estado"
+      ],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "comandos",
+        "ia",
+        "diagnostico"
+      ]
+    },
+    {
+      "id": "social_sugerencias_colaboraciones",
+      "category": "Social",
+      "topic": "social, colaboraciones y sugerencias",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "social",
+        "colaboraciones",
+        "sugerencias",
+        "servidor discord",
+        "duda social"
+      ],
+      "question_examples": [
+        "¿Dónde envío una sugerencia?",
+        "¿Dónde pregunto por una colaboración?"
+      ],
+      "answer": "La categoría Social del panel está pensada para dudas del servidor de Discord, colaboraciones y sugerencias generales. Si la consulta no es sobre normativa, mercado, streaming, apelaciones o funcionamiento del bot, puede encajar aquí.",
+      "bullets": [
+        "Usa Social para temas comunitarios o de servidor que no encajan en otra categoría."
+      ],
+      "related_commands": [],
+      "escalate_when": [],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "social",
+        "comunidad"
+      ]
+    },
+    {
+      "id": "general_temas_sin_respuesta_explicita",
+      "category": "Soporte general",
+      "topic": "temas no cubiertos explícitamente",
+      "audience": [
+        "usuarios"
+      ],
+      "keywords": [
+        "pagar",
+        "cuota",
+        "precio de entrada",
+        "env",
+        "token",
+        "credenciales",
+        "configuración interna",
+        "interno"
+      ],
+      "question_examples": [
+        "¿Hay que pagar para entrar?",
+        "¿Cuál es el token del bot?",
+        "¿Qué variable usa el backend?"
+      ],
+      "answer": "Si preguntan por cuotas de inscripción, pagos para entrar, configuraciones internas del bot, variables de entorno, credenciales, rutas privadas o decisiones administrativas no documentadas, el bot no debe inventar respuestas. Debe derivar a staff y explicar que no hay base suficiente o que la información es interna.",
+      "bullets": [
+        "No inventar respuestas cuando la documentación no lo indica.",
+        "Derivar a staff si la respuesta depende de datos internos o sensibles."
+      ],
+      "related_commands": [],
+      "escalate_when": [
+        "Siempre que pidan información interna, sensible o no documentada."
+      ],
+      "confidence": "high",
+      "source_refs": [],
+      "public_safe": true,
+      "tags": [
+        "seguridad",
+        "limites",
+        "staff"
+      ]
+    }
+  ]
+}

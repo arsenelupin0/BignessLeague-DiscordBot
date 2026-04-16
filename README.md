@@ -31,13 +31,16 @@ pip install -e .
 10. Si quieres usar la integracion nativa de tickets, configura `BOT_TICKET_FORUM_CHANNEL_ID` con el ID del foro donde
     el bot debe crear los posts internos de ticket. `BOT_TICKET_STATE_FILE` es opcional y define donde se guarda el
     estado persistente de tickets activos.
-11. Si quieres usar `/ver_mi_equipo`, configura `BOT_GOOGLE_SERVICE_ACCOUNT_FILE`
+11. Si quieres activar la IA local para tickets, ajusta `BOT_TICKET_AI_*`. El bot soporta dos backends:
+    `openai_compatible` para LM Studio y tambien para Ollama en modo OpenAI-compatible, y `ollama_native` para la API
+    nativa de Ollama.
+12. Si quieres usar `/ver_mi_equipo`, configura `BOT_GOOGLE_SERVICE_ACCOUNT_FILE`
     y `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`. `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME` es opcional.
-12. Si quieres sincronizar roles automaticamente desde `/hacer_fichaje` o `/asignar_rol_equipo_automatico`,
+13. Si quieres sincronizar roles automaticamente desde `/hacer_fichaje` o `/asignar_rol_equipo_automatico`,
     ajusta `BOT_PARTICIPANT_ROLE_ID` y `BOT_PLAYER_ROLE_ID` con los roles base que deben recibir todos los jugadores.
-13. Si quieres que `/dar_de_baja` retire tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
+14. Si quieres que `/dar_de_baja` retire tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
     `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID` y `BOT_STAFF_CAPTAIN_ROLE_ID`.
-14. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
+15. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
     Lo recomendado es colocar la fuente dentro de `aa_resources/fonts/`.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
@@ -193,8 +196,9 @@ Restricciones de `/cerrar_canal`:
 - los mensajes enviados por DM se reenvian al hilo del foro
 - las respuestas del staff escritas en el hilo del foro se envian al usuario por DM
 - cada usuario solo puede tener un ticket activo a la vez
-- el hilo incluye un boton persistente para cerrar el ticket
+- el hilo incluye botones persistentes para `🔒 Cerrar ticket` y `🔏 Cerrar con razón`
 - el estado de tickets activos se guarda en `BOT_TICKET_STATE_FILE`
+- el foro usa las etiquetas de categoria y las etiquetas de estado `🔓 Abierto` / `🔒 Cerrado`
 
 Etiquetas esperadas en el foro de tickets:
 
@@ -205,6 +209,82 @@ Etiquetas esperadas en el foro de tickets:
 - `Apelaciones`
 - `Bot`
 - `Social`
+- `🔓 Abierto`
+- `🔒 Cerrado`
+
+## IA local para tickets
+
+La base inicial de IA local usa Ollama por HTTP y una base de conocimiento en JSON. No depende del sistema operativo:
+el bot solo necesita poder acceder a `BOT_TICKET_AI_BASE_URL` o, en modo legacy, a `BOT_TICKET_AI_OLLAMA_BASE_URL`.
+
+Variables de entorno principales:
+
+- `BOT_TICKET_AI_ENABLED`: activa o desactiva la carga del servicio de IA local
+- `BOT_TICKET_AI_AUTO_REPLY_ENABLED`: permite contestacion automatica en las categorias seguras configuradas
+- `BOT_TICKET_AI_PROVIDER`: `openai_compatible` u `ollama_native`
+- `BOT_TICKET_AI_BASE_URL`: URL base del backend local
+- `BOT_TICKET_AI_API_KEY`: clave local para backends OpenAI-compatible como LM Studio u Ollama
+- `BOT_TICKET_AI_MODEL`: modelo local, recomendado `qwen2.5:3b`
+- `BOT_TICKET_AI_MAX_OUTPUT_TOKENS`: limite de salida de la respuesta estructurada
+- `BOT_TICKET_AI_AUTO_REPLY_MIN_CONFIDENCE`: umbral minimo para responder automaticamente al usuario
+- `BOT_TICKET_AI_KNOWLEDGE_BASE_FILE`: JSON estructurado con la base de conocimiento
+- `BOT_TICKET_AI_SYSTEM_PROMPT_FILE`: prompt del sistema editable sin tocar codigo
+- `BOT_TICKET_AI_AUTOREPLY_CATEGORIES`: categorias seguras separadas por comas
+
+Recursos incluidos:
+
+- `aa_resources/ticket_ai/knowledge_base.json`: ejemplo inicial de base de conocimiento
+- `aa_resources/ticket_ai/system_prompt.txt`: prompt del sistema para la IA local
+
+Flujo actual de la configuracion:
+
+1. El bot carga la base de conocimiento JSON.
+2. Recupera entradas relevantes por coincidencia lexica segun categoria y mensaje.
+3. Llama al backend local con un prompt acotado y salida JSON estructurada.
+4. La respuesta devuelve `answer`, `confidence`, `should_escalate`, `reason` y `used_entry_ids`.
+5. Cuando el ticket entra por DM, el bot puede responder automaticamente si la categoria esta permitida y la
+   confianza supera el umbral configurado.
+6. El hilo interno recibe siempre una traza de la respuesta IA o del fallo del backend local.
+
+Configuracion recomendada en Windows con LM Studio:
+
+```dotenv
+BOT_TICKET_AI_ENABLED=true
+BOT_TICKET_AI_AUTO_REPLY_ENABLED=true
+BOT_TICKET_AI_PROVIDER=openai_compatible
+BOT_TICKET_AI_BASE_URL=http://127.0.0.1:1234/v1
+BOT_TICKET_AI_API_KEY=lm-studio
+BOT_TICKET_AI_MODEL=qwen2.5-3b-instruct
+```
+
+Si el bot corre en la misma maquina que LM Studio, usa `127.0.0.1` en vez de la IP `192.168.x.x`. Es mas seguro y
+evita depender de la red local.
+
+Configuracion recomendada en Debian con Ollama usando la misma ruta OpenAI-compatible:
+
+```dotenv
+BOT_TICKET_AI_ENABLED=true
+BOT_TICKET_AI_AUTO_REPLY_ENABLED=true
+BOT_TICKET_AI_PROVIDER=openai_compatible
+BOT_TICKET_AI_BASE_URL=http://127.0.0.1:11434/v1
+BOT_TICKET_AI_API_KEY=ollama
+BOT_TICKET_AI_MODEL=qwen2.5:3b
+```
+
+Ejemplo de arranque con Ollama:
+
+```powershell
+ollama pull qwen2.5:3b
+ollama serve
+```
+
+Si prefieres usar la API nativa de Ollama en Debian, cambia:
+
+```dotenv
+BOT_TICKET_AI_PROVIDER=ollama_native
+BOT_TICKET_AI_BASE_URL=http://127.0.0.1:11434
+BOT_TICKET_AI_MODEL=qwen2.5:3b
+```
 
 Configuracion de Google Sheets:
 

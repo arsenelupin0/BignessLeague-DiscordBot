@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "general_scope",
+      "category": "general",
+      "title": "Soporte general",
+      "question": "Cuando debo abrir un ticket de soporte general?",
+      "answer": "Usa soporte general cuando tu duda no encaje claramente en competicion, mercado de jugadores, stream, apelaciones, bot o social.",
+      "tags": [
+        "soporte",
+        "general",
+        "ayuda"
+      ],
+      "keywords": [
+        "soporte general",
+        "ayuda",
+        "duda"
+      ],
+      "related_commands": [],
+      "requires_staff": false
+    },
+    {
+      "id": "competition_entry_fee",
+      "category": "competition",
+      "title": "Inscripcion y coste de entrada",
+      "question": "Tengo que pagar para entrar en la liga?",
+      "answer": "Consulta siempre la normativa y la informacion oficial vigente de Bigness League. Si la duda afecta a pagos, inscripciones cerradas o una situacion particular de un equipo, escala el ticket a staff.",
+      "tags": [
+        "competicion",
+        "inscripcion",
+        "pricepool"
+      ],
+      "keywords": [
+        "pagar",
+        "inscripcion",
+        "entrada",
+        "liga"
+      ],
+      "related_commands": [],
+      "requires_staff": false
+    },
+    {
+      "id": "player_market_changes",
+      "category": "player_market",
+      "title": "Mercado de jugadores y cambios de rol",
+      "question": "Que tipo de cambios se tramitan en mercado de jugadores?",
+      "answer": "Esta categoria cubre altas y bajas de jugadores, asi como cambios de rol de CEO, manager, segundo manager, coach o analista. Si falta informacion concreta, pide los datos del equipo y el jugador implicado.",
+      "tags": [
+        "mercado",
+        "jugadores",
+        "roles"
+      ],
+      "keywords": [
+        "alta",
+        "baja",
+        "cambio de rol",
+        "manager",
+        "coach"
+      ],
+      "related_commands": [
+        "/hacer_fichaje",
+        "/dar_de_baja",
+        "/asignar_rol_equipo_automatico"
+      ],
+      "requires_staff": false
+    },
+    {
+      "id": "stream_requirements",
+      "category": "stream",
+      "title": "Stream y casteo",
+      "question": "Como puedo retrasmitir o castear un partido?",
+      "answer": "Si el usuario quiere retrasmitir o castear un partido, recopila que jornada o partido es, que rol tiene y si cuenta con permiso previo. Si faltan permisos o hay impacto competitivo, escala a staff.",
+      "tags": [
+        "stream",
+        "casteo",
+        "partido"
+      ],
+      "keywords": [
+        "stream",
+        "retransmitir",
+        "castear",
+        "partido"
+      ],
+      "related_commands": [],
+      "requires_staff": false
+    },
+    {
+      "id": "appeals_escalation",
+      "category": "appeals",
+      "title": "Apelaciones y conflictos",
+      "question": "Como debe responder la IA ante apelaciones o problemas disciplinarios?",
+      "answer": "No resuelvas apelaciones ni conflictos disciplinarios. Pide un resumen ordenado de hechos, indica que el staff revisara el caso y escala siempre el ticket a una persona.",
+      "tags": [
+        "apelaciones",
+        "sanciones",
+        "conflictos"
+      ],
+      "keywords": [
+        "apelacion",
+        "sancion",
+        "problema",
+        "toxico",
+        "inapropiada"
+      ],
+      "related_commands": [],
+      "requires_staff": true
+    },
+    {
+      "id": "bot_support_scope",
+      "category": "bot",
+      "title": "Soporte del bot de Bigness League",
+      "question": "Que dudas entran en la categoria del bot?",
+      "answer": "Esta categoria cubre comandos disponibles, errores de funcionamiento y reportes de bugs. Si el usuario aporta capturas, version del comando o el mensaje de error, mejorara mucho la resolucion.",
+      "tags": [
+        "bot",
+        "comandos",
+        "errores"
+      ],
+      "keywords": [
+        "bot",
+        "comando",
+        "error",
+        "bug",
+        "no funciona"
+      ],
+      "related_commands": [
+        "/integracion_de_tickets",
+        "/canal_de_jornada",
+        "/ver_mi_equipo"
+      ],
+      "requires_staff": false
+    },
+    {
+      "id": "social_scope",
+      "category": "social",
+      "title": "Dudas sociales y colaboraciones",
+      "question": "Que temas cubre la categoria social?",
+      "answer": "La categoria social cubre dudas del servidor de Discord, colaboraciones y sugerencias. Si la peticion implica acuerdos externos o decisiones oficiales, deja constancia y escala a staff.",
+      "tags": [
+        "social",
+        "colaboraciones",
+        "sugerencias"
+      ],
+      "keywords": [
+        "discord",
+        "colaboracion",
+        "sugerencia"
+      ],
+      "related_commands": [],
+      "requires_staff": false
+    }
+  ]
+}

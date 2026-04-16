@@ -14,6 +14,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit, urlunsplit
 
 from dotenv import load_dotenv
 
@@ -50,6 +51,17 @@ def _read_int(name: str, default: int) -> int:
         raise ValueError(f"{name} debe ser un entero valido.") from exc
 
 
+def _read_float(name: str, default: float) -> float:
+    raw_value = os.getenv(name)
+    if raw_value is None or not raw_value.strip():
+        return default
+
+    try:
+        return float(raw_value.strip())
+    except ValueError as exc:
+        raise ValueError(f"{name} debe ser un numero valido.") from exc
+
+
 def _read_optional_int(name: str) -> int | None:
     raw_value = os.getenv(name)
     if raw_value is None or not raw_value.strip():
@@ -72,6 +84,77 @@ def _read_optional_str(name: str) -> str | None:
 
     normalized_value = raw_value.strip()
     return normalized_value or None
+
+
+def _read_csv(name: str, default: tuple[str, ...]) -> tuple[str, ...]:
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        return default
+
+    values = tuple(
+        item.strip()
+        for item in raw_value.split(",")
+        if item.strip()
+    )
+    return values or default
+
+
+def _normalize_ticket_ai_base_url(
+        provider: Literal["openai_compatible", "ollama_native"],
+        base_url: str,
+) -> str:
+    normalized = base_url.strip()
+    if not normalized:
+        return normalized
+
+    parsed_url = urlsplit(normalized)
+    path = parsed_url.path.rstrip("/")
+
+    if provider == "openai_compatible":
+        removable_suffixes = (
+            "/chat/completions",
+            "/responses",
+            "/completions",
+            "/embeddings",
+            "/models",
+        )
+        for suffix in removable_suffixes:
+            if path.endswith(suffix):
+                path = path[:-len(suffix)]
+                break
+
+        if not path:
+            path = "/v1"
+        elif not path.endswith("/v1"):
+            path = f"{path}/v1"
+    else:
+        removable_suffixes = (
+            "/api/chat",
+            "/api/generate",
+            "/chat/completions",
+            "/responses",
+            "/completions",
+            "/embeddings",
+            "/models",
+        )
+        for suffix in removable_suffixes:
+            if path.endswith(suffix):
+                path = path[:-len(suffix)]
+                break
+
+        if path.endswith("/v1"):
+            path = path[:-len("/v1")]
+        path = path.rstrip("/")
+
+    return urlunsplit(
+        (
+            parsed_url.scheme,
+            parsed_url.netloc,
+            path,
+            parsed_url.query,
+            parsed_url.fragment,
+        )
+    ).rstrip("/")
 
 
 def _resolve_optional_storage_path(name: str) -> Path | None:
@@ -129,6 +212,28 @@ class Settings:
     team_profile_font_path: Path | None = None
     ticket_forum_channel_id: int | None = None
     ticket_state_file: Path = Path("aa_var/tickets/active_tickets.json")
+    ticket_ai_enabled: bool = False
+    ticket_ai_auto_reply_enabled: bool = False
+    ticket_ai_provider: Literal["openai_compatible", "ollama_native"] = "openai_compatible"
+    ticket_ai_base_url: str = "http://127.0.0.1:11434/v1"
+    ticket_ai_api_key: str = "ollama"
+    ticket_ai_model: str = "qwen2.5:3b"
+    ticket_ai_temperature: float = 0.2
+    ticket_ai_request_timeout_seconds: int = 60
+    ticket_ai_keep_alive: str = "15m"
+    ticket_ai_max_context_messages: int = 6
+    ticket_ai_max_knowledge_matches: int = 4
+    ticket_ai_max_knowledge_characters: int = 4_000
+    ticket_ai_max_output_tokens: int = 300
+    ticket_ai_auto_reply_min_confidence: int = 70
+    ticket_ai_autoreply_categories: tuple[str, ...] = (
+        "general",
+        "competition",
+        "bot",
+        "social",
+    )
+    ticket_ai_knowledge_base_file: Path = Path("aa_resources/ticket_ai/knowledge_base_v0.json")
+    ticket_ai_system_prompt_file: Path = Path("aa_resources/ticket_ai/system_prompt.txt")
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -241,6 +346,89 @@ class Settings:
             "BOT_TICKET_STATE_FILE",
             "aa_var/tickets/active_tickets.json",
         )
+        ticket_ai_enabled = _read_bool("BOT_TICKET_AI_ENABLED", False)
+        ticket_ai_auto_reply_enabled = _read_bool(
+            "BOT_TICKET_AI_AUTO_REPLY_ENABLED",
+            False,
+        )
+        ticket_ai_provider = _read_str(
+            "BOT_TICKET_AI_PROVIDER",
+            "openai_compatible",
+        ).lower()
+        if ticket_ai_provider not in {"openai_compatible", "ollama_native"}:
+            raise ValueError(
+                "BOT_TICKET_AI_PROVIDER debe ser `openai_compatible` u `ollama_native`."
+            )
+        ticket_ai_base_url = _read_optional_str("BOT_TICKET_AI_BASE_URL")
+        if ticket_ai_base_url is None:
+            legacy_base_url = _read_optional_str("BOT_TICKET_AI_OLLAMA_BASE_URL")
+            if legacy_base_url is not None:
+                ticket_ai_base_url = legacy_base_url
+            elif ticket_ai_provider == "openai_compatible":
+                ticket_ai_base_url = "http://127.0.0.1:11434/v1"
+            else:
+                ticket_ai_base_url = "http://127.0.0.1:11434"
+        ticket_ai_api_key = _read_str(
+            "BOT_TICKET_AI_API_KEY",
+            "ollama",
+        )
+        ticket_ai_base_url = _normalize_ticket_ai_base_url(
+            ticket_ai_provider,
+            ticket_ai_base_url,
+        )
+        ticket_ai_model = _read_str(
+            "BOT_TICKET_AI_MODEL",
+            "qwen2.5:3b",
+        )
+        ticket_ai_temperature = _read_float(
+            "BOT_TICKET_AI_TEMPERATURE",
+            0.2,
+        )
+        ticket_ai_request_timeout_seconds = _read_int(
+            "BOT_TICKET_AI_REQUEST_TIMEOUT_SECONDS",
+            60,
+        )
+        ticket_ai_keep_alive = _read_str(
+            "BOT_TICKET_AI_KEEP_ALIVE",
+            "15m",
+        )
+        ticket_ai_max_context_messages = _read_int(
+            "BOT_TICKET_AI_MAX_CONTEXT_MESSAGES",
+            6,
+        )
+        ticket_ai_max_knowledge_matches = _read_int(
+            "BOT_TICKET_AI_MAX_KNOWLEDGE_MATCHES",
+            4,
+        )
+        ticket_ai_max_knowledge_characters = _read_int(
+            "BOT_TICKET_AI_MAX_KNOWLEDGE_CHARACTERS",
+            4_000,
+        )
+        ticket_ai_max_output_tokens = _read_int(
+            "BOT_TICKET_AI_MAX_OUTPUT_TOKENS",
+            300,
+        )
+        ticket_ai_auto_reply_min_confidence = _read_int(
+            "BOT_TICKET_AI_AUTO_REPLY_MIN_CONFIDENCE",
+            40,
+        )
+        ticket_ai_autoreply_categories = _read_csv(
+            "BOT_TICKET_AI_AUTOREPLY_CATEGORIES",
+            (
+                "general",
+                "competition",
+                "bot",
+                "social",
+            ),
+        )
+        ticket_ai_knowledge_base_file = _resolve_storage_path(
+            "BOT_TICKET_AI_KNOWLEDGE_BASE_FILE",
+            "aa_resources/ticket_ai/knowledge_base_v0.json",
+        )
+        ticket_ai_system_prompt_file = _resolve_storage_path(
+            "BOT_TICKET_AI_SYSTEM_PROMPT_FILE",
+            "aa_resources/ticket_ai/system_prompt.txt",
+        )
 
         return cls(
             token=token,
@@ -274,4 +462,21 @@ class Settings:
             team_profile_font_path=team_profile_font_path,
             ticket_forum_channel_id=ticket_forum_channel_id,
             ticket_state_file=ticket_state_file,
+            ticket_ai_enabled=ticket_ai_enabled,
+            ticket_ai_auto_reply_enabled=ticket_ai_auto_reply_enabled,
+            ticket_ai_provider=ticket_ai_provider,
+            ticket_ai_base_url=ticket_ai_base_url,
+            ticket_ai_api_key=ticket_ai_api_key,
+            ticket_ai_model=ticket_ai_model,
+            ticket_ai_temperature=ticket_ai_temperature,
+            ticket_ai_request_timeout_seconds=ticket_ai_request_timeout_seconds,
+            ticket_ai_keep_alive=ticket_ai_keep_alive,
+            ticket_ai_max_context_messages=ticket_ai_max_context_messages,
+            ticket_ai_max_knowledge_matches=ticket_ai_max_knowledge_matches,
+            ticket_ai_max_knowledge_characters=ticket_ai_max_knowledge_characters,
+            ticket_ai_max_output_tokens=ticket_ai_max_output_tokens,
+            ticket_ai_auto_reply_min_confidence=ticket_ai_auto_reply_min_confidence,
+            ticket_ai_autoreply_categories=ticket_ai_autoreply_categories,
+            ticket_ai_knowledge_base_file=ticket_ai_knowledge_base_file,
+            ticket_ai_system_prompt_file=ticket_ai_system_prompt_file,
         )
