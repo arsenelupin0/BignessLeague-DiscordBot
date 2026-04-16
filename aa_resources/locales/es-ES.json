@@ -23,6 +23,12 @@
         "description": "Anade roles al canal actual con un selector filtrado."
       }
     },
+    "tickets": {
+      "publish_panel": {
+        "name": "integracion_de_tickets",
+        "description": "Publica el panel de soporte para abrir tickets."
+      }
+    },
     "match_channel_creation": {
       "create_match_channel": {
         "name": "canal_de_jornada",
@@ -168,6 +174,69 @@
       "delete_prompt": "Vas a eliminar el canal `{channel_name}` de forma permanente.\nRoles protegidos del sistema: {protected_roles}.\nConfirma solo si estas completamente seguro.",
       "matchday_close_prompt": "Vas a cerrar la jornada en `{channel_name}`.\nSe eliminaran los permisos de los roles no protegidos y solo conservaran acceso: {protected_roles}.\nConfirma solo si quieres aplicar este cierre."
     },
+    "tickets": {
+      "panel": {
+        "content": "# 🔰 Soporte 🔰\n➡️ Selecciona **una** de las siguientes **opciones** en el **menú desplegable** abajo de este mensaje. Si necesitas **ayuda** sobre que **tema** quieres abrir el **ticket**, **lee** atentamente **aquí debajo**.\n\n## 1️⃣ Soporte general\n- En caso de que tu duda no esté en ninguna de las otras categorías. Esta es tu categoría.\n## 2️⃣ Competición Bigness League\n- Reglamento\n- Código de conducta\n- Cómo funciona la liga (divisiones, inscripción, max rango, etc)\n- Pricepool\n- ¿Tengo que pagar para entrar?\n## 3️⃣ Mercado de jugadores\n- Inscribir a un nuevo jugador\n- Quitar a un jugador de mi equipo\n- Modificación de rol (ceo, manager, segundo manager, coach o analista)\n## 4️⃣ ¿Quieres hacer stream de tu partido?\n- Quiero retrasmitir mi partido\n- Que tengo que hacer para poder retrasmitir una jornada de la liga\n- ¿Puedo castear un partido?\n## 5️⃣ Apelaciones, problemas con algún equipo, jugador, etc\n- Sanciones sobre jugadores\n- Problemas con equipos externos\n- Problemas con X jugador ajeno a la liga\n- Apelación sobre decisión de la liga inapropiada\n## 6️⃣ Bot de la Bigness League\n- Como funciona el bot de la bigness\n- Que comandos puedo hacer\n- No funciona o hay algún error\n- Quiero reportar un error\n## 7️⃣ Social\n- Dudas del servidor de discord\n- Colaboraciones\n- Sugerencias",
+        "select_placeholder": "Soporte General",
+        "published": "Panel de tickets publicado."
+      },
+      "open": {
+        "embed": {
+          "title": "🔓 Nuevo Ticket Creado",
+          "description": "Tu ticket de soporte ha sido abierto con exito. Un miembro del personal te asistira en breve.\n \n_ _",
+          "fields": {
+            "ticket_number": "📝 Numero de Ticket",
+            "opened_by": "👤 Abierto por",
+            "category": "📋 Categoria",
+            "created_at": "📅 Creado el",
+            "instructions": "ℹ️ Instrucciones"
+          },
+          "instructions": "- Describe tu problema en detalle\n- Ten paciencia mientras esperas una respuesta\n- Usa los botones de abajo para cerrar el ticket cuando se resuelva",
+          "footer": "Desarrollado por el equipo de la Bigness League"
+        },
+        "dm_created": "# Ticket abierto\nHas abierto un ticket de **{category}**.\n\nResponde a este mensaje privado para hablar con el staff de Bigness League. Las respuestas del staff tambien llegaran por aqui.",
+        "created_ephemeral": "{emoji} Tu nuevo Ticket ha sido creado: {message_link}",
+        "already_open": "Ya tienes un ticket activo. Revisa tus mensajes privados. Hilo interno: `{thread_id}`.",
+        "already_open_with_link": "Ya tienes un ticket activo. Revisa tus mensajes privados: {message_link}",
+        "dm_failed_ephemeral": "No he podido enviarte un mensaje privado, asi que el ticket se ha cerrado. Activa los DM de este servidor y vuelve a intentarlo.",
+        "dm_failed_thread": "No se pudo abrir DM con {user}. El ticket se cierra automaticamente."
+      },
+      "relay": {
+        "from_user": "**Mensaje del usuario {author}:**\n{body}",
+        "from_staff": "**Respuesta de Bigness League - {author}:**\n{body}",
+        "attachments": "Adjuntos:\n{urls}",
+        "empty_body": "(mensaje sin texto)",
+        "thread_missing_for_user": "No he encontrado el hilo interno de tu ticket. Se ha cerrado el registro activo; vuelve a abrirlo desde el panel si necesitas continuar.",
+        "dm_failed_for_staff": "No he podido enviar este mensaje por DM al usuario `{user_id}`."
+      },
+      "buttons": {
+        "close_ticket": "Cerrar ticket"
+      },
+      "close": {
+        "not_ticket_thread": "Este boton solo se puede usar dentro de un hilo de ticket.",
+        "not_active": "No hay ningun ticket activo asociado a este hilo.",
+        "thread_closed": "Ticket cerrado por {actor}.",
+        "dm_closed": "Tu ticket ha sido cerrado por {actor}.",
+        "closed_ephemeral": "Ticket cerrado.",
+        "embed": {
+          "title": "🔒 Ticket Cerrado",
+          "description": "Tu ticket de soporte ha sido cerrado con exito. Si necesitas ayuda adicional, puedes abrir un nuevo ticket.\n \n_ _",
+          "fields": {
+            "ticket_number": "📝 Numero de Ticket",
+            "closed_by": "👤 Cerrado por",
+            "category": "📋 Categoria",
+            "ticket_link": "🔗 Ir al Ticket",
+            "created_at": "📅 Creado el",
+            "duration": "⏱️ Duracion",
+            "closed_at": "🔒 Cerrado el",
+            "close_reason": "📌 Razon de cierre"
+          },
+          "link_value": "[Enlace directo al mensaje de inicio del ticket]({ticket_link})",
+          "default_reason": "No se ha especificado ninguna razon.",
+          "footer": "Desarrollado por el equipo de la Bigness League"
+        }
+      }
+    },
     "channel_role_addition": {
       "loading_placeholder": "Cargando roles...",
       "empty_option_label": "Sin roles",
@@ -251,6 +320,15 @@
       "range_start_missing": "No existe el rol de inicio configurado para el selector: `{role_id}`.",
       "range_end_missing": "No existe el rol de fin configurado para el selector: `{role_id}`.",
       "range_empty": "No hay roles seleccionables entre los separadores configurados."
+    },
+    "tickets": {
+      "ceo_only": "Solo puede publicar el panel de tickets un miembro con el rol `CEO`.",
+      "category_unknown": "La categoria de ticket seleccionada no es valida.",
+      "forum_channel_not_configured": "Falta configurar `BOT_TICKET_FORUM_CHANNEL_ID` con el ID del foro de tickets.",
+      "forum_channel_not_found": "No se encontro el foro de tickets configurado: `{channel_id}`.",
+      "forum_channel_not_in_guild": "El canal configurado como foro de tickets no pertenece a este servidor: `{channel_id}`.",
+      "forum_channel_invalid_type": "El canal configurado como foro de tickets debe ser un foro de Discord: `{channel_id}`.",
+      "forum_tag_missing": "No existe la etiqueta `{tag_name}` en el foro `{forum_name}`. Crea esa etiqueta en el foro o ajusta la configuracion de categorias."
     },
     "match_channel_creation": {
       "same_team_roles": "No puedes crear un partido usando el mismo rol dos veces: `{role_name}`.",

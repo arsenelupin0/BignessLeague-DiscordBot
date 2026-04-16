@@ -28,13 +28,16 @@ pip install -e .
    Puedes usar `local`, un offset como `+02:00`, o una zona IANA valida si tu entorno dispone de datos de zona horaria.
 9. Si quieres cambiar los botones del mensaje inicial de los partidos, ajusta `BOT_MATCH_CHANNEL_TICKET_URL` y
    `BOT_MATCH_CHANNEL_RULES_URL`.
-10. Si quieres usar `/ver_mi_equipo`, configura `BOT_GOOGLE_SERVICE_ACCOUNT_FILE`
+10. Si quieres usar la integracion nativa de tickets, configura `BOT_TICKET_FORUM_CHANNEL_ID` con el ID del foro donde
+    el bot debe crear los posts internos de ticket. `BOT_TICKET_STATE_FILE` es opcional y define donde se guarda el
+    estado persistente de tickets activos.
+11. Si quieres usar `/ver_mi_equipo`, configura `BOT_GOOGLE_SERVICE_ACCOUNT_FILE`
     y `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`. `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME` es opcional.
-11. Si quieres sincronizar roles automaticamente desde `/hacer_fichaje` o `/asignar_rol_equipo_automatico`,
+12. Si quieres sincronizar roles automaticamente desde `/hacer_fichaje` o `/asignar_rol_equipo_automatico`,
     ajusta `BOT_PARTICIPANT_ROLE_ID` y `BOT_PLAYER_ROLE_ID` con los roles base que deben recibir todos los jugadores.
-12. Si quieres que `/dar_de_baja` retire tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
+13. Si quieres que `/dar_de_baja` retire tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
     `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID` y `BOT_STAFF_CAPTAIN_ROLE_ID`.
-13. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
+14. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
     Lo recomendado es colocar la fuente dentro de `aa_resources/fonts/`.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
@@ -79,6 +82,7 @@ crea un canal de partido con permisos para ambos equipos.
   mensajes de Discord hacia Google Sheets.
 - `/dar_de_baja discord_jugador:<texto>`: elimina un jugador buscandolo globalmente por su Discord en Google Sheets.
 - `/asignar_rol_equipo_automatico equipo:<rol>`: revisa la hoja del equipo y sincroniza los roles en Discord.
+- `/integracion_de_tickets`: publica el panel de soporte para abrir tickets desde un menu desplegable.
 
 Opciones disponibles en `/cerrar_canal`:
 
@@ -178,6 +182,29 @@ Restricciones de `/cerrar_canal`:
 - intenta asignar el rol de equipo y los roles tecnicos correspondientes a `STAFF TÉCNICO`
 - si un miembro de staff cambia de rol tecnico, retira los roles tecnicos configurados que ya no correspondan
 - informa de miembros asignados, ya configurados, sin coincidencia y coincidencias ambiguas
+
+`/integracion_de_tickets`:
+
+- solo puede usarlo un miembro con el rol `Ceo`/`CEO`
+- publica en el canal actual un panel persistente con menu desplegable para abrir tickets
+- al seleccionar una categoria, el bot crea un post dentro del foro configurado por `BOT_TICKET_FORUM_CHANNEL_ID`
+- el post aplica la etiqueta del foro que coincida con la categoria seleccionada
+- el usuario continua la conversacion por DM con el bot
+- los mensajes enviados por DM se reenvian al hilo del foro
+- las respuestas del staff escritas en el hilo del foro se envian al usuario por DM
+- cada usuario solo puede tener un ticket activo a la vez
+- el hilo incluye un boton persistente para cerrar el ticket
+- el estado de tickets activos se guarda en `BOT_TICKET_STATE_FILE`
+
+Etiquetas esperadas en el foro de tickets:
+
+- `Soporte general`
+- `Competicion`
+- `Mercado`
+- `Streaming`
+- `Apelaciones`
+- `Bot`
+- `Social`
 
 Configuracion de Google Sheets:
 

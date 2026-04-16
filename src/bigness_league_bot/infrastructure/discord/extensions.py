@@ -25,6 +25,7 @@ INITIAL_EXTENSIONS: tuple[str, ...] = (
     "bigness_league_bot.presentation.discord.cogs.match_channel_creation",
     "bigness_league_bot.presentation.discord.cogs.team_profile",
     "bigness_league_bot.presentation.discord.cogs.team_signing",
+    "bigness_league_bot.presentation.discord.cogs.tickets",
 )
 
 

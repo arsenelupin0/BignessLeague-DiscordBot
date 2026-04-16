@@ -50,6 +50,17 @@ def _read_int(name: str, default: int) -> int:
         raise ValueError(f"{name} debe ser un entero valido.") from exc
 
 
+def _read_optional_int(name: str) -> int | None:
+    raw_value = os.getenv(name)
+    if raw_value is None or not raw_value.strip():
+        return None
+
+    try:
+        return int(raw_value.strip())
+    except ValueError as exc:
+        raise ValueError(f"{name} debe ser un entero valido.") from exc
+
+
 def _read_str(name: str, default: str) -> str:
     return os.getenv(name, default).strip() or default
 
@@ -116,6 +127,8 @@ class Settings:
     google_sheets_spreadsheet_id: str = ""
     google_sheets_team_sheet_name: str = ""
     team_profile_font_path: Path | None = None
+    ticket_forum_channel_id: int | None = None
+    ticket_state_file: Path = Path("aa_var/tickets/active_tickets.json")
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -223,6 +236,11 @@ class Settings:
         team_profile_font_path = _resolve_optional_storage_path(
             "BOT_TEAM_PROFILE_FONT_PATH"
         )
+        ticket_forum_channel_id = _read_optional_int("BOT_TICKET_FORUM_CHANNEL_ID")
+        ticket_state_file = _resolve_storage_path(
+            "BOT_TICKET_STATE_FILE",
+            "aa_var/tickets/active_tickets.json",
+        )
 
         return cls(
             token=token,
@@ -254,4 +272,6 @@ class Settings:
             google_sheets_spreadsheet_id=google_sheets_spreadsheet_id,
             google_sheets_team_sheet_name=google_sheets_team_sheet_name,
             team_profile_font_path=team_profile_font_path,
+            ticket_forum_channel_id=ticket_forum_channel_id,
+            ticket_state_file=ticket_state_file,
         )
