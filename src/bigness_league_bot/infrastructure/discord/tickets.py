@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
 LOGGER = logging.getLogger(__name__)
-TICKET_STATE_VERSION = 1
+TICKET_STATE_VERSION = 3
 TICKET_OPEN_STATUS_TAG_NAME = "Abierto"
 TICKET_CLOSED_STATUS_TAG_NAME = "Cerrado"
 
@@ -57,7 +57,7 @@ class TicketStateStore:
         active_records = [
             record
             for record in self._records.values()
-            if record.user_id == user_id and record.status == "active"
+            if record.includes_user(user_id) and record.status == "active"
         ]
         if not active_records:
             return None
@@ -72,6 +72,10 @@ class TicketStateStore:
         return record
 
     def add(self, record: TicketRecord) -> None:
+        self._records[record.thread_id] = record
+        self._save_records()
+
+    def update(self, record: TicketRecord) -> None:
         self._records[record.thread_id] = record
         self._save_records()
 

@@ -37,7 +37,10 @@ from bigness_league_bot.presentation.discord.views.ticket_message_embeds import 
 )
 
 if TYPE_CHECKING:
-    from bigness_league_bot.application.services.tickets import TicketRecord
+    from bigness_league_bot.application.services.tickets import (
+        TicketParticipant,
+        TicketRecord,
+    )
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
 
@@ -537,31 +540,36 @@ async def _send_close_dm(
         is_dm_interaction: bool,
         close_reason: str | None,
 ) -> None:
-    dm_ticket_link = build_dm_message_link(
-        channel_id=record.dm_channel_id,
-        message_id=record.dm_start_message_id,
-    )
-    close_embed = build_ticket_close_embed(
-        bot=interaction.client,
-        locale=interaction.locale,
-        guild=guild,
-        closed_by=interaction.user,
-        category_label=category_label,
-        ticket_number=record.ticket_number,
-        ticket_link=dm_ticket_link,
-        created_at=record.created_at,
-        closed_at=record.closed_at or record.created_at,
-        close_reason=close_reason,
-    )
-    try:
-        if is_dm_interaction and isinstance(interaction.channel, discord.DMChannel):
-            await interaction.channel.send(embed=close_embed)
-            return
+    for participant in record.participants:
+        try:
+            dm_ticket_link = build_dm_message_link(
+                channel_id=participant.dm_channel_id,
+                message_id=participant.dm_start_message_id,
+            )
+            close_embed = build_ticket_close_embed(
+                bot=interaction.client,
+                locale=interaction.locale,
+                guild=guild,
+                closed_by=interaction.user,
+                category_label=category_label,
+                ticket_number=record.ticket_number,
+                ticket_link=dm_ticket_link,
+                created_at=record.created_at,
+                closed_at=record.closed_at or record.created_at,
+                close_reason=close_reason,
+            )
+            if (
+                    is_dm_interaction
+                    and interaction.user.id == participant.user_id
+                    and isinstance(interaction.channel, discord.DMChannel)
+            ):
+                await interaction.channel.send(embed=close_embed)
+                continue
 
-        ticket_user = await interaction.client.fetch_user(record.user_id)
-        await ticket_user.send(embed=close_embed)
-    except discord.HTTPException:
-        return
+            ticket_user = await interaction.client.fetch_user(participant.user_id)
+            await ticket_user.send(embed=close_embed)
+        except discord.HTTPException:
+            continue
 
 
 async def _disable_ticket_start_controls(
@@ -576,32 +584,33 @@ async def _disable_ticket_start_controls(
         message_id=record.thread_start_message_id,
         store=store,
     )
-    dm_channel = await _resolve_dm_channel(
-        interaction=interaction,
-        record=record,
-    )
-    if dm_channel is None:
-        return
+    for participant in record.participants:
+        dm_channel = await _resolve_dm_channel(
+            interaction=interaction,
+            participant=participant,
+        )
+        if dm_channel is None:
+            continue
 
-    await _disable_message_controls(
-        channel=dm_channel,
-        message_id=record.dm_start_message_id,
-        store=store,
-    )
+        await _disable_message_controls(
+            channel=dm_channel,
+            message_id=participant.dm_start_message_id,
+            store=store,
+        )
 
 
 async def _resolve_dm_channel(
         *,
         interaction: discord.Interaction[BignessLeagueBot],
-        record: TicketRecord,
+        participant: TicketParticipant,
 ) -> discord.DMChannel | None:
-    if record.dm_channel_id is not None:
-        cached_channel = interaction.client.get_channel(record.dm_channel_id)
+    if participant.dm_channel_id is not None:
+        cached_channel = interaction.client.get_channel(participant.dm_channel_id)
         if isinstance(cached_channel, discord.DMChannel):
             return cached_channel
 
     try:
-        ticket_user = await interaction.client.fetch_user(record.user_id)
+        ticket_user = await interaction.client.fetch_user(participant.user_id)
         return await ticket_user.create_dm()
     except discord.HTTPException:
         return None

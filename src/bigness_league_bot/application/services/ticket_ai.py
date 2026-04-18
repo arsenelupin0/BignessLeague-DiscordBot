@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Protocol
 
+from bigness_league_bot.application.services.tickets import normalize_ticket_category_key
 from bigness_league_bot.core.settings import Settings
 from bigness_league_bot.infrastructure.ticket_ai.knowledge_base import (
     TicketAiKnowledgeBase,
@@ -29,6 +30,27 @@ from bigness_league_bot.infrastructure.ticket_ai.openai_compatible import (
 )
 
 ConversationRole = Literal["user", "staff", "assistant"]
+HUMAN_ESCALATION_PHRASES: tuple[str, ...] = (
+    "escalar este ticket",
+    "escala este ticket",
+    "puedes escalar este ticket",
+    "quiero que lo revise una persona",
+    "quiero que lo revise alguien",
+    "quiero hablar con una persona",
+    "quiero hablar con alguien",
+    "quiero hablar con staff",
+    "quiero hablar con el staff",
+    "necesito ayuda de una persona",
+    "necesito ayuda real",
+    "necesito ayuda humana",
+    "necesito soporte humano",
+    "necesito a un administrador",
+    "necesito a alguien del staff",
+    "necesito a una persona del staff",
+    "que alguien del staff revise esto",
+    "que un administrador revise esto",
+    "que una persona revise esto",
+)
 
 
 class TicketAiChatClient(Protocol):
@@ -95,7 +117,15 @@ class TicketAiService:
         if not self.settings.ticket_ai_auto_reply_enabled:
             return False
 
-        return category_key in self.settings.ticket_ai_autoreply_categories
+        normalized_category_key = normalize_ticket_category_key(category_key)
+        if self.is_force_escalate_category(normalized_category_key):
+            return False
+
+        return normalized_category_key in self._normalized_autoreply_categories()
+
+    def is_force_escalate_category(self, category_key: str) -> bool:
+        normalized_category_key = normalize_ticket_category_key(category_key)
+        return normalized_category_key in self._normalized_force_escalate_categories()
 
     async def generate_reply(
             self,
@@ -104,6 +134,7 @@ class TicketAiService:
             latest_user_message: str,
             conversation: tuple[TicketAiConversationTurn, ...],
     ) -> TicketAiReply:
+        requested_human_support = detect_human_support_request(latest_user_message)
         matches = self.knowledge_base.search(
             query=latest_user_message,
             category=category_key,
@@ -122,6 +153,7 @@ class TicketAiService:
                     latest_user_message=latest_user_message,
                     conversation=conversation[-self.settings.ticket_ai_max_context_messages:],
                     matches=matches,
+                    requested_human_support=requested_human_support,
                 ),
             ),
         )
@@ -133,6 +165,8 @@ class TicketAiService:
             payload=response_payload,
             retrieved_matches=matches,
             category_key=category_key,
+            force_escalate_category=self.is_force_escalate_category(category_key),
+            requested_human_support=requested_human_support,
         )
 
     async def ping(self) -> bool:
@@ -155,6 +189,18 @@ class TicketAiService:
         return OllamaChatMessage(
             role=role,
             content=content,
+        )
+
+    def _normalized_autoreply_categories(self) -> frozenset[str]:
+        return frozenset(
+            normalize_ticket_category_key(category_key)
+            for category_key in self.settings.ticket_ai_autoreply_categories
+        )
+
+    def _normalized_force_escalate_categories(self) -> frozenset[str]:
+        return frozenset(
+            normalize_ticket_category_key(category_key)
+            for category_key in self.settings.ticket_ai_force_escalate_categories
         )
 
 
@@ -188,6 +234,7 @@ def _build_model_input(
         latest_user_message: str,
         conversation: tuple[TicketAiConversationTurn, ...],
         matches: tuple[TicketAiKnowledgeMatch, ...],
+        requested_human_support: bool,
 ) -> str:
     conversation_blocks = [
         f"- {turn.role}: {turn.content.strip()}"
@@ -204,6 +251,10 @@ def _build_model_input(
     return "\n\n".join(
         [
             f"Categoria del ticket: {category_key}",
+            (
+                    "El usuario ha pedido atencion humana o escalar el ticket: "
+                    + ("si" if requested_human_support else "no")
+            ),
             f"Ultimo mensaje del usuario:\n{latest_user_message.strip()}",
             (
                 "Contexto reciente del ticket:\n"
@@ -244,6 +295,8 @@ def _parse_ticket_ai_reply(
         payload: dict[str, object],
         retrieved_matches: tuple[TicketAiKnowledgeMatch, ...],
         category_key: str,
+        force_escalate_category: bool = False,
+        requested_human_support: bool = False,
 ) -> TicketAiReply:
     answer = str(payload.get("answer", "")).strip()
     if not answer:
@@ -255,7 +308,7 @@ def _parse_ticket_ai_reply(
     except (TypeError, ValueError) as exc:
         raise OllamaClientError("La IA local ha devuelto una confianza invalida.") from exc
 
-    should_escalate = bool(payload.get("should_escalate", False))
+    should_escalate = requested_human_support
     reason = str(payload.get("reason", "")).strip() or "Sin motivo especificado."
     used_entry_ids_raw = payload.get("used_entry_ids", [])
     if isinstance(used_entry_ids_raw, list):
@@ -267,15 +320,13 @@ def _parse_ticket_ai_reply(
     else:
         used_entry_ids = ()
 
-    if any(
-            match.entry.requires_staff
-            and (
-                    match.entry.entry_id in used_entry_ids
-                    or match.entry.category == category_key
-            )
-            for match in retrieved_matches
-    ):
+    if force_escalate_category:
         should_escalate = True
+        if reason == "Sin motivo especificado.":
+            reason = "La categoria del ticket requiere revision de staff."
+
+    if requested_human_support and reason == "Sin motivo especificado.":
+        reason = "El usuario ha pedido atencion de una persona del staff."
 
     return TicketAiReply(
         answer=answer,
@@ -284,4 +335,12 @@ def _parse_ticket_ai_reply(
         reason=reason,
         used_entry_ids=used_entry_ids,
         retrieved_matches=retrieved_matches,
+    )
+
+
+def detect_human_support_request(message: str) -> bool:
+    normalized_message = " ".join(message.casefold().split())
+    return any(
+        phrase in normalized_message
+        for phrase in HUMAN_ESCALATION_PHRASES
     )

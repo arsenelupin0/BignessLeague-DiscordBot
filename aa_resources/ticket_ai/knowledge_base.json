@@ -34,6 +34,9 @@
       "reglamento",
       "formato",
       "divisiones",
+      "inscripcion",
+      "inscribirse",
+      "registro de equipo",
       "partidos",
       "fechas",
       "prizepool"
@@ -125,7 +128,10 @@
       "keywords": [
         "inscripción",
         "inscribirse",
+        "inscribirme",
         "registro",
+        "registro de equipo",
+        "abrir ticket para inscribirme",
         "tracker",
         "cuenta principal",
         "discord",
@@ -135,6 +141,9 @@
       ],
       "question_examples": [
         "¿Qué necesito para inscribirme?",
+        "¿Puedo inscribirme a la liga?",
+        "¿Qué ticket debo abrir para inscribirme?",
+        "¿La inscripción va en Competición o en otro ticket?",
         "¿Todos los jugadores deben estar en Discord?",
         "¿Qué datos lleva la inscripción?"
       ],

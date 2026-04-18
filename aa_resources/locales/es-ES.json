@@ -28,6 +28,27 @@
         "name": "integracion_de_tickets",
         "description": "Publica el panel de soporte para abrir tickets."
       },
+      "add_to_ticket": {
+        "name": "anadir_al_ticket",
+        "description": "Añade uno o varios usuarios al ticket actual.",
+        "parameters": {
+          "user_1": {
+            "description": "Primer usuario que quieres añadir al ticket."
+          },
+          "user_2": {
+            "description": "Segundo usuario que quieres añadir al ticket."
+          },
+          "user_3": {
+            "description": "Tercer usuario que quieres añadir al ticket."
+          },
+          "user_4": {
+            "description": "Cuarto usuario que quieres añadir al ticket."
+          },
+          "user_5": {
+            "description": "Quinto usuario que quieres añadir al ticket."
+          }
+        }
+      },
       "ai_status": {
         "name": "ai_estado",
         "description": "Muestra el estado actual de la IA local para tickets."
@@ -205,9 +226,23 @@
         "dm_failed_ephemeral": "No he podido enviarte un mensaje privado, asi que el ticket se ha cerrado. Activa los DM de este servidor y vuelve a intentarlo.",
         "dm_failed_thread": "No se pudo abrir DM con {user}. El ticket se cierra automaticamente."
       },
+      "participants": {
+        "only_ticket_thread": "Este comando solo se puede usar dentro de un hilo de ticket activo.",
+        "added_dm": "Has sido añadido al ticket {ticket_number} de **{category}**. Responde por este mensaje privado para participar en la conversación.",
+        "added_thread": "Se han añadido al ticket: {users}",
+        "none_added": "No se ha añadido ningun usuario al ticket.",
+        "owner_unavailable": "No he podido resolver al usuario que abrio originalmente este ticket.",
+        "summary": {
+          "added": "Añadidos: {users}",
+          "already_present": "Ya estaban en el ticket: {users}",
+          "blocked_by_other_ticket": "No se han añadido porque ya tienen otro ticket activo: {users}",
+          "dm_failed": "No he podido abrir DM con: {users}"
+        }
+      },
       "relay": {
         "from_user": "**Mensaje del usuario {author}:**\n{body}",
         "from_staff": "**Respuesta de Bigness League - {author}:**\n{body}",
+        "from_command_result": "**Resultado del comando /{command_name}:**\n{body}",
         "attachments": "Adjuntos:\n{urls}",
         "empty_body": "(mensaje sin texto)",
         "thread_missing_for_user": "No he encontrado el hilo interno de tu ticket. Se ha cerrado el registro activo; vuelve a abrirlo desde el panel si necesitas continuar.",
@@ -216,6 +251,7 @@
       "ai": {
         "thread_response": "**Respuesta IA local:**\n{answer}\n\nConfianza: `{confidence}` | Escalar: `{should_escalate}`\nMotivo: {reason}\nBase de conocimiento: {used_entry_ids}",
         "user_fallback": "He recibido tu mensaje. Un miembro del staff revisara tu caso en cuanto sea posible.",
+        "user_escalated": "De acuerdo. He dejado el ticket para que lo revise una persona del staff lo antes posible.",
         "unavailable_thread": "La IA local no ha podido responder a este mensaje: {details}",
         "status": {
           "result": "## Estado de la IA de tickets\n- Cargada en runtime: `{loaded}`\n- Activada por configuracion: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Proveedor: `{provider}`\n- Modelo: `{model}`\n- Base URL: `{base_url}`\n- Backend accesible: `{backend_reachable}`\n- Categorias con auto-reply: `{categories}`\n- Base de conocimiento: `{knowledge_base_file}`\n- Prompt del sistema: `{system_prompt_file}`"

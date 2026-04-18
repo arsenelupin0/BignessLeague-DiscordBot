@@ -23,6 +23,10 @@ from bigness_league_bot.infrastructure.google.team_sheet_repository import (
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import LocalizationService
+from bigness_league_bot.presentation.discord.ticket_command_mirroring import (
+    fetch_interaction_message,
+    mirror_ticket_command_message_edit,
+)
 from bigness_league_bot.presentation.discord.views.team_profile_tracker_actions import (
     TeamProfileTrackerActionsView,
 )
@@ -178,4 +182,11 @@ class TeamProfileTeamSelectionView(discord.ui.View):
             attachments=[image_file],
             view=tracker_view,
         )
-        tracker_view.message = interaction.message
+        updated_message = await fetch_interaction_message(interaction, interaction.message.id)
+        tracker_view.message = updated_message or interaction.message
+        if updated_message is not None:
+            await mirror_ticket_command_message_edit(
+                interaction,
+                updated_message,
+                command_name="ver_mi_equipo",
+            )

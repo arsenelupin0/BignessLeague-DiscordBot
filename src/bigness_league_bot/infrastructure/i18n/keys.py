@@ -49,6 +49,45 @@ class _CommandsTicketsPublishPanel:
                                                  default_text="Publica el panel de soporte para abrir tickets.")
 
 
+class _CommandsTicketsAddToTicketParametersUser1:
+    description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_1.description",
+                                                 default_text="Primer usuario que quieres añadir al ticket.")
+
+
+class _CommandsTicketsAddToTicketParametersUser2:
+    description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_2.description",
+                                                 default_text="Segundo usuario que quieres añadir al ticket.")
+
+
+class _CommandsTicketsAddToTicketParametersUser3:
+    description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_3.description",
+                                                 default_text="Tercer usuario que quieres añadir al ticket.")
+
+
+class _CommandsTicketsAddToTicketParametersUser4:
+    description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_4.description",
+                                                 default_text="Cuarto usuario que quieres añadir al ticket.")
+
+
+class _CommandsTicketsAddToTicketParametersUser5:
+    description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_5.description",
+                                                 default_text="Quinto usuario que quieres añadir al ticket.")
+
+
+class _CommandsTicketsAddToTicketParameters:
+    user_1: _CommandsTicketsAddToTicketParametersUser1 = _CommandsTicketsAddToTicketParametersUser1()
+    user_2: _CommandsTicketsAddToTicketParametersUser2 = _CommandsTicketsAddToTicketParametersUser2()
+    user_3: _CommandsTicketsAddToTicketParametersUser3 = _CommandsTicketsAddToTicketParametersUser3()
+    user_4: _CommandsTicketsAddToTicketParametersUser4 = _CommandsTicketsAddToTicketParametersUser4()
+    user_5: _CommandsTicketsAddToTicketParametersUser5 = _CommandsTicketsAddToTicketParametersUser5()
+
+
+class _CommandsTicketsAddToTicket:
+    name: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.name", default_text="anadir_al_ticket")
+    description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.description",
+                                                 default_text="Añade uno o varios usuarios al ticket actual.")
+    parameters: _CommandsTicketsAddToTicketParameters = _CommandsTicketsAddToTicketParameters()
+
 class _CommandsTicketsAiStatus:
     name: TranslationKey = TranslationKey(key="commands.tickets.ai_status.name", default_text="ai_estado")
     description: TranslationKey = TranslationKey(key="commands.tickets.ai_status.description",
@@ -56,6 +95,7 @@ class _CommandsTicketsAiStatus:
 
 class _CommandsTickets:
     publish_panel: _CommandsTicketsPublishPanel = _CommandsTicketsPublishPanel()
+    add_to_ticket: _CommandsTicketsAddToTicket = _CommandsTicketsAddToTicket()
     ai_status: _CommandsTicketsAiStatus = _CommandsTicketsAiStatus()
 
 class _CommandsMatchChannelCreationCreateMatchChannelParametersJornada:
@@ -352,11 +392,39 @@ class _MessagesTicketsOpen:
     dm_failed_thread: TranslationKey = TranslationKey(key="messages.tickets.open.dm_failed_thread",
                                                       default_text="No se pudo abrir DM con {user}. El ticket se cierra automaticamente.")
 
+
+class _MessagesTicketsParticipantsSummary:
+    added: TranslationKey = TranslationKey(key="messages.tickets.participants.summary.added",
+                                           default_text="Añadidos: {users}")
+    already_present: TranslationKey = TranslationKey(key="messages.tickets.participants.summary.already_present",
+                                                     default_text="Ya estaban en el ticket: {users}")
+    blocked_by_other_ticket: TranslationKey = TranslationKey(
+        key="messages.tickets.participants.summary.blocked_by_other_ticket",
+        default_text="No se han añadido porque ya tienen otro ticket activo: {users}")
+    dm_failed: TranslationKey = TranslationKey(key="messages.tickets.participants.summary.dm_failed",
+                                               default_text="No he podido abrir DM con: {users}")
+
+
+class _MessagesTicketsParticipants:
+    only_ticket_thread: TranslationKey = TranslationKey(key="messages.tickets.participants.only_ticket_thread",
+                                                        default_text="Este comando solo se puede usar dentro de un hilo de ticket activo.")
+    added_dm: TranslationKey = TranslationKey(key="messages.tickets.participants.added_dm",
+                                              default_text="Has sido añadido al ticket {ticket_number} de **{category}**. Responde por este mensaje privado para participar en la conversación.")
+    added_thread: TranslationKey = TranslationKey(key="messages.tickets.participants.added_thread",
+                                                  default_text="Se han añadido al ticket: {users}")
+    none_added: TranslationKey = TranslationKey(key="messages.tickets.participants.none_added",
+                                                default_text="No se ha añadido ningun usuario al ticket.")
+    owner_unavailable: TranslationKey = TranslationKey(key="messages.tickets.participants.owner_unavailable",
+                                                       default_text="No he podido resolver al usuario que abrio originalmente este ticket.")
+    summary: _MessagesTicketsParticipantsSummary = _MessagesTicketsParticipantsSummary()
+
 class _MessagesTicketsRelay:
     from_user: TranslationKey = TranslationKey(key="messages.tickets.relay.from_user",
                                                default_text="**Mensaje del usuario {author}:**\n{body}")
     from_staff: TranslationKey = TranslationKey(key="messages.tickets.relay.from_staff",
                                                 default_text="**Respuesta de Bigness League - {author}:**\n{body}")
+    from_command_result: TranslationKey = TranslationKey(key="messages.tickets.relay.from_command_result",
+                                                         default_text="**Resultado del comando /{command_name}:**\n{body}")
     attachments: TranslationKey = TranslationKey(key="messages.tickets.relay.attachments",
                                                  default_text="Adjuntos:\n{urls}")
     empty_body: TranslationKey = TranslationKey(key="messages.tickets.relay.empty_body",
@@ -366,17 +434,17 @@ class _MessagesTicketsRelay:
     dm_failed_for_staff: TranslationKey = TranslationKey(key="messages.tickets.relay.dm_failed_for_staff",
                                                          default_text="No he podido enviar este mensaje por DM al usuario `{user_id}`.")
 
-
 class _MessagesTicketsAiStatus:
     result: TranslationKey = TranslationKey(key="messages.tickets.ai.status.result",
                                             default_text="## Estado de la IA de tickets\n- Cargada en runtime: `{loaded}`\n- Activada por configuracion: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Proveedor: `{provider}`\n- Modelo: `{model}`\n- Base URL: `{base_url}`\n- Backend accesible: `{backend_reachable}`\n- Categorias con auto-reply: `{categories}`\n- Base de conocimiento: `{knowledge_base_file}`\n- Prompt del sistema: `{system_prompt_file}`")
-
 
 class _MessagesTicketsAi:
     thread_response: TranslationKey = TranslationKey(key="messages.tickets.ai.thread_response",
                                                      default_text="**Respuesta IA local:**\n{answer}\n\nConfianza: `{confidence}` | Escalar: `{should_escalate}`\nMotivo: {reason}\nBase de conocimiento: {used_entry_ids}")
     user_fallback: TranslationKey = TranslationKey(key="messages.tickets.ai.user_fallback",
                                                    default_text="He recibido tu mensaje. Un miembro del staff revisara tu caso en cuanto sea posible.")
+    user_escalated: TranslationKey = TranslationKey(key="messages.tickets.ai.user_escalated",
+                                                    default_text="De acuerdo. He dejado el ticket para que lo revise una persona del staff lo antes posible.")
     unavailable_thread: TranslationKey = TranslationKey(key="messages.tickets.ai.unavailable_thread",
                                                         default_text="La IA local no ha podido responder a este mensaje: {details}")
     status: _MessagesTicketsAiStatus = _MessagesTicketsAiStatus()
@@ -465,6 +533,7 @@ class _MessagesTicketsClose:
 class _MessagesTickets:
     panel: _MessagesTicketsPanel = _MessagesTicketsPanel()
     open: _MessagesTicketsOpen = _MessagesTicketsOpen()
+    participants: _MessagesTicketsParticipants = _MessagesTicketsParticipants()
     relay: _MessagesTicketsRelay = _MessagesTicketsRelay()
     ai: _MessagesTicketsAi = _MessagesTicketsAi()
     buttons: _MessagesTicketsButtons = _MessagesTicketsButtons()

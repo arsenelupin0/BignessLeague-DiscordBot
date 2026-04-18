@@ -33,7 +33,8 @@ from bigness_league_bot.infrastructure.discord.tickets import (
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.presentation.discord.views.ticket_message_embeds import (
-    build_ticket_message_content,
+    build_ticket_open_message_content,
+    build_ticket_opening_notice,
     build_ticket_open_embed,
     resolve_success_emoji,
 )
@@ -180,7 +181,7 @@ class TicketPanelView(discord.ui.View):
 
             try:
                 dm_message = await interaction.user.send(
-                    content=build_ticket_message_content(interaction.user),
+                    content=build_ticket_open_message_content(),
                     embed=build_ticket_open_embed(
                         bot=interaction.client,
                         locale=interaction.locale,
@@ -191,6 +192,15 @@ class TicketPanelView(discord.ui.View):
                         created_at=created_at,
                     ),
                     view=TicketThreadControlsView(self.store),
+                    allowed_mentions=discord.AllowedMentions(
+                        users=True,
+                        roles=False,
+                        everyone=False,
+                        replied_user=False,
+                    ),
+                )
+                await interaction.user.send(
+                    build_ticket_opening_notice(interaction.user),
                     allowed_mentions=discord.AllowedMentions(
                         users=True,
                         roles=False,
@@ -294,7 +304,7 @@ class TicketPanelView(discord.ui.View):
         )
         result = await forum_channel.create_thread(
             name=thread_name,
-            content=build_ticket_message_content(interaction.user),
+            content=build_ticket_open_message_content(),
             embed=build_ticket_open_embed(
                 bot=interaction.client,
                 locale=interaction.locale,
@@ -315,6 +325,15 @@ class TicketPanelView(discord.ui.View):
             reason=(
                 f"{interaction.user} ({interaction.user.id}) abrio "
                 f"ticket categoria={category.key}"
+            ),
+        )
+        await result.thread.send(
+            build_ticket_opening_notice(interaction.user),
+            allowed_mentions=discord.AllowedMentions(
+                users=True,
+                roles=False,
+                everyone=False,
+                replied_user=False,
             ),
         )
         return result.thread, result.message.id

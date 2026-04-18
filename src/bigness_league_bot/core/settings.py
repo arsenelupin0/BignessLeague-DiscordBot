@@ -86,7 +86,12 @@ def _read_optional_str(name: str) -> str | None:
     return normalized_value or None
 
 
-def _read_csv(name: str, default: tuple[str, ...]) -> tuple[str, ...]:
+def _read_csv(
+        name: str,
+        default: tuple[str, ...],
+        *,
+        allow_empty: bool = False,
+) -> tuple[str, ...]:
     raw_value = os.getenv(name)
     if raw_value is None:
         return default
@@ -96,6 +101,8 @@ def _read_csv(name: str, default: tuple[str, ...]) -> tuple[str, ...]:
         for item in raw_value.split(",")
         if item.strip()
     )
+    if allow_empty and not values:
+        return ()
     return values or default
 
 
@@ -229,10 +236,13 @@ class Settings:
     ticket_ai_autoreply_categories: tuple[str, ...] = (
         "general",
         "competition",
+        "player_market",
+        "stream",
         "bot",
         "social",
     )
-    ticket_ai_knowledge_base_file: Path = Path("aa_resources/ticket_ai/knowledge_base_v0.json")
+    ticket_ai_force_escalate_categories: tuple[str, ...] = ()
+    ticket_ai_knowledge_base_file: Path = Path("aa_resources/ticket_ai/knowledge_base.json")
     ticket_ai_system_prompt_file: Path = Path("aa_resources/ticket_ai/system_prompt.txt")
 
     @classmethod
@@ -410,20 +420,27 @@ class Settings:
         )
         ticket_ai_auto_reply_min_confidence = _read_int(
             "BOT_TICKET_AI_AUTO_REPLY_MIN_CONFIDENCE",
-            40,
+            70,
         )
         ticket_ai_autoreply_categories = _read_csv(
             "BOT_TICKET_AI_AUTOREPLY_CATEGORIES",
             (
                 "general",
                 "competition",
+                "player_market",
+                "stream",
                 "bot",
                 "social",
             ),
         )
+        ticket_ai_force_escalate_categories = _read_csv(
+            "BOT_TICKET_AI_FORCE_ESCALATE_CATEGORIES",
+            (),
+            allow_empty=True,
+        )
         ticket_ai_knowledge_base_file = _resolve_storage_path(
             "BOT_TICKET_AI_KNOWLEDGE_BASE_FILE",
-            "aa_resources/ticket_ai/knowledge_base_v0.json",
+            "aa_resources/ticket_ai/knowledge_base.json",
         )
         ticket_ai_system_prompt_file = _resolve_storage_path(
             "BOT_TICKET_AI_SYSTEM_PROMPT_FILE",
@@ -477,6 +494,7 @@ class Settings:
             ticket_ai_max_output_tokens=ticket_ai_max_output_tokens,
             ticket_ai_auto_reply_min_confidence=ticket_ai_auto_reply_min_confidence,
             ticket_ai_autoreply_categories=ticket_ai_autoreply_categories,
+            ticket_ai_force_escalate_categories=ticket_ai_force_escalate_categories,
             ticket_ai_knowledge_base_file=ticket_ai_knowledge_base_file,
             ticket_ai_system_prompt_file=ticket_ai_system_prompt_file,
         )

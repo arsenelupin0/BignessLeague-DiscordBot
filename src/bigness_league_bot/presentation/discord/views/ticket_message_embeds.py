@@ -34,6 +34,18 @@ def build_ticket_message_content(user: discord.abc.User | discord.Member) -> str
     return user.mention
 
 
+def build_ticket_open_message_content() -> None:
+    return None
+
+
+def build_ticket_opening_notice(user: discord.abc.User | discord.Member) -> str:
+    return (
+        f"\n\n_ _\nHola {user.mention}, ¡tu ticket ha sido abierto! "
+        "Explica con brevedad que es lo que necesitas. "
+        "Alguien del **Staff** te atenderá lo antes posible."
+    )
+
+
 def build_ticket_open_embed(
         *,
         bot: BignessLeagueBot,

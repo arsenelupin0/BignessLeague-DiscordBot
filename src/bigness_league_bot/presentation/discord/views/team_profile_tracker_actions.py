@@ -20,6 +20,10 @@ from bigness_league_bot.infrastructure.discord.team_profile import (
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import LocalizationService
+from bigness_league_bot.presentation.discord.ticket_command_mirroring import (
+    fetch_interaction_message,
+    mirror_ticket_command_message_edit,
+)
 
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
@@ -124,6 +128,13 @@ class TeamProfileTrackerActionsView(discord.ui.View):
             allowed_mentions=discord.AllowedMentions.none(),
             suppress_embeds=True,
         )
+        updated_message = await fetch_interaction_message(interaction, interaction.message.id)
+        if updated_message is not None:
+            await mirror_ticket_command_message_edit(
+                interaction,
+                updated_message,
+                command_name="ver_mi_equipo",
+            )
         self.stop()
 
     async def cancel(
