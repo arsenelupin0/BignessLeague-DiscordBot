@@ -33,6 +33,7 @@ from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.discord.channel_management import (
     ChannelManagementError,
     ensure_allowed_member,
+    get_channel_access_role_catalog,
 )
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
@@ -177,7 +178,90 @@ class TicketsCog(commands.Cog):
                 if member is not None
             )
         )
+        await self._add_members_to_ticket(
+            interaction=interaction,
+            thread=thread,
+            record=record,
+            requested_members=requested_members,
+        )
 
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.tickets.add_team_to_ticket.name),
+        description=localized_locale_str(
+            I18N.commands.tickets.add_team_to_ticket.description
+        ),
+    )
+    @app_commands.describe(
+        equipo=localized_locale_str(
+            I18N.commands.tickets.add_team_to_ticket.parameters.team_role.description
+        ),
+    )
+    @app_commands.guild_only()
+    async def add_team_to_ticket(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            equipo: discord.Role,
+    ) -> None:
+        if interaction.guild is None or not isinstance(interaction.user, discord.Member):
+            raise CommandUserError(localize(I18N.errors.channel_management.server_only))
+
+        try:
+            ensure_allowed_member(interaction.user)
+        except ChannelManagementError as error:
+            raise CommandUserError(error.message) from error
+
+        thread = interaction.channel
+        if not isinstance(thread, discord.Thread):
+            raise CommandUserError(localize(I18N.messages.tickets.participants.only_ticket_thread))
+
+        record = self.store.active_for_thread(thread.id)
+        if record is None:
+            raise CommandUserError(localize(I18N.messages.tickets.close.not_active))
+
+        role_catalog = get_channel_access_role_catalog(
+            interaction.guild,
+            interaction.client.settings.channel_access_range_start_role_id,
+            interaction.client.settings.channel_access_range_end_role_id,
+        )
+        if equipo.id not in {role.id for role in role_catalog.roles}:
+            raise CommandUserError(
+                localize(
+                    I18N.errors.match_channel_creation.team_role_out_of_range,
+                    role_name=equipo.name,
+                    range_start=role_catalog.range_start.name,
+                    range_end=role_catalog.range_end.name,
+                )
+            )
+
+        requested_members = tuple(
+            dict.fromkeys(
+                member
+                for member in equipo.members
+                if not member.bot
+            )
+        )
+
+        if not requested_members:
+            raise CommandUserError(
+                localize(I18N.messages.tickets.participants.team_role_empty)
+            )
+
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        await self._add_members_to_ticket(
+            interaction=interaction,
+            thread=thread,
+            record=record,
+            requested_members=requested_members,
+        )
+
+    async def _add_members_to_ticket(
+            self,
+            *,
+            interaction: discord.Interaction[BignessLeagueBot],
+            thread: discord.Thread,
+            record: TicketRecord,
+            requested_members: tuple[discord.Member, ...],
+    ) -> None:
         members_to_add: list[discord.Member] = []
         already_present: list[discord.Member] = []
         blocked_by_other_ticket: list[discord.Member] = []

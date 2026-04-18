@@ -14,7 +14,7 @@ import asyncio
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 import discord
 import unicodedata
@@ -32,6 +32,7 @@ from bigness_league_bot.application.services.team_signing import (
     TeamSigningPlayer,
     TeamTechnicalStaffBatch,
     merge_team_signing_players,
+    TeamTechnicalStaffMember,
 )
 from bigness_league_bot.application.services.team_signing import (
     sort_team_signing_players,
@@ -39,6 +40,7 @@ from bigness_league_bot.application.services.team_signing import (
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import localize
 from bigness_league_bot.core.settings import Settings
+from bigness_league_bot.infrastructure.discord.team_role_assignment import PLACEHOLDER_MEMBER_NAMES
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 
 GOOGLE_SHEETS_READ_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly"
@@ -274,6 +276,15 @@ class GoogleSheetsTeamRepository:
             discord_name,
         )
 
+    async def find_player_matches_by_discord_names(
+            self,
+            discord_names: Iterable[str],
+    ) -> tuple[TeamPlayerMatch, ...]:
+        return await asyncio.to_thread(
+            self._find_player_matches_by_discord_names_sync,
+            tuple(discord_names),
+        )
+
     def _find_team_profile_for_role_sync(
             self,
             role: discord.Role,
@@ -331,6 +342,28 @@ class GoogleSheetsTeamRepository:
                 role_name=role.name,
                 sheet_name=sheet_scope,
             )
+        )
+
+    def _find_player_matches_by_discord_names_sync(
+            self,
+            discord_names: tuple[str, ...],
+    ) -> tuple[TeamPlayerMatch, ...]:
+        normalized_names = tuple(
+            normalized_name
+            for normalized_name in (
+                _normalize_member_lookup_text(discord_name)
+                for discord_name in discord_names
+            )
+            if normalized_name not in PLACEHOLDER_MEMBER_NAMES
+        )
+        if not normalized_names:
+            return ()
+
+        service = self._build_google_sheets_service(read_only=True)
+        _, sheet_grids = self._fetch_sheet_grids(service)
+        return self._find_player_matches_by_discord_name_set(
+            frozenset(normalized_names),
+            sheet_grids,
         )
 
     def _register_team_signings_sync(
@@ -888,16 +921,40 @@ class GoogleSheetsTeamRepository:
             normalized_discord_name: str,
             sheet_grids: tuple[tuple[str, dict[int, dict[int, SheetCell]]], ...],
     ) -> tuple[TeamPlayerMatch, ...]:
+        return GoogleSheetsTeamRepository._find_player_matches_by_discord_name_set(
+            frozenset({normalized_discord_name}),
+            sheet_grids,
+        )
+
+    @staticmethod
+    def _find_player_matches_by_discord_name_set(
+            normalized_discord_names: frozenset[str],
+            sheet_grids: tuple[tuple[str, dict[int, dict[int, SheetCell]]], ...],
+    ) -> tuple[TeamPlayerMatch, ...]:
         matches: list[TeamPlayerMatch] = []
+        seen_matches: set[tuple[str, int, int, str, str]] = set()
         for worksheet_title, cell_grid in sheet_grids:
             for block in GoogleSheetsTeamRepository._collect_team_blocks(cell_grid):
                 if _is_free_block_title(block.title):
                     continue
 
                 for player in GoogleSheetsTeamRepository._parse_players(cell_grid, block):
-                    if _normalize_member_lookup_text(player.discord_name) != normalized_discord_name:
+                    normalized_player_discord = _normalize_member_lookup_text(
+                        player.discord_name
+                    )
+                    if normalized_player_discord not in normalized_discord_names:
                         continue
 
+                    match_key = (
+                        worksheet_title,
+                        block.title_row,
+                        block.start_column,
+                        normalized_player_discord,
+                        player.player_name,
+                    )
+                    if match_key in seen_matches:
+                        continue
+                    seen_matches.add(match_key)
                     matches.append(
                         TeamPlayerMatch(
                             worksheet_title=worksheet_title,

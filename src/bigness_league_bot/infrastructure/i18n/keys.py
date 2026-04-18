@@ -81,6 +81,24 @@ class _CommandsTicketsAddToTicket:
                                                  default_text="A\u00f1ade uno o varios usuarios al ticket actual.")
     parameters: _CommandsTicketsAddToTicketParameters = _CommandsTicketsAddToTicketParameters()
 
+
+class _CommandsTicketsAddTeamToTicketParametersTeamRole:
+    description: TranslationKey = TranslationKey(
+        key="commands.tickets.add_team_to_ticket.parameters.team_role.description",
+        default_text="Rol de equipo cuyos miembros quieres a\u00f1adir al ticket.")
+
+
+class _CommandsTicketsAddTeamToTicketParameters:
+    team_role: _CommandsTicketsAddTeamToTicketParametersTeamRole = _CommandsTicketsAddTeamToTicketParametersTeamRole()
+
+
+class _CommandsTicketsAddTeamToTicket:
+    name: TranslationKey = TranslationKey(key="commands.tickets.add_team_to_ticket.name",
+                                          default_text="anadir_equipo_al_ticket")
+    description: TranslationKey = TranslationKey(key="commands.tickets.add_team_to_ticket.description",
+                                                 default_text="A\u00f1ade al ticket a todos los miembros de un rol de equipo.")
+    parameters: _CommandsTicketsAddTeamToTicketParameters = _CommandsTicketsAddTeamToTicketParameters()
+
 class _CommandsTicketsAiStatus:
     name: TranslationKey = TranslationKey(key="commands.tickets.ai_status.name", default_text="ai_estado")
     description: TranslationKey = TranslationKey(key="commands.tickets.ai_status.description",
@@ -89,6 +107,7 @@ class _CommandsTicketsAiStatus:
 class _CommandsTickets:
     publish_panel: _CommandsTicketsPublishPanel = _CommandsTicketsPublishPanel()
     add_to_ticket: _CommandsTicketsAddToTicket = _CommandsTicketsAddToTicket()
+    add_team_to_ticket: _CommandsTicketsAddTeamToTicket = _CommandsTicketsAddTeamToTicket()
     ai_status: _CommandsTicketsAiStatus = _CommandsTicketsAiStatus()
 
 class _CommandsMatchChannelCreationCreateMatchChannelParametersJornada:
@@ -405,6 +424,8 @@ class _MessagesTicketsParticipants:
                                                   default_text="Se han a\u00f1adido al ticket: {users}")
     none_added: TranslationKey = TranslationKey(key="messages.tickets.participants.none_added",
                                                 default_text="No se ha a\u00f1adido ningun usuario al ticket.")
+    team_role_empty: TranslationKey = TranslationKey(key="messages.tickets.participants.team_role_empty",
+                                                     default_text="Ese rol de equipo no tiene ningun miembro valido para a\u00f1adir al ticket.")
     owner_unavailable: TranslationKey = TranslationKey(key="messages.tickets.participants.owner_unavailable",
                                                        default_text="No he podido resolver al usuario que abrio originalmente este ticket.")
     summary: _MessagesTicketsParticipantsSummary = _MessagesTicketsParticipantsSummary()

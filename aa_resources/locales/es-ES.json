@@ -49,6 +49,15 @@
           }
         }
       },
+      "add_team_to_ticket": {
+        "name": "anadir_equipo_al_ticket",
+        "description": "Añade al ticket a todos los miembros de un rol de equipo.",
+        "parameters": {
+          "team_role": {
+            "description": "Rol de equipo cuyos miembros quieres añadir al ticket."
+          }
+        }
+      },
       "ai_status": {
         "name": "ai_estado",
         "description": "Muestra el estado actual de la IA local para tickets."
@@ -231,6 +240,7 @@
         "added_dm": "Has sido añadido al ticket {ticket_number} de **{category}**. Responde por este mensaje privado para participar en la conversación.",
         "added_thread": "Se han añadido al ticket: {users}",
         "none_added": "No se ha añadido ningun usuario al ticket.",
+        "team_role_empty": "Ese rol de equipo no tiene ningun miembro valido para añadir al ticket.",
         "owner_unavailable": "No he podido resolver al usuario que abrio originalmente este ticket.",
         "summary": {
           "added": "Añadidos: {users}",

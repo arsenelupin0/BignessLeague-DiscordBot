@@ -73,6 +73,17 @@
         }
       }
     },
+    "tickets": {
+      "add_team_to_ticket": {
+        "name": "add_team_to_ticket",
+        "description": "Adds all members of a team role to the current ticket.",
+        "parameters": {
+          "team_role": {
+            "description": "Team role whose members you want to add to the ticket."
+          }
+        }
+      }
+    },
     "team_signing": {
       "make_signing": {
         "name": "make_signing",
@@ -235,6 +246,11 @@
           "create_ticket": "Create ticket",
           "rules": "Rules - Bigness League"
         }
+      }
+    },
+    "tickets": {
+      "participants": {
+        "team_role_empty": "That team role has no valid members to add to the ticket."
       }
     }
   },

@@ -204,6 +204,7 @@ class Settings:
     channel_access_range_end_role_id: int = 1_364_336_738_323_009_796
     participant_role_id: int = 1_409_540_956_809_859_112
     player_role_id: int = 1_376_297_465_220_825_108
+    auto_assign_player_roles_on_join: bool = True
     staff_ceo_role_id: int = 1_493_595_275_837_706_292
     staff_coach_role_id: int = 1_376_299_092_216_516_699
     staff_manager_role_id: int = 1_376_297_612_654_936_215
@@ -297,6 +298,10 @@ class Settings:
         player_role_id = _read_int(
             "BOT_PLAYER_ROLE_ID",
             1_376_297_465_220_825_108,
+        )
+        auto_assign_player_roles_on_join = _read_bool(
+            "BOT_AUTO_ASSIGN_PLAYER_ROLES_ON_JOIN",
+            True,
         )
         staff_ceo_role_id = _read_int(
             "BOT_STAFF_CEO_ROLE_ID",
@@ -464,6 +469,7 @@ class Settings:
             channel_access_range_end_role_id=channel_access_range_end_role_id,
             participant_role_id=participant_role_id,
             player_role_id=player_role_id,
+            auto_assign_player_roles_on_join=auto_assign_player_roles_on_join,
             staff_ceo_role_id=staff_ceo_role_id,
             staff_coach_role_id=staff_coach_role_id,
             staff_manager_role_id=staff_manager_role_id,

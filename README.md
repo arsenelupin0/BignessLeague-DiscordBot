@@ -38,9 +38,11 @@ pip install -e .
     y `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`. `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME` es opcional.
 13. Si quieres sincronizar roles automaticamente desde `/hacer_fichaje` o `/asignar_rol_equipo_automatico`,
     ajusta `BOT_PARTICIPANT_ROLE_ID` y `BOT_PLAYER_ROLE_ID` con los roles base que deben recibir todos los jugadores.
-14. Si quieres que `/dar_de_baja` retire tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
+14. Si quieres autoasignar esos roles de jugador al entrar al servidor cuando el miembro coincida con Google Sheets,
+    deja `BOT_AUTO_ASSIGN_PLAYER_ROLES_ON_JOIN=true`.
+15. Si quieres que `/dar_de_baja` retire tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
     `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID` y `BOT_STAFF_CAPTAIN_ROLE_ID`.
-15. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
+16. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
     Lo recomendado es colocar la fuente dentro de `aa_resources/fonts/`.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
@@ -186,6 +188,17 @@ Restricciones de `/cerrar_canal`:
 - si un miembro de staff cambia de rol tecnico, retira los roles tecnicos configurados que ya no correspondan
 - informa de miembros asignados, ya configurados, sin coincidencia y coincidencias ambiguas
 
+Autoasignado al entrar al servidor:
+
+- si `BOT_AUTO_ASSIGN_PLAYER_ROLES_ON_JOIN=true`, el bot revisa al entrar un miembro nuevo contra la plantilla de
+  jugadores de Google Sheets
+- si encuentra una unica coincidencia, anade `Participante`, `Jugador` y el rol de equipo
+- si no encuentra coincidencia, no hace nada
+- si encuentra varias coincidencias, no asigna nada y lo deja en log como ambiguo
+- este flujo solo afecta a jugadores, no a `STAFF TÃ‰CNICO`
+- `/asignar_rol_equipo_automatico` sigue siendo el metodo manual de reconciliacion para miembros ya dentro del servidor
+  o cambios masivos
+
 `/integracion_de_tickets`:
 
 - solo puede usarlo un miembro con el rol `Ceo`/`CEO`
@@ -293,6 +306,8 @@ Configuracion de Google Sheets:
 - `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`: ID del documento de Google Sheets
 - `BOT_PARTICIPANT_ROLE_ID`: rol general que se anade junto al rol del equipo cuando se sincronizan miembros
 - `BOT_PLAYER_ROLE_ID`: rol general de jugador que tambien se anade junto al rol del equipo
+- `BOT_AUTO_ASSIGN_PLAYER_ROLES_ON_JOIN`: activa o desactiva el autoasignado de esos roles a nuevos miembros si
+  coinciden con la plantilla de jugadores de Google Sheets
 - `BOT_STAFF_CEO_ROLE_ID`, `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID`, `BOT_STAFF_CAPTAIN_ROLE_ID`:
   roles extra que `/dar_de_baja` puede retirar si el Discord tambien aparece en `STAFF TÉCNICO`
 - `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME`: opcional. Si lo dejas vacio, el bot buscara en todas las sheets del documento.
