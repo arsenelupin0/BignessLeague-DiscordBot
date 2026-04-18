@@ -71,8 +71,41 @@ def _synced_command_name(command: app_commands.AppCommand) -> str:
     return command.name
 
 
+def _synced_http_command_name(command: object) -> str:
+    if isinstance(command, app_commands.AppCommand):
+        return command.name
+
+    if isinstance(command, dict):
+        name = command.get("name")
+        if isinstance(name, str):
+            return name
+
+    raise TypeError(
+        f"No se pudo resolver el nombre del comando sincronizado: {command!r}"
+    )
+
+
 def get_local_command_names(tree: app_commands.CommandTree) -> tuple[str, ...]:
     commands = tree.get_commands()
+    return tuple(sorted(_local_command_name(command) for command in commands))
+
+
+def _supports_dm_context(
+        command: app_commands.Command | app_commands.Group | app_commands.ContextMenu,
+) -> bool:
+    allowed_contexts = getattr(command, "allowed_contexts", None)
+    if allowed_contexts is None:
+        return False
+
+    return bool(allowed_contexts.dm_channel or allowed_contexts.private_channel)
+
+
+def get_dm_command_names(tree: app_commands.CommandTree) -> tuple[str, ...]:
+    commands = (
+        command
+        for command in tree.get_commands()
+        if _supports_dm_context(command)
+    )
     return tuple(sorted(_local_command_name(command) for command in commands))
 
 
@@ -106,6 +139,38 @@ async def sync_command_tree(
     return SyncReport(
         scope="global",
         command_names=tuple(_synced_command_name(command) for command in synced_commands),
+    )
+
+
+async def sync_dm_commands_globally(
+        tree: app_commands.CommandTree,
+) -> SyncReport:
+    application_id = _require_application_id(tree)
+    commands = [
+        command
+        for command in tree.get_commands()
+        if _supports_dm_context(command)
+    ]
+
+    translator = tree.translator
+    if translator:
+        payload = [
+            await command.get_translated_payload(tree, translator)
+            for command in commands
+        ]
+    else:
+        payload = [command.to_dict(tree) for command in commands]
+
+    synced_commands = await tree.client.http.bulk_upsert_global_commands(
+        application_id,
+        payload=payload,
+    )
+    return SyncReport(
+        scope="global",
+        command_names=tuple(
+            _synced_http_command_name(command)
+            for command in synced_commands
+        ),
     )
 
 

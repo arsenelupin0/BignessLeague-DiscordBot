@@ -22,7 +22,9 @@ from bigness_league_bot.infrastructure.discord.extensions import (
     load_extensions,
 )
 from bigness_league_bot.infrastructure.discord.sync import (
+    get_dm_command_names,
     get_local_command_names,
+    sync_dm_commands_globally,
     sync_command_tree,
 )
 from bigness_league_bot.infrastructure.discord.telemetry import register_tree_error_handler
@@ -66,6 +68,15 @@ class BignessLeagueBot(commands.Bot):
             self.settings.guild_id,
         )
         LOGGER.info("Sincronizacion completada: %s", sync_report.format_summary())
+
+        if self.settings.sync_scope == "guild":
+            dm_command_names = get_dm_command_names(self.tree)
+            dm_sync_report = await sync_dm_commands_globally(self.tree)
+            LOGGER.info(
+                "Sincronizacion global para DM completada: %s | Locales DM=[%s]",
+                dm_sync_report.format_summary(),
+                ", ".join(dm_command_names) if dm_command_names else "(ninguno)",
+            )
 
     async def on_ready(self) -> None:
         user = self.user

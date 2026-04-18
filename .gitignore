@@ -8,3 +8,4 @@ aa_var/
 dist/
 build/
 aa_resources/google/service-account.json
+.codex/

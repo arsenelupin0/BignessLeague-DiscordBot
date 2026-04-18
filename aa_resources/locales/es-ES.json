@@ -408,6 +408,8 @@
     "team_profile": {
       "team_role_missing": "No tienes ningun rol de equipo dentro del rango configurado para este comando.",
       "multiple_team_roles": "Tienes varios roles de equipo y no se puede decidir cual usar: {role_names}.",
+      "dm_guild_unavailable": "No se puede resolver este comando por MD porque el servidor principal del bot no esta disponible. Revisa `DISCORD_GUILD_ID` y que el bot siga dentro del servidor.",
+      "dm_member_not_found": "No he podido vincular este MD con tu miembro del servidor principal. Asegurate de seguir dentro del servidor de la Bigness League.",
       "google_dependencies_missing": "Faltan las dependencias de Google Sheets en el entorno del bot.",
       "google_service_account_missing": "Falta configurar `BOT_GOOGLE_SERVICE_ACCOUNT_FILE` para usar Google Sheets.",
       "google_service_account_not_found": "No existe el fichero de credenciales configurado para Google Sheets: `{path}`.",

@@ -59,17 +59,13 @@ class TeamProfileCog(commands.Cog):
             I18N.commands.team_profile.view_my_team.parameters.team_role.description
         )
     )
-    @app_commands.guild_only()
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=False)
     async def view_my_team(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
             equipo: discord.Role | None = None,
     ) -> None:
-        guild = interaction.guild
-        if guild is None or not isinstance(interaction.user, discord.Member):
-            raise UnsupportedChannelError(
-                localize(I18N.errors.channel_management.server_only)
-            )
+        guild, member = await self._resolve_guild_and_member(interaction)
 
         settings = interaction.client.settings
         role_catalog = get_channel_access_role_catalog(
@@ -78,7 +74,7 @@ class TeamProfileCog(commands.Cog):
             settings.channel_access_range_end_role_id,
         )
         if equipo is not None:
-            ensure_allowed_member(interaction.user)
+            ensure_allowed_member(member)
             if equipo.id not in {role.id for role in role_catalog.roles}:
                 raise UnsupportedChannelError(
                     localize(
@@ -91,8 +87,8 @@ class TeamProfileCog(commands.Cog):
 
             team_role = equipo
         else:
-            ensure_member_can_access_team_features(interaction.user, role_catalog)
-            member_team_roles = get_member_team_roles(interaction.user, role_catalog)
+            ensure_member_can_access_team_features(member, role_catalog)
+            member_team_roles = get_member_team_roles(member, role_catalog)
             if not member_team_roles:
                 raise MemberTeamRoleMissingError(
                     localize(I18N.errors.team_profile.team_role_missing)
@@ -101,7 +97,7 @@ class TeamProfileCog(commands.Cog):
             if len(member_team_roles) > 1:
                 role_names = ", ".join(role.name for role in member_team_roles)
                 view = TeamProfileTeamSelectionView(
-                    actor=interaction.user,
+                    actor=member,
                     team_roles=member_team_roles,
                     localizer=interaction.client.localizer,
                     locale=interaction.locale,
@@ -129,7 +125,7 @@ class TeamProfileCog(commands.Cog):
             font_path=settings.team_profile_font_path,
         )
         view = TeamProfileTrackerActionsView(
-            actor=interaction.user,
+            actor=member,
             team_profile=team_profile,
             localizer=interaction.client.localizer,
             locale=interaction.locale,
@@ -140,6 +136,40 @@ class TeamProfileCog(commands.Cog):
             wait=True,
         )
         view.message = message
+
+    async def _resolve_guild_and_member(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+    ) -> tuple[discord.Guild, discord.Member]:
+        guild = interaction.guild
+        if guild is not None and isinstance(interaction.user, discord.Member):
+            return guild, interaction.user
+
+        guild_id = interaction.client.settings.guild_id
+        if guild_id is None:
+            raise UnsupportedChannelError(
+                localize(I18N.errors.team_profile.dm_guild_unavailable)
+            )
+
+        guild = interaction.client.get_guild(guild_id)
+        if guild is None:
+            raise UnsupportedChannelError(
+                localize(I18N.errors.team_profile.dm_guild_unavailable)
+            )
+
+        member = guild.get_member(interaction.user.id)
+        if member is None:
+            try:
+                member = await guild.fetch_member(interaction.user.id)
+            except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+                member = None
+
+        if member is None:
+            raise MemberTeamRoleMissingError(
+                localize(I18N.errors.team_profile.dm_member_not_found)
+            )
+
+        return guild, member
 
     async def cog_app_command_error(
             self,

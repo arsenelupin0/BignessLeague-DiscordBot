@@ -48,31 +48,25 @@ class _CommandsTicketsPublishPanel:
     description: TranslationKey = TranslationKey(key="commands.tickets.publish_panel.description",
                                                  default_text="Publica el panel de soporte para abrir tickets.")
 
-
 class _CommandsTicketsAddToTicketParametersUser1:
     description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_1.description",
-                                                 default_text="Primer usuario que quieres añadir al ticket.")
-
+                                                 default_text="Primer usuario que quieres a\u00f1adir al ticket.")
 
 class _CommandsTicketsAddToTicketParametersUser2:
     description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_2.description",
-                                                 default_text="Segundo usuario que quieres añadir al ticket.")
-
+                                                 default_text="Segundo usuario que quieres a\u00f1adir al ticket.")
 
 class _CommandsTicketsAddToTicketParametersUser3:
     description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_3.description",
-                                                 default_text="Tercer usuario que quieres añadir al ticket.")
-
+                                                 default_text="Tercer usuario que quieres a\u00f1adir al ticket.")
 
 class _CommandsTicketsAddToTicketParametersUser4:
     description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_4.description",
-                                                 default_text="Cuarto usuario que quieres añadir al ticket.")
-
+                                                 default_text="Cuarto usuario que quieres a\u00f1adir al ticket.")
 
 class _CommandsTicketsAddToTicketParametersUser5:
     description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_5.description",
-                                                 default_text="Quinto usuario que quieres añadir al ticket.")
-
+                                                 default_text="Quinto usuario que quieres a\u00f1adir al ticket.")
 
 class _CommandsTicketsAddToTicketParameters:
     user_1: _CommandsTicketsAddToTicketParametersUser1 = _CommandsTicketsAddToTicketParametersUser1()
@@ -81,11 +75,10 @@ class _CommandsTicketsAddToTicketParameters:
     user_4: _CommandsTicketsAddToTicketParametersUser4 = _CommandsTicketsAddToTicketParametersUser4()
     user_5: _CommandsTicketsAddToTicketParametersUser5 = _CommandsTicketsAddToTicketParametersUser5()
 
-
 class _CommandsTicketsAddToTicket:
     name: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.name", default_text="anadir_al_ticket")
     description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.description",
-                                                 default_text="Añade uno o varios usuarios al ticket actual.")
+                                                 default_text="A\u00f1ade uno o varios usuarios al ticket actual.")
     parameters: _CommandsTicketsAddToTicketParameters = _CommandsTicketsAddToTicketParameters()
 
 class _CommandsTicketsAiStatus:
@@ -392,28 +385,26 @@ class _MessagesTicketsOpen:
     dm_failed_thread: TranslationKey = TranslationKey(key="messages.tickets.open.dm_failed_thread",
                                                       default_text="No se pudo abrir DM con {user}. El ticket se cierra automaticamente.")
 
-
 class _MessagesTicketsParticipantsSummary:
     added: TranslationKey = TranslationKey(key="messages.tickets.participants.summary.added",
-                                           default_text="Añadidos: {users}")
+                                           default_text="A\u00f1adidos: {users}")
     already_present: TranslationKey = TranslationKey(key="messages.tickets.participants.summary.already_present",
                                                      default_text="Ya estaban en el ticket: {users}")
     blocked_by_other_ticket: TranslationKey = TranslationKey(
         key="messages.tickets.participants.summary.blocked_by_other_ticket",
-        default_text="No se han añadido porque ya tienen otro ticket activo: {users}")
+        default_text="No se han a\u00f1adido porque ya tienen otro ticket activo: {users}")
     dm_failed: TranslationKey = TranslationKey(key="messages.tickets.participants.summary.dm_failed",
                                                default_text="No he podido abrir DM con: {users}")
-
 
 class _MessagesTicketsParticipants:
     only_ticket_thread: TranslationKey = TranslationKey(key="messages.tickets.participants.only_ticket_thread",
                                                         default_text="Este comando solo se puede usar dentro de un hilo de ticket activo.")
     added_dm: TranslationKey = TranslationKey(key="messages.tickets.participants.added_dm",
-                                              default_text="Has sido añadido al ticket {ticket_number} de **{category}**. Responde por este mensaje privado para participar en la conversación.")
+                                              default_text="Has sido a\u00f1adido al ticket {ticket_number} de **{category}**. Responde por este mensaje privado para participar en la conversaci\u00f3n.")
     added_thread: TranslationKey = TranslationKey(key="messages.tickets.participants.added_thread",
-                                                  default_text="Se han añadido al ticket: {users}")
+                                                  default_text="Se han a\u00f1adido al ticket: {users}")
     none_added: TranslationKey = TranslationKey(key="messages.tickets.participants.none_added",
-                                                default_text="No se ha añadido ningun usuario al ticket.")
+                                                default_text="No se ha a\u00f1adido ningun usuario al ticket.")
     owner_unavailable: TranslationKey = TranslationKey(key="messages.tickets.participants.owner_unavailable",
                                                        default_text="No he podido resolver al usuario que abrio originalmente este ticket.")
     summary: _MessagesTicketsParticipantsSummary = _MessagesTicketsParticipantsSummary()
@@ -733,6 +724,10 @@ class _ErrorsTeamProfile:
                                                        default_text="No tienes ningun rol de equipo dentro del rango configurado para este comando.")
     multiple_team_roles: TranslationKey = TranslationKey(key="errors.team_profile.multiple_team_roles",
                                                          default_text="Tienes varios roles de equipo y no se puede decidir cual usar: {role_names}.")
+    dm_guild_unavailable: TranslationKey = TranslationKey(key="errors.team_profile.dm_guild_unavailable",
+                                                          default_text="No se puede resolver este comando por MD porque el servidor principal del bot no esta disponible. Revisa `DISCORD_GUILD_ID` y que el bot siga dentro del servidor.")
+    dm_member_not_found: TranslationKey = TranslationKey(key="errors.team_profile.dm_member_not_found",
+                                                         default_text="No he podido vincular este MD con tu miembro del servidor principal. Asegurate de seguir dentro del servidor de la Bigness League.")
     google_dependencies_missing: TranslationKey = TranslationKey(key="errors.team_profile.google_dependencies_missing",
                                                                  default_text="Faltan las dependencias de Google Sheets en el entorno del bot.")
     google_service_account_missing: TranslationKey = TranslationKey(
