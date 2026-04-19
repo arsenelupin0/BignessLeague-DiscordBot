@@ -10,6 +10,13 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
     ChannelAccessRoleRangeError,
     get_channel_access_role_catalog,
 )
+from bigness_league_bot.infrastructure.discord.emojis import (
+    TEAM_ROLE_REMOVAL_INFO_ONE_EMOJI,
+    TEAM_ROLE_REMOVAL_INFO_TWO_EMOJI,
+    TEAM_ROLE_REMOVAL_LEFT_ARROW_EMOJI,
+    TEAM_ROLE_REMOVAL_RIGHT_ARROW_EMOJI,
+    render_custom_emoji,
+)
 from bigness_league_bot.infrastructure.discord.team_role_removal_card import (
     build_team_role_removal_image_file,
 )
@@ -84,6 +91,11 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
             )
             repository = None
         for removed_team_role in removed_team_roles:
+            content = self._build_role_removal_content(
+                member=after,
+                team_role=removed_team_role,
+                guild=after.guild,
+            )
             metadata = await self._load_team_role_metadata(
                 repository,
                 removed_team_role,
@@ -95,17 +107,21 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
                 guild=after.guild,
                 metadata=metadata,
             )
+            allowed_mentions = discord.AllowedMentions(
+                everyone=False,
+                replied_user=False,
+                users=[after],
+                roles=[removed_team_role],
+            )
             try:
-                await channel.send(
-                    embed=embed,
-                    file=image_file,
-                    allowed_mentions=discord.AllowedMentions.none(),
-                )
-            except TypeError:
-                await channel.send(
-                    embed=embed,
-                    allowed_mentions=discord.AllowedMentions.none(),
-                )
+                send_kwargs: dict[str, object] = {
+                    "content": content,
+                    "embed": embed,
+                    "allowed_mentions": allowed_mentions,
+                }
+                if image_file is not None:
+                    send_kwargs["file"] = image_file
+                await channel.send(**send_kwargs)
             except (discord.Forbidden, discord.HTTPException) as exc:
                 LOGGER.warning(
                     "TEAM_ROLE_REMOVAL_ANNOUNCEMENT_SEND_FAILED guild=%s(%s) user=%s(%s) role=%s(%s) details=%s",
@@ -179,6 +195,20 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
                 team_image_url=None,
             )
 
+    def _build_role_removal_content(
+            self,
+            *,
+            member: discord.Member,
+            team_role: discord.Role,
+            guild: discord.Guild,
+    ) -> str:
+        return self.bot.localizer.translate(
+            I18N.messages.team_role_removal_announcement.content,
+            locale=guild.preferred_locale,
+            member_mention=member.mention,
+            team_role_mention=team_role.mention,
+        )
+
     def _build_role_removal_embed(
             self,
             *,
@@ -188,12 +218,6 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
             metadata: TeamRoleSheetMetadata,
     ) -> tuple[discord.Embed, discord.File | None]:
         localizer = self.bot.localizer
-        description = localizer.translate(
-            I18N.messages.team_role_removal_announcement.description,
-            locale=guild.preferred_locale,
-            member_mention=member.mention,
-            team_role_mention=team_role.mention,
-        )
         author_name = localizer.translate(
             I18N.messages.team_role_removal_announcement.author,
             locale=guild.preferred_locale,
@@ -209,7 +233,7 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
         )
 
         embed = discord.Embed(
-            description=description,
+            description=self._build_role_removal_description(guild),
             color=TEAM_ROLE_REMOVAL_EMBED_COLOR,
             timestamp=discord.utils.utcnow(),
         )
@@ -257,6 +281,15 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
 
         embed.set_image(url=f"attachment://{image_file.filename}")
         return embed, image_file
+
+    def _build_role_removal_description(self, guild: discord.Guild) -> str:
+        return (
+            "# "
+            f"{render_custom_emoji(guild=guild, bot=self.bot, emoji=TEAM_ROLE_REMOVAL_LEFT_ARROW_EMOJI)}   "
+            f"{render_custom_emoji(guild=guild, bot=self.bot, emoji=TEAM_ROLE_REMOVAL_INFO_ONE_EMOJI)} "
+            f"{render_custom_emoji(guild=guild, bot=self.bot, emoji=TEAM_ROLE_REMOVAL_INFO_TWO_EMOJI)}   "
+            f"{render_custom_emoji(guild=guild, bot=self.bot, emoji=TEAM_ROLE_REMOVAL_RIGHT_ARROW_EMOJI)}"
+        )
 
 
 async def setup(bot: BignessLeagueBot) -> None:
