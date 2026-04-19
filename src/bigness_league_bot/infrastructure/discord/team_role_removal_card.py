@@ -42,12 +42,14 @@ def build_team_role_removal_image_file(
         team_role: discord.Role,
         action_text: str,
         font_path: Path | None = None,
+        accent_color: tuple[int, int, int] = TEAM_ROLE_REMOVAL_CARD_ACCENT_COLOR,
 ) -> discord.File:
     image_data = _render_team_role_removal_image(
         member=member,
         team_role=team_role,
         action_text=action_text,
         font_path=font_path,
+        accent_color=accent_color,
     )
     filename = f"team-role-removal-{member.id}-{team_role.id}.png"
     return discord.File(
@@ -62,6 +64,7 @@ def _render_team_role_removal_image(
         team_role: discord.Role,
         action_text: str,
         font_path: Path | None,
+        accent_color: tuple[int, int, int],
 ) -> bytes:
     try:
         from PIL import Image, ImageDraw, ImageFont
@@ -156,7 +159,7 @@ def _render_team_role_removal_image(
         line_two_text,
         content_center_x,
         current_y + line_two_height // 2,
-        fill=TEAM_ROLE_REMOVAL_CARD_ACCENT_COLOR,
+        fill=accent_color,
     )
     current_y += line_two_height + TEAM_ROLE_REMOVAL_CARD_BLOCK_SPACING
 

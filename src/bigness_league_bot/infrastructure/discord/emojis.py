@@ -28,6 +28,10 @@ TEAM_ROLE_REMOVAL_RIGHT_ARROW_EMOJI = DiscordEmojiRef(
     name="flecha_izquierda",
     id=1_495_240_902_506_184_704,
 )
+TEAM_ROLE_REMOVAL_WARNING_EMOJI = DiscordEmojiRef(
+    name="warning",
+    id=1_495_252_797_862_707_250,
+)
 
 
 def render_custom_emoji(

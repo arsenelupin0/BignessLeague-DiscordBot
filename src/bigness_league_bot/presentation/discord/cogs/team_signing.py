@@ -20,8 +20,23 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
     ensure_allowed_member,
     get_channel_access_role_catalog,
 )
+from bigness_league_bot.infrastructure.discord.emojis import (
+    TEAM_ROLE_REMOVAL_WARNING_EMOJI,
+    render_custom_emoji,
+)
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
+)
+from bigness_league_bot.infrastructure.discord.team_change_announcements import (
+    TEAM_ROLE_SIGNING_SPEC,
+    build_team_change_content,
+    build_team_change_embed,
+    build_team_role_sheet_metadata_fallback,
+)
+from bigness_league_bot.infrastructure.discord.team_change_bulletin import (
+    create_team_change_repository,
+    load_team_change_metadata,
+    resolve_team_change_bulletin_channel,
 )
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     TeamStaffRoleEntry,
@@ -54,6 +69,9 @@ if TYPE_CHECKING:
 
 
 class TeamSigningCog(commands.Cog):
+    def __init__(self, bot: BignessLeagueBot) -> None:
+        self.bot = bot
+
     @app_commands.command(
         name=localized_locale_str(I18N.commands.team_signing.make_signing.name),
         description=localized_locale_str(
@@ -158,6 +176,12 @@ class TeamSigningCog(commands.Cog):
             ),
             allowed_mentions=discord.AllowedMentions.none(),
         )
+        if assignment_summary is not None:
+            await self._publish_signing_bulletins(
+                interaction,
+                team_role=team_role,
+                assigned_members=assignment_summary.assigned_members,
+            )
 
     @app_commands.command(
         name=localized_locale_str(I18N.commands.team_signing.remove_signing.name),
@@ -638,6 +662,84 @@ class TeamSigningCog(commands.Cog):
             roles=", ".join(role.name for role in removal_summary.removed_roles),
         )
 
+    async def _publish_signing_bulletins(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            *,
+            team_role: discord.Role,
+            assigned_members: tuple[discord.Member, ...],
+    ) -> None:
+        if not assigned_members:
+            return
+
+        guild = interaction.guild
+        if guild is None:
+            return
+
+        channel = await resolve_team_change_bulletin_channel(
+            guild=guild,
+            channel_id=interaction.client.settings.team_role_removal_announcement_channel_id,
+        )
+        if channel is None:
+            return
+
+        repository = await create_team_change_repository(
+            interaction.client.settings,
+            guild=guild,
+        )
+        metadata = await load_team_change_metadata(
+            repository=repository,
+            team_role=team_role,
+            fallback=build_team_role_sheet_metadata_fallback(team_role),
+            guild=guild,
+        )
+        description = self._build_team_change_description(guild)
+        for member in assigned_members:
+            content = build_team_change_content(
+                bot=interaction.client,
+                spec=TEAM_ROLE_SIGNING_SPEC,
+                member=member,
+                team_role=team_role,
+                guild=guild,
+            )
+            embed, image_file = build_team_change_embed(
+                bot=interaction.client,
+                spec=TEAM_ROLE_SIGNING_SPEC,
+                member=member,
+                team_role=team_role,
+                guild=guild,
+                metadata=metadata,
+                description=description,
+            )
+            allowed_mentions = discord.AllowedMentions(
+                everyone=False,
+                replied_user=False,
+                users=[member],
+                roles=[team_role],
+            )
+            try:
+                send_kwargs: dict[str, object] = {
+                    "content": content,
+                    "embed": embed,
+                    "allowed_mentions": allowed_mentions,
+                }
+                if image_file is not None:
+                    send_kwargs["file"] = image_file
+                await channel.send(**send_kwargs)
+            except (discord.Forbidden, discord.HTTPException):
+                continue
+
+    def _build_team_change_description(self, guild: discord.Guild) -> str:
+        warning_emoji = render_custom_emoji(
+            guild=guild,
+            bot=self.bot,
+            emoji=TEAM_ROLE_REMOVAL_WARNING_EMOJI,
+        )
+        return (
+            "## "
+            f"{warning_emoji} {warning_emoji} {warning_emoji} {warning_emoji}"
+        )
+
     async def cog_app_command_error(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
@@ -656,4 +758,4 @@ class TeamSigningCog(commands.Cog):
 
 
 async def setup(bot: BignessLeagueBot) -> None:
-    await bot.add_cog(TeamSigningCog())
+    await bot.add_cog(TeamSigningCog(bot))

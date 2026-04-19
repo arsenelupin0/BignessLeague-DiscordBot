@@ -182,6 +182,10 @@
       "footer": "Developed by the Bigness League team",
       "action": "Leaves"
     },
+    "team_role_signing_announcement": {
+      "content": "_ _\n-# 📢 Official bulletin: {member_mention} is signed by {team_role_mention}\n\n_ _",
+      "action": "Signs for"
+    },
     "channel_management": {
       "delete_prompt": "You are about to permanently delete `{channel_name}`.\nProtected system roles: {protected_roles}.\nConfirm only if you are completely sure.",
       "matchday_close_prompt": "You are about to close the matchday in `{channel_name}`.\nPermissions for unprotected roles will be removed and only these roles will keep access: {protected_roles}.\nConfirm only if you want to apply this closure."
