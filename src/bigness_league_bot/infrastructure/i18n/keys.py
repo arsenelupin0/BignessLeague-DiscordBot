@@ -349,10 +349,9 @@ class _MessagesTeamProfile:
     only_actor: TranslationKey = TranslationKey(key="messages.team_profile.only_actor",
                                                 default_text="Solo quien ejecuto el comando puede usar estos botones.")
 
-
 class _MessagesTeamRoleRemovalAnnouncement:
     description: TranslationKey = TranslationKey(key="messages.team_role_removal_announcement.description",
-                                                 default_text="# \ud83d\udc5f Jugador abandona club...")
+                                                 default_text="-# \ud83d\udce2 Bolet\u00edn oficial: {member_mention} abandona su club {team_role_mention}")
     author: TranslationKey = TranslationKey(key="messages.team_role_removal_announcement.author",
                                             default_text="BIGNESS LEAGUE - {division_name}")
     footer: TranslationKey = TranslationKey(key="messages.team_role_removal_announcement.footer",

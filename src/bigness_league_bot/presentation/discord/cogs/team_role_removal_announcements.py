@@ -10,6 +10,9 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
     ChannelAccessRoleRangeError,
     get_channel_access_role_catalog,
 )
+from bigness_league_bot.infrastructure.discord.team_role_removal_card import (
+    build_team_role_removal_image_file,
+)
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     GoogleSheetsTeamRepository,
     TeamRoleSheetMetadata,
@@ -21,9 +24,7 @@ if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
 LOGGER = logging.getLogger("bigness_league_bot.activity")
-TEAM_ROLE_REMOVAL_EMBED_COLOR = 15_404_819
-TEAM_ROLE_REMOVAL_PADDING = "\u2003\u2003\u2003"
-TEAM_ROLE_REMOVAL_BLANK_LINE = "_ _"
+TEAM_ROLE_REMOVAL_EMBED_COLOR = 15_403_534
 TEAM_ROLE_REMOVAL_FALLBACK_DIVISION_NAME = "Division no disponible"
 
 
@@ -88,13 +89,19 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
                 removed_team_role,
                 after.guild,
             )
-            embed = self._build_role_removal_embed(
+            embed, image_file = self._build_role_removal_embed(
                 member=after,
                 team_role=removed_team_role,
                 guild=after.guild,
                 metadata=metadata,
             )
             try:
+                await channel.send(
+                    embed=embed,
+                    file=image_file,
+                    allowed_mentions=discord.AllowedMentions.none(),
+                )
+            except TypeError:
                 await channel.send(
                     embed=embed,
                     allowed_mentions=discord.AllowedMentions.none(),
@@ -179,11 +186,13 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
             team_role: discord.Role,
             guild: discord.Guild,
             metadata: TeamRoleSheetMetadata,
-    ) -> discord.Embed:
+    ) -> tuple[discord.Embed, discord.File | None]:
         localizer = self.bot.localizer
         description = localizer.translate(
             I18N.messages.team_role_removal_announcement.description,
             locale=guild.preferred_locale,
+            member_mention=member.mention,
+            team_role_mention=team_role.mention,
         )
         author_name = localizer.translate(
             I18N.messages.team_role_removal_announcement.author,
@@ -213,20 +222,41 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
         if thumbnail_url:
             embed.set_thumbnail(url=thumbnail_url)
 
-        embed.add_field(
-            name="\u200b",
-            value="\n".join(
-                (
-                    f"{TEAM_ROLE_REMOVAL_PADDING}{member.mention} - {member.name}",
-                    TEAM_ROLE_REMOVAL_BLANK_LINE,
-                    f"{TEAM_ROLE_REMOVAL_PADDING}{TEAM_ROLE_REMOVAL_PADDING}**{action_text}**",
-                    TEAM_ROLE_REMOVAL_BLANK_LINE,
-                    f"{TEAM_ROLE_REMOVAL_PADDING}{TEAM_ROLE_REMOVAL_PADDING}{team_role.mention}",
-                )
-            ),
-            inline=False,
-        )
-        return embed
+        try:
+            image_file = build_team_role_removal_image_file(
+                member=member,
+                team_role=team_role,
+                action_text=action_text,
+                font_path=self.bot.settings.team_profile_font_path,
+            )
+        except RuntimeError as exc:
+            LOGGER.warning(
+                "TEAM_ROLE_REMOVAL_ANNOUNCEMENT_IMAGE_FALLBACK guild=%s(%s) user=%s(%s) role=%s(%s) details=%s",
+                guild.name,
+                guild.id,
+                member,
+                member.id,
+                team_role.name,
+                team_role.id,
+                exc,
+            )
+            embed.add_field(
+                name="\u200b",
+                value="\n".join(
+                    (
+                        f"@{member.name}",
+                        "_ _",
+                        f"**{action_text.upper()}**",
+                        "_ _",
+                        team_role.name,
+                    )
+                ),
+                inline=False,
+            )
+            return embed, None
+
+        embed.set_image(url=f"attachment://{image_file.filename}")
+        return embed, image_file
 
 
 async def setup(bot: BignessLeagueBot) -> None:

@@ -176,7 +176,7 @@
       "only_actor": "Only the user who ran the command can use these buttons."
     },
     "team_role_removal_announcement": {
-      "description": "# 👟 Player leaves club...",
+      "description": "-# 📢 Official bulletin: {member_mention} leaves club {team_role_mention}",
       "author": "BIGNESS LEAGUE - {division_name}",
       "footer": "Developed by the Bigness League team",
       "action": "Leaves"

@@ -205,7 +205,7 @@
       "only_actor": "Solo quien ejecuto el comando puede usar estos botones."
     },
     "team_role_removal_announcement": {
-      "description": "# 👟 Jugador abandona club...",
+      "description": "-# 📢 Boletín oficial: {member_mention} abandona su club {team_role_mention}",
       "author": "BIGNESS LEAGUE - {division_name}",
       "footer": "Desarrollado por el equipo de la Bigness League",
       "action": "Abandona"
