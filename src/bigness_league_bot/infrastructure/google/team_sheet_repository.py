@@ -238,6 +238,13 @@ class TeamTechnicalStaffWriteResult:
     updated_count: int
 
 
+@dataclass(frozen=True, slots=True)
+class TeamRoleSheetMetadata:
+    worksheet_title: str
+    team_name: str
+    team_image_url: str | None = None
+
+
 class GoogleSheetsTeamRepository:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
@@ -265,6 +272,15 @@ class GoogleSheetsTeamRepository:
         return await asyncio.to_thread(
             self._register_team_technical_staff_sync,
             technical_staff_batch,
+        )
+
+    async def find_team_sheet_metadata_for_role(
+            self,
+            role: discord.Role,
+    ) -> TeamRoleSheetMetadata:
+        return await asyncio.to_thread(
+            self._find_team_sheet_metadata_for_role_sync,
+            role,
         )
 
     async def remove_team_player_by_discord(
@@ -334,6 +350,47 @@ class GoogleSheetsTeamRepository:
                 top_three_average=top_three_average,
                 players=players,
                 technical_staff=technical_staff,
+            )
+
+        raise TeamSheetRowNotFoundError(
+            localize(
+                I18N.errors.team_profile.team_not_found,
+                role_name=role.name,
+                sheet_name=sheet_scope,
+            )
+        )
+
+    def _find_team_sheet_metadata_for_role_sync(
+            self,
+            role: discord.Role,
+    ) -> TeamRoleSheetMetadata:
+        service = self._build_google_sheets_service(read_only=True)
+        sheet_scope, sheet_grids = self._fetch_sheet_grids(service)
+        if not sheet_grids:
+            raise TeamSheetEmptyError(
+                localize(
+                    I18N.errors.team_profile.team_sheet_empty,
+                    sheet_name=sheet_scope,
+                )
+            )
+
+        for worksheet_title, cell_grid in sheet_grids:
+            if not cell_grid:
+                continue
+
+            team_block = self._find_team_block(role.name, cell_grid)
+            if team_block is None:
+                continue
+
+            title_cell = self._extract_block_title_cell(
+                cell_grid,
+                team_block.title_row,
+                team_block.start_column,
+            )
+            return TeamRoleSheetMetadata(
+                worksheet_title=worksheet_title,
+                team_name=team_block.title,
+                team_image_url=title_cell.hyperlink,
             )
 
         raise TeamSheetRowNotFoundError(
@@ -971,13 +1028,25 @@ class GoogleSheetsTeamRepository:
             row_index: int,
             start_column: int,
     ) -> str:
+        return GoogleSheetsTeamRepository._extract_block_title_cell(
+            cell_grid,
+            row_index,
+            start_column,
+        ).value
+
+    @staticmethod
+    def _extract_block_title_cell(
+            cell_grid: dict[int, dict[int, SheetCell]],
+            row_index: int,
+            start_column: int,
+    ) -> SheetCell:
         title_row = cell_grid.get(row_index, {})
         for column in range(start_column, start_column + TEAM_BLOCK_COLUMN_COUNT):
-            value = title_row.get(column, SheetCell()).value
-            if value:
-                return value
+            cell = title_row.get(column, SheetCell())
+            if cell.value:
+                return cell
 
-        return ""
+        return SheetCell()
 
     @staticmethod
     def _build_player_values_grid(

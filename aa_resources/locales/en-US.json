@@ -175,6 +175,12 @@
       },
       "only_actor": "Only the user who ran the command can use these buttons."
     },
+    "team_role_removal_announcement": {
+      "description": "# 👟 Player leaves club...",
+      "author": "BIGNESS LEAGUE - {division_name}",
+      "footer": "Developed by the Bigness League team",
+      "action": "Leaves"
+    },
     "channel_management": {
       "delete_prompt": "You are about to permanently delete `{channel_name}`.\nProtected system roles: {protected_roles}.\nConfirm only if you are completely sure.",
       "matchday_close_prompt": "You are about to close the matchday in `{channel_name}`.\nPermissions for unprotected roles will be removed and only these roles will keep access: {protected_roles}.\nConfirm only if you want to apply this closure."

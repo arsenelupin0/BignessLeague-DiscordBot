@@ -81,16 +81,13 @@ class _CommandsTicketsAddToTicket:
                                                  default_text="A\u00f1ade uno o varios usuarios al ticket actual.")
     parameters: _CommandsTicketsAddToTicketParameters = _CommandsTicketsAddToTicketParameters()
 
-
 class _CommandsTicketsAddTeamToTicketParametersTeamRole:
     description: TranslationKey = TranslationKey(
         key="commands.tickets.add_team_to_ticket.parameters.team_role.description",
         default_text="Rol de equipo cuyos miembros quieres a\u00f1adir al ticket.")
 
-
 class _CommandsTicketsAddTeamToTicketParameters:
     team_role: _CommandsTicketsAddTeamToTicketParametersTeamRole = _CommandsTicketsAddTeamToTicketParametersTeamRole()
-
 
 class _CommandsTicketsAddTeamToTicket:
     name: TranslationKey = TranslationKey(key="commands.tickets.add_team_to_ticket.name",
@@ -351,6 +348,17 @@ class _MessagesTeamProfile:
     trackers: _MessagesTeamProfileTrackers = _MessagesTeamProfileTrackers()
     only_actor: TranslationKey = TranslationKey(key="messages.team_profile.only_actor",
                                                 default_text="Solo quien ejecuto el comando puede usar estos botones.")
+
+
+class _MessagesTeamRoleRemovalAnnouncement:
+    description: TranslationKey = TranslationKey(key="messages.team_role_removal_announcement.description",
+                                                 default_text="# \ud83d\udc5f Jugador abandona club...")
+    author: TranslationKey = TranslationKey(key="messages.team_role_removal_announcement.author",
+                                            default_text="BIGNESS LEAGUE - {division_name}")
+    footer: TranslationKey = TranslationKey(key="messages.team_role_removal_announcement.footer",
+                                            default_text="Desarrollado por el equipo de la Bigness League")
+    action: TranslationKey = TranslationKey(key="messages.team_role_removal_announcement.action",
+                                            default_text="Abandona")
 
 class _MessagesChannelManagement:
     delete_prompt: TranslationKey = TranslationKey(key="messages.channel_management.delete_prompt",
@@ -675,6 +683,7 @@ class _MessagesMatchChannelCreation:
 class _Messages:
     admin: _MessagesAdmin = _MessagesAdmin()
     team_profile: _MessagesTeamProfile = _MessagesTeamProfile()
+    team_role_removal_announcement: _MessagesTeamRoleRemovalAnnouncement = _MessagesTeamRoleRemovalAnnouncement()
     channel_management: _MessagesChannelManagement = _MessagesChannelManagement()
     tickets: _MessagesTickets = _MessagesTickets()
     channel_role_addition: _MessagesChannelRoleAddition = _MessagesChannelRoleAddition()

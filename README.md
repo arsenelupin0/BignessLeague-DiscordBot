@@ -40,9 +40,11 @@ pip install -e .
     ajusta `BOT_PARTICIPANT_ROLE_ID` y `BOT_PLAYER_ROLE_ID` con los roles base que deben recibir todos los jugadores.
 14. Si quieres autoasignar esos roles de jugador al entrar al servidor cuando el miembro coincida con Google Sheets,
     deja `BOT_AUTO_ASSIGN_PLAYER_ROLES_ON_JOIN=true`.
-15. Si quieres que `/dar_de_baja` retire tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
+15. Si quieres publicar automaticamente el aviso de salida de un club cuando un miembro pierda un rol de equipo,
+    ajusta `BOT_TEAM_ROLE_REMOVAL_ANNOUNCEMENT_CHANNEL_ID`.
+16. Si quieres que `/dar_de_baja` retire tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
     `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID` y `BOT_STAFF_CAPTAIN_ROLE_ID`.
-16. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
+17. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
     Lo recomendado es colocar la fuente dentro de `aa_resources/fonts/`.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
@@ -195,9 +197,18 @@ Autoasignado al entrar al servidor:
 - si encuentra una unica coincidencia, anade `Participante`, `Jugador` y el rol de equipo
 - si no encuentra coincidencia, no hace nada
 - si encuentra varias coincidencias, no asigna nada y lo deja en log como ambiguo
-- este flujo solo afecta a jugadores, no a `STAFF TÃ‰CNICO`
+- este flujo solo afecta a jugadores, no a `STAFF TÉCNICO`
 - `/asignar_rol_equipo_automatico` sigue siendo el metodo manual de reconciliacion para miembros ya dentro del servidor
   o cambios masivos
+
+Aviso automatico al perder rol de equipo:
+
+- si un miembro pierde uno o varios roles de equipo, el bot publica un embed en
+  `BOT_TEAM_ROLE_REMOVAL_ANNOUNCEMENT_CHANNEL_ID`
+- el embed intenta resolver la division real desde Google Sheets y usa como thumbnail el hipervinculo de la celda del
+  equipo
+- si el equipo no tiene imagen enlazada, usa el icono del servidor como fallback
+- este flujo solo escucha la perdida de roles de equipo; no se activa por cambios de roles tecnicos
 
 `/integracion_de_tickets`:
 
@@ -308,6 +319,8 @@ Configuracion de Google Sheets:
 - `BOT_PLAYER_ROLE_ID`: rol general de jugador que tambien se anade junto al rol del equipo
 - `BOT_AUTO_ASSIGN_PLAYER_ROLES_ON_JOIN`: activa o desactiva el autoasignado de esos roles a nuevos miembros si
   coinciden con la plantilla de jugadores de Google Sheets
+- `BOT_TEAM_ROLE_REMOVAL_ANNOUNCEMENT_CHANNEL_ID`: canal donde se publica el aviso cuando un miembro pierde un rol de
+  equipo
 - `BOT_STAFF_CEO_ROLE_ID`, `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID`, `BOT_STAFF_CAPTAIN_ROLE_ID`:
   roles extra que `/dar_de_baja` puede retirar si el Discord tambien aparece en `STAFF TÉCNICO`
 - `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME`: opcional. Si lo dejas vacio, el bot buscara en todas las sheets del documento.

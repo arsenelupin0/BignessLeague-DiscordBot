@@ -205,6 +205,7 @@ class Settings:
     participant_role_id: int = 1_409_540_956_809_859_112
     player_role_id: int = 1_376_297_465_220_825_108
     auto_assign_player_roles_on_join: bool = True
+    team_role_removal_announcement_channel_id: int = 1_495_200_649_107_869_808
     staff_ceo_role_id: int = 1_493_595_275_837_706_292
     staff_coach_role_id: int = 1_376_299_092_216_516_699
     staff_manager_role_id: int = 1_376_297_612_654_936_215
@@ -302,6 +303,10 @@ class Settings:
         auto_assign_player_roles_on_join = _read_bool(
             "BOT_AUTO_ASSIGN_PLAYER_ROLES_ON_JOIN",
             True,
+        )
+        team_role_removal_announcement_channel_id = _read_int(
+            "BOT_TEAM_ROLE_REMOVAL_ANNOUNCEMENT_CHANNEL_ID",
+            1_495_200_649_107_869_808,
         )
         staff_ceo_role_id = _read_int(
             "BOT_STAFF_CEO_ROLE_ID",
@@ -470,6 +475,7 @@ class Settings:
             participant_role_id=participant_role_id,
             player_role_id=player_role_id,
             auto_assign_player_roles_on_join=auto_assign_player_roles_on_join,
+            team_role_removal_announcement_channel_id=team_role_removal_announcement_channel_id,
             staff_ceo_role_id=staff_ceo_role_id,
             staff_coach_role_id=staff_coach_role_id,
             staff_manager_role_id=staff_manager_role_id,
