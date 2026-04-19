@@ -186,6 +186,14 @@
       "content": "_ _\n-# 📢 Official bulletin: {member_mention} is signed by {team_role_mention}\n\n_ _",
       "action": "Signs for"
     },
+    "team_staff_role_removal_announcement": {
+      "content": "_ _\n-# 📢 Official bulletin: {member_mention} leaves the **{staff_role_name}** role in {team_role_mention}\n\n_ _",
+      "action": "Leaves role in"
+    },
+    "team_staff_role_signing_announcement": {
+      "content": "_ _\n-# 📢 Official bulletin: {member_mention} signs for the **{staff_role_name}** role in {team_role_mention}\n\n_ _",
+      "action": "New role in"
+    },
     "channel_management": {
       "delete_prompt": "You are about to permanently delete `{channel_name}`.\nProtected system roles: {protected_roles}.\nConfirm only if you are completely sure.",
       "matchday_close_prompt": "You are about to close the matchday in `{channel_name}`.\nPermissions for unprotected roles will be removed and only these roles will keep access: {protected_roles}.\nConfirm only if you want to apply this closure."
@@ -332,8 +340,10 @@
       "participant_role_missing": "The configured participant role does not exist: `{role_id}`.",
       "player_role_missing": "The configured player role does not exist: `{role_id}`.",
       "staff_ceo_role_missing": "The configured staff `CEO` role does not exist: `{role_id}`.",
+      "staff_analyst_role_missing": "The configured staff `ANALYST` role does not exist: `{role_id}`.",
       "staff_coach_role_missing": "The configured staff `COACH` role does not exist: `{role_id}`.",
       "staff_manager_role_missing": "The configured staff `MANAGER` role does not exist: `{role_id}`.",
+      "staff_second_manager_role_missing": "The configured staff `SECOND MANAGER` role does not exist: `{role_id}`.",
       "staff_captain_role_missing": "The configured staff `CAPTAIN` role does not exist: `{role_id}`.",
       "team_role_not_found": "No Discord team role matches `{team_name}`."
     },

@@ -207,8 +207,10 @@ class Settings:
     auto_assign_player_roles_on_join: bool = True
     team_role_removal_announcement_channel_id: int = 1_495_200_649_107_869_808
     staff_ceo_role_id: int = 1_493_595_275_837_706_292
+    staff_analyst_role_id: int = 1_495_257_914_439_499_907
     staff_coach_role_id: int = 1_376_299_092_216_516_699
     staff_manager_role_id: int = 1_376_297_612_654_936_215
+    staff_second_manager_role_id: int = 1_495_257_914_439_499_907
     staff_captain_role_id: int = 1_493_595_896_179_327_097
     gold_division_category_id: int = 1_487_858_997_812_789_298
     silver_division_category_id: int = 1_487_859_192_256_790_630
@@ -312,6 +314,10 @@ class Settings:
             "BOT_STAFF_CEO_ROLE_ID",
             1_493_595_275_837_706_292,
         )
+        staff_analyst_role_id = _read_int(
+            "BOT_STAFF_ANALYST_ROLE_ID",
+            1_495_257_914_439_499_907,
+        )
         staff_coach_role_id = _read_int(
             "BOT_STAFF_COACH_ROLE_ID",
             1_376_299_092_216_516_699,
@@ -319,6 +325,10 @@ class Settings:
         staff_manager_role_id = _read_int(
             "BOT_STAFF_MANAGER_ROLE_ID",
             1_376_297_612_654_936_215,
+        )
+        staff_second_manager_role_id = _read_int(
+            "BOT_STAFF_SECOND_MANAGER_ROLE_ID",
+            1_495_257_914_439_499_907,
         )
         staff_captain_role_id = _read_int(
             "BOT_STAFF_CAPTAIN_ROLE_ID",
@@ -477,8 +487,10 @@ class Settings:
             auto_assign_player_roles_on_join=auto_assign_player_roles_on_join,
             team_role_removal_announcement_channel_id=team_role_removal_announcement_channel_id,
             staff_ceo_role_id=staff_ceo_role_id,
+            staff_analyst_role_id=staff_analyst_role_id,
             staff_coach_role_id=staff_coach_role_id,
             staff_manager_role_id=staff_manager_role_id,
+            staff_second_manager_role_id=staff_second_manager_role_id,
             staff_captain_role_id=staff_captain_role_id,
             gold_division_category_id=gold_division_category_id,
             silver_division_category_id=silver_division_category_id,

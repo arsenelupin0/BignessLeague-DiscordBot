@@ -18,10 +18,17 @@ from bigness_league_bot.infrastructure.i18n.keys import I18N
 DISCORD_MEMBER_MENTION_PATTERN = re.compile(r"^<@!?(\d+)>$")
 DISCORD_MEMBER_ID_PATTERN = re.compile(r"^\d{15,20}$")
 PLACEHOLDER_MEMBER_NAMES = {"", "-"}
-TEAM_STAFF_ROLE_MANAGER_ALIASES = {"manager", "segundo manager"}
+TEAM_STAFF_ROLE_MANAGER_ALIASES = {"manager"}
+TEAM_STAFF_ROLE_SECOND_MANAGER_ALIASES = {"segundo manager"}
 TEAM_STAFF_ROLE_CEO = "ceo"
-TEAM_STAFF_ROLE_COACH_ALIASES = {"coach", "analista"}
+TEAM_STAFF_ROLE_COACH_ALIASES = {"coach"}
+TEAM_STAFF_ROLE_ANALYST_ALIASES = {"analista"}
 TEAM_STAFF_ROLE_CAPTAIN_ALIASES = {"capitan", "captain"}
+TEAM_STAFF_ROLE_MANAGER = "manager"
+TEAM_STAFF_ROLE_SECOND_MANAGER = "second_manager"
+TEAM_STAFF_ROLE_COACH = "coach"
+TEAM_STAFF_ROLE_ANALYST = "analyst"
+TEAM_STAFF_ROLE_CAPTAIN = "captain"
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,8 +122,10 @@ def resolve_optional_team_staff_roles(
         guild: discord.Guild,
         *,
         ceo_role_id: int,
+        analyst_role_id: int,
         coach_role_id: int,
         manager_role_id: int,
+        second_manager_role_id: int,
         captain_role_id: int,
         staff_role_names: Iterable[str],
 ) -> tuple[discord.Role, ...]:
@@ -137,7 +146,15 @@ def resolve_optional_team_staff_roles(
                 error_key=I18N.errors.team_role_assignment.staff_ceo_role_missing,
             )
         )
-    if "coach" in requested_role_keys:
+    if TEAM_STAFF_ROLE_ANALYST in requested_role_keys:
+        resolved_roles.append(
+            _resolve_required_role(
+                guild,
+                role_id=analyst_role_id,
+                error_key=I18N.errors.team_role_assignment.staff_analyst_role_missing,
+            )
+        )
+    if TEAM_STAFF_ROLE_COACH in requested_role_keys:
         resolved_roles.append(
             _resolve_required_role(
                 guild,
@@ -145,7 +162,7 @@ def resolve_optional_team_staff_roles(
                 error_key=I18N.errors.team_role_assignment.staff_coach_role_missing,
             )
         )
-    if "manager" in requested_role_keys:
+    if TEAM_STAFF_ROLE_MANAGER in requested_role_keys:
         resolved_roles.append(
             _resolve_required_role(
                 guild,
@@ -153,7 +170,15 @@ def resolve_optional_team_staff_roles(
                 error_key=I18N.errors.team_role_assignment.staff_manager_role_missing,
             )
         )
-    if "captain" in requested_role_keys:
+    if TEAM_STAFF_ROLE_SECOND_MANAGER in requested_role_keys:
+        resolved_roles.append(
+            _resolve_required_role(
+                guild,
+                role_id=second_manager_role_id,
+                error_key=I18N.errors.team_role_assignment.staff_second_manager_role_missing,
+            )
+        )
+    if TEAM_STAFF_ROLE_CAPTAIN in requested_role_keys:
         resolved_roles.append(
             _resolve_required_role(
                 guild,
@@ -174,8 +199,10 @@ async def sync_team_staff_roles_by_names(
         *,
         team_role: discord.Role,
         ceo_role_id: int,
+        analyst_role_id: int,
         coach_role_id: int,
         manager_role_id: int,
+        second_manager_role_id: int,
         captain_role_id: int,
         actor: discord.abc.User,
         staff_entries: Iterable[TeamStaffRoleEntry],
@@ -193,8 +220,10 @@ async def sync_team_staff_roles_by_names(
     configured_staff_roles = _resolve_configured_team_staff_roles(
         guild,
         ceo_role_id=ceo_role_id,
+        analyst_role_id=analyst_role_id,
         coach_role_id=coach_role_id,
         manager_role_id=manager_role_id,
+        second_manager_role_id=second_manager_role_id,
         captain_role_id=captain_role_id,
     )
     members = await _load_guild_members(guild)
@@ -221,9 +250,11 @@ async def sync_team_staff_roles_by_names(
 
         member = matches[0]
         desired_staff_roles = tuple(
-            configured_staff_roles[role_key]
-            for role_key in sorted(entry.role_keys)
-            if role_key in configured_staff_roles
+            {
+                configured_staff_roles[role_key].id: configured_staff_roles[role_key]
+                for role_key in sorted(entry.role_keys)
+                if role_key in configured_staff_roles
+            }.values()
         )
         desired_roles = (team_role, *desired_staff_roles)
         roles_to_add = tuple(
@@ -232,9 +263,11 @@ async def sync_team_staff_roles_by_names(
             if role not in member.roles
         )
         roles_to_remove = tuple(
-            role
-            for role in configured_staff_roles.values()
-            if role in member.roles and role not in desired_staff_roles
+            {
+                role.id: role
+                for role in configured_staff_roles.values()
+                if role in member.roles and role not in desired_staff_roles
+            }.values()
         )
 
         if roles_to_add:
@@ -405,8 +438,10 @@ def _resolve_configured_team_staff_roles(
         guild: discord.Guild,
         *,
         ceo_role_id: int,
+        analyst_role_id: int,
         coach_role_id: int,
         manager_role_id: int,
+        second_manager_role_id: int,
         captain_role_id: int,
 ) -> dict[str, discord.Role]:
     return {
@@ -415,17 +450,27 @@ def _resolve_configured_team_staff_roles(
             role_id=ceo_role_id,
             error_key=I18N.errors.team_role_assignment.staff_ceo_role_missing,
         ),
-        "coach": _resolve_required_role(
+        TEAM_STAFF_ROLE_ANALYST: _resolve_required_role(
+            guild,
+            role_id=analyst_role_id,
+            error_key=I18N.errors.team_role_assignment.staff_analyst_role_missing,
+        ),
+        TEAM_STAFF_ROLE_COACH: _resolve_required_role(
             guild,
             role_id=coach_role_id,
             error_key=I18N.errors.team_role_assignment.staff_coach_role_missing,
         ),
-        "manager": _resolve_required_role(
+        TEAM_STAFF_ROLE_MANAGER: _resolve_required_role(
             guild,
             role_id=manager_role_id,
             error_key=I18N.errors.team_role_assignment.staff_manager_role_missing,
         ),
-        "captain": _resolve_required_role(
+        TEAM_STAFF_ROLE_SECOND_MANAGER: _resolve_required_role(
+            guild,
+            role_id=second_manager_role_id,
+            error_key=I18N.errors.team_role_assignment.staff_second_manager_role_missing,
+        ),
+        TEAM_STAFF_ROLE_CAPTAIN: _resolve_required_role(
             guild,
             role_id=captain_role_id,
             error_key=I18N.errors.team_role_assignment.staff_captain_role_missing,
@@ -579,10 +624,14 @@ def _normalize_team_staff_role_name(role_name: str | None) -> str | None:
     )
     if normalized_role_name == TEAM_STAFF_ROLE_CEO:
         return TEAM_STAFF_ROLE_CEO
+    if normalized_role_name in TEAM_STAFF_ROLE_ANALYST_ALIASES:
+        return TEAM_STAFF_ROLE_ANALYST
     if normalized_role_name in TEAM_STAFF_ROLE_COACH_ALIASES:
-        return "coach"
+        return TEAM_STAFF_ROLE_COACH
+    if normalized_role_name in TEAM_STAFF_ROLE_SECOND_MANAGER_ALIASES:
+        return TEAM_STAFF_ROLE_SECOND_MANAGER
     if normalized_role_name in TEAM_STAFF_ROLE_MANAGER_ALIASES:
-        return "manager"
+        return TEAM_STAFF_ROLE_MANAGER
     if normalized_role_name in TEAM_STAFF_ROLE_CAPTAIN_ALIASES:
-        return "captain"
+        return TEAM_STAFF_ROLE_CAPTAIN
     return None

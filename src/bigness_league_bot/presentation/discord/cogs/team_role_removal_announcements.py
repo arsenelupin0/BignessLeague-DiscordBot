@@ -16,6 +16,8 @@ from bigness_league_bot.infrastructure.discord.emojis import (
 )
 from bigness_league_bot.infrastructure.discord.team_change_announcements import (
     TEAM_ROLE_REMOVAL_SPEC,
+    TEAM_STAFF_ROLE_REMOVAL_SPEC,
+    TEAM_STAFF_ROLE_SIGNING_SPEC,
     build_team_change_content,
     build_team_change_embed,
     build_team_role_sheet_metadata_fallback,
@@ -31,7 +33,6 @@ if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
 LOGGER = logging.getLogger("bigness_league_bot.activity")
-TEAM_ROLE_REMOVAL_FALLBACK_DIVISION_NAME = "Division no disponible"
 
 
 class TeamRoleRemovalAnnouncements(commands.Cog):
@@ -70,7 +71,19 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
             for role in before.roles
             if role.id in tracked_role_ids and role not in after.roles
         )
-        if not removed_team_roles:
+        tracked_staff_roles = self._resolve_tracked_staff_roles(after.guild)
+        tracked_staff_role_ids = {role.id for role in tracked_staff_roles}
+        removed_staff_roles = tuple(
+            role
+            for role in before.roles
+            if role.id in tracked_staff_role_ids and role not in after.roles
+        )
+        added_staff_roles = tuple(
+            role
+            for role in after.roles
+            if role.id in tracked_staff_role_ids and role not in before.roles
+        )
+        if not removed_team_roles and not removed_staff_roles and not added_staff_roles:
             return
 
         channel = await resolve_team_change_bulletin_channel(
@@ -129,6 +142,51 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
                     exc,
                 )
 
+        if not removed_staff_roles and not added_staff_roles:
+            return
+
+        team_role = self._resolve_team_role_context(
+            before=before,
+            after=after,
+            tracked_team_role_ids=tracked_role_ids,
+        )
+        if team_role is None:
+            LOGGER.warning(
+                "TEAM_STAFF_ROLE_ANNOUNCEMENT_SKIPPED guild=%s(%s) user=%s(%s) details=no-team-role-context",
+                after.guild.name,
+                after.guild.id,
+                after,
+                after.id,
+            )
+            return
+
+        metadata = await load_team_change_metadata(
+            repository=repository,
+            team_role=team_role,
+            fallback=build_team_role_sheet_metadata_fallback(team_role),
+            guild=after.guild,
+        )
+        for removed_staff_role in removed_staff_roles:
+            await self._send_staff_role_change_announcement(
+                member=after,
+                team_role=team_role,
+                staff_role=removed_staff_role,
+                guild=after.guild,
+                metadata=metadata,
+                spec=TEAM_STAFF_ROLE_REMOVAL_SPEC,
+                channel=channel,
+            )
+        for added_staff_role in added_staff_roles:
+            await self._send_staff_role_change_announcement(
+                member=after,
+                team_role=team_role,
+                staff_role=added_staff_role,
+                guild=after.guild,
+                metadata=metadata,
+                spec=TEAM_STAFF_ROLE_SIGNING_SPEC,
+                channel=channel,
+            )
+
     def _build_role_removal_content(
             self,
             *,
@@ -172,6 +230,100 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
             "# "
             f"{warning_emoji} {warning_emoji} {warning_emoji} {warning_emoji}"
         )
+
+    def _resolve_tracked_staff_roles(
+            self,
+            guild: discord.Guild,
+    ) -> tuple[discord.Role, ...]:
+        configured_role_ids = (
+            self.bot.settings.staff_ceo_role_id,
+            self.bot.settings.staff_analyst_role_id,
+            self.bot.settings.staff_coach_role_id,
+            self.bot.settings.staff_manager_role_id,
+            self.bot.settings.staff_second_manager_role_id,
+            self.bot.settings.staff_captain_role_id,
+        )
+        tracked_roles: dict[int, discord.Role] = {}
+        for role_id in configured_role_ids:
+            role = guild.get_role(role_id)
+            if role is not None:
+                tracked_roles[role.id] = role
+
+        return tuple(tracked_roles.values())
+
+    @staticmethod
+    def _resolve_team_role_context(
+            *,
+            before: discord.Member,
+            after: discord.Member,
+            tracked_team_role_ids: set[int],
+    ) -> discord.Role | None:
+        candidate_roles = {
+            role.id: role
+            for role in (*after.roles, *before.roles)
+            if role.id in tracked_team_role_ids
+        }
+        if len(candidate_roles) != 1:
+            return None
+
+        return next(iter(candidate_roles.values()))
+
+    async def _send_staff_role_change_announcement(
+            self,
+            *,
+            member: discord.Member,
+            team_role: discord.Role,
+            staff_role: discord.Role,
+            guild: discord.Guild,
+            metadata: TeamRoleSheetMetadata,
+            spec: object,
+            channel: discord.abc.Messageable,
+    ) -> None:
+        content = build_team_change_content(
+            bot=self.bot,
+            spec=spec,
+            member=member,
+            team_role=team_role,
+            guild=guild,
+            staff_role_name=staff_role.name,
+        )
+        embed, image_file = build_team_change_embed(
+            bot=self.bot,
+            spec=spec,
+            member=member,
+            team_role=team_role,
+            guild=guild,
+            metadata=metadata,
+            description=self._build_role_removal_description(guild),
+        )
+        allowed_mentions = discord.AllowedMentions(
+            everyone=False,
+            replied_user=False,
+            users=[member],
+            roles=[team_role],
+        )
+        try:
+            send_kwargs: dict[str, object] = {
+                "content": content,
+                "embed": embed,
+                "allowed_mentions": allowed_mentions,
+            }
+            if image_file is not None:
+                send_kwargs["file"] = image_file
+            await channel.send(**send_kwargs)
+        except (discord.Forbidden, discord.HTTPException) as exc:
+            LOGGER.warning(
+                "TEAM_STAFF_ROLE_ANNOUNCEMENT_SEND_FAILED guild=%s(%s) user=%s(%s) team_role=%s(%s) staff_role=%s(%s) details=%s",
+                guild.name,
+                guild.id,
+                member,
+                member.id,
+                team_role.name,
+                team_role.id,
+                staff_role.name,
+                staff_role.id,
+                exc,
+            )
 
 
 async def setup(bot: BignessLeagueBot) -> None:

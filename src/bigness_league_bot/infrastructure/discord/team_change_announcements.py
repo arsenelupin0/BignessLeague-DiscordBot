@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 TEAM_CHANGE_FALLBACK_DIVISION_NAME = "Division no disponible"
 TEAM_CHANGE_REMOVAL_EMBED_COLOR = 15_403_534
 TEAM_CHANGE_SIGNING_EMBED_COLOR = 5_166_352
+TEAM_CHANGE_STAFF_EMBED_COLOR = 14_606_862
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,6 +37,16 @@ TEAM_ROLE_SIGNING_SPEC = TeamChangeAnnouncementSpec(
     action_key=I18N.messages.team_role_signing_announcement.action,
     embed_color=TEAM_CHANGE_SIGNING_EMBED_COLOR,
 )
+TEAM_STAFF_ROLE_REMOVAL_SPEC = TeamChangeAnnouncementSpec(
+    content_key=I18N.messages.team_staff_role_removal_announcement.content,
+    action_key=I18N.messages.team_staff_role_removal_announcement.action,
+    embed_color=TEAM_CHANGE_STAFF_EMBED_COLOR,
+)
+TEAM_STAFF_ROLE_SIGNING_SPEC = TeamChangeAnnouncementSpec(
+    content_key=I18N.messages.team_staff_role_signing_announcement.content,
+    action_key=I18N.messages.team_staff_role_signing_announcement.action,
+    embed_color=TEAM_CHANGE_STAFF_EMBED_COLOR,
+)
 
 
 def build_team_change_content(
@@ -45,12 +56,21 @@ def build_team_change_content(
         member: discord.Member,
         team_role: discord.Role,
         guild: discord.Guild,
+        staff_role_name: str | None = None,
 ) -> str:
+    translation_kwargs = {
+        "member_mention": member.mention,
+        "team_role_mention": team_role.mention,
+    }
+    if staff_role_name is not None:
+        translation_kwargs["staff_role_name"] = discord.utils.escape_markdown(
+            staff_role_name
+        )
+
     return bot.localizer.translate(
         spec.content_key,
         locale=guild.preferred_locale,
-        member_mention=member.mention,
-        team_role_mention=team_role.mention,
+        **translation_kwargs,
     )
 
 

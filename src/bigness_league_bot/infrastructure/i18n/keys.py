@@ -361,12 +361,25 @@ class _MessagesTeamRoleRemovalAnnouncement:
     action: TranslationKey = TranslationKey(key="messages.team_role_removal_announcement.action",
                                             default_text="Abandona")
 
-
 class _MessagesTeamRoleSigningAnnouncement:
     content: TranslationKey = TranslationKey(key="messages.team_role_signing_announcement.content",
                                              default_text="_ _\n-# \ud83d\udce2 Bolet\u00edn oficial: {member_mention} es fichado por {team_role_mention}\n_ _")
     action: TranslationKey = TranslationKey(key="messages.team_role_signing_announcement.action",
                                             default_text="Ficha por")
+
+
+class _MessagesTeamStaffRoleRemovalAnnouncement:
+    content: TranslationKey = TranslationKey(key="messages.team_staff_role_removal_announcement.content",
+                                             default_text="_ _\n-# \ud83d\udce2 Bolet\u00edn oficial: {member_mention} abandona el cargo de **{staff_role_name}** en {team_role_mention}\n_ _")
+    action: TranslationKey = TranslationKey(key="messages.team_staff_role_removal_announcement.action",
+                                            default_text="Abandona cargo en")
+
+
+class _MessagesTeamStaffRoleSigningAnnouncement:
+    content: TranslationKey = TranslationKey(key="messages.team_staff_role_signing_announcement.content",
+                                             default_text="_ _\n-# \ud83d\udce2 Bolet\u00edn oficial: {member_mention} ficha por el cargo de **{staff_role_name}** en {team_role_mention}\n_ _")
+    action: TranslationKey = TranslationKey(key="messages.team_staff_role_signing_announcement.action",
+                                            default_text="Nuevo cargo en")
 
 class _MessagesChannelManagement:
     delete_prompt: TranslationKey = TranslationKey(key="messages.channel_management.delete_prompt",
@@ -693,6 +706,8 @@ class _Messages:
     team_profile: _MessagesTeamProfile = _MessagesTeamProfile()
     team_role_removal_announcement: _MessagesTeamRoleRemovalAnnouncement = _MessagesTeamRoleRemovalAnnouncement()
     team_role_signing_announcement: _MessagesTeamRoleSigningAnnouncement = _MessagesTeamRoleSigningAnnouncement()
+    team_staff_role_removal_announcement: _MessagesTeamStaffRoleRemovalAnnouncement = _MessagesTeamStaffRoleRemovalAnnouncement()
+    team_staff_role_signing_announcement: _MessagesTeamStaffRoleSigningAnnouncement = _MessagesTeamStaffRoleSigningAnnouncement()
     channel_management: _MessagesChannelManagement = _MessagesChannelManagement()
     tickets: _MessagesTickets = _MessagesTickets()
     channel_role_addition: _MessagesChannelRoleAddition = _MessagesChannelRoleAddition()
@@ -849,12 +864,18 @@ class _ErrorsTeamRoleAssignment:
                                                          default_text="No existe el rol de jugador configurado: `{role_id}`.")
     staff_ceo_role_missing: TranslationKey = TranslationKey(key="errors.team_role_assignment.staff_ceo_role_missing",
                                                             default_text="No existe el rol de staff `CEO` configurado: `{role_id}`.")
+    staff_analyst_role_missing: TranslationKey = TranslationKey(
+        key="errors.team_role_assignment.staff_analyst_role_missing",
+        default_text="No existe el rol de staff `ANALISTA` configurado: `{role_id}`.")
     staff_coach_role_missing: TranslationKey = TranslationKey(
         key="errors.team_role_assignment.staff_coach_role_missing",
         default_text="No existe el rol de staff `COACH` configurado: `{role_id}`.")
     staff_manager_role_missing: TranslationKey = TranslationKey(
         key="errors.team_role_assignment.staff_manager_role_missing",
         default_text="No existe el rol de staff `MANAGER` configurado: `{role_id}`.")
+    staff_second_manager_role_missing: TranslationKey = TranslationKey(
+        key="errors.team_role_assignment.staff_second_manager_role_missing",
+        default_text="No existe el rol de staff `SEGUNDO M\u00c1NAGER` configurado: `{role_id}`.")
     staff_captain_role_missing: TranslationKey = TranslationKey(
         key="errors.team_role_assignment.staff_captain_role_missing",
         default_text="No existe el rol de staff `CAPIT\u00c1N` configurado: `{role_id}`.")

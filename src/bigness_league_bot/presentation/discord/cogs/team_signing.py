@@ -153,8 +153,10 @@ class TeamSigningCog(commands.Cog):
                 guild,
                 team_role=team_role,
                 ceo_role_id=settings.staff_ceo_role_id,
+                analyst_role_id=settings.staff_analyst_role_id,
                 coach_role_id=settings.staff_coach_role_id,
                 manager_role_id=settings.staff_manager_role_id,
+                second_manager_role_id=settings.staff_second_manager_role_id,
                 captain_role_id=settings.staff_captain_role_id,
                 actor=interaction.user,
                 staff_entries=self._collect_technical_staff_role_entries(
@@ -295,8 +297,10 @@ class TeamSigningCog(commands.Cog):
             guild,
             team_role=equipo,
             ceo_role_id=settings.staff_ceo_role_id,
+            analyst_role_id=settings.staff_analyst_role_id,
             coach_role_id=settings.staff_coach_role_id,
             manager_role_id=settings.staff_manager_role_id,
+            second_manager_role_id=settings.staff_second_manager_role_id,
             captain_role_id=settings.staff_captain_role_id,
             actor=interaction.user,
             staff_entries=collect_team_profile_staff_role_entries(team_profile),
@@ -598,8 +602,10 @@ class TeamSigningCog(commands.Cog):
             staff_roles = resolve_optional_team_staff_roles(
                 guild,
                 ceo_role_id=settings.staff_ceo_role_id,
+                analyst_role_id=settings.staff_analyst_role_id,
                 coach_role_id=settings.staff_coach_role_id,
                 manager_role_id=settings.staff_manager_role_id,
+                second_manager_role_id=settings.staff_second_manager_role_id,
                 captain_role_id=settings.staff_captain_role_id,
                 staff_role_names=technical_staff_role_names,
             )
