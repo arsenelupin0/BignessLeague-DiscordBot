@@ -13,21 +13,6 @@ MESSAGE_METADATA_KEYS = {
     "division": "division_name",
     "equipo": "team_name",
 }
-MESSAGE_PLAYER_KEYS = {
-    "pos": "position",
-    "jugador": "player_name",
-    "tracker": "tracker_url",
-    "discord": "discord_name",
-    "epic name": "epic_name",
-    "rocket in-game name": "rocket_name",
-    "mmr": "mmr",
-}
-MESSAGE_TECHNICAL_STAFF_KEYS = {
-    "rol": "role_name",
-    "discord": "discord_name",
-    "epic name": "epic_name",
-    "rocket in-game name": "rocket_name",
-}
 REQUIRED_PLAYER_FIELDS = (
     "position",
     "player_name",
@@ -40,6 +25,36 @@ REQUIRED_PLAYER_FIELDS = (
 REQUIRED_TECHNICAL_STAFF_FIELDS = (
     "role_name",
     "discord_name",
+)
+COMPACT_PLAYER_HEADERS = (
+    "jugador",
+    "tracker",
+    "discord",
+    "epic name",
+    "rocket in-game name",
+    "mmr",
+)
+COMPACT_PLAYER_FIELD_ORDER = (
+    "player_name",
+    "tracker_url",
+    "discord_name",
+    "epic_name",
+    "rocket_name",
+    "mmr",
+)
+COMPACT_TECHNICAL_STAFF_HEADERS = (
+    "rol",
+    "discord",
+    "epic name",
+    "rocket in-game name",
+)
+COMPACT_TECHNICAL_STAFF_REQUIRED_FIELD_ORDER = (
+    "role_name",
+    "discord_name",
+)
+COMPACT_TECHNICAL_STAFF_OPTIONAL_FIELD_ORDER = (
+    "epic_name",
+    "rocket_name",
 )
 
 
@@ -137,64 +152,9 @@ class TeamTechnicalStaffBatch:
 def parse_team_signing_message(content: str) -> TeamSigningBatch:
     content = _unwrap_discord_code_block(content)
     content_lines = content.splitlines()
-    metadata: dict[str, str] = {}
-    current_player: dict[str, str] | None = None
-    players: list[TeamSigningPlayer] = []
-
-    for line_number, raw_line in enumerate(content_lines, start=1):
-        line = raw_line.strip()
-        if not line:
-            continue
-
-        if ":" not in line:
-            raise TeamSigningParseError(
-                f"La linea {line_number} no sigue el formato `Campo: Valor`."
-            )
-
-        raw_key, raw_value = line.split(":", 1)
-        key = _normalize_key(raw_key)
-        value = _normalize_value(raw_value)
-        if not value:
-            raise TeamSigningParseError(
-                f"La linea {line_number} no contiene un valor valido para `{raw_key.strip()}`."
-            )
-
-        if key in MESSAGE_METADATA_KEYS:
-            if current_player is not None:
-                raise TeamSigningParseError(
-                    f"La linea {line_number} aparece despues del bloque de jugadores."
-                )
-
-            metadata[MESSAGE_METADATA_KEYS[key]] = value
-            continue
-
-        if key == "pos":
-            if current_player is not None:
-                players.append(_build_team_signing_player(current_player, line_number - 1))
-
-            current_player = {"position": value}
-            continue
-
-        if key not in MESSAGE_PLAYER_KEYS:
-            raise TeamSigningParseError(
-                f"La linea {line_number} usa un campo no reconocido: `{raw_key.strip()}`."
-            )
-
-        if current_player is None:
-            raise TeamSigningParseError(
-                f"La linea {line_number} aparece antes de definir `Pos:`."
-            )
-
-        field_name = MESSAGE_PLAYER_KEYS[key]
-        if field_name in current_player:
-            raise TeamSigningParseError(
-                f"El campo `{raw_key.strip()}` esta repetido en el bloque actual."
-            )
-
-        current_player[field_name] = value
-
-    if current_player is not None:
-        players.append(_build_team_signing_player(current_player, len(content_lines)))
+    metadata, player_lines, player_start_line = _extract_message_metadata_and_body(
+        content_lines
+    )
 
     division_name = metadata.get("division_name", "")
     team_name = metadata.get("team_name", "")
@@ -202,6 +162,18 @@ def parse_team_signing_message(content: str) -> TeamSigningBatch:
         raise TeamSigningParseError("Falta la cabecera `Division:` en el mensaje enlazado.")
     if not team_name:
         raise TeamSigningParseError("Falta la cabecera `Equipo:` en el mensaje enlazado.")
+    if not _contains_non_empty_lines(player_lines):
+        raise TeamSigningParseError("El mensaje enlazado no contiene ningun bloque de jugador.")
+
+    if not _looks_like_compact_player_format(player_lines):
+        raise TeamSigningParseError(
+            "La plantilla de jugadores debe empezar con las cabeceras `Jugador`, `Tracker`, `Discord`, `Epic Name`, `Rocket In-Game Name`, `MMR`."
+        )
+
+    players = _parse_compact_player_blocks(
+        player_lines,
+        start_line_number=player_start_line,
+    )
     if not players:
         raise TeamSigningParseError("El mensaje enlazado no contiene ningun bloque de jugador.")
 
@@ -215,68 +187,9 @@ def parse_team_signing_message(content: str) -> TeamSigningBatch:
 def parse_team_technical_staff_message(content: str) -> TeamTechnicalStaffBatch:
     content = _unwrap_discord_code_block(content)
     content_lines = content.splitlines()
-    metadata: dict[str, str] = {}
-    current_member: dict[str, str] | None = None
-    members: list[TeamTechnicalStaffMember] = []
-
-    for line_number, raw_line in enumerate(content_lines, start=1):
-        line = raw_line.strip()
-        if not line:
-            continue
-
-        if ":" not in line:
-            raise TeamSigningParseError(
-                f"La linea {line_number} no sigue el formato `Campo: Valor`."
-            )
-
-        raw_key, raw_value = line.split(":", 1)
-        key = _normalize_key(raw_key)
-        value = _normalize_value(raw_value)
-        if not value:
-            raise TeamSigningParseError(
-                f"La linea {line_number} no contiene un valor valido para `{raw_key.strip()}`."
-            )
-
-        if key in MESSAGE_METADATA_KEYS:
-            if current_member is not None:
-                raise TeamSigningParseError(
-                    f"La linea {line_number} aparece despues del bloque de staff tecnico."
-                )
-
-            metadata[MESSAGE_METADATA_KEYS[key]] = value
-            continue
-
-        if key == "rol":
-            if current_member is not None:
-                members.append(
-                    _build_team_technical_staff_member(current_member, line_number - 1)
-                )
-
-            current_member = {"role_name": value}
-            continue
-
-        if key not in MESSAGE_TECHNICAL_STAFF_KEYS:
-            raise TeamSigningParseError(
-                f"La linea {line_number} usa un campo no reconocido: `{raw_key.strip()}`."
-            )
-
-        if current_member is None:
-            raise TeamSigningParseError(
-                f"La linea {line_number} aparece antes de definir `Rol:`."
-            )
-
-        field_name = MESSAGE_TECHNICAL_STAFF_KEYS[key]
-        if field_name in current_member:
-            raise TeamSigningParseError(
-                f"El campo `{raw_key.strip()}` esta repetido en el bloque actual."
-            )
-
-        current_member[field_name] = value
-
-    if current_member is not None:
-        members.append(
-            _build_team_technical_staff_member(current_member, len(content_lines))
-        )
+    metadata, staff_lines, staff_start_line = _extract_message_metadata_and_body(
+        content_lines
+    )
 
     division_name = metadata.get("division_name", "")
     team_name = metadata.get("team_name", "")
@@ -284,6 +197,19 @@ def parse_team_technical_staff_message(content: str) -> TeamTechnicalStaffBatch:
         raise TeamSigningParseError("Falta la cabecera `Division:` en el mensaje enlazado.")
     if not team_name:
         raise TeamSigningParseError("Falta la cabecera `Equipo:` en el mensaje enlazado.")
+    if not _contains_non_empty_lines(staff_lines):
+        raise TeamSigningParseError(
+            "El mensaje enlazado no contiene ningun bloque de staff tecnico."
+        )
+    if not _looks_like_compact_technical_staff_format(staff_lines):
+        raise TeamSigningParseError(
+            "La plantilla de staff tecnico debe empezar con las cabeceras `Rol`, `Discord`, `Epic Name`, `Rocket In-Game Name`."
+        )
+
+    members = _parse_compact_technical_staff_blocks(
+        staff_lines,
+        start_line_number=staff_start_line,
+    )
     if not members:
         raise TeamSigningParseError(
             "El mensaje enlazado no contiene ningun bloque de staff tecnico."
@@ -328,6 +254,223 @@ def merge_team_signing_players(
         )
 
     return sort_team_signing_players(merged_players)
+
+
+def _extract_message_metadata_and_body(
+        content_lines: list[str],
+) -> tuple[dict[str, str], list[str], int]:
+    metadata: dict[str, str] = {}
+    body_start_index = len(content_lines)
+
+    for line_index, raw_line in enumerate(content_lines):
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        if ":" in line:
+            raw_key, raw_value = line.split(":", 1)
+            key = _normalize_key(raw_key)
+            value = _normalize_value(raw_value)
+            if key in MESSAGE_METADATA_KEYS:
+                if not value:
+                    raise TeamSigningParseError(
+                        f"La linea {line_index + 1} no contiene un valor valido para `{raw_key.strip()}`."
+                    )
+
+                metadata[MESSAGE_METADATA_KEYS[key]] = value
+                continue
+
+        body_start_index = line_index
+        break
+
+    if body_start_index >= len(content_lines):
+        return metadata, [], len(content_lines) + 1
+
+    return metadata, content_lines[body_start_index:], body_start_index + 1
+
+
+def _looks_like_compact_player_format(content_lines: list[str]) -> bool:
+    non_empty_lines = [line.strip() for line in content_lines if line.strip()]
+    if len(non_empty_lines) < len(COMPACT_PLAYER_HEADERS):
+        return False
+
+    normalized_headers = tuple(
+        _normalize_key(line)
+        for line in non_empty_lines[:len(COMPACT_PLAYER_HEADERS)]
+    )
+    return normalized_headers == COMPACT_PLAYER_HEADERS
+
+
+def _parse_compact_player_blocks(
+        content_lines: list[str],
+        *,
+        start_line_number: int,
+) -> list[TeamSigningPlayer]:
+    indexed_lines = [
+        (start_line_number + index, raw_line.strip())
+        for index, raw_line in enumerate(content_lines)
+        if raw_line.strip()
+    ]
+    header_count = len(COMPACT_PLAYER_HEADERS)
+    if len(indexed_lines) < header_count:
+        raise TeamSigningParseError(
+            "La plantilla compacta de jugadores no contiene todas las cabeceras esperadas."
+        )
+
+    normalized_headers = tuple(
+        _normalize_key(line)
+        for _, line in indexed_lines[:header_count]
+    )
+    if normalized_headers != COMPACT_PLAYER_HEADERS:
+        raise TeamSigningParseError(
+            "La plantilla compacta de jugadores debe empezar con las cabeceras `Jugador`, `Tracker`, `Discord`, `Epic Name`, `Rocket In-Game Name`, `MMR`."
+        )
+
+    data_lines = indexed_lines[header_count:]
+    while data_lines and _is_visual_separator_line(data_lines[0][1]):
+        data_lines = data_lines[1:]
+
+    if not data_lines:
+        raise TeamSigningParseError(
+            "La plantilla compacta no contiene ningun jugador despues de las cabeceras."
+        )
+
+    field_count = len(COMPACT_PLAYER_FIELD_ORDER)
+    if len(data_lines) % field_count != 0:
+        raise TeamSigningParseError(
+            "La plantilla compacta de jugadores debe contener bloques completos de 6 lineas por jugador."
+        )
+
+    players: list[TeamSigningPlayer] = []
+    for player_index, offset in enumerate(range(0, len(data_lines), field_count), start=1):
+        payload = {"position": str(player_index)}
+        chunk = data_lines[offset:offset + field_count]
+        for field_name, (line_number, value) in zip(COMPACT_PLAYER_FIELD_ORDER, chunk, strict=True):
+            normalized_value = _normalize_value(value)
+            if not normalized_value:
+                raise TeamSigningParseError(
+                    f"La linea {line_number} no contiene un valor valido."
+                )
+            payload[field_name] = normalized_value
+
+        players.append(_build_team_signing_player(payload, chunk[-1][0]))
+
+    return players
+
+
+def _looks_like_compact_technical_staff_format(content_lines: list[str]) -> bool:
+    non_empty_lines = [line.strip() for line in content_lines if line.strip()]
+    if len(non_empty_lines) < len(COMPACT_TECHNICAL_STAFF_HEADERS):
+        return False
+
+    normalized_headers = tuple(
+        _normalize_key(line)
+        for line in non_empty_lines[:len(COMPACT_TECHNICAL_STAFF_HEADERS)]
+    )
+    return normalized_headers == COMPACT_TECHNICAL_STAFF_HEADERS
+
+
+def _parse_compact_technical_staff_blocks(
+        content_lines: list[str],
+        *,
+        start_line_number: int,
+) -> list[TeamTechnicalStaffMember]:
+    entry_blocks = _split_compact_entry_blocks(
+        content_lines,
+        header_count=len(COMPACT_TECHNICAL_STAFF_HEADERS),
+        start_line_number=start_line_number,
+    )
+    if not entry_blocks:
+        raise TeamSigningParseError(
+            "La plantilla compacta de staff tecnico no contiene ningun bloque despues de las cabeceras."
+        )
+
+    members: list[TeamTechnicalStaffMember] = []
+    required_field_count = len(COMPACT_TECHNICAL_STAFF_REQUIRED_FIELD_ORDER)
+    full_field_count = required_field_count + len(COMPACT_TECHNICAL_STAFF_OPTIONAL_FIELD_ORDER)
+    for entry_block in entry_blocks:
+        if len(entry_block) not in {required_field_count, full_field_count}:
+            raise TeamSigningParseError(
+                "Cada bloque de staff tecnico debe contener 2 lineas (`Rol`, `Discord`) o 4 lineas (añadiendo `Epic Name` y `Rocket In-Game Name`)."
+            )
+
+        payload: dict[str, str] = {}
+        for field_name, (line_number, value) in zip(
+                COMPACT_TECHNICAL_STAFF_REQUIRED_FIELD_ORDER,
+                entry_block[:required_field_count],
+                strict=True,
+        ):
+            normalized_value = _normalize_value(value)
+            if not normalized_value:
+                raise TeamSigningParseError(
+                    f"La linea {line_number} no contiene un valor valido."
+                )
+            payload[field_name] = normalized_value
+
+        optional_lines = entry_block[required_field_count:]
+        for field_name, (line_number, value) in zip(
+                COMPACT_TECHNICAL_STAFF_OPTIONAL_FIELD_ORDER[:len(optional_lines)],
+                optional_lines,
+                strict=True,
+        ):
+            normalized_value = _normalize_value(value)
+            if not normalized_value:
+                raise TeamSigningParseError(
+                    f"La linea {line_number} no contiene un valor valido."
+                )
+            payload[field_name] = normalized_value
+
+        members.append(
+            _build_team_technical_staff_member(
+                payload,
+                entry_block[-1][0],
+            )
+        )
+
+    return members
+
+
+def _split_compact_entry_blocks(
+        content_lines: list[str],
+        *,
+        header_count: int,
+        start_line_number: int,
+) -> list[list[tuple[int, str]]]:
+    entry_blocks: list[list[tuple[int, str]]] = []
+    current_block: list[tuple[int, str]] = []
+    for line_offset, raw_line in enumerate(content_lines[header_count:], start=header_count):
+        line_number = start_line_number + line_offset
+        line = raw_line.strip()
+        if not line:
+            if current_block:
+                entry_blocks.append(current_block)
+                current_block = []
+            continue
+
+        if _is_visual_separator_line(line):
+            if current_block:
+                entry_blocks.append(current_block)
+                current_block = []
+            continue
+
+        current_block.append((line_number, line))
+
+    if current_block:
+        entry_blocks.append(current_block)
+
+    return entry_blocks
+
+
+def _contains_non_empty_lines(content_lines: list[str]) -> bool:
+    return any(raw_line.strip() for raw_line in content_lines)
+
+
+def _is_visual_separator_line(value: str) -> bool:
+    stripped_value = "".join(character for character in value.strip() if not character.isspace())
+    if not stripped_value:
+        return False
+
+    return not any(character.isalnum() for character in stripped_value)
 
 
 def _build_team_signing_player(
