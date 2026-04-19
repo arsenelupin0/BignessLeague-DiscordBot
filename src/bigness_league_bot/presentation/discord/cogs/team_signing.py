@@ -44,6 +44,7 @@ from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     TeamRoleAssignmentSummary,
     TeamRoleRemovalSummary,
     assign_team_roles_by_names,
+    build_member_lookup_keys,
     collect_team_profile_player_names,
     collect_team_profile_staff_role_entries,
     remove_roles_from_member_by_name,
@@ -58,6 +59,7 @@ from bigness_league_bot.infrastructure.discord.team_signing import (
 )
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     GoogleSheetsTeamRepository,
+    TeamMemberSheetAffiliation,
     TeamSigningWriteResult,
     TeamTechnicalStaffWriteResult,
 )
@@ -304,6 +306,17 @@ class TeamSigningCog(commands.Cog):
             captain_role_id=settings.staff_captain_role_id,
             actor=interaction.user,
             staff_entries=collect_team_profile_staff_role_entries(team_profile),
+        )
+        await self._reconcile_team_role_assignment(
+            guild,
+            repository=repository,
+            actor=interaction.user,
+            team_role=equipo,
+            participant_role=participant_role,
+            player_role=player_role,
+            assignment_summary=assignment_summary,
+            staff_role_sync_summary=staff_role_sync_summary,
+            team_profile=team_profile,
         )
         await interaction.followup.send(
             self._build_team_role_sync_message(
@@ -744,6 +757,161 @@ class TeamSigningCog(commands.Cog):
         return (
             "## "
             f"{warning_emoji} {warning_emoji} {warning_emoji} {warning_emoji}"
+        )
+
+    async def _reconcile_team_role_assignment(
+            self,
+            guild: discord.Guild,
+            *,
+            repository: GoogleSheetsTeamRepository,
+            actor: discord.Member,
+            team_role: discord.Role,
+            participant_role: discord.Role,
+            player_role: discord.Role,
+            assignment_summary: TeamRoleAssignmentSummary,
+            staff_role_sync_summary: TeamStaffRoleSyncSummary,
+            team_profile,
+    ) -> None:
+        current_team_members = await self._load_current_team_members(
+            guild,
+            team_role=team_role,
+        )
+        if not current_team_members:
+            return
+
+        desired_member_ids = {
+            member.id
+            for member in (
+                *assignment_summary.assigned_members,
+                *assignment_summary.already_configured_members,
+                *staff_role_sync_summary.assigned_members,
+                *staff_role_sync_summary.removed_members,
+                *staff_role_sync_summary.already_configured_members,
+            )
+        }
+        affiliations_by_lookup = await repository.find_member_affiliations_by_discord_names(
+            lookup_key
+            for member in current_team_members
+            for lookup_key in build_member_lookup_keys(member)
+        )
+        configured_staff_roles = self._resolve_configured_staff_roles(
+            guild,
+        )
+        for member in current_team_members:
+            member_affiliation = self._resolve_member_affiliation(
+                member,
+                affiliations_by_lookup=affiliations_by_lookup,
+            )
+            desired_staff_roles = ()
+            if member_affiliation is not None and member_affiliation.staff_role_names:
+                desired_staff_roles = resolve_optional_team_staff_roles(
+                    guild,
+                    ceo_role_id=self.bot.settings.staff_ceo_role_id,
+                    analyst_role_id=self.bot.settings.staff_analyst_role_id,
+                    coach_role_id=self.bot.settings.staff_coach_role_id,
+                    manager_role_id=self.bot.settings.staff_manager_role_id,
+                    second_manager_role_id=self.bot.settings.staff_second_manager_role_id,
+                    captain_role_id=self.bot.settings.staff_captain_role_id,
+                    staff_role_names=member_affiliation.staff_role_names,
+                )
+
+            roles_to_remove: dict[int, discord.Role] = {}
+            if member.id not in desired_member_ids and team_role in member.roles:
+                roles_to_remove[team_role.id] = team_role
+
+            if not (member_affiliation and member_affiliation.is_player):
+                if participant_role in member.roles:
+                    roles_to_remove[participant_role.id] = participant_role
+                if player_role in member.roles:
+                    roles_to_remove[player_role.id] = player_role
+
+            desired_staff_role_ids = {role.id for role in desired_staff_roles}
+            for configured_staff_role in configured_staff_roles:
+                if (
+                        configured_staff_role in member.roles
+                        and configured_staff_role.id not in desired_staff_role_ids
+                ):
+                    roles_to_remove[configured_staff_role.id] = configured_staff_role
+
+            if not roles_to_remove:
+                continue
+
+            await member.remove_roles(
+                *roles_to_remove.values(),
+                reason=(
+                    f"{actor} ({actor.id}) sincronizo completamente el equipo "
+                    f"{team_role.name} segun Google Sheets para {member} ({member.id})"
+                ),
+            )
+
+    @staticmethod
+    async def _load_current_team_members(
+            guild: discord.Guild,
+            *,
+            team_role: discord.Role,
+    ) -> tuple[discord.Member, ...]:
+        try:
+            members = tuple([
+                member
+                async for member in guild.fetch_members(limit=None)
+                if not member.bot and team_role in member.roles
+            ])
+        except discord.HTTPException:
+            members = tuple(
+                member
+                for member in guild.members
+                if not member.bot and team_role in member.roles
+            )
+
+        return members
+
+    def _resolve_configured_staff_roles(
+            self,
+            guild: discord.Guild,
+    ) -> tuple[discord.Role, ...]:
+        configured_roles: dict[int, discord.Role] = {}
+        for role_id in (
+                self.bot.settings.staff_ceo_role_id,
+                self.bot.settings.staff_analyst_role_id,
+                self.bot.settings.staff_coach_role_id,
+                self.bot.settings.staff_manager_role_id,
+                self.bot.settings.staff_second_manager_role_id,
+                self.bot.settings.staff_captain_role_id,
+        ):
+            role = guild.get_role(role_id)
+            if role is not None:
+                configured_roles[role.id] = role
+
+        return tuple(configured_roles.values())
+
+    @staticmethod
+    def _resolve_member_affiliation(
+            member: discord.Member,
+            *,
+            affiliations_by_lookup: dict[str, TeamMemberSheetAffiliation],
+    ) -> TeamMemberSheetAffiliation | None:
+        matched_affiliations: list[TeamMemberSheetAffiliation] = []
+        for lookup_key in build_member_lookup_keys(member):
+            affiliation = affiliations_by_lookup.get(lookup_key)
+            if affiliation is not None:
+                matched_affiliations.append(affiliation)
+
+        if not matched_affiliations:
+            return None
+
+        merged_staff_role_names = tuple(
+            sorted(
+                {
+                    role_name
+                    for affiliation in matched_affiliations
+                    for role_name in affiliation.staff_role_names
+                }
+            )
+        )
+        return TeamMemberSheetAffiliation(
+            discord_name=matched_affiliations[0].discord_name,
+            is_player=any(affiliation.is_player for affiliation in matched_affiliations),
+            staff_role_names=merged_staff_role_names,
         )
 
     async def cog_app_command_error(

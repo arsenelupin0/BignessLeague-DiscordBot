@@ -62,6 +62,10 @@ class TeamStaffRoleSyncSummary:
     ambiguous_names: tuple[str, ...]
 
 
+def build_member_lookup_keys(member: discord.Member) -> tuple[str, ...]:
+    return tuple(_member_lookup_keys(member))
+
+
 def collect_team_profile_player_names(team_profile: TeamProfile) -> tuple[str, ...]:
     return _deduplicate_member_names(player.discord_name for player in team_profile.players)
 
