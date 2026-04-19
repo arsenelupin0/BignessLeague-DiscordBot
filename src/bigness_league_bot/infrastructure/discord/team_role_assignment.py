@@ -66,6 +66,10 @@ def build_member_lookup_keys(member: discord.Member) -> tuple[str, ...]:
     return tuple(_member_lookup_keys(member))
 
 
+def normalize_member_lookup_text(value: str | None) -> str:
+    return _normalize_member_lookup_text(value)
+
+
 def collect_team_profile_player_names(team_profile: TeamProfile) -> tuple[str, ...]:
     return _deduplicate_member_names(player.discord_name for player in team_profile.players)
 

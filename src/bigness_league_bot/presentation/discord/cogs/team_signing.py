@@ -47,6 +47,7 @@ from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     build_member_lookup_keys,
     collect_team_profile_player_names,
     collect_team_profile_staff_role_entries,
+    normalize_member_lookup_text,
     remove_roles_from_member_by_name,
     resolve_optional_team_staff_roles,
     resolve_participant_role,
@@ -309,13 +310,10 @@ class TeamSigningCog(commands.Cog):
         )
         await self._reconcile_team_role_assignment(
             guild,
-            repository=repository,
             actor=interaction.user,
             team_role=equipo,
             participant_role=participant_role,
             player_role=player_role,
-            assignment_summary=assignment_summary,
-            staff_role_sync_summary=staff_role_sync_summary,
             team_profile=team_profile,
         )
         await interaction.followup.send(
@@ -763,13 +761,10 @@ class TeamSigningCog(commands.Cog):
             self,
             guild: discord.Guild,
             *,
-            repository: GoogleSheetsTeamRepository,
             actor: discord.Member,
             team_role: discord.Role,
             participant_role: discord.Role,
             player_role: discord.Role,
-            assignment_summary: TeamRoleAssignmentSummary,
-            staff_role_sync_summary: TeamStaffRoleSyncSummary,
             team_profile,
     ) -> None:
         current_team_members = await self._load_current_team_members(
@@ -779,21 +774,7 @@ class TeamSigningCog(commands.Cog):
         if not current_team_members:
             return
 
-        desired_member_ids = {
-            member.id
-            for member in (
-                *assignment_summary.assigned_members,
-                *assignment_summary.already_configured_members,
-                *staff_role_sync_summary.assigned_members,
-                *staff_role_sync_summary.removed_members,
-                *staff_role_sync_summary.already_configured_members,
-            )
-        }
-        affiliations_by_lookup = await repository.find_member_affiliations_by_discord_names(
-            lookup_key
-            for member in current_team_members
-            for lookup_key in build_member_lookup_keys(member)
-        )
+        affiliations_by_lookup = self._build_team_profile_affiliations(team_profile)
         configured_staff_roles = self._resolve_configured_staff_roles(
             guild,
         )
@@ -816,7 +797,7 @@ class TeamSigningCog(commands.Cog):
                 )
 
             roles_to_remove: dict[int, discord.Role] = {}
-            if member.id not in desired_member_ids and team_role in member.roles:
+            if member_affiliation is None and team_role in member.roles:
                 roles_to_remove[team_role.id] = team_role
 
             if not (member_affiliation and member_affiliation.is_player):
@@ -913,6 +894,42 @@ class TeamSigningCog(commands.Cog):
             is_player=any(affiliation.is_player for affiliation in matched_affiliations),
             staff_role_names=merged_staff_role_names,
         )
+
+    @staticmethod
+    def _build_team_profile_affiliations(
+            team_profile,
+    ) -> dict[str, TeamMemberSheetAffiliation]:
+        collected_affiliations: dict[str, TeamMemberSheetAffiliation] = {}
+
+        for player in team_profile.players:
+            normalized_discord_name = normalize_member_lookup_text(player.discord_name)
+            if normalized_discord_name in {"", "-"}:
+                continue
+
+            existing_affiliation = collected_affiliations.get(normalized_discord_name)
+            collected_affiliations[normalized_discord_name] = TeamMemberSheetAffiliation(
+                discord_name=player.discord_name,
+                is_player=True,
+                staff_role_names=existing_affiliation.staff_role_names if existing_affiliation is not None else (),
+            )
+
+        for staff_member in team_profile.technical_staff:
+            normalized_discord_name = normalize_member_lookup_text(staff_member.discord_name)
+            if normalized_discord_name in {"", "-"}:
+                continue
+
+            existing_affiliation = collected_affiliations.get(normalized_discord_name)
+            staff_role_names = set(
+                existing_affiliation.staff_role_names if existing_affiliation is not None else ()
+            )
+            staff_role_names.add(staff_member.role_name)
+            collected_affiliations[normalized_discord_name] = TeamMemberSheetAffiliation(
+                discord_name=staff_member.discord_name,
+                is_player=existing_affiliation.is_player if existing_affiliation is not None else False,
+                staff_role_names=tuple(sorted(staff_role_names)),
+            )
+
+        return collected_affiliations
 
     async def cog_app_command_error(
             self,
