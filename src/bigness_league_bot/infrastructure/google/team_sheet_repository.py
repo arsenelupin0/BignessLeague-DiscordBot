@@ -829,15 +829,19 @@ class GoogleSheetsTeamRepository:
                 localize(I18N.errors.team_profile.google_dependencies_missing)
             ) from exc
 
+        request_arguments: dict[str, Any] = {
+            "spreadsheetId": self.config.spreadsheet_id,
+            "includeGridData": True,
+            "fields": (
+                "sheets(properties(title),"
+                "data(startRow,startColumn,rowData(values(formattedValue,hyperlink,userEnteredValue))))"
+            ),
+        }
+        if self.config.worksheet_names:
+            request_arguments["ranges"] = list(self.config.worksheet_names)
+
         try:
-            response = service.spreadsheets().get(
-                spreadsheetId=self.config.spreadsheet_id,
-                includeGridData=True,
-                fields=(
-                    "sheets(properties(title),"
-                    "data(startRow,startColumn,rowData(values(formattedValue,hyperlink,userEnteredValue))))"
-                ),
-            ).execute()
+            response = service.spreadsheets().get(**request_arguments).execute()
         except HttpError as exc:
             raise TeamSheetRequestError(
                 localize(
@@ -877,20 +881,12 @@ class GoogleSheetsTeamRepository:
         if grids:
             return _sheet_scope_label(self.config.worksheet_names), tuple(grids)
 
-        all_grids: list[tuple[str, dict[int, dict[int, SheetCell]]]] = []
-        for sheet in sheets:
-            if not isinstance(sheet, dict):
-                continue
-
-            worksheet_title = _normalize_cell_value(
-                sheet.get("properties", {}).get("title")
+        raise TeamSheetEmptyError(
+            localize(
+                I18N.errors.team_profile.team_sheet_empty,
+                sheet_name=_sheet_scope_label(self.config.worksheet_names),
             )
-            if not worksheet_title:
-                continue
-
-            all_grids.append((worksheet_title, _build_sheet_grid(sheet)))
-
-        return _sheet_scope_label(()), tuple(all_grids)
+        )
 
     @staticmethod
     def _find_team_block(

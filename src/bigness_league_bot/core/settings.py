@@ -24,6 +24,13 @@ load_dotenv()
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_GOOGLE_SHEETS_TEAM_WORKSHEETS = (
+    "GOLD DIVISIÓN S3",
+    "SILVER DIVISIÓN S3",
+)
+DEFAULT_GOOGLE_SHEETS_TEAM_WORKSHEETS_RAW = ",".join(
+    DEFAULT_GOOGLE_SHEETS_TEAM_WORKSHEETS
+)
 
 
 def _read_bool(name: str, default: bool) -> bool:
@@ -219,7 +226,7 @@ class Settings:
     match_channel_rules_url: str = "https://canary.discord.com/channels/1016819103555657851/1363537934665515351"
     google_service_account_file: Path | None = None
     google_sheets_spreadsheet_id: str = ""
-    google_sheets_team_sheet_name: str = ""
+    google_sheets_team_sheet_name: str = DEFAULT_GOOGLE_SHEETS_TEAM_WORKSHEETS_RAW
     team_profile_font_path: Path | None = None
     ticket_forum_channel_id: int | None = None
     ticket_state_file: Path = Path("aa_var/tickets/active_tickets.json")
@@ -366,7 +373,7 @@ class Settings:
         )
         google_sheets_team_sheet_name = _read_str(
             "BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME",
-            "",
+            DEFAULT_GOOGLE_SHEETS_TEAM_WORKSHEETS_RAW,
         )
         team_profile_font_path = _resolve_optional_storage_path(
             "BOT_TEAM_PROFILE_FONT_PATH"
