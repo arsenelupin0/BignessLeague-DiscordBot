@@ -1,0 +1,17 @@
+[Unit]
+Description=Bigness League Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bigness
+Group=bigness
+WorkingDirectory=/opt/bigness-league
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/bigness-league/.venv/bin/bigness-bot
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
