@@ -35,7 +35,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class MatchChannelAlreadyExistsError(ChannelManagementError):
-    """Raised when the target channel name already exists in the guild."""
+    """Raised when the target channel name already exists in the destination category."""
 
 
 class InvalidMatchTeamRoleError(ChannelManagementError):
@@ -96,12 +96,12 @@ def _build_match_channel_overwrites(
 
 
 def _ensure_match_channel_absent(
-        guild: discord.Guild,
+        category: discord.CategoryChannel,
         specification: MatchChannelSpecification,
 ) -> None:
     channel_name = specification.channel_name
     candidate_names = {*specification.legacy_channel_names, channel_name}
-    if any(channel.name in candidate_names for channel in guild.channels):
+    if any(channel.name in candidate_names for channel in category.channels):
         raise MatchChannelAlreadyExistsError(
             localize(
                 I18N.errors.match_channel_creation.channel_already_exists,
@@ -248,7 +248,7 @@ async def create_match_channel(
         team_one: discord.Role,
         team_two: discord.Role,
 ) -> MatchChannelCreationResult:
-    _ensure_match_channel_absent(guild, specification)
+    _ensure_match_channel_absent(category, specification)
     overwrites = _build_match_channel_overwrites(guild, (team_one, team_two))
     created_channel = await guild.create_text_channel(
         specification.channel_name,
