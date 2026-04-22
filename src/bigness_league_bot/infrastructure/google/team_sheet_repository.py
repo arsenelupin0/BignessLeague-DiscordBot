@@ -252,6 +252,13 @@ class TeamMemberSheetAffiliation:
     staff_role_names: tuple[str, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class TeamMemberTeamMatch:
+    worksheet_title: str
+    block: TeamBlockAnchor
+    affiliation: TeamMemberSheetAffiliation
+
+
 class GoogleSheetsTeamRepository:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
@@ -314,6 +321,15 @@ class GoogleSheetsTeamRepository:
     ) -> dict[str, TeamMemberSheetAffiliation]:
         return await asyncio.to_thread(
             self._find_member_affiliations_by_discord_names_sync,
+            tuple(discord_names),
+        )
+
+    async def find_member_team_matches_by_discord_names(
+            self,
+            discord_names: Iterable[str],
+    ) -> tuple[TeamMemberTeamMatch, ...]:
+        return await asyncio.to_thread(
+            self._find_member_team_matches_by_discord_names_sync,
             tuple(discord_names),
         )
 
@@ -457,6 +473,28 @@ class GoogleSheetsTeamRepository:
         service = self._build_google_sheets_service(read_only=True)
         _, sheet_grids = self._fetch_sheet_grids(service)
         return self._find_member_affiliations_by_discord_name_set(
+            frozenset(normalized_names),
+            sheet_grids,
+        )
+
+    def _find_member_team_matches_by_discord_names_sync(
+            self,
+            discord_names: tuple[str, ...],
+    ) -> tuple[TeamMemberTeamMatch, ...]:
+        normalized_names = tuple(
+            normalized_name
+            for normalized_name in (
+                _normalize_member_lookup_text(discord_name)
+                for discord_name in discord_names
+            )
+            if normalized_name not in PLACEHOLDER_MEMBER_NAMES
+        )
+        if not normalized_names:
+            return ()
+
+        service = self._build_google_sheets_service(read_only=True)
+        _, sheet_grids = self._fetch_sheet_grids(service)
+        return self._find_member_team_matches_by_discord_name_set(
             frozenset(normalized_names),
             sheet_grids,
         )
@@ -1121,6 +1159,98 @@ class GoogleSheetsTeamRepository:
             if player_flags.get(normalized_name, False)
                or staff_role_names.get(normalized_name)
         }
+
+    @staticmethod
+    def _find_member_team_matches_by_discord_name_set(
+            normalized_discord_names: frozenset[str],
+            sheet_grids: tuple[tuple[str, dict[int, dict[int, SheetCell]]], ...],
+    ) -> tuple[TeamMemberTeamMatch, ...]:
+        matches: list[TeamMemberTeamMatch] = []
+        seen_matches: set[tuple[str, int, int, str]] = set()
+
+        for worksheet_title, cell_grid in sheet_grids:
+            for block in GoogleSheetsTeamRepository._collect_team_blocks(cell_grid):
+                if _is_free_block_title(block.title):
+                    continue
+
+                player_flags: dict[str, bool] = {}
+                staff_role_names: dict[str, set[str]] = {}
+                original_names: dict[str, str] = {}
+
+                for player in GoogleSheetsTeamRepository._parse_players(cell_grid, block):
+                    normalized_player_discord = _normalize_member_lookup_text(
+                        player.discord_name
+                    )
+                    if normalized_player_discord not in normalized_discord_names:
+                        continue
+
+                    player_flags[normalized_player_discord] = True
+                    original_names.setdefault(
+                        normalized_player_discord,
+                        player.discord_name,
+                    )
+
+                for staff_member in GoogleSheetsTeamRepository._parse_technical_staff(
+                        cell_grid,
+                        block,
+                ):
+                    normalized_staff_discord = _normalize_member_lookup_text(
+                        staff_member.discord_name
+                    )
+                    if normalized_staff_discord not in normalized_discord_names:
+                        continue
+
+                    normalized_staff_role_name = _normalize_technical_staff_role_name(
+                        staff_member.role_name
+                    )
+                    if not normalized_staff_role_name or normalized_staff_role_name == _normalize_lookup_text(
+                            PLACEHOLDER_CELL_VALUE):
+                        continue
+
+                    original_names.setdefault(
+                        normalized_staff_discord,
+                        staff_member.discord_name,
+                    )
+                    staff_role_names.setdefault(
+                        normalized_staff_discord,
+                        set(),
+                    ).add(staff_member.role_name)
+
+                matched_names = sorted(
+                    normalized_name
+                    for normalized_name in normalized_discord_names
+                    if player_flags.get(normalized_name, False)
+                    or staff_role_names.get(normalized_name)
+                )
+                for normalized_name in matched_names:
+                    match_key = (
+                        worksheet_title,
+                        block.title_row,
+                        block.start_column,
+                        normalized_name,
+                    )
+                    if match_key in seen_matches:
+                        continue
+
+                    seen_matches.add(match_key)
+                    matches.append(
+                        TeamMemberTeamMatch(
+                            worksheet_title=worksheet_title,
+                            block=block,
+                            affiliation=TeamMemberSheetAffiliation(
+                                discord_name=original_names.get(
+                                    normalized_name,
+                                    normalized_name,
+                                ),
+                                is_player=player_flags.get(normalized_name, False),
+                                staff_role_names=tuple(
+                                    sorted(staff_role_names.get(normalized_name, set()))
+                                ),
+                            ),
+                        )
+                    )
+
+        return tuple(matches)
 
     @staticmethod
     def _extract_block_title(

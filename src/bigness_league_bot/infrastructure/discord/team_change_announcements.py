@@ -69,7 +69,7 @@ def build_team_change_content(
 
     return bot.localizer.translate(
         spec.content_key,
-        locale=guild.preferred_locale,
+        locale=bot.settings.default_locale,
         **translation_kwargs,
     )
 
@@ -86,16 +86,16 @@ def build_team_change_embed(
 ) -> tuple[discord.Embed, discord.File | None]:
     author_name = bot.localizer.translate(
         I18N.messages.team_role_removal_announcement.author,
-        locale=guild.preferred_locale,
+        locale=bot.settings.default_locale,
         division_name=metadata.worksheet_title,
     )
     footer_text = bot.localizer.translate(
         I18N.messages.team_role_removal_announcement.footer,
-        locale=guild.preferred_locale,
+        locale=bot.settings.default_locale,
     )
     action_text = bot.localizer.translate(
         spec.action_key,
-        locale=guild.preferred_locale,
+        locale=bot.settings.default_locale,
     )
 
     embed = discord.Embed(

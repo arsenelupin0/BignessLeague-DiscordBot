@@ -193,11 +193,12 @@ Restricciones de `/cerrar_canal`:
 Autoasignado al entrar al servidor:
 
 - si `BOT_AUTO_ASSIGN_PLAYER_ROLES_ON_JOIN=true`, el bot revisa al entrar un miembro nuevo contra la plantilla de
-  jugadores de Google Sheets
-- si encuentra una unica coincidencia, anade `Participante`, `Jugador` y el rol de equipo
+  jugadores y `STAFF TÉCNICO` de Google Sheets
+- si encuentra una unica coincidencia como jugador, anade `Participante`, `Jugador` y el rol de equipo
+- si tambien aparece en `STAFF TÉCNICO`, anade el rol de equipo y los roles tecnicos que correspondan
 - si no encuentra coincidencia, no hace nada
 - si encuentra varias coincidencias, no asigna nada y lo deja en log como ambiguo
-- este flujo solo afecta a jugadores, no a `STAFF TÉCNICO`
+- si asigna rol de equipo a un jugador, publica el boletin automatico de fichaje
 - `/asignar_rol_equipo_automatico` sigue siendo el metodo manual de reconciliacion para miembros ya dentro del servidor
   o cambios masivos
 
