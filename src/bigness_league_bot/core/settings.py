@@ -20,10 +20,9 @@ from dotenv import load_dotenv
 
 from bigness_league_bot.core.timezones import resolve_timezone
 
-load_dotenv()
-
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(PROJECT_ROOT / ".env", override=True)
 DEFAULT_GOOGLE_SHEETS_TEAM_WORKSHEETS = (
     "GOLD DIVISIÓN S3",
     "SILVER DIVISIÓN S3",
