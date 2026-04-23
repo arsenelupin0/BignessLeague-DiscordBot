@@ -229,6 +229,14 @@
       "footer": "Desarrollado por el equipo de la Bigness League",
       "action": "Abandona"
     },
+    "team_player_role_removal_announcement": {
+      "content": "_ _\n-# 📢 Boletín oficial: {member_mention} deja de ser jugador en {team_role_mention}\n_ _",
+      "action": "Abandona plantilla en"
+    },
+    "team_player_role_signing_announcement": {
+      "content": "_ _\n-# 📢 Boletín oficial: {member_mention} sube a la plantilla como jugador en {team_role_mention}\n_ _",
+      "action": "Sube a plantilla en"
+    },
     "team_role_signing_announcement": {
       "content": "_ _\n-# 📢 Boletín oficial: {member_mention} es fichado por {team_role_mention}\n_ _",
       "action": "Ficha por"

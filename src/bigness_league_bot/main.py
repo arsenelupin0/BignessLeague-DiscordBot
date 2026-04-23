@@ -10,16 +10,29 @@
 
 from __future__ import annotations
 
+import logging
+
 from bigness_league_bot.app.bootstrap import create_bot
 from bigness_league_bot.app.logging import configure_logging
+from bigness_league_bot.app.single_instance import (
+    SingleInstanceLockError,
+    create_single_instance_guard,
+)
 from bigness_league_bot.core.settings import Settings
+
+LOGGER = logging.getLogger(__name__)
 
 
 def main() -> None:
     settings = Settings.from_env()
     configure_logging(settings)
-    bot = create_bot(settings)
-    bot.run(settings.token, log_handler=None)
+    try:
+        with create_single_instance_guard(settings):
+            bot = create_bot(settings)
+            bot.run(settings.token, log_handler=None)
+    except SingleInstanceLockError as exc:
+        LOGGER.critical("BOT_SINGLE_INSTANCE_LOCK_FAILED details=%s", exc)
+        raise SystemExit(1) from exc
 
 
 if __name__ == "__main__":

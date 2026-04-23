@@ -32,6 +32,16 @@ TEAM_ROLE_REMOVAL_SPEC = TeamChangeAnnouncementSpec(
     action_key=I18N.messages.team_role_removal_announcement.action,
     embed_color=TEAM_CHANGE_REMOVAL_EMBED_COLOR,
 )
+TEAM_PLAYER_ROLE_REMOVAL_SPEC = TeamChangeAnnouncementSpec(
+    content_key=I18N.messages.team_player_role_removal_announcement.content,
+    action_key=I18N.messages.team_player_role_removal_announcement.action,
+    embed_color=TEAM_CHANGE_REMOVAL_EMBED_COLOR,
+)
+TEAM_PLAYER_ROLE_SIGNING_SPEC = TeamChangeAnnouncementSpec(
+    content_key=I18N.messages.team_player_role_signing_announcement.content,
+    action_key=I18N.messages.team_player_role_signing_announcement.action,
+    embed_color=TEAM_CHANGE_SIGNING_EMBED_COLOR,
+)
 TEAM_ROLE_SIGNING_SPEC = TeamChangeAnnouncementSpec(
     content_key=I18N.messages.team_role_signing_announcement.content,
     action_key=I18N.messages.team_role_signing_announcement.action,
