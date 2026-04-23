@@ -20,23 +20,8 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
     ensure_allowed_member,
     get_channel_access_role_catalog,
 )
-from bigness_league_bot.infrastructure.discord.emojis import (
-    TEAM_ROLE_REMOVAL_WARNING_EMOJI,
-    render_custom_emoji,
-)
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
-)
-from bigness_league_bot.infrastructure.discord.team_change_announcements import (
-    TEAM_ROLE_SIGNING_SPEC,
-    build_team_change_content,
-    build_team_change_embed,
-    build_team_role_sheet_metadata_fallback,
-)
-from bigness_league_bot.infrastructure.discord.team_change_bulletin import (
-    create_team_change_repository,
-    load_team_change_metadata,
-    resolve_team_change_bulletin_channel,
 )
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     TeamStaffRoleEntry,
@@ -61,6 +46,7 @@ from bigness_league_bot.infrastructure.discord.team_signing import (
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     GoogleSheetsTeamRepository,
     TeamMemberSheetAffiliation,
+    TeamSigningRemovalResult,
     TeamSigningWriteResult,
     TeamTechnicalStaffWriteResult,
 )
@@ -132,10 +118,10 @@ class TeamSigningCog(commands.Cog):
 
         repository = GoogleSheetsTeamRepository(interaction.client.settings)
         team_role = resolve_team_role_by_name(team_name, role_catalog)
+        participant_role = resolve_participant_role(guild, settings.participant_role_id)
         player_result = None
         assignment_summary = None
         if signing_batch is not None:
-            participant_role = resolve_participant_role(guild, settings.participant_role_id)
             player_role = resolve_player_role(guild, settings.player_role_id)
             player_result = await repository.register_team_signings(signing_batch)
             assignment_summary = await assign_team_roles_by_names(
@@ -155,6 +141,7 @@ class TeamSigningCog(commands.Cog):
             staff_role_sync_summary = await sync_team_staff_roles_by_names(
                 guild,
                 team_role=team_role,
+                participant_role=participant_role,
                 ceo_role_id=settings.staff_ceo_role_id,
                 analyst_role_id=settings.staff_analyst_role_id,
                 coach_role_id=settings.staff_coach_role_id,
@@ -181,12 +168,6 @@ class TeamSigningCog(commands.Cog):
             ),
             allowed_mentions=discord.AllowedMentions.none(),
         )
-        if assignment_summary is not None:
-            await self._publish_signing_bulletins(
-                interaction,
-                team_role=team_role,
-                assigned_members=assignment_summary.assigned_members,
-            )
 
     @app_commands.command(
         name=localized_locale_str(I18N.commands.team_signing.remove_signing.name),
@@ -205,6 +186,65 @@ class TeamSigningCog(commands.Cog):
             interaction: discord.Interaction[BignessLeagueBot],
             discord_jugador: str,
     ) -> None:
+        await self._remove_signing(
+            interaction,
+            discord_name=discord_jugador,
+            removal_scope="all",
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.team_signing.remove_player_signing.name),
+        description=localized_locale_str(
+            I18N.commands.team_signing.remove_player_signing.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        discord_jugador=localized_locale_str(
+            I18N.commands.team_signing.remove_player_signing.parameters.discord_name.description
+        )
+    )
+    async def remove_player_signing(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            discord_jugador: str,
+    ) -> None:
+        await self._remove_signing(
+            interaction,
+            discord_name=discord_jugador,
+            removal_scope="player",
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.team_signing.remove_staff_signing.name),
+        description=localized_locale_str(
+            I18N.commands.team_signing.remove_staff_signing.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        discord_staff=localized_locale_str(
+            I18N.commands.team_signing.remove_staff_signing.parameters.discord_name.description
+        )
+    )
+    async def remove_staff_signing(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            discord_staff: str,
+    ) -> None:
+        await self._remove_signing(
+            interaction,
+            discord_name=discord_staff,
+            removal_scope="staff",
+        )
+
+    async def _remove_signing(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            *,
+            discord_name: str,
+            removal_scope: str,
+    ) -> None:
         guild = interaction.guild
         if guild is None or not isinstance(interaction.user, discord.Member):
             raise UnsupportedChannelError(
@@ -214,21 +254,22 @@ class TeamSigningCog(commands.Cog):
         ensure_allowed_member(interaction.user)
         await interaction.response.defer(thinking=True)
         repository = GoogleSheetsTeamRepository(interaction.client.settings)
-        result = await repository.remove_team_player_by_discord(discord_jugador)
+        if removal_scope == "player":
+            result = await repository.remove_team_player_by_discord(discord_name)
+        elif removal_scope == "staff":
+            result = await repository.remove_team_staff_by_discord(discord_name)
+        else:
+            result = await repository.remove_team_member_by_discord(discord_name)
+
         role_removal_message = await self._remove_discord_roles_after_signing_removal(
             interaction,
-            discord_name=discord_jugador,
-            team_name=result.team_name,
-            technical_staff_role_names=result.technical_staff_role_names,
+            discord_name=discord_name,
+            result=result,
         )
-        followup_message = interaction.client.localizer.translate(
-            I18N.actions.team_signing.removed,
-            locale=interaction.locale,
-            discord_name=discord_jugador,
-            player_name=result.removed_player_name,
-            team_name=result.team_name,
-            division_name=result.worksheet_title,
-            total_players=str(result.total_players),
+        followup_message = self._build_removal_completed_message(
+            interaction,
+            discord_name=discord_name,
+            result=result,
         )
         if role_removal_message:
             followup_message = f"{followup_message}\n{role_removal_message}"
@@ -299,6 +340,7 @@ class TeamSigningCog(commands.Cog):
         staff_role_sync_summary = await sync_team_staff_roles_by_names(
             guild,
             team_role=equipo,
+            participant_role=participant_role,
             ceo_role_id=settings.staff_ceo_role_id,
             analyst_role_id=settings.staff_analyst_role_id,
             coach_role_id=settings.staff_coach_role_id,
@@ -581,12 +623,48 @@ class TeamSigningCog(commands.Cog):
         )
 
     @staticmethod
+    def _build_removal_completed_message(
+            interaction: discord.Interaction[BignessLeagueBot],
+            *,
+            discord_name: str,
+            result: TeamSigningRemovalResult,
+    ) -> str:
+        localizer = interaction.client.localizer
+        locale = interaction.locale
+        message_lines: list[str] = []
+        if result.removed_player_name is not None and result.total_players is not None:
+            message_lines.append(
+                localizer.translate(
+                    I18N.actions.team_signing.removed,
+                    locale=locale,
+                    discord_name=discord_name,
+                    player_name=result.removed_player_name,
+                    team_name=result.team_name,
+                    division_name=result.worksheet_title,
+                    total_players=str(result.total_players),
+                )
+            )
+
+        if result.removed_staff_role_names:
+            message_lines.append(
+                localizer.translate(
+                    I18N.actions.team_signing.technical_staff_removed,
+                    locale=locale,
+                    discord_name=discord_name,
+                    team_name=result.team_name,
+                    division_name=result.worksheet_title,
+                    staff_roles=", ".join(result.removed_staff_role_names),
+                )
+            )
+
+        return "\n".join(message_lines)
+
+    @staticmethod
     async def _remove_discord_roles_after_signing_removal(
             interaction: discord.Interaction[BignessLeagueBot],
             *,
             discord_name: str,
-            team_name: str,
-            technical_staff_role_names: tuple[str, ...],
+            result: TeamSigningRemovalResult,
     ) -> str | None:
         guild = interaction.guild
         if guild is None:
@@ -601,7 +679,7 @@ class TeamSigningCog(commands.Cog):
         localizer = interaction.client.localizer
         locale = interaction.locale
         try:
-            team_role = resolve_team_role_by_name(team_name, role_catalog)
+            team_role = resolve_team_role_by_name(result.team_name, role_catalog)
             participant_role = resolve_participant_role(
                 guild,
                 settings.participant_role_id,
@@ -610,6 +688,14 @@ class TeamSigningCog(commands.Cog):
                 guild,
                 settings.player_role_id,
             )
+            has_team_affiliation_after = (
+                    result.is_player_present_after
+                    or bool(result.remaining_staff_role_names)
+            )
+            roles_to_remove: list[discord.Role] = []
+            if result.removed_player_name is not None:
+                roles_to_remove.append(player_role)
+
             staff_roles = resolve_optional_team_staff_roles(
                 guild,
                 ceo_role_id=settings.staff_ceo_role_id,
@@ -618,13 +704,17 @@ class TeamSigningCog(commands.Cog):
                 manager_role_id=settings.staff_manager_role_id,
                 second_manager_role_id=settings.staff_second_manager_role_id,
                 captain_role_id=settings.staff_captain_role_id,
-                staff_role_names=technical_staff_role_names,
+                staff_role_names=result.removed_staff_role_names,
             )
+            roles_to_remove.extend(staff_roles)
+            if not has_team_affiliation_after:
+                roles_to_remove.extend((participant_role, team_role))
+
             removal_summary = await remove_roles_from_member_by_name(
                 guild,
                 actor=interaction.user,
                 member_name=discord_name,
-                roles_to_remove=(participant_role, player_role, team_role, *staff_roles),
+                roles_to_remove=roles_to_remove,
             )
         except (CommandUserError, discord.Forbidden, discord.HTTPException) as exc:
             return localizer.translate(
@@ -679,84 +769,6 @@ class TeamSigningCog(commands.Cog):
             roles=", ".join(role.name for role in removal_summary.removed_roles),
         )
 
-    async def _publish_signing_bulletins(
-            self,
-            interaction: discord.Interaction[BignessLeagueBot],
-            *,
-            team_role: discord.Role,
-            assigned_members: tuple[discord.Member, ...],
-    ) -> None:
-        if not assigned_members:
-            return
-
-        guild = interaction.guild
-        if guild is None:
-            return
-
-        channel = await resolve_team_change_bulletin_channel(
-            guild=guild,
-            channel_id=interaction.client.settings.team_role_removal_announcement_channel_id,
-        )
-        if channel is None:
-            return
-
-        repository = await create_team_change_repository(
-            interaction.client.settings,
-            guild=guild,
-        )
-        metadata = await load_team_change_metadata(
-            repository=repository,
-            team_role=team_role,
-            fallback=build_team_role_sheet_metadata_fallback(team_role),
-            guild=guild,
-        )
-        description = self._build_team_change_description(guild)
-        for member in assigned_members:
-            content = build_team_change_content(
-                bot=interaction.client,
-                spec=TEAM_ROLE_SIGNING_SPEC,
-                member=member,
-                team_role=team_role,
-                guild=guild,
-            )
-            embed, image_file = build_team_change_embed(
-                bot=interaction.client,
-                spec=TEAM_ROLE_SIGNING_SPEC,
-                member=member,
-                team_role=team_role,
-                guild=guild,
-                metadata=metadata,
-                description=description,
-            )
-            allowed_mentions = discord.AllowedMentions(
-                everyone=False,
-                replied_user=False,
-                users=[member],
-                roles=[team_role],
-            )
-            try:
-                send_kwargs: dict[str, object] = {
-                    "content": content,
-                    "embed": embed,
-                    "allowed_mentions": allowed_mentions,
-                }
-                if image_file is not None:
-                    send_kwargs["file"] = image_file
-                await channel.send(**send_kwargs)
-            except (discord.Forbidden, discord.HTTPException):
-                continue
-
-    def _build_team_change_description(self, guild: discord.Guild) -> str:
-        warning_emoji = render_custom_emoji(
-            guild=guild,
-            bot=self.bot,
-            emoji=TEAM_ROLE_REMOVAL_WARNING_EMOJI,
-        )
-        return (
-            "## "
-            f"{warning_emoji} {warning_emoji} {warning_emoji} {warning_emoji}"
-        )
-
     async def _reconcile_team_role_assignment(
             self,
             guild: discord.Guild,
@@ -800,9 +812,12 @@ class TeamSigningCog(commands.Cog):
             if member_affiliation is None and team_role in member.roles:
                 roles_to_remove[team_role.id] = team_role
 
-            if not (member_affiliation and member_affiliation.is_player):
+            if member_affiliation is None:
                 if participant_role in member.roles:
                     roles_to_remove[participant_role.id] = participant_role
+                if player_role in member.roles:
+                    roles_to_remove[player_role.id] = player_role
+            elif not member_affiliation.is_player:
                 if player_role in member.roles:
                     roles_to_remove[player_role.id] = player_role
 

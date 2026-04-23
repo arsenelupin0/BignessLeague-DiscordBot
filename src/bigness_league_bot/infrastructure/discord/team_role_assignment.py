@@ -206,6 +206,7 @@ async def sync_team_staff_roles_by_names(
         guild: discord.Guild,
         *,
         team_role: discord.Role,
+        participant_role: discord.Role,
         ceo_role_id: int,
         analyst_role_id: int,
         coach_role_id: int,
@@ -264,7 +265,7 @@ async def sync_team_staff_roles_by_names(
                 if role_key in configured_staff_roles
             }.values()
         )
-        desired_roles = (team_role, *desired_staff_roles)
+        desired_roles = (team_role, participant_role, *desired_staff_roles)
         roles_to_add = tuple(
             role
             for role in desired_roles

@@ -42,8 +42,9 @@ pip install -e .
     deja `BOT_AUTO_ASSIGN_PLAYER_ROLES_ON_JOIN=true`.
 15. Si quieres publicar automaticamente el aviso de salida de un club cuando un miembro pierda un rol de equipo,
     ajusta `BOT_TEAM_ROLE_REMOVAL_ANNOUNCEMENT_CHANNEL_ID`.
-16. Si quieres que `/dar_de_baja` retire tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
-    `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID` y `BOT_STAFF_CAPTAIN_ROLE_ID`.
+16. Si quieres que las bajas retiren tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
+    `BOT_STAFF_ANALYST_ROLE_ID`, `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID`,
+    `BOT_STAFF_SECOND_MANAGER_ROLE_ID` y `BOT_STAFF_CAPTAIN_ROLE_ID`.
 17. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
     Lo recomendado es colocar la fuente dentro de `aa_resources/fonts/`.
 
@@ -87,7 +88,9 @@ crea un canal de partido con permisos para ambos equipos.
 - `/ver_mi_equipo`: busca tu equipo en Google Sheets a partir de tu rol de Discord y muestra su ficha.
 - `/hacer_fichaje enlace_jugadores:<url> enlace_staff_tecnico:<url>`: importa jugadores, staff tecnico o ambos desde
   mensajes de Discord hacia Google Sheets.
-- `/dar_de_baja discord_jugador:<texto>`: elimina un jugador buscandolo globalmente por su Discord en Google Sheets.
+- `/dar_de_baja discord_jugador:<texto>`: elimina completamente a un miembro como jugador y staff tecnico.
+- `/dar_de_baja_jugador discord_jugador:<texto>`: elimina solo al jugador del roster.
+- `/dar_de_baja_staff discord_staff:<texto>`: elimina solo sus cargos de `STAFF TÉCNICO`.
 - `/asignar_rol_equipo_automatico equipo:<rol>`: revisa la hoja del equipo y sincroniza los roles en Discord.
 - `/integracion_de_tickets`: publica el panel de soporte para abrir tickets desde un menu desplegable.
 
@@ -169,15 +172,16 @@ Restricciones de `/cerrar_canal`:
 - despues de escribir, intenta asignar automaticamente el rol general de participante y el rol del equipo a los
   miembros que ya esten en Discord, junto con el rol general de jugador
 
-`/dar_de_baja`:
+`/dar_de_baja`, `/dar_de_baja_jugador` y `/dar_de_baja_staff`:
 
 - solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
-- busca el jugador por el valor de la columna `Discord` en todas las hojas configuradas
-- si encuentra mas de una coincidencia, rechaza la operacion y muestra donde estan los duplicados
-- si encuentra una unica coincidencia, reescribe el roster del bloque sin ese jugador y rellena con `-`
-- intenta retirar en Discord el rol del equipo, `Participante`, `Jugador` y, si ese mismo Discord figura en
-  `STAFF TÉCNICO`,
-  tambien los roles extra configurados de `CEO`, `COACH`, `MANAGER` y `CAPITÁN`
+- `/dar_de_baja` elimina al miembro del roster y de `STAFF TÉCNICO` si aparece en ambos sitios
+- `/dar_de_baja_jugador` solo reescribe el roster; si el miembro sigue en `STAFF TÉCNICO`, conserva el rol de equipo
+- `/dar_de_baja_staff` solo limpia sus filas de staff; si el miembro sigue como jugador, conserva `Participante`,
+  `Jugador` y el rol de equipo
+- si encuentra coincidencias en mas de un bloque de equipo, rechaza la operacion y muestra donde estan los duplicados
+- al borrar filas, el bot rellena los huecos de Google Sheets con `-`
+- despues intenta retirar en Discord solo los roles que dejan de corresponder segun el tipo de baja
 - no modifica automaticamente la celda de fichajes restantes
 
 `/asignar_rol_equipo_automatico`:
@@ -322,10 +326,11 @@ Configuracion de Google Sheets:
   coinciden con la plantilla de jugadores de Google Sheets
 - `BOT_TEAM_ROLE_REMOVAL_ANNOUNCEMENT_CHANNEL_ID`: canal donde se publica el aviso cuando un miembro pierde un rol de
   equipo
-- `BOT_STAFF_CEO_ROLE_ID`, `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID`, `BOT_STAFF_CAPTAIN_ROLE_ID`:
-  roles extra que `/dar_de_baja` puede retirar si el Discord tambien aparece en `STAFF TÉCNICO`
-- `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME`: opcional. Si lo dejas vacio, el bot buscara en todas las sheets del documento.
-  Tambien admite varios nombres separados por comas si quieres limitar la busqueda.
+- `BOT_STAFF_CEO_ROLE_ID`, `BOT_STAFF_ANALYST_ROLE_ID`, `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID`,
+  `BOT_STAFF_SECOND_MANAGER_ROLE_ID`, `BOT_STAFF_CAPTAIN_ROLE_ID`: roles extra que las bajas y sincronizaciones pueden
+  retirar si el Discord tambien aparece en `STAFF TÉCNICO`
+- `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME`: hojas de equipo que el bot debe consultar, separadas por comas. Por defecto se
+  limita a `GOLD DIVISIÓN S3,SILVER DIVISIÓN S3`.
 - la hoja debe estar organizada por bloques de equipo con este esquema: titulo del equipo, cabecera `Jugador`,
   `Discord`, `Epic Name`, `Rocket In-Game Name`, `MMR`, hasta 6 jugadores y una fila de resumen con fichajes restantes
   y media del equipo

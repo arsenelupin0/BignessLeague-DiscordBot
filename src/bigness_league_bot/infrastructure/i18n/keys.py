@@ -221,7 +221,7 @@ class _CommandsTeamSigningMakeSigning:
 class _CommandsTeamSigningRemoveSigningParametersDiscordName:
     description: TranslationKey = TranslationKey(
         key="commands.team_signing.remove_signing.parameters.discord_name.description",
-        default_text="Nombre de Discord del jugador que quieres eliminar del roster.")
+        default_text="Nombre de Discord del miembro que quieres eliminar completamente.")
 
 class _CommandsTeamSigningRemoveSigningParameters:
     discord_name: _CommandsTeamSigningRemoveSigningParametersDiscordName = _CommandsTeamSigningRemoveSigningParametersDiscordName()
@@ -229,12 +229,50 @@ class _CommandsTeamSigningRemoveSigningParameters:
 class _CommandsTeamSigningRemoveSigning:
     name: TranslationKey = TranslationKey(key="commands.team_signing.remove_signing.name", default_text="dar_de_baja")
     description: TranslationKey = TranslationKey(key="commands.team_signing.remove_signing.description",
-                                                 default_text="Da de baja a un jugador buscandolo por su nombre de Discord en Google Sheets.")
+                                                 default_text="Da de baja completamente a un miembro como jugador y staff tecnico en Google Sheets.")
     parameters: _CommandsTeamSigningRemoveSigningParameters = _CommandsTeamSigningRemoveSigningParameters()
+
+
+class _CommandsTeamSigningRemovePlayerSigningParametersDiscordName:
+    description: TranslationKey = TranslationKey(
+        key="commands.team_signing.remove_player_signing.parameters.discord_name.description",
+        default_text="Nombre de Discord del jugador que quieres eliminar del roster.")
+
+
+class _CommandsTeamSigningRemovePlayerSigningParameters:
+    discord_name: _CommandsTeamSigningRemovePlayerSigningParametersDiscordName = _CommandsTeamSigningRemovePlayerSigningParametersDiscordName()
+
+
+class _CommandsTeamSigningRemovePlayerSigning:
+    name: TranslationKey = TranslationKey(key="commands.team_signing.remove_player_signing.name",
+                                          default_text="dar_de_baja_jugador")
+    description: TranslationKey = TranslationKey(key="commands.team_signing.remove_player_signing.description",
+                                                 default_text="Da de baja solo a un jugador del roster en Google Sheets.")
+    parameters: _CommandsTeamSigningRemovePlayerSigningParameters = _CommandsTeamSigningRemovePlayerSigningParameters()
+
+
+class _CommandsTeamSigningRemoveStaffSigningParametersDiscordName:
+    description: TranslationKey = TranslationKey(
+        key="commands.team_signing.remove_staff_signing.parameters.discord_name.description",
+        default_text="Nombre de Discord del miembro que quieres eliminar de STAFF T\u00c9CNICO.")
+
+
+class _CommandsTeamSigningRemoveStaffSigningParameters:
+    discord_name: _CommandsTeamSigningRemoveStaffSigningParametersDiscordName = _CommandsTeamSigningRemoveStaffSigningParametersDiscordName()
+
+
+class _CommandsTeamSigningRemoveStaffSigning:
+    name: TranslationKey = TranslationKey(key="commands.team_signing.remove_staff_signing.name",
+                                          default_text="dar_de_baja_staff")
+    description: TranslationKey = TranslationKey(key="commands.team_signing.remove_staff_signing.description",
+                                                 default_text="Da de baja solo los cargos de staff tecnico en Google Sheets.")
+    parameters: _CommandsTeamSigningRemoveStaffSigningParameters = _CommandsTeamSigningRemoveStaffSigningParameters()
 
 class _CommandsTeamSigning:
     make_signing: _CommandsTeamSigningMakeSigning = _CommandsTeamSigningMakeSigning()
     remove_signing: _CommandsTeamSigningRemoveSigning = _CommandsTeamSigningRemoveSigning()
+    remove_player_signing: _CommandsTeamSigningRemovePlayerSigning = _CommandsTeamSigningRemovePlayerSigning()
+    remove_staff_signing: _CommandsTeamSigningRemoveStaffSigning = _CommandsTeamSigningRemoveStaffSigning()
 
 class _CommandsTeamRoleAssignmentSyncTeamRoleParametersTeamRole:
     description: TranslationKey = TranslationKey(
@@ -367,13 +405,11 @@ class _MessagesTeamRoleSigningAnnouncement:
     action: TranslationKey = TranslationKey(key="messages.team_role_signing_announcement.action",
                                             default_text="Ficha por")
 
-
 class _MessagesTeamStaffRoleRemovalAnnouncement:
     content: TranslationKey = TranslationKey(key="messages.team_staff_role_removal_announcement.content",
                                              default_text="_ _\n-# \ud83d\udce2 Bolet\u00edn oficial: {member_mention} abandona el cargo de **{staff_role_name}** en {team_role_mention}\n_ _")
     action: TranslationKey = TranslationKey(key="messages.team_staff_role_removal_announcement.action",
                                             default_text="Abandona cargo en")
-
 
 class _MessagesTeamStaffRoleSigningAnnouncement:
     content: TranslationKey = TranslationKey(key="messages.team_staff_role_signing_announcement.content",
@@ -389,7 +425,7 @@ class _MessagesChannelManagement:
 
 class _MessagesTicketsPanel:
     content: TranslationKey = TranslationKey(key="messages.tickets.panel.content",
-                                             default_text="# \ud83d\udd30 Soporte \ud83d\udd30\n\u27a1\ufe0f Selecciona **una** de las siguientes **opciones** en el **men\u00fa desplegable** abajo de este mensaje. Si necesitas **ayuda** sobre que **tema** quieres abrir el **ticket**, **lee** atentamente **aqu\u00ed debajo**.\n\n## 1\ufe0f\u20e3 Soporte general\n- En caso de que tu duda no est\u00e9 en ninguna de las otras categor\u00edas. Esta es tu categor\u00eda.\n## 2\ufe0f\u20e3 Competici\u00f3n Bigness League\n- Reglamento\n- C\u00f3digo de conducta\n- C\u00f3mo funciona la liga (divisiones, inscripci\u00f3n, max rango, etc)\n- Pricepool\n- \u00bfTengo que pagar para entrar?\n## 3\ufe0f\u20e3 Mercado de jugadores\n- Inscribir a un nuevo jugador\n- Quitar a un jugador de mi equipo\n- Modificaci\u00f3n de rol (ceo, manager, segundo manager, coach o analista)\n## 4\ufe0f\u20e3 \u00bfQuieres hacer stream de tu partido?\n- Quiero retrasmitir mi partido\n- Que tengo que hacer para poder retrasmitir una jornada de la liga\n- \u00bfPuedo castear un partido?\n## 5\ufe0f\u20e3 Apelaciones, problemas con alg\u00fan equipo, jugador, etc\n- Sanciones sobre jugadores\n- Problemas con equipos externos\n- Problemas con X jugador ajeno a la liga\n- Apelaci\u00f3n sobre decisi\u00f3n de la liga inapropiada\n## 6\ufe0f\u20e3 Bot de la Bigness League\n- Como funciona el bot de la bigness\n- Que comandos puedo hacer\n- No funciona o hay alg\u00fan error\n- Quiero reportar un error\n## 7\ufe0f\u20e3 Social\n- Dudas del servidor de discord\n- Colaboraciones\n- Sugerencias")
+                                             default_text="# \ud83d\udd30 Soporte \ud83d\udd30\n_ _\n\u27a1\ufe0f Selecciona **una** de las siguientes **opciones** en el **men\u00fa desplegable** abajo de este mensaje. Si **no sabes** sobre que **tema** quieres abrir el **ticket**, **lee** atentamente **aqu\u00ed abajo**.\n\n## 1\ufe0f\u20e3 Soporte general\n- En caso de que tu duda no est\u00e9 en ninguna de las otras categor\u00edas. Esta es tu categor\u00eda.\n## 2\ufe0f\u20e3 Competici\u00f3n Bigness League\n- Reglamento\n- C\u00f3digo de conducta\n- C\u00f3mo funciona la liga (divisiones, inscripci\u00f3n, m\u00e1x rango, etc)\n- Pricepool\n- \u00bfTengo que pagar para entrar?\n- \u00bfC\u00f3mo inscribo a mi equipo a la Bigness League?\n## 3\ufe0f\u20e3 Mercado de jugadores\n- Inscribir a un nuevo jugador\n- Quitar a un jugador de mi equipo\n- Modificaci\u00f3n de rol (ceo, manager, segundo manager, coach o analista)\n## 4\ufe0f\u20e3 \u00bfQuieres hacer stream de tu partido?\n- Quiero retrasmitir mi partido\n- Que tengo que hacer para poder retrasmitir una jornada de la liga\n- \u00bfPuedo castear un partido?\n## 5\ufe0f\u20e3 Apelaciones, problemas con alg\u00fan equipo, jugador, etc\n- Sanciones sobre jugadores\n- Problemas con equipos externos\n- Problemas con X jugador ajeno a la liga\n- Apelaci\u00f3n sobre decisi\u00f3n de la liga inapropiada\n## 6\ufe0f\u20e3 Bot de la Bigness League\n- C\u00f3mo funciona el bot de la bigness\n- Que comandos puedo hacer\n- No funciona o hay alg\u00fan error\n- Quiero reportar un error\n## 7\ufe0f\u20e3 Social\n- Dudas del servidor de discord\n- Colaboraciones\n- Sugerencias")
     select_placeholder: TranslationKey = TranslationKey(key="messages.tickets.panel.select_placeholder",
                                                         default_text="Soporte General")
     published: TranslationKey = TranslationKey(key="messages.tickets.panel.published",
@@ -845,8 +881,15 @@ class _ErrorsTeamSigning:
         default_text="No se pudo completar el staff tecnico `{role_name}` porque el Discord `{discord_name}` aparece duplicado en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.")
     player_not_found: TranslationKey = TranslationKey(key="errors.team_signing.player_not_found",
                                                       default_text="No se encontro ningun jugador con el Discord `{discord_name}` en Google Sheets.")
+    technical_staff_member_not_found: TranslationKey = TranslationKey(
+        key="errors.team_signing.technical_staff_member_not_found",
+        default_text="No se encontro ningun cargo de staff tecnico con el Discord `{discord_name}` en Google Sheets.")
+    member_not_found: TranslationKey = TranslationKey(key="errors.team_signing.member_not_found",
+                                                      default_text="No se encontro ningun jugador ni cargo de staff tecnico con el Discord `{discord_name}` en Google Sheets.")
     player_duplicate: TranslationKey = TranslationKey(key="errors.team_signing.player_duplicate",
                                                       default_text="Hay varios jugadores con el Discord `{discord_name}` en Google Sheets: {locations}. Corrigelo manualmente antes de continuar.")
+    member_duplicate: TranslationKey = TranslationKey(key="errors.team_signing.member_duplicate",
+                                                      default_text="El Discord `{discord_name}` aparece en mas de un bloque de equipo: {locations}. Corrigelo manualmente antes de continuar.")
     remaining_signings_invalid: TranslationKey = TranslationKey(key="errors.team_signing.remaining_signings_invalid",
                                                                 default_text="La celda de fichajes restantes no es valida para `{team_name}` en `{sheet_name}`.")
     remaining_signings_exceeded: TranslationKey = TranslationKey(key="errors.team_signing.remaining_signings_exceeded",
@@ -929,6 +972,8 @@ class _ActionsTeamSigning:
                                                              default_text="Roles de staff tecnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
     removed: TranslationKey = TranslationKey(key="actions.team_signing.removed",
                                              default_text="Se ha dado de baja a `{player_name}` (`{discord_name}`) de `{team_name}` en `{division_name}`. Plantilla actual: {total_players}/6.")
+    technical_staff_removed: TranslationKey = TranslationKey(key="actions.team_signing.technical_staff_removed",
+                                                             default_text="Se ha dado de baja a `{discord_name}` del staff tecnico de `{team_name}` en `{division_name}`. Cargos retirados: {staff_roles}.")
     role_removal_completed: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_completed",
                                                             default_text="Roles retirados en Discord a `{member_name}`: {roles}.")
     role_removal_no_changes: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_no_changes",

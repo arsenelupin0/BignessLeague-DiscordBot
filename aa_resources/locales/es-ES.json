@@ -128,10 +128,28 @@
       },
       "remove_signing": {
         "name": "dar_de_baja",
-        "description": "Da de baja a un jugador buscandolo por su nombre de Discord en Google Sheets.",
+        "description": "Da de baja completamente a un miembro como jugador y staff tecnico en Google Sheets.",
+        "parameters": {
+          "discord_name": {
+            "description": "Nombre de Discord del miembro que quieres eliminar completamente."
+          }
+        }
+      },
+      "remove_player_signing": {
+        "name": "dar_de_baja_jugador",
+        "description": "Da de baja solo a un jugador del roster en Google Sheets.",
         "parameters": {
           "discord_name": {
             "description": "Nombre de Discord del jugador que quieres eliminar del roster."
+          }
+        }
+      },
+      "remove_staff_signing": {
+        "name": "dar_de_baja_staff",
+        "description": "Da de baja solo los cargos de staff tecnico en Google Sheets.",
+        "parameters": {
+          "discord_name": {
+            "description": "Nombre de Discord del miembro que quieres eliminar de STAFF TÉCNICO."
           }
         }
       }
@@ -468,7 +486,10 @@
       "technical_staff_player_not_found": "No se pudo completar el staff tecnico `{role_name}` porque el Discord `{discord_name}` no existe en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.",
       "technical_staff_player_duplicate": "No se pudo completar el staff tecnico `{role_name}` porque el Discord `{discord_name}` aparece duplicado en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.",
       "player_not_found": "No se encontro ningun jugador con el Discord `{discord_name}` en Google Sheets.",
+      "technical_staff_member_not_found": "No se encontro ningun cargo de staff tecnico con el Discord `{discord_name}` en Google Sheets.",
+      "member_not_found": "No se encontro ningun jugador ni cargo de staff tecnico con el Discord `{discord_name}` en Google Sheets.",
       "player_duplicate": "Hay varios jugadores con el Discord `{discord_name}` en Google Sheets: {locations}. Corrigelo manualmente antes de continuar.",
+      "member_duplicate": "El Discord `{discord_name}` aparece en mas de un bloque de equipo: {locations}. Corrigelo manualmente antes de continuar.",
       "remaining_signings_invalid": "La celda de fichajes restantes no es valida para `{team_name}` en `{sheet_name}`.",
       "remaining_signings_exceeded": "No quedan fichajes suficientes en `{team_name}`. Restantes: {remaining_signings}. Solicitados: {requested_signings}.",
       "team_roster_full": "No hay hueco suficiente en `{team_name}` para estos fichajes. Huecos libres: {available_slots}. Fichajes solicitados: {requested_slots}.",
@@ -509,6 +530,7 @@
       "technical_staff_completed": "Se ha actualizado el staff tecnico de `{team_name}` en `{division_name}`. Filas actualizadas: {updated_count}.",
       "staff_role_sync_summary": "Roles de staff tecnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
       "removed": "Se ha dado de baja a `{player_name}` (`{discord_name}`) de `{team_name}` en `{division_name}`. Plantilla actual: {total_players}/6.",
+      "technical_staff_removed": "Se ha dado de baja a `{discord_name}` del staff tecnico de `{team_name}` en `{division_name}`. Cargos retirados: {staff_roles}.",
       "role_removal_completed": "Roles retirados en Discord a `{member_name}`: {roles}.",
       "role_removal_no_changes": "No habia roles que retirar en Discord para `{member_name}`.",
       "role_removal_unresolved": "No se encontro ningun miembro de Discord para retirar roles a `{discord_name}`.",

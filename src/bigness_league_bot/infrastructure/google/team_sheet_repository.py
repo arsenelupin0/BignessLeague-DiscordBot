@@ -219,9 +219,12 @@ class TeamSigningWriteResult:
 class TeamSigningRemovalResult:
     worksheet_title: str
     team_name: str
-    removed_player_name: str
-    total_players: int
-    technical_staff_role_names: tuple[str, ...] = ()
+    discord_name: str
+    removed_player_name: str | None = None
+    total_players: int | None = None
+    removed_staff_role_names: tuple[str, ...] = ()
+    remaining_staff_role_names: tuple[str, ...] = ()
+    is_player_present_after: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -229,6 +232,14 @@ class TeamPlayerMatch:
     worksheet_title: str
     block: TeamBlockAnchor
     player: TeamProfilePlayer
+
+
+@dataclass(frozen=True, slots=True)
+class TeamTechnicalStaffMatch:
+    worksheet_title: str
+    block: TeamBlockAnchor
+    row_index: int
+    member: TeamProfileStaffMember
 
 
 @dataclass(frozen=True, slots=True)
@@ -306,6 +317,24 @@ class GoogleSheetsTeamRepository:
             discord_name,
         )
 
+    async def remove_team_staff_by_discord(
+            self,
+            discord_name: str,
+    ) -> TeamSigningRemovalResult:
+        return await asyncio.to_thread(
+            self._remove_team_staff_by_discord_sync,
+            discord_name,
+        )
+
+    async def remove_team_member_by_discord(
+            self,
+            discord_name: str,
+    ) -> TeamSigningRemovalResult:
+        return await asyncio.to_thread(
+            self._remove_team_member_by_discord_sync,
+            discord_name,
+        )
+
     async def find_player_matches_by_discord_names(
             self,
             discord_names: Iterable[str],
@@ -338,7 +367,7 @@ class GoogleSheetsTeamRepository:
             role: discord.Role,
     ) -> TeamProfile:
         service = self._build_google_sheets_service(read_only=True)
-        sheet_scope, sheet_grids = self._fetch_sheet_grids(service)
+        _, sheet_grids = self._fetch_sheet_grids(service)
         if not sheet_grids:
             raise TeamSheetEmptyError(
                 localize(
@@ -633,29 +662,97 @@ class GoogleSheetsTeamRepository:
             self,
             discord_name: str,
     ) -> TeamSigningRemovalResult:
+        return self._remove_team_member_by_discord_sync(
+            discord_name,
+            remove_player=True,
+            remove_staff=False,
+        )
+
+    def _remove_team_staff_by_discord_sync(
+            self,
+            discord_name: str,
+    ) -> TeamSigningRemovalResult:
+        return self._remove_team_member_by_discord_sync(
+            discord_name,
+            remove_player=False,
+            remove_staff=True,
+        )
+
+    def _remove_team_member_by_discord_sync(
+            self,
+            discord_name: str,
+            *,
+            remove_player: bool = True,
+            remove_staff: bool = True,
+    ) -> TeamSigningRemovalResult:
         normalized_discord_name = _normalize_member_lookup_text(discord_name)
         if not normalized_discord_name:
-            raise TeamSheetPlayerNotFoundError(
-                localize(
-                    I18N.errors.team_signing.player_not_found,
-                    discord_name=discord_name,
-                )
+            self._raise_removal_not_found_error(
+                discord_name,
+                remove_player=remove_player,
+                remove_staff=remove_staff,
             )
 
         service = self._build_google_sheets_service(read_only=False)
         sheet_scope, sheet_grids = self._fetch_sheet_grids(service)
-        matches = self._find_player_matches(normalized_discord_name, sheet_grids)
-        if not matches:
-            raise TeamSheetPlayerNotFoundError(
+        player_matches = self._find_player_matches(normalized_discord_name, sheet_grids)
+        staff_matches = self._find_technical_staff_matches(
+            normalized_discord_name,
+            sheet_grids,
+        )
+
+        candidate_contexts: dict[tuple[str, int, int], TeamBlockAnchor] = {}
+        if remove_player:
+            for match in player_matches:
+                candidate_contexts[
+                    (match.worksheet_title, match.block.title_row, match.block.start_column)
+                ] = match.block
+        if remove_staff:
+            for match in staff_matches:
+                candidate_contexts[
+                    (match.worksheet_title, match.block.title_row, match.block.start_column)
+                ] = match.block
+
+        if not candidate_contexts:
+            self._raise_removal_not_found_error(
+                discord_name,
+                remove_player=remove_player,
+                remove_staff=remove_staff,
+            )
+
+        if len(candidate_contexts) > 1:
+            duplicate_locations = ", ".join(
+                f"{worksheet_title}/{block.title}"
+                for (worksheet_title, _, _), block in candidate_contexts.items()
+            )
+            raise TeamSheetDuplicatePlayerError(
                 localize(
-                    I18N.errors.team_signing.player_not_found,
+                    I18N.errors.team_signing.member_duplicate,
                     discord_name=discord_name,
+                    locations=duplicate_locations,
                 )
             )
-        if len(matches) > 1:
+
+        (worksheet_title, title_row, start_column), target_block = next(
+            iter(candidate_contexts.items())
+        )
+        target_context_key = (worksheet_title, title_row, start_column)
+        target_player_matches = tuple(
+            match
+            for match in player_matches
+            if (match.worksheet_title, match.block.title_row, match.block.start_column)
+            == target_context_key
+        )
+        target_staff_matches = tuple(
+            match
+            for match in staff_matches
+            if (match.worksheet_title, match.block.title_row, match.block.start_column)
+            == target_context_key
+        )
+        if remove_player and len(target_player_matches) > 1:
             duplicate_locations = ", ".join(
                 f"{match.worksheet_title}/{match.block.title}"
-                for match in matches
+                for match in target_player_matches
             )
             raise TeamSheetDuplicatePlayerError(
                 localize(
@@ -664,44 +761,85 @@ class GoogleSheetsTeamRepository:
                     locations=duplicate_locations,
                 )
             )
+        if remove_player and not remove_staff and not target_player_matches:
+            self._raise_removal_not_found_error(
+                discord_name,
+                remove_player=remove_player,
+                remove_staff=False,
+            )
+        if remove_staff and not remove_player and not target_staff_matches:
+            self._raise_removal_not_found_error(
+                discord_name,
+                remove_player=False,
+                remove_staff=remove_staff,
+            )
 
-        player_match = matches[0]
         target_sheet_grid = next(
             cell_grid
             for worksheet_title, cell_grid in sheet_grids
-            if worksheet_title == player_match.worksheet_title
+            if worksheet_title == target_context_key[0]
         )
-        remaining_players = tuple(
-            self._to_team_signing_player(player)
-            for player in self._parse_players(target_sheet_grid, player_match.block)
-            if _normalize_member_lookup_text(player.discord_name) != normalized_discord_name
-        )
-        sorted_remaining_players = sort_team_signing_players(remaining_players)
-        technical_staff_role_names = self._find_technical_staff_role_names_by_discord(
-            target_sheet_grid,
-            player_match.block,
-            normalized_discord_name,
-        )
+        update_data: list[dict[str, Any]] = []
+        removed_player_name: str | None = None
+        total_players: int | None = None
+        is_player_present_after = bool(target_player_matches)
+
+        if remove_player and target_player_matches:
+            player_match = target_player_matches[0]
+            remaining_players = tuple(
+                self._to_team_signing_player(player)
+                for player in self._parse_players(target_sheet_grid, target_block)
+                if _normalize_member_lookup_text(player.discord_name) != normalized_discord_name
+            )
+            sorted_remaining_players = sort_team_signing_players(remaining_players)
+            removed_player_name = player_match.player.player_name
+            total_players = len(sorted_remaining_players)
+            is_player_present_after = False
+            update_data.append(
+                {
+                    "range": _build_a1_range(
+                        worksheet_title,
+                        target_block.title_row + TEAM_BLOCK_PLAYERS_ROW_OFFSET,
+                        target_block.start_column,
+                        TEAM_BLOCK_MAX_PLAYERS,
+                        TEAM_BLOCK_COLUMN_COUNT,
+                    ),
+                    "values": self._build_player_values_grid(sorted_remaining_players),
+                }
+            )
+
+        removed_staff_role_names: tuple[str, ...] = ()
+        remaining_staff_role_names = tuple(match.member.role_name for match in target_staff_matches)
+        if remove_staff and target_staff_matches:
+            removed_staff_role_names = tuple(match.member.role_name for match in target_staff_matches)
+            remaining_staff_role_names = ()
+            for staff_match in target_staff_matches:
+                update_data.append(
+                    {
+                        "range": _build_a1_range(
+                            staff_match.worksheet_title,
+                            staff_match.row_index,
+                            staff_match.block.start_column + 1,
+                            1,
+                            3,
+                        ),
+                        "values": [[
+                            PLACEHOLDER_CELL_VALUE,
+                            PLACEHOLDER_CELL_VALUE,
+                            PLACEHOLDER_CELL_VALUE,
+                        ]],
+                    }
+                )
 
         try:
-            service.spreadsheets().values().batchUpdate(
-                spreadsheetId=self.config.spreadsheet_id,
-                body={
-                    "valueInputOption": "USER_ENTERED",
-                    "data": [
-                        {
-                            "range": _build_a1_range(
-                                player_match.worksheet_title,
-                                player_match.block.title_row + TEAM_BLOCK_PLAYERS_ROW_OFFSET,
-                                player_match.block.start_column,
-                                TEAM_BLOCK_MAX_PLAYERS,
-                                TEAM_BLOCK_COLUMN_COUNT,
-                            ),
-                            "values": self._build_player_values_grid(sorted_remaining_players),
-                        }
-                    ],
-                },
-            ).execute()
+            if update_data:
+                service.spreadsheets().values().batchUpdate(
+                    spreadsheetId=self.config.spreadsheet_id,
+                    body={
+                        "valueInputOption": "USER_ENTERED",
+                        "data": update_data,
+                    },
+                ).execute()
         except Exception as exc:
             http_error = _maybe_wrap_google_http_error(exc)
             if http_error is not None:
@@ -714,11 +852,14 @@ class GoogleSheetsTeamRepository:
             raise
 
         return TeamSigningRemovalResult(
-            worksheet_title=player_match.worksheet_title,
-            team_name=player_match.block.title,
-            removed_player_name=player_match.player.player_name,
-            total_players=len(sorted_remaining_players),
-            technical_staff_role_names=technical_staff_role_names,
+            worksheet_title=target_context_key[0],
+            team_name=target_block.title,
+            discord_name=discord_name,
+            removed_player_name=removed_player_name,
+            total_players=total_players,
+            removed_staff_role_names=removed_staff_role_names,
+            remaining_staff_role_names=remaining_staff_role_names,
+            is_player_present_after=is_player_present_after,
         )
 
     def _register_team_technical_staff_sync(
@@ -1053,6 +1194,105 @@ class GoogleSheetsTeamRepository:
         return GoogleSheetsTeamRepository._find_player_matches_by_discord_name_set(
             frozenset({normalized_discord_name}),
             sheet_grids,
+        )
+
+    @staticmethod
+    def _find_technical_staff_matches(
+            normalized_discord_name: str,
+            sheet_grids: tuple[tuple[str, dict[int, dict[int, SheetCell]]], ...],
+    ) -> tuple[TeamTechnicalStaffMatch, ...]:
+        matches: list[TeamTechnicalStaffMatch] = []
+        for worksheet_title, cell_grid in sheet_grids:
+            for block in GoogleSheetsTeamRepository._collect_team_blocks(cell_grid):
+                if _is_free_block_title(block.title):
+                    continue
+
+                start_row = GoogleSheetsTeamRepository._find_technical_staff_start_row(
+                    cell_grid,
+                    block,
+                )
+                if start_row is None:
+                    continue
+
+                for offset in range(TEAM_BLOCK_MAX_TECHNICAL_STAFF):
+                    row_index = start_row + offset
+                    role_cell = GoogleSheetsTeamRepository._get_cell(
+                        cell_grid,
+                        row_index,
+                        block.start_column,
+                    )
+                    discord_cell = GoogleSheetsTeamRepository._get_cell(
+                        cell_grid,
+                        row_index,
+                        block.start_column + 1,
+                    )
+                    epic_cell = GoogleSheetsTeamRepository._get_cell(
+                        cell_grid,
+                        row_index,
+                        block.start_column + 2,
+                    )
+                    rocket_cell = GoogleSheetsTeamRepository._get_cell(
+                        cell_grid,
+                        row_index,
+                        block.start_column + 3,
+                    )
+
+                    row_values = (
+                        role_cell.value,
+                        discord_cell.value,
+                        epic_cell.value,
+                        rocket_cell.value,
+                    )
+                    if _is_placeholder_row(*row_values):
+                        continue
+
+                    if _normalize_member_lookup_text(discord_cell.value) != normalized_discord_name:
+                        continue
+
+                    matches.append(
+                        TeamTechnicalStaffMatch(
+                            worksheet_title=worksheet_title,
+                            block=block,
+                            row_index=row_index,
+                            member=TeamProfileStaffMember(
+                                role_name=role_cell.value,
+                                discord_name=discord_cell.value,
+                                epic_name=epic_cell.value,
+                                rocket_name=rocket_cell.value,
+                            ),
+                        )
+                    )
+
+        return tuple(matches)
+
+    @staticmethod
+    def _raise_removal_not_found_error(
+            discord_name: str,
+            *,
+            remove_player: bool,
+            remove_staff: bool,
+    ) -> None:
+        if remove_player and remove_staff:
+            raise TeamSheetPlayerNotFoundError(
+                localize(
+                    I18N.errors.team_signing.member_not_found,
+                    discord_name=discord_name,
+                )
+            )
+
+        if remove_staff:
+            raise TeamSheetPlayerNotFoundError(
+                localize(
+                    I18N.errors.team_signing.technical_staff_member_not_found,
+                    discord_name=discord_name,
+                )
+            )
+
+        raise TeamSheetPlayerNotFoundError(
+            localize(
+                I18N.errors.team_signing.player_not_found,
+                discord_name=discord_name,
+            )
         )
 
     @staticmethod

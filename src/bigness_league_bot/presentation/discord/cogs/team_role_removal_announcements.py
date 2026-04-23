@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 import discord
@@ -16,6 +17,7 @@ from bigness_league_bot.infrastructure.discord.emojis import (
 )
 from bigness_league_bot.infrastructure.discord.team_change_announcements import (
     TEAM_ROLE_REMOVAL_SPEC,
+    TEAM_ROLE_SIGNING_SPEC,
     TEAM_STAFF_ROLE_REMOVAL_SPEC,
     TEAM_STAFF_ROLE_SIGNING_SPEC,
     build_team_change_content,
@@ -71,6 +73,11 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
             for role in before.roles
             if role.id in tracked_role_ids and role not in after.roles
         )
+        added_team_roles = tuple(
+            role
+            for role in after.roles
+            if role.id in tracked_role_ids and role not in before.roles
+        )
         tracked_staff_roles = self._resolve_tracked_staff_roles(after.guild)
         tracked_staff_role_ids = {role.id for role in tracked_staff_roles}
         removed_staff_roles = tuple(
@@ -83,7 +90,12 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
             for role in after.roles
             if role.id in tracked_staff_role_ids and role not in before.roles
         )
-        if not removed_team_roles and not removed_staff_roles and not added_staff_roles:
+        if (
+                not removed_team_roles
+                and not added_team_roles
+                and not removed_staff_roles
+                and not added_staff_roles
+        ):
             return
 
         channel = await resolve_team_change_bulletin_channel(
@@ -142,6 +154,56 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
                     exc,
                 )
 
+        for added_team_role in added_team_roles:
+            content = build_team_change_content(
+                bot=self.bot,
+                spec=TEAM_ROLE_SIGNING_SPEC,
+                member=after,
+                team_role=added_team_role,
+                guild=after.guild,
+            )
+            metadata = await load_team_change_metadata(
+                repository=repository,
+                team_role=added_team_role,
+                fallback=build_team_role_sheet_metadata_fallback(added_team_role),
+                guild=after.guild,
+            )
+            embed, image_file = build_team_change_embed(
+                bot=self.bot,
+                spec=TEAM_ROLE_SIGNING_SPEC,
+                member=after,
+                team_role=added_team_role,
+                guild=after.guild,
+                metadata=metadata,
+                description=self._build_role_removal_description(after.guild),
+            )
+            allowed_mentions = discord.AllowedMentions(
+                everyone=False,
+                replied_user=False,
+                users=[after],
+                roles=[added_team_role],
+            )
+            try:
+                send_kwargs: dict[str, object] = {
+                    "content": content,
+                    "embed": embed,
+                    "allowed_mentions": allowed_mentions,
+                }
+                if image_file is not None:
+                    send_kwargs["file"] = image_file
+                await channel.send(**send_kwargs)
+            except (discord.Forbidden, discord.HTTPException) as exc:
+                LOGGER.warning(
+                    "TEAM_ROLE_SIGNING_ANNOUNCEMENT_SEND_FAILED guild=%s(%s) user=%s(%s) role=%s(%s) details=%s",
+                    after.guild.name,
+                    after.guild.id,
+                    after,
+                    after.id,
+                    added_team_role.name,
+                    added_team_role.id,
+                    exc,
+                )
+
         if not removed_staff_roles and not added_staff_roles:
             return
 
@@ -149,14 +211,32 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
             before=before,
             after=after,
             tracked_team_role_ids=tracked_role_ids,
+            removed_team_roles=removed_team_roles,
+            added_team_roles=added_team_roles,
+            removed_staff_roles=removed_staff_roles,
+            added_staff_roles=added_staff_roles,
         )
         if team_role is None:
             LOGGER.warning(
-                "TEAM_STAFF_ROLE_ANNOUNCEMENT_SKIPPED guild=%s(%s) user=%s(%s) details=no-team-role-context",
+                "TEAM_STAFF_ROLE_ANNOUNCEMENT_SKIPPED guild=%s(%s) user=%s(%s) details=no-team-role-context before_team_roles=%s after_team_roles=%s removed_team_roles=%s added_team_roles=%s removed_staff_roles=%s added_staff_roles=%s",
                 after.guild.name,
                 after.guild.id,
                 after,
                 after.id,
+                self._format_roles_for_log(
+                    role
+                    for role in before.roles
+                    if role.id in tracked_role_ids
+                ),
+                self._format_roles_for_log(
+                    role
+                    for role in after.roles
+                    if role.id in tracked_role_ids
+                ),
+                self._format_roles_for_log(removed_team_roles),
+                self._format_roles_for_log(added_team_roles),
+                self._format_roles_for_log(removed_staff_roles),
+                self._format_roles_for_log(added_staff_roles),
             )
             return
 
@@ -257,16 +337,50 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
             before: discord.Member,
             after: discord.Member,
             tracked_team_role_ids: set[int],
+            removed_team_roles: tuple[discord.Role, ...],
+            added_team_roles: tuple[discord.Role, ...],
+            removed_staff_roles: tuple[discord.Role, ...],
+            added_staff_roles: tuple[discord.Role, ...],
     ) -> discord.Role | None:
+        role_groups: list[tuple[discord.Role, ...]] = []
+        if removed_staff_roles:
+            role_groups.append(removed_team_roles)
+        if added_staff_roles:
+            role_groups.append(added_team_roles)
+        role_groups.extend(
+            (
+                tuple(role for role in after.roles if role.id in tracked_team_role_ids),
+                tuple(role for role in before.roles if role.id in tracked_team_role_ids),
+            )
+        )
         candidate_roles = {
             role.id: role
             for role in (*after.roles, *before.roles)
             if role.id in tracked_team_role_ids
         }
-        if len(candidate_roles) != 1:
-            return None
+        role_groups.append(tuple(candidate_roles.values()))
+        for role_group in role_groups:
+            unique_roles = TeamRoleRemovalAnnouncements._deduplicate_roles(role_group)
+            if len(unique_roles) == 1:
+                return unique_roles[0]
 
-        return next(iter(candidate_roles.values()))
+        return None
+
+    @staticmethod
+    def _deduplicate_roles(
+            roles: tuple[discord.Role, ...],
+    ) -> tuple[discord.Role, ...]:
+        return tuple({role.id: role for role in roles}.values())
+
+    @staticmethod
+    def _format_roles_for_log(
+            roles: Iterable[discord.Role],
+    ) -> str:
+        formatted_roles = tuple(f"{role.name}({role.id})" for role in roles)
+        if not formatted_roles:
+            return "-"
+
+        return ", ".join(formatted_roles)
 
     async def _send_staff_role_change_announcement(
             self,
