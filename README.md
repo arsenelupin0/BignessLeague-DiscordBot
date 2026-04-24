@@ -382,6 +382,13 @@ Esto te da autocompletado en IntelliJ IDEA y evita typos en las rutas de traducc
 Los comandos de desarrollo usan el prefijo definido en `BOT_PREFIX` y estan limitados al propietario de la aplicacion.
 `!sync` solo acepta el scope configurado en `BOT_SYNC_SCOPE`.
 
+## Comandos de texto
+
+- `!fichaje`: muestra la guia y plantilla para hacer una inscripcion o fichaje.
+- `!inscripcion`: alias de `!fichaje`.
+
+Este comando funciona tanto en canales del servidor como en hilos de ticket y en mensajes directos al bot.
+
 ## Estructura recomendada
 
 ```text

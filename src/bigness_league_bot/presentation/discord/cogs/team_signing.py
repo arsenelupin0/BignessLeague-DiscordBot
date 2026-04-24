@@ -52,14 +52,95 @@ from bigness_league_bot.infrastructure.google.team_sheet_repository import (
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
+from bigness_league_bot.presentation.discord.ticket_command_mirroring import (
+    mirror_ticket_text_command_message,
+)
 
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
+
+DISCORD_MESSAGE_CONTENT_LIMIT = 2000
+TEAM_SIGNING_GUIDE_SPLIT_MARKERS = (
+    "Copia la plantilla tal cual",
+    "Copy the template exactly",
+)
+
+
+def _split_discord_message_content(content: str) -> tuple[str, ...]:
+    chunks: list[str] = []
+    remaining = content.strip()
+    preferred_separators = ("\n## ", "\n\n", "\n")
+
+    split_marker_start = min(
+        (
+            marker_start_index
+            for marker in TEAM_SIGNING_GUIDE_SPLIT_MARKERS
+            if (marker_start_index := remaining.find(marker)) >= 0
+        ),
+        default=-1,
+    )
+    split_marker_index = -1
+    if split_marker_start >= 0:
+        closing_bold_index = remaining.find("**", split_marker_start)
+        if closing_bold_index >= 0:
+            split_marker_index = closing_bold_index + len("**")
+
+    if 0 < split_marker_index <= DISCORD_MESSAGE_CONTENT_LIMIT:
+        return (
+            remaining[:split_marker_index].strip(),
+            remaining[split_marker_index:].strip(),
+        )
+
+    while len(remaining) > DISCORD_MESSAGE_CONTENT_LIMIT:
+        split_at = -1
+        for separator in preferred_separators:
+            candidate = remaining.rfind(
+                separator,
+                0,
+                DISCORD_MESSAGE_CONTENT_LIMIT + 1,
+            )
+            if candidate > 0:
+                split_at = candidate
+                break
+
+        if split_at <= 0:
+            split_at = DISCORD_MESSAGE_CONTENT_LIMIT
+
+        chunk = remaining[:split_at].strip()
+        if chunk:
+            chunks.append(chunk)
+        remaining = remaining[split_at:].strip()
+
+    if remaining:
+        chunks.append(remaining)
+
+    return tuple(chunks)
 
 
 class TeamSigningCog(commands.Cog):
     def __init__(self, bot: BignessLeagueBot) -> None:
         self.bot = bot
+
+    @commands.command(
+        name="fichaje",
+        aliases=("inscripcion",),
+    )
+    async def signing_guide(self, ctx: commands.Context[BignessLeagueBot]) -> None:
+        content = self.bot.localizer.translate(
+            I18N.messages.team_signing.guide.content,
+        )
+        for chunk in _split_discord_message_content(content):
+            sent_message = await ctx.send(
+                chunk,
+                allowed_mentions=discord.AllowedMentions.none(),
+                suppress_embeds=True,
+            )
+            if ctx.command is not None:
+                await mirror_ticket_text_command_message(
+                    self.bot,
+                    sent_message,
+                    command_name=f"!{ctx.command.qualified_name}",
+                )
 
     @app_commands.command(
         name=localized_locale_str(I18N.commands.team_signing.make_signing.name),

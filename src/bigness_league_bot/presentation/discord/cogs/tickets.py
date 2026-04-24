@@ -1166,11 +1166,16 @@ class TicketsCog(commands.Cog):
             message,
             command_name=command_name,
         )
+        command_label = (
+            resolved_command_name
+            if resolved_command_name.startswith(("/", "!"))
+            else f"/{resolved_command_name}"
+        )
         body = self._message_body(message, attachment_mode="names")
         return self._truncate(
             self.bot.localizer.translate(
                 I18N.messages.tickets.relay.from_command_result,
-                command_name=resolved_command_name,
+                command_name=command_label,
                 body=body,
             )
         )

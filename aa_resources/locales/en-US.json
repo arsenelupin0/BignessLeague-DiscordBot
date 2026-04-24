@@ -193,6 +193,11 @@
       },
       "only_actor": "Only the user who ran the command can use these buttons."
     },
+    "team_signing": {
+      "guide": {
+        "content": "#  How to submit a registration or signing \n_ _\nIf you want a bit more information about how signings and registrations work, click these links below:\n - [Information for submitting a signing](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)\n - [Information for adding a Technical Staff role to your team](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\nThe template you need to follow to submit a signing correctly is the following one (this one is explanatory). Remember that you have to copy all the message content, including the text above and below everything.\n```\nDivision: GOLD DIVISIÓN S3 // SILVER DIVISIÓN S3 (YOUR CORRESPONDING DIVISION)\nEquipo: KE Pensionistas (TEAM YOU WANT TO SIGN FOR)\n\nJugador -> Name that may be used for casting\nTracker -> Player tracker URL\nDiscord -> Discord Name ID. If you do not know what it is, see*1\nEpic Name -> Epic name. If you do not know what it is, see*2\nRocket In-Game Name -> In-game name. If you do not know what it is, see*2\n\n⏬⏬⏬⏬⏬⏬⏬⏬\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```\n1* [What is the Discord Name ID?](https://canary.discord.com/channels/1016819103555657851/1495742330047561942)\n2* [What is the difference between Epic Name and Rocket In-Game Name?](https://canary.discord.com/channels/1016819103555657851/1496951199373590629)\n## ✅ Example template you should send...\nIf you have more players, add them with a blank line between each one, just like in the template (max 6 in the template). **Copy the template exactly as it appears in the text below**\n```\nDivision: GOLD DIVISIÓN S3\nEquipo: KE Pensionistas\n\nJugador\nTracker\nDiscord\nEpic Name\nRocket In-Game Name\n\n⏬⏬⏬⏬⏬⏬⏬⏬\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```"
+      }
+    },
     "team_role_removal_announcement": {
       "content": "_ _\n-# 📢 Official bulletin: {member_mention} leaves club {team_role_mention}\n\n_ _",
       "description": "# :flecha_derecha:   :info_1: :info_2:   :flecha_izquierda:",
@@ -288,6 +293,9 @@
     "tickets": {
       "participants": {
         "team_role_empty": "That team role has no valid members to add to the ticket."
+      },
+      "relay": {
+        "from_command_result": "**Command result {command_name}:**\n{body}"
       }
     }
   },

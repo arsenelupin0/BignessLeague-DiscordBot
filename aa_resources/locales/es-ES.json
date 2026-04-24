@@ -222,6 +222,11 @@
       },
       "only_actor": "Solo quien ejecuto el comando puede usar estos botones."
     },
+    "team_signing": {
+      "guide": {
+        "content": "#  Como hacer una inscripción o fichaje \n_ _\nSi quieres tener un poco más de información de como funcionan los fichajes/inscripciones. Dale click a estos links de aquí abajo:\n - [Información para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)\n - [Información para añadir un rol de Staff Técnico a tu equipo](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\nLa plantilla que hay que seguir para hacer un fichaje correctamente es la siguiente (esta es explicativa).\n```\nDivision: GOLD DIVISIÓN S3 // SILVER DIVISIÓN S3 (TU DIVISIÓN CORRESPONDIENTE)\nEquipo: KE Pensionistas (EQUIPO AL QUE QUIERES HACER EL FICHAJE)\n\nJugador -> Nombre posiblemente a castear\nTracker -> URL del tracker del jugador\nDiscord -> Nombre ID, del jugador. Si no sabes lo que es revisa*1\nEpic Name -> Nombre de Epic. Si no sabes lo que es revisa*2\nRocket In-Game Name -> Nombre en el juego. Si no sabes lo que es revisa*2\n\n⏬⏬⏬⏬⏬⏬⏬⏬\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```\n1* [¿Qué es el Name ID de Discord?](https://canary.discord.com/channels/1016819103555657851/1495742330047561942)\n2* [¿Qué diferencia hay entre Epic Name y Rocket In-Game Name?](https://canary.discord.com/channels/1016819103555657851/1496951199373590629)\n_ _\n## ✅ Plantilla de ejemplo que tendrías que enviar...\n_ _\nEn caso de que tengas más jugadores, lo vas agregando con un salto de línea, como está en la plantilla (máx 6 en la plantilla). **Copia la plantilla tal cual está en este texto de aquí abajo**\n```\nDivision: GOLD DIVISIÓN S3\nEquipo: KE Pensionistas\n\nJugador\nTracker\nDiscord\nEpic Name\nRocket In-Game Name\n\n⏬⏬⏬⏬⏬⏬⏬⏬\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```"
+      }
+    },
     "team_role_removal_announcement": {
       "content": "_ _\n-# 📢 Boletín oficial: {member_mention} abandona su club {team_role_mention}\n_ _",
       "description": "## :flecha_derecha:   :info_1: :info_2:   :flecha_izquierda:",
@@ -297,7 +302,7 @@
       "relay": {
         "from_user": "**Mensaje del usuario {author}:**\n{body}",
         "from_staff": "**Respuesta de Bigness League - {author}:**\n{body}",
-        "from_command_result": "**Resultado del comando /{command_name}:**\n{body}",
+        "from_command_result": "**Resultado del comando {command_name}:**\n{body}",
         "attachments": "Adjuntos:\n{urls}",
         "empty_body": "(mensaje sin texto)",
         "thread_missing_for_user": "No he encontrado el hilo interno de tu ticket. Se ha cerrado el registro activo; vuelve a abrirlo desde el panel si necesitas continuar.",
