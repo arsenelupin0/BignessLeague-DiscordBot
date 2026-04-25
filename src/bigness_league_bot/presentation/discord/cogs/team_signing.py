@@ -14,7 +14,7 @@ from bigness_league_bot.application.services.team_signing import (
     parse_team_technical_staff_message,
 )
 from bigness_league_bot.core.errors import CommandUserError
-from bigness_league_bot.core.localization import TranslationKeyLike, localize
+from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.discord.channel_management import (
     UnsupportedChannelError,
     ensure_allowed_member,
@@ -24,10 +24,6 @@ from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
 )
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
-    TeamStaffRoleEntry,
-    TeamStaffRoleSyncSummary,
-    TeamRoleAssignmentSummary,
-    TeamRoleRemovalSummary,
     assign_team_roles_by_names,
     build_member_lookup_keys,
     collect_team_profile_player_names,
@@ -43,12 +39,18 @@ from bigness_league_bot.infrastructure.discord.team_role_assignment import (
 from bigness_league_bot.infrastructure.discord.team_signing import (
     fetch_linked_message,
 )
+from bigness_league_bot.infrastructure.discord.team_signing_messages import (
+    build_team_role_sync_message,
+    build_team_signing_import_completed_message,
+    build_team_signing_removal_completed_message,
+    collect_technical_staff_role_entries,
+    format_team_role_removal_message,
+    split_discord_message_content,
+)
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     GoogleSheetsTeamRepository,
     TeamMemberSheetAffiliation,
     TeamSigningRemovalResult,
-    TeamSigningWriteResult,
-    TeamTechnicalStaffWriteResult,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
@@ -58,63 +60,6 @@ from bigness_league_bot.presentation.discord.ticket_command_mirroring import (
 
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
-
-DISCORD_MESSAGE_CONTENT_LIMIT = 2000
-TEAM_SIGNING_GUIDE_SPLIT_MARKERS = (
-    "Copia la plantilla tal cual",
-    "Copy the template exactly",
-)
-
-
-def _split_discord_message_content(content: str) -> tuple[str, ...]:
-    chunks: list[str] = []
-    remaining = content.strip()
-    preferred_separators = ("\n## ", "\n\n", "\n")
-
-    split_marker_start = min(
-        (
-            marker_start_index
-            for marker in TEAM_SIGNING_GUIDE_SPLIT_MARKERS
-            if (marker_start_index := remaining.find(marker)) >= 0
-        ),
-        default=-1,
-    )
-    split_marker_index = -1
-    if split_marker_start >= 0:
-        closing_bold_index = remaining.find("**", split_marker_start)
-        if closing_bold_index >= 0:
-            split_marker_index = closing_bold_index + len("**")
-
-    if 0 < split_marker_index <= DISCORD_MESSAGE_CONTENT_LIMIT:
-        return (
-            remaining[:split_marker_index].strip(),
-            remaining[split_marker_index:].strip(),
-        )
-
-    while len(remaining) > DISCORD_MESSAGE_CONTENT_LIMIT:
-        split_at = -1
-        for separator in preferred_separators:
-            candidate = remaining.rfind(
-                separator,
-                0,
-                DISCORD_MESSAGE_CONTENT_LIMIT + 1,
-            )
-            if candidate > 0:
-                split_at = candidate
-                break
-
-        if split_at <= 0:
-            split_at = DISCORD_MESSAGE_CONTENT_LIMIT
-
-        chunk = remaining[:split_at].strip()
-        if chunk:
-            chunks.append(chunk)
-        remaining = remaining[split_at:].strip()
-
-    if remaining:
-        chunks.append(remaining)
-
-    return tuple(chunks)
 
 
 class TeamSigningCog(commands.Cog):
@@ -129,7 +74,7 @@ class TeamSigningCog(commands.Cog):
         content = self.bot.localizer.translate(
             I18N.messages.team_signing.guide.content,
         )
-        for chunk in _split_discord_message_content(content):
+        for chunk in split_discord_message_content(content):
             sent_message = await ctx.send(
                 chunk,
                 allowed_mentions=discord.AllowedMentions.none(),
@@ -230,14 +175,15 @@ class TeamSigningCog(commands.Cog):
                 second_manager_role_id=settings.staff_second_manager_role_id,
                 captain_role_id=settings.staff_captain_role_id,
                 actor=interaction.user,
-                staff_entries=self._collect_technical_staff_role_entries(
+                staff_entries=collect_technical_staff_role_entries(
                     technical_staff_batch
                 ),
             )
 
         await interaction.followup.send(
-            self._build_import_completed_message(
-                interaction,
+            build_team_signing_import_completed_message(
+                localizer=interaction.client.localizer,
+                locale=interaction.locale,
                 division_name=division_name,
                 team_name=team_name,
                 signing_batch=signing_batch,
@@ -347,8 +293,9 @@ class TeamSigningCog(commands.Cog):
             discord_name=discord_name,
             result=result,
         )
-        followup_message = self._build_removal_completed_message(
-            interaction,
+        followup_message = build_team_signing_removal_completed_message(
+            localizer=interaction.client.localizer,
+            locale=interaction.locale,
             discord_name=discord_name,
             result=result,
         )
@@ -440,8 +387,9 @@ class TeamSigningCog(commands.Cog):
             team_profile=team_profile,
         )
         await interaction.followup.send(
-            self._build_team_role_sync_message(
-                interaction,
+            build_team_role_sync_message(
+                localizer=interaction.client.localizer,
+                locale=interaction.locale,
                 team_name=equipo.name,
                 assignment_summary=assignment_summary,
                 staff_role_sync_summary=staff_role_sync_summary,
@@ -534,213 +482,6 @@ class TeamSigningCog(commands.Cog):
         return division_name, team_name
 
     @staticmethod
-    def _build_import_completed_message(
-            interaction: discord.Interaction[BignessLeagueBot],
-            *,
-            division_name: str,
-            team_name: str,
-            signing_batch: TeamSigningBatch | None,
-            technical_staff_batch: TeamTechnicalStaffBatch | None,
-            player_result: TeamSigningWriteResult | None,
-            technical_staff_result: TeamTechnicalStaffWriteResult | None,
-            assignment_summary: TeamRoleAssignmentSummary | None,
-            staff_role_sync_summary: TeamStaffRoleSyncSummary | None,
-    ) -> str:
-        localizer = interaction.client.localizer
-        locale = interaction.locale
-        message_lines: list[str] = []
-        if player_result is not None and signing_batch is not None and assignment_summary is not None:
-            message_lines.append(
-                localizer.translate(
-                    I18N.actions.team_signing.completed,
-                    locale=locale,
-                    division_name=division_name,
-                    team_name=team_name,
-                    inserted_count=str(player_result.inserted_count),
-                    total_players=str(player_result.total_players),
-                )
-            )
-            message_lines.append(
-                localizer.translate(
-                    I18N.actions.team_signing.role_assignment_summary,
-                    locale=locale,
-                    assigned_count=str(len(assignment_summary.assigned_members)),
-                    already_count=str(len(assignment_summary.already_configured_members)),
-                    unresolved_count=str(len(assignment_summary.unresolved_names)),
-                    ambiguous_count=str(len(assignment_summary.ambiguous_names)),
-                )
-            )
-            message_lines.extend(
-                TeamSigningCog._build_assignment_detail_lines(
-                    interaction,
-                    assignment_summary=assignment_summary,
-                    unresolved_key=I18N.actions.team_signing.role_assignment_unresolved,
-                    ambiguous_key=I18N.actions.team_signing.role_assignment_ambiguous,
-                )
-            )
-
-        if technical_staff_result is not None and technical_staff_batch is not None:
-            message_lines.append(
-                localizer.translate(
-                    I18N.actions.team_signing.technical_staff_completed,
-                    locale=locale,
-                    division_name=division_name,
-                    team_name=team_name,
-                    updated_count=str(technical_staff_result.updated_count),
-                )
-            )
-            if staff_role_sync_summary is not None:
-                message_lines.append(
-                    localizer.translate(
-                        I18N.actions.team_signing.staff_role_sync_summary,
-                        locale=locale,
-                        assigned_count=str(len(staff_role_sync_summary.assigned_members)),
-                        removed_count=str(len(staff_role_sync_summary.removed_members)),
-                        already_count=str(len(staff_role_sync_summary.already_configured_members)),
-                        unresolved_count=str(len(staff_role_sync_summary.unresolved_names)),
-                        ambiguous_count=str(len(staff_role_sync_summary.ambiguous_names)),
-                    )
-                )
-                message_lines.extend(
-                    TeamSigningCog._build_assignment_detail_lines(
-                        interaction,
-                        assignment_summary=staff_role_sync_summary,
-                        unresolved_key=I18N.actions.team_signing.role_assignment_unresolved,
-                        ambiguous_key=I18N.actions.team_signing.role_assignment_ambiguous,
-                    )
-                )
-
-        return "\n".join(message_lines)
-
-    @staticmethod
-    def _build_team_role_sync_message(
-            interaction: discord.Interaction[BignessLeagueBot],
-            *,
-            team_name: str,
-            assignment_summary: TeamRoleAssignmentSummary,
-            staff_role_sync_summary: TeamStaffRoleSyncSummary,
-    ) -> str:
-        localizer = interaction.client.localizer
-        locale = interaction.locale
-        message_lines = [
-            localizer.translate(
-                I18N.actions.team_role_assignment.completed,
-                locale=locale,
-                team_name=team_name,
-                assigned_count=str(len(assignment_summary.assigned_members)),
-                already_count=str(len(assignment_summary.already_configured_members)),
-                unresolved_count=str(len(assignment_summary.unresolved_names)),
-                ambiguous_count=str(len(assignment_summary.ambiguous_names)),
-            )
-        ]
-        message_lines.extend(
-            TeamSigningCog._build_assignment_detail_lines(
-                interaction,
-                assignment_summary=assignment_summary,
-                unresolved_key=I18N.actions.team_role_assignment.unresolved,
-                ambiguous_key=I18N.actions.team_role_assignment.ambiguous,
-            )
-        )
-        message_lines.append(
-            localizer.translate(
-                I18N.actions.team_role_assignment.staff_role_sync_summary,
-                locale=locale,
-                assigned_count=str(len(staff_role_sync_summary.assigned_members)),
-                removed_count=str(len(staff_role_sync_summary.removed_members)),
-                already_count=str(len(staff_role_sync_summary.already_configured_members)),
-                unresolved_count=str(len(staff_role_sync_summary.unresolved_names)),
-                ambiguous_count=str(len(staff_role_sync_summary.ambiguous_names)),
-            )
-        )
-        message_lines.extend(
-            TeamSigningCog._build_assignment_detail_lines(
-                interaction,
-                assignment_summary=staff_role_sync_summary,
-                unresolved_key=I18N.actions.team_role_assignment.unresolved,
-                ambiguous_key=I18N.actions.team_role_assignment.ambiguous,
-            )
-        )
-        return "\n".join(message_lines)
-
-    @staticmethod
-    def _build_assignment_detail_lines(
-            interaction: discord.Interaction[BignessLeagueBot],
-            *,
-            assignment_summary: TeamRoleAssignmentSummary | TeamStaffRoleSyncSummary,
-            unresolved_key: TranslationKeyLike,
-            ambiguous_key: TranslationKeyLike,
-    ) -> list[str]:
-        localizer = interaction.client.localizer
-        locale = interaction.locale
-        message_lines: list[str] = []
-        if assignment_summary.unresolved_names:
-            message_lines.append(
-                localizer.translate(
-                    unresolved_key,
-                    locale=locale,
-                    names=", ".join(assignment_summary.unresolved_names),
-                )
-            )
-        if assignment_summary.ambiguous_names:
-            message_lines.append(
-                localizer.translate(
-                    ambiguous_key,
-                    locale=locale,
-                    names=", ".join(assignment_summary.ambiguous_names),
-                )
-            )
-        return message_lines
-
-    @staticmethod
-    def _collect_technical_staff_role_entries(
-            technical_staff_batch: TeamTechnicalStaffBatch,
-    ) -> tuple[TeamStaffRoleEntry, ...]:
-        return tuple(
-            TeamStaffRoleEntry(
-                role_name=member.role_name,
-                member_name=member.discord_name,
-            )
-            for member in technical_staff_batch.members
-        )
-
-    @staticmethod
-    def _build_removal_completed_message(
-            interaction: discord.Interaction[BignessLeagueBot],
-            *,
-            discord_name: str,
-            result: TeamSigningRemovalResult,
-    ) -> str:
-        localizer = interaction.client.localizer
-        locale = interaction.locale
-        message_lines: list[str] = []
-        if result.removed_player_name is not None and result.total_players is not None:
-            message_lines.append(
-                localizer.translate(
-                    I18N.actions.team_signing.removed,
-                    locale=locale,
-                    discord_name=discord_name,
-                    player_name=result.removed_player_name,
-                    team_name=result.team_name,
-                    division_name=result.worksheet_title,
-                    total_players=str(result.total_players),
-                )
-            )
-
-        if result.removed_staff_role_names:
-            message_lines.append(
-                localizer.translate(
-                    I18N.actions.team_signing.technical_staff_removed,
-                    locale=locale,
-                    discord_name=discord_name,
-                    team_name=result.team_name,
-                    division_name=result.worksheet_title,
-                    staff_roles=", ".join(result.removed_staff_role_names),
-                )
-            )
-
-        return "\n".join(message_lines)
-
-    @staticmethod
     async def _remove_discord_roles_after_signing_removal(
             interaction: discord.Interaction[BignessLeagueBot],
             *,
@@ -804,50 +545,11 @@ class TeamSigningCog(commands.Cog):
                 details=str(exc),
             )
 
-        return TeamSigningCog._format_role_removal_message(
-            interaction,
+        return format_team_role_removal_message(
+            localizer=localizer,
+            locale=locale,
             discord_name=discord_name,
             removal_summary=removal_summary,
-        )
-
-    @staticmethod
-    def _format_role_removal_message(
-            interaction: discord.Interaction[BignessLeagueBot],
-            *,
-            discord_name: str,
-            removal_summary: TeamRoleRemovalSummary,
-    ) -> str:
-        localizer = interaction.client.localizer
-        locale = interaction.locale
-        if removal_summary.unresolved:
-            return localizer.translate(
-                I18N.actions.team_signing.role_removal_unresolved,
-                locale=locale,
-                discord_name=discord_name,
-            )
-        if removal_summary.ambiguous:
-            return localizer.translate(
-                I18N.actions.team_signing.role_removal_ambiguous,
-                locale=locale,
-                discord_name=discord_name,
-            )
-        if not removal_summary.removed_roles:
-            member_label = (
-                str(removal_summary.member)
-                if removal_summary.member is not None
-                else discord_name
-            )
-            return localizer.translate(
-                I18N.actions.team_signing.role_removal_no_changes,
-                locale=locale,
-                member_name=member_label,
-            )
-
-        return localizer.translate(
-            I18N.actions.team_signing.role_removal_completed,
-            locale=locale,
-            member_name=str(removal_summary.member),
-            roles=", ".join(role.name for role in removal_summary.removed_roles),
         )
 
     async def _reconcile_team_role_assignment(
@@ -917,7 +619,7 @@ class TeamSigningCog(commands.Cog):
                 *roles_to_remove.values(),
                 reason=(
                     f"{actor} ({actor.id}) sincronizó completamente el equipo "
-                    f"{team_role.name} segun Google Sheets para {member} ({member.id})"
+                    f"{team_role.name} según Google Sheets para {member} ({member.id})"
                 ),
             )
 
