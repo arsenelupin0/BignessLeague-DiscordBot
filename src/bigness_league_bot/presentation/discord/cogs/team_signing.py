@@ -183,7 +183,7 @@ class TeamSigningCog(commands.Cog):
                 player_result=player_result,
                 technical_staff_result=technical_staff_result,
                 assignment_summary=assignment_summary,
-                staff_role_sync_summary=staff_role_sync_summary,
+                staff_sync_summary=staff_role_sync_summary,
             ),
             allowed_mentions=discord.AllowedMentions.none(),
         )
@@ -385,7 +385,7 @@ class TeamSigningCog(commands.Cog):
                 locale=interaction.locale,
                 team_name=equipo.name,
                 assignment_summary=assignment_summary,
-                staff_role_sync_summary=staff_role_sync_summary,
+                staff_sync_summary=staff_role_sync_summary,
             ),
             allowed_mentions=discord.AllowedMentions.none(),
         )

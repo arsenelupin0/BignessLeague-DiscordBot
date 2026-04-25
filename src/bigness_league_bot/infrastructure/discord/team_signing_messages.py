@@ -104,7 +104,7 @@ def build_team_signing_import_completed_message(
         player_result: TeamSigningWriteResult | None,
         technical_staff_result: TeamTechnicalStaffWriteResult | None,
         assignment_summary: TeamRoleAssignmentSummary | None,
-        staff_role_sync_summary: TeamStaffRoleSyncSummary | None,
+        staff_sync_summary: TeamStaffRoleSyncSummary | None,
 ) -> str:
     message_lines: list[str] = []
     if player_result is not None and signing_batch is not None and assignment_summary is not None:
@@ -148,23 +148,23 @@ def build_team_signing_import_completed_message(
                 updated_count=str(technical_staff_result.updated_count),
             )
         )
-        if staff_role_sync_summary is not None:
+        if staff_sync_summary is not None:
             message_lines.append(
                 localizer.translate(
                     I18N.actions.team_signing.staff_role_sync_summary,
                     locale=locale,
-                    assigned_count=str(len(staff_role_sync_summary.assigned_members)),
-                    removed_count=str(len(staff_role_sync_summary.removed_members)),
-                    already_count=str(len(staff_role_sync_summary.already_configured_members)),
-                    unresolved_count=str(len(staff_role_sync_summary.unresolved_names)),
-                    ambiguous_count=str(len(staff_role_sync_summary.ambiguous_names)),
+                    assigned_count=str(len(staff_sync_summary.assigned_members)),
+                    removed_count=str(len(staff_sync_summary.removed_members)),
+                    already_count=str(len(staff_sync_summary.already_configured_members)),
+                    unresolved_count=str(len(staff_sync_summary.unresolved_names)),
+                    ambiguous_count=str(len(staff_sync_summary.ambiguous_names)),
                 )
             )
             message_lines.extend(
                 _build_assignment_detail_lines(
                     localizer=localizer,
                     locale=locale,
-                    assignment_summary=staff_role_sync_summary,
+                    assignment_summary=staff_sync_summary,
                     unresolved_key=I18N.actions.team_signing.role_assignment_unresolved,
                     ambiguous_key=I18N.actions.team_signing.role_assignment_ambiguous,
                 )
@@ -179,7 +179,7 @@ def build_team_role_sync_message(
         locale: str | discord.Locale | None,
         team_name: str,
         assignment_summary: TeamRoleAssignmentSummary,
-        staff_role_sync_summary: TeamStaffRoleSyncSummary,
+        staff_sync_summary: TeamStaffRoleSyncSummary,
 ) -> str:
     message_lines = [
         localizer.translate(
@@ -205,18 +205,18 @@ def build_team_role_sync_message(
         localizer.translate(
             I18N.actions.team_role_assignment.staff_role_sync_summary,
             locale=locale,
-            assigned_count=str(len(staff_role_sync_summary.assigned_members)),
-            removed_count=str(len(staff_role_sync_summary.removed_members)),
-            already_count=str(len(staff_role_sync_summary.already_configured_members)),
-            unresolved_count=str(len(staff_role_sync_summary.unresolved_names)),
-            ambiguous_count=str(len(staff_role_sync_summary.ambiguous_names)),
+            assigned_count=str(len(staff_sync_summary.assigned_members)),
+            removed_count=str(len(staff_sync_summary.removed_members)),
+            already_count=str(len(staff_sync_summary.already_configured_members)),
+            unresolved_count=str(len(staff_sync_summary.unresolved_names)),
+            ambiguous_count=str(len(staff_sync_summary.ambiguous_names)),
         )
     )
     message_lines.extend(
         _build_assignment_detail_lines(
             localizer=localizer,
             locale=locale,
-            assignment_summary=staff_role_sync_summary,
+            assignment_summary=staff_sync_summary,
             unresolved_key=I18N.actions.team_role_assignment.unresolved,
             ambiguous_key=I18N.actions.team_role_assignment.ambiguous,
         )

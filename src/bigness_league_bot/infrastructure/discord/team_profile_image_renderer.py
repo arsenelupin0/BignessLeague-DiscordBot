@@ -58,16 +58,13 @@ def _render_team_profile_image(
         font_path: Path | None = None,
 ) -> bytes:
     try:
-        from PIL import Image, ImageDraw, ImageFont
+        from PIL import Image, ImageDraw
     except ImportError as exc:
         raise CommandUserError(
             localize(I18N.errors.team_profile.image_dependencies_missing)
         ) from exc
 
-    font, unit_width, row_height = _load_team_profile_font_context(
-        ImageFont,
-        font_path=font_path,
-    )
+    font, unit_width, row_height = _load_team_profile_font_context(font_path=font_path)
 
     position_width = POSITION_WIDTH * unit_width
     player_width = PLAYER_WIDTH * unit_width

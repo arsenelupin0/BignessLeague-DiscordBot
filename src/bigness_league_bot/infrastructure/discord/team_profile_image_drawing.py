@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
+
+from PIL import ImageFont as PillowImageFont
 
 from bigness_league_bot.infrastructure.discord.team_profile_layout import (
     TEAM_PROFILE_FONT_CANDIDATES,
@@ -24,43 +26,41 @@ from bigness_league_bot.infrastructure.discord.team_profile_layout import (
     TEAM_PROFILE_IMAGE_TEXT_BORDER_INSET,
     sanitize_text,
 )
+from bigness_league_bot.main import LOGGER
 
 Color = tuple[int, int, int]
 Point = tuple[int, int]
 Rectangle = tuple[int, int, int, int]
 LinePoints = tuple[Point, Point]
 
+if TYPE_CHECKING:
+    from PIL.ImageDraw import ImageDraw as ImageDrawLike
+    from PIL.ImageFont import FreeTypeFont, ImageFont
 
-class ImageDrawLike(Protocol):
-    def rectangle(self, xy: Rectangle, *, outline: Color, width: int) -> None:
-        ...
+    FontLike = ImageFont | FreeTypeFont
+else:
+    class ImageDrawLike(Protocol):
+        def rectangle(self, xy: Rectangle, *, outline: Color, width: int) -> None:
+            ...
 
-    def line(self, xy: LinePoints, *, fill: Color, width: int) -> None:
-        ...
+        def line(self, xy: LinePoints, *, fill: Color, width: int) -> None:
+            ...
 
-    def text(
-            self,
-            xy: Point,
-            text: str,
-            *,
-            font: "FontLike",
-            fill: Color,
-            anchor: str,
-    ) -> None:
-        ...
-
-
-class FontLike(Protocol):
-    def getbbox(self, text: str) -> tuple[float, float, float, float]:
-        ...
+        def text(
+                self,
+                xy: Point,
+                text: str,
+                *,
+                font: "FontLike",
+                fill: Color,
+                anchor: str,
+        ) -> None:
+            ...
 
 
-class ImageFontModuleLike(Protocol):
-    def truetype(self, font: str, size: int) -> FontLike:
-        ...
-
-    def load_default(self) -> FontLike:
-        ...
+    class FontLike(Protocol):
+        def getbbox(self, text: str) -> tuple[float, float, float, float]:
+            ...
 
 
 def _draw_box(
@@ -241,28 +241,44 @@ def fit_text_to_pixel_width(font: FontLike, text: str, width: int) -> str:
 
 
 def _load_team_profile_font(
-        image_font_module: ImageFontModuleLike,
         *,
         font_path: Path | None = None,
 ) -> FontLike:
-    if font_path is not None and font_path.exists():
-        return image_font_module.truetype(str(font_path), TEAM_PROFILE_IMAGE_FONT_SIZE)
+    if font_path is not None:
+        font = _try_load_team_profile_font(font_path)
+        if font is not None:
+            return font
 
     for candidate_path in TEAM_PROFILE_FONT_CANDIDATES:
-        if not candidate_path.exists():
-            continue
+        font = _try_load_team_profile_font(candidate_path)
+        if font is not None:
+            return font
 
-        return image_font_module.truetype(str(candidate_path), TEAM_PROFILE_IMAGE_FONT_SIZE)
+    return PillowImageFont.load_default()
 
-    return image_font_module.load_default()
+
+def _try_load_team_profile_font(font_path: Path) -> FontLike | None:
+    if not font_path.exists():
+        return None
+
+    try:
+        return PillowImageFont.truetype(
+            str(font_path),
+            TEAM_PROFILE_IMAGE_FONT_SIZE,
+        )
+    except OSError:
+        LOGGER.warning(
+            "No se pudo cargar la fuente para la imagen de perfil de equipo: %s",
+            font_path,
+        )
+        return None
 
 
 def _load_team_profile_font_context(
-        image_font_module: ImageFontModuleLike,
         *,
         font_path: Path | None = None,
 ) -> tuple[FontLike, int, int]:
-    font = _load_team_profile_font(image_font_module, font_path=font_path)
+    font = _load_team_profile_font(font_path=font_path)
     unit_width = _measure_unit_width(font)
     line_height = _measure_line_height(font)
     row_height = line_height + TEAM_PROFILE_IMAGE_CELL_PADDING_Y * 2
@@ -280,10 +296,6 @@ def _measure_unit_width(font: FontLike) -> int:
 def _measure_text_width(font: FontLike, text: str) -> int:
     if not text:
         return 0
-
-    getlength = getattr(font, "getlength", None)
-    if callable(getlength):
-        return max(1, int(math.ceil(float(getlength(text)))))
 
     bbox = font.getbbox(text)
     return max(1, int(math.ceil(bbox[2] - bbox[0])))

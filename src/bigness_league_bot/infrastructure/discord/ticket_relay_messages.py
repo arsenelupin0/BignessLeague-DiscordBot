@@ -146,11 +146,7 @@ def relay_author_name(message: discord.Message) -> str:
     if isinstance(global_name, str) and global_name.strip():
         return global_name
 
-    name = getattr(message.author, "name", None)
-    if isinstance(name, str) and name.strip():
-        return name
-
-    return message.author.name
+    return _fallback_author_name(message.author)
 
 
 def relay_visual_username(message: discord.Message) -> str:
@@ -173,8 +169,18 @@ def thread_relay_display_name(
 
 
 def author_avatar_url(author: discord.abc.User | discord.User) -> str:
-    avatar = getattr(author, "display_avatar", None)
-    return "" if avatar is None else avatar.url
+    avatar = author.display_avatar
+    if avatar is None:
+        return ""
+
+    return avatar.url
+
+
+def _fallback_author_name(author: discord.abc.User | discord.User) -> str:
+    if isinstance(author.name, str) and author.name.strip():
+        return author.name
+
+    return f"user-{author.id}"
 
 
 def should_relay_bot_thread_message(message: discord.Message) -> bool:

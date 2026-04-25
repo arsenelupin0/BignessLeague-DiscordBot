@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from io import BytesIO
 from pathlib import Path
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 import discord
 
@@ -38,38 +38,37 @@ TEAM_ROLE_REMOVAL_CARD_FONT_CANDIDATES = (
 
 Color = tuple[int, int, int]
 Point = tuple[int, int]
+Rectangle = tuple[int, int, int, int]
+Line = tuple[int, int, int, int]
+
+if TYPE_CHECKING:
+    from PIL.ImageDraw import ImageDraw as ImageDrawLike
+    from PIL.ImageFont import FreeTypeFont, ImageFont
+
+    FontLike = ImageFont | FreeTypeFont
+else:
+    class ImageDrawLike(Protocol):
+        def rectangle(self, xy: Rectangle, *, outline: Color, width: int) -> None:
+            ...
+
+        def line(self, xy: Line, *, fill: Color, width: int) -> None:
+            ...
+
+        def text(
+                self,
+                xy: Point,
+                text: str,
+                *,
+                font: "FontLike",
+                fill: Color,
+                anchor: str,
+        ) -> None:
+            ...
 
 
-class ImageDrawLike(Protocol):
-    def rectangle(self, xy: object, *, outline: Color, width: int) -> None:
-        ...
-
-    def line(self, xy: object, *, fill: Color, width: int) -> None:
-        ...
-
-    def text(
-            self,
-            xy: Point,
-            text: str,
-            *,
-            font: "FontLike",
-            fill: Color,
-            anchor: str,
-    ) -> None:
-        ...
-
-
-class FontLike(Protocol):
-    def getbbox(self, text: str) -> tuple[float, float, float, float]:
-        ...
-
-
-class ImageFontModuleLike(Protocol):
-    def truetype(self, font: str, size: int) -> FontLike:
-        ...
-
-    def load_default(self) -> FontLike:
-        ...
+    class FontLike(Protocol):
+        def getbbox(self, text: str) -> tuple[float, float, float, float]:
+            ...
 
 
 def build_team_role_removal_image_file(
@@ -103,9 +102,9 @@ def _render_team_role_removal_image(
         accent_color: tuple[int, int, int],
 ) -> bytes:
     try:
-        from PIL import Image, ImageDraw, ImageFont
+        from PIL import Image, ImageDraw
     except ImportError as exc:
-        raise RuntimeError("Pillow no esta disponible para renderizar la tarjeta PNG.") from exc
+        raise RuntimeError("Pillow no está disponible para renderizar la tarjeta PNG.") from exc
 
     image = Image.new(
         "RGB",
@@ -114,17 +113,14 @@ def _render_team_role_removal_image(
     )
     draw = ImageDraw.Draw(image)
     line_one_font = _load_font(
-        ImageFont,
         size=TEAM_ROLE_REMOVAL_CARD_LINE_ONE_FONT_SIZE,
         font_path=font_path,
     )
     line_two_font = _load_font(
-        ImageFont,
         size=TEAM_ROLE_REMOVAL_CARD_LINE_TWO_FONT_SIZE,
         font_path=font_path,
     )
     line_three_font = _load_font(
-        ImageFont,
         size=TEAM_ROLE_REMOVAL_CARD_LINE_THREE_FONT_SIZE,
         font_path=font_path,
     )
@@ -295,10 +291,6 @@ def _measure_text_width(font: FontLike, text: str) -> int:
     if not text:
         return 0
 
-    getlength = getattr(font, "getlength", None)
-    if callable(getlength):
-        return max(1, int(math.ceil(float(getlength(text)))))
-
     bbox = font.getbbox(text)
     return max(1, int(math.ceil(bbox[2] - bbox[0])))
 
@@ -309,17 +301,18 @@ def _measure_line_height(font: FontLike) -> int:
 
 
 def _load_font(
-        image_font_module: ImageFontModuleLike,
         *,
         size: int,
         font_path: Path | None,
 ) -> FontLike:
+    from PIL import ImageFont
+
     if font_path is not None and font_path.exists():
-        return image_font_module.truetype(str(font_path), size)
+        return ImageFont.truetype(str(font_path), size)
 
     for candidate_path in TEAM_ROLE_REMOVAL_CARD_FONT_CANDIDATES:
         if not candidate_path.exists():
             continue
-        return image_font_module.truetype(str(candidate_path), size)
+        return ImageFont.truetype(str(candidate_path), size)
 
-    return image_font_module.load_default()
+    return ImageFont.load_default()
