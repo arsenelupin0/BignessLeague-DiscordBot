@@ -17,7 +17,7 @@ from bigness_league_bot.application.services.team_signing import (
     TeamSigningCapacityError,
     TeamTechnicalStaffBatch,
     merge_team_signing_players,
-    sort_team_signing_players,
+    sort_team_signing_players, TeamSigningPlayer,
 )
 from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.google.team_sheets.blocks import (
@@ -52,7 +52,7 @@ from bigness_league_bot.infrastructure.google.team_sheets.http_errors import (
 from bigness_league_bot.infrastructure.google.team_sheets.models import (
     TeamSigningRemovalResult,
     TeamSigningWriteResult,
-    TeamTechnicalStaffWriteResult,
+    TeamTechnicalStaffWriteResult, TeamBlockAnchor,
 )
 from bigness_league_bot.infrastructure.google.team_sheets.parser import (
     _build_player_values_grid,

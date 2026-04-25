@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import Any
 
 from bigness_league_bot.core.localization import localize
-from bigness_league_bot.infrastructure.google.team_sheets.cells import _build_sheet_grid
+from bigness_league_bot.infrastructure.google.team_sheets.cells import _build_sheet_grid, _normalize_cell_value
 from bigness_league_bot.infrastructure.google.team_sheets.config import (
     GOOGLE_SHEETS_READ_SCOPE,
     GOOGLE_SHEETS_WRITE_SCOPE,
