@@ -44,19 +44,16 @@ from bigness_league_bot.infrastructure.discord.ticket_ai_messages import (
 from bigness_league_bot.infrastructure.discord.ticket_command_mirror import (
     TicketCommandMirror,
 )
+from bigness_league_bot.infrastructure.discord.ticket_participant_messenger import (
+    TicketParticipantMessenger,
+)
 from bigness_league_bot.infrastructure.discord.ticket_relay_messages import (
-    PARTICIPANT_DM_RELAY_COLOR,
-    STAFF_DM_RELAY_COLOR,
     author_avatar_url,
-    build_ticket_dm_relay_embed,
     build_ticket_user_relay_message,
     clone_message_attachments_as_files,
-    looks_like_user_relay_message,
-    relay_visual_username,
     should_relay_bot_thread_message,
     should_retry_discord_http_error,
     thread_relay_display_name,
-    truncate_relay_text,
     yes_no,
 )
 from bigness_league_bot.infrastructure.discord.tickets import TicketStateStore
@@ -88,6 +85,13 @@ class TicketsCog(commands.Cog):
             store=store,
             resolve_ticket_user=self._resolve_ticket_user,
             send_dm=self._send_dm_with_retry,
+        )
+        self.participant_messenger = TicketParticipantMessenger(
+            bot=bot,
+            command_mirror=self.command_mirror,
+            resolve_ticket_user=self._resolve_ticket_user,
+            send_dm=self._send_dm_with_retry,
+            relay_mention=self._relay_clickable_mention,
         )
         self._pending_initial_command_mirror_tasks: dict[int, asyncio.Task[None]] = {}
         self._dm_retry_delays: tuple[float, ...] = (0.75, 1.5)
@@ -346,10 +350,11 @@ class TicketsCog(commands.Cog):
                 dm_channel_id=dm_message.channel.id,
                 dm_start_message_id=dm_message.id,
             )
-            await self._sync_ticket_history_to_participant(
+            await self.participant_messenger.sync_history_to_participant(
                 record=updated_record,
                 participant_id=member.id,
                 thread=thread,
+                thread_user_relay_message_ids=self._thread_user_relay_message_ids,
             )
             successfully_added.append(member)
 
@@ -497,8 +502,9 @@ class TicketsCog(commands.Cog):
             thread=thread,
             message=message,
         )
-        await self._relay_user_message_to_other_participants(
+        await self.participant_messenger.relay_user_message_to_other_participants(
             record=record,
+            thread=thread,
             message=message,
         )
         await self._maybe_auto_reply_to_user_ticket(
@@ -512,110 +518,10 @@ class TicketsCog(commands.Cog):
         if record is None:
             return
 
-        failed_user_ids: list[int] = []
-        for participant_id in record.participant_ids:
-            if participant_id == message.author.id:
-                continue
-            try:
-                ticket_user = await self._resolve_ticket_user(participant_id)
-                if ticket_user is None:
-                    failed_user_ids.append(participant_id)
-                    continue
-                await self._send_staff_relay_to_dm_participant(
-                    ticket_user=ticket_user,
-                    message=message,
-                )
-            except discord.Forbidden:
-                failed_user_ids.append(participant_id)
-            except discord.HTTPException:
-                LOGGER.exception(
-                    "TICKET_STAFF_RELAY_FAILED thread=%s user_id=%s",
-                    message.channel.id,
-                    participant_id,
-                )
-
-        if not failed_user_ids:
-            return
-
-        await message.channel.send(
-            self.bot.localizer.translate(
-                I18N.messages.tickets.relay.dm_failed_for_staff,
-                user_id=", ".join(str(user_id) for user_id in failed_user_ids),
-            ),
-            allowed_mentions=discord.AllowedMentions.none(),
+        await self.participant_messenger.relay_staff_message_to_participants(
+            record=record,
+            message=message,
         )
-
-    async def _relay_user_message_to_other_participants(
-            self,
-            *,
-            record: TicketRecord,
-            message: discord.Message,
-    ) -> None:
-        failed_user_ids: list[int] = []
-        for participant_id in record.participant_ids:
-            if participant_id == message.author.id:
-                continue
-            try:
-                ticket_user = await self._resolve_ticket_user(participant_id)
-                if ticket_user is None:
-                    failed_user_ids.append(participant_id)
-                    continue
-                await self._send_user_relay_to_dm_participant(
-                    ticket_user=ticket_user,
-                    message=message,
-                )
-            except discord.Forbidden:
-                failed_user_ids.append(participant_id)
-            except discord.HTTPException:
-                LOGGER.exception(
-                    "TICKET_USER_RELAY_TO_PARTICIPANT_FAILED thread=%s user_id=%s sender=%s(%s)",
-                    record.thread_id,
-                    participant_id,
-                    message.author,
-                    message.author.id,
-                )
-
-        if not failed_user_ids:
-            return
-
-        thread = await self._resolve_ticket_thread(record)
-        if thread is None:
-            return
-
-        await thread.send(
-            self.bot.localizer.translate(
-                I18N.messages.tickets.relay.dm_failed_for_staff,
-                user_id=", ".join(str(user_id) for user_id in failed_user_ids),
-            ),
-            allowed_mentions=discord.AllowedMentions.none(),
-        )
-
-    async def _send_ticket_dm_message_to_participants(
-            self,
-            *,
-            record: TicketRecord,
-            content: str,
-            exclude_user_ids: set[int] | None = None,
-    ) -> None:
-        skipped_user_ids = exclude_user_ids or set()
-        for participant_id in record.participant_ids:
-            if participant_id in skipped_user_ids:
-                continue
-            try:
-                ticket_user = await self._resolve_ticket_user(participant_id)
-                if ticket_user is None:
-                    continue
-                await self._send_dm_with_retry(
-                    ticket_user,
-                    truncate_relay_text(content),
-                    allowed_mentions=discord.AllowedMentions.none(),
-                )
-            except discord.HTTPException:
-                LOGGER.exception(
-                    "TICKET_PARTICIPANT_DM_BROADCAST_FAILED thread=%s user_id=%s",
-                    record.thread_id,
-                    participant_id,
-                )
 
     async def _schedule_initial_bot_thread_message_to_user(
             self,
@@ -798,52 +704,6 @@ class TicketsCog(commands.Cog):
             self._forum_relay_webhook_locks[forum_channel_id] = lock
         return lock
 
-    async def _send_staff_relay_to_dm_participant(
-            self,
-            *,
-            ticket_user: discord.User,
-            message: discord.Message,
-    ) -> None:
-        await self._send_dm_with_retry(
-            ticket_user,
-            embed=build_ticket_dm_relay_embed(
-                localizer=self.bot.localizer,
-                message=message,
-                color=STAFF_DM_RELAY_COLOR,
-                is_staff=True,
-                mention_line=(
-                        self._relay_clickable_mention(message)
-                        or relay_visual_username(message)
-                ),
-                avatar_url=author_avatar_url(message.author),
-            ),
-            files=await clone_message_attachments_as_files(message),
-            allowed_mentions=discord.AllowedMentions.none(),
-        )
-
-    async def _send_user_relay_to_dm_participant(
-            self,
-            *,
-            ticket_user: discord.User,
-            message: discord.Message,
-    ) -> None:
-        await self._send_dm_with_retry(
-            ticket_user,
-            embed=build_ticket_dm_relay_embed(
-                localizer=self.bot.localizer,
-                message=message,
-                color=PARTICIPANT_DM_RELAY_COLOR,
-                is_staff=False,
-                mention_line=(
-                        self._relay_clickable_mention(message)
-                        or relay_visual_username(message)
-                ),
-                avatar_url=author_avatar_url(message.author),
-            ),
-            files=await clone_message_attachments_as_files(message),
-            allowed_mentions=discord.AllowedMentions.none(),
-        )
-
     def _relay_clickable_mention(self, message: discord.Message) -> str | None:
         if message.webhook_id is not None:
             original_user_id = self._thread_user_relay_message_authors.get(message.id)
@@ -942,7 +802,7 @@ class TicketsCog(commands.Cog):
         if (
                 fallback_required
         ):
-            await self._send_ticket_dm_message_to_participants(
+            await self.participant_messenger.broadcast_dm_message(
                 record=record,
                 content=self.bot.localizer.translate(
                     I18N.messages.tickets.ai.user_escalated,
@@ -950,7 +810,7 @@ class TicketsCog(commands.Cog):
             )
             return
 
-        await self._send_ticket_dm_message_to_participants(
+        await self.participant_messenger.broadcast_dm_message(
             record=record,
             content=ai_reply.answer,
         )
@@ -1031,69 +891,6 @@ class TicketsCog(commands.Cog):
             )
         except discord.HTTPException:
             return None
-
-    async def _sync_ticket_history_to_participant(
-            self,
-            *,
-            record: TicketRecord,
-            participant_id: int,
-            thread: discord.Thread,
-    ) -> None:
-        participant_user = await self._resolve_ticket_user(participant_id)
-        if participant_user is None:
-            return
-
-        try:
-            async for history_message in thread.history(limit=25, oldest_first=True):
-                if history_message.id == record.thread_start_message_id:
-                    continue
-
-                if should_relay_bot_thread_message(history_message):
-                    dm_message = await self.command_mirror.send_result_to_participant(
-                        record=record,
-                        participant_id=participant_id,
-                        message=history_message,
-                    )
-                    if dm_message is None:
-                        continue
-                    self.command_mirror.remember_participant_message(
-                        thread_message_id=history_message.id,
-                        participant_id=participant_id,
-                        dm_message_id=dm_message.id,
-                        message=history_message,
-                    )
-                    continue
-
-                if (
-                        history_message.id in self._thread_user_relay_message_ids
-                        or record.relay_message_author_id(history_message.id) is not None
-                        or history_message.webhook_id is not None
-                ):
-                    await self._send_user_relay_to_dm_participant(
-                        ticket_user=participant_user,
-                        message=history_message,
-                    )
-                    continue
-
-                if history_message.author.bot:
-                    if looks_like_user_relay_message(history_message.content):
-                        await self._send_dm_with_retry(
-                            participant_user,
-                            truncate_relay_text(history_message.content),
-                            allowed_mentions=discord.AllowedMentions.none(),
-                        )
-                    continue
-
-                await self._send_staff_relay_to_dm_participant(
-                    ticket_user=participant_user,
-                    message=history_message,
-                )
-        except discord.HTTPException:
-            LOGGER.exception(
-                "TICKET_HISTORY_SYNC_FAILED thread=%s user_id=%s",
-                record.thread_id,
-                participant_id,
-            )
 
     async def _send_dm_with_retry(
             self,
