@@ -1,0 +1,59 @@
+version: "1.0"
+
+# PyCharm Professional based linter for Python projects.
+# Keep this version aligned with the Qodana/PyCharm major version used locally or in CI.
+linter: jetbrains/qodana-python:2026.1
+
+profile:
+  name: qodana.recommended
+
+# Qodana runs in an isolated environment in CI/container mode, so install the
+# project and its runtime dependencies from pyproject.toml before analysis.
+bootstrap: |
+  python -m pip install --disable-pip-version-check --upgrade pip
+  python -m pip install --disable-pip-version-check uv
+  uv sync --no-cache --frozen --extra dev
+  uv run --no-cache --frozen lint-imports --no-cache --verbose --show-timings
+
+include:
+  # Imports, dependency resolution and package metadata.
+  - name: PyUnresolvedReferencesInspection
+  - name: PyPackageRequirementsInspection
+
+  # Type hints and inferred type compatibility.
+  - name: PyTypeCheckerInspection
+  - name: PyTypeHintsInspection
+  - name: PyMissingTypeHintsInspection
+  - name: PyArgumentListInspection
+
+  # Dead code and unused symbols.
+  - name: PyUnusedImportsInspection
+  - name: PyUnusedLocalInspection
+  - name: PyUnusedFunctionInspection
+  - name: PyUnreachableCodeInspection
+  - name: PyRedeclarationInspection
+
+  # Maintainability and common Python correctness issues.
+  - name: PyDataclassInspection
+  - name: PyBroadExceptionInspection
+  - name: PyShadowingNamesInspection
+  - name: PyPep8Inspection
+  - name: PyPep8NamingInspection
+
+exclude:
+  - name: All
+    paths:
+      - .codex
+      - .git
+      - .idea
+      - .venv
+      - aa_resources
+      - aa_var
+      - uv.lock
+      - src/bigness_league_bot/infrastructure/i18n/keys.py
+
+failureConditions:
+  severityThresholds:
+    critical: 0
+    high: 10
+    any: 250

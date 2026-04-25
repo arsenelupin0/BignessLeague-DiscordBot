@@ -37,17 +37,9 @@ class TicketParticipant:
             payload: dict[str, object],
     ) -> "TicketParticipant":
         return cls(
-            user_id=int(payload["user_id"]),
-            dm_channel_id=(
-                int(payload["dm_channel_id"])
-                if payload.get("dm_channel_id") is not None
-                else None
-            ),
-            dm_start_message_id=(
-                int(payload["dm_start_message_id"])
-                if payload.get("dm_start_message_id") is not None
-                else None
-            ),
+            user_id=_required_int(payload, "user_id"),
+            dm_channel_id=_optional_int(payload, "dm_channel_id"),
+            dm_start_message_id=_optional_int(payload, "dm_start_message_id"),
         )
 
     def to_dict(self) -> dict[str, object]:
@@ -138,52 +130,38 @@ class TicketRecord:
                 parsed_participants.append(TicketParticipant.from_dict(raw_participant))
             participants = tuple(parsed_participants)
 
-        dm_channel_id = (
-            int(payload["dm_channel_id"])
-            if payload.get("dm_channel_id") is not None
-            else None
-        )
-        dm_start_message_id = (
-            int(payload["dm_start_message_id"])
-            if payload.get("dm_start_message_id") is not None
-            else None
-        )
+        dm_channel_id = _optional_int(payload, "dm_channel_id")
+        dm_start_message_id = _optional_int(payload, "dm_start_message_id")
         raw_thread_relay_message_authors = payload.get("thread_relay_message_authors")
         thread_relay_message_authors: tuple[tuple[int, int], ...] = ()
         if isinstance(raw_thread_relay_message_authors, dict):
             parsed_mappings: list[tuple[int, int]] = []
             for raw_message_id, raw_user_id in raw_thread_relay_message_authors.items():
-                try:
-                    parsed_mappings.append((int(raw_message_id), int(raw_user_id)))
-                except (TypeError, ValueError):
+                message_id = _coerce_int(raw_message_id)
+                user_id = _coerce_int(raw_user_id)
+                if message_id is None or user_id is None:
                     continue
+                parsed_mappings.append((message_id, user_id))
             thread_relay_message_authors = tuple(parsed_mappings)
+        user_id = _required_int(payload, "user_id")
         return cls(
-            ticket_number=int(payload.get("ticket_number", fallback_ticket_number)),
-            user_id=int(payload["user_id"]),
-            thread_id=int(payload["thread_id"]),
-            forum_channel_id=int(payload["forum_channel_id"]),
-            thread_start_message_id=(
-                int(payload["thread_start_message_id"])
-                if payload.get("thread_start_message_id") is not None
-                else None
-            ),
+            ticket_number=_optional_int(payload, "ticket_number") or fallback_ticket_number,
+            user_id=user_id,
+            thread_id=_required_int(payload, "thread_id"),
+            forum_channel_id=_required_int(payload, "forum_channel_id"),
+            thread_start_message_id=_optional_int(payload, "thread_start_message_id"),
             dm_channel_id=dm_channel_id,
             dm_start_message_id=dm_start_message_id,
             participants=_normalize_ticket_participants(
                 participants=participants,
-                owner_user_id=int(payload["user_id"]),
+                owner_user_id=user_id,
                 owner_dm_channel_id=dm_channel_id,
                 owner_dm_start_message_id=dm_start_message_id,
             ),
-            category_key=str(payload["category_key"]),
-            created_at=str(payload["created_at"]),
-            status=str(payload.get("status", "active")),
-            closed_at=(
-                str(payload["closed_at"])
-                if payload.get("closed_at") is not None
-                else None
-            ),
+            category_key=_required_text(payload, "category_key"),
+            created_at=_required_text(payload, "created_at"),
+            status=_optional_text(payload, "status") or "active",
+            closed_at=_optional_text(payload, "closed_at"),
             thread_relay_message_authors=thread_relay_message_authors,
         )
 
@@ -382,6 +360,60 @@ def _normalize_ticket_participants(
     ordered_participants = [participants_by_user_id.pop(owner_user_id)]
     ordered_participants.extend(participants_by_user_id.values())
     return tuple(ordered_participants)
+
+
+def _required_int(payload: dict[str, object], key: str) -> int:
+    value = _coerce_int(payload.get(key))
+    if value is None:
+        raise ValueError(f"El campo `{key}` debe ser un entero.")
+
+    return value
+
+
+def _optional_int(payload: dict[str, object], key: str) -> int | None:
+    value = payload.get(key)
+    if value is None:
+        return None
+
+    parsed_value = _coerce_int(value)
+    if parsed_value is None:
+        raise ValueError(f"El campo `{key}` debe ser un entero.")
+
+    return parsed_value
+
+
+def _coerce_int(value: object) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str) and value.strip():
+        try:
+            return int(value.strip())
+        except ValueError:
+            return None
+
+    return None
+
+
+def _required_text(payload: dict[str, object], key: str) -> str:
+    value = _optional_text(payload, key)
+    if value is None:
+        raise ValueError(f"El campo `{key}` debe ser texto.")
+
+    return value
+
+
+def _optional_text(payload: dict[str, object], key: str) -> str | None:
+    value = payload.get(key)
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (int, float, bool)):
+        return str(value)
+
+    raise ValueError(f"El campo `{key}` debe ser texto.")
 
 
 TICKET_CATEGORIES: tuple[TicketCategory, ...] = (

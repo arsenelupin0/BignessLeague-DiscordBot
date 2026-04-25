@@ -83,7 +83,7 @@ class OpenAiCompatibleClient:
 
         first_choice = choices[0]
         if not isinstance(first_choice, dict):
-            raise OllamaClientError("La primera opción de respuesta no es valida.")
+            raise OllamaClientError("La primera opción de respuesta no es válida.")
 
         message = first_choice.get("message")
         if not isinstance(message, dict):
@@ -91,7 +91,7 @@ class OpenAiCompatibleClient:
 
         content = message.get("content")
         if not isinstance(content, str) or not content.strip():
-            raise OllamaClientError("La respuesta del modelo no contiene texto util.")
+            raise OllamaClientError("La respuesta del modelo no contiene texto útil.")
 
         try:
             parsed_payload = json.loads(content)

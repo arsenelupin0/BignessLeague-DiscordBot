@@ -1,11 +1,36 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 import discord
 
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
+
+
+@runtime_checkable
+class TicketCommandMirrorCog(Protocol):
+    async def mirror_thread_command_message(
+            self,
+            message: discord.Message,
+            *,
+            command_name: str | None = None,
+    ) -> discord.Message | None:
+        ...
+
+    async def mirror_thread_command_message_edit(
+            self,
+            message: discord.Message,
+            *,
+            command_name: str | None = None,
+    ) -> discord.Message | None:
+        ...
+
+
+@runtime_checkable
+class MessageFetchableChannel(Protocol):
+    async def fetch_message(self, message_id: int) -> discord.Message:
+        ...
 
 
 async def _mirror_ticket_message(
@@ -16,19 +41,20 @@ async def _mirror_ticket_message(
         edit: bool,
 ) -> None:
     cog = bot.get_cog("TicketsCog")
-    if cog is None:
+    if not isinstance(cog, TicketCommandMirrorCog):
         return
 
-    method_name = (
-        "mirror_thread_command_message_edit"
-        if edit
-        else "mirror_thread_command_message"
+    if edit:
+        await cog.mirror_thread_command_message_edit(
+            message,
+            command_name=command_name,
+        )
+        return
+
+    await cog.mirror_thread_command_message(
+        message,
+        command_name=command_name,
     )
-    mirror_method = getattr(cog, method_name, None)
-    if not callable(mirror_method):
-        return
-
-    await mirror_method(message, command_name=command_name)
 
 
 async def mirror_ticket_command_message(
@@ -78,7 +104,7 @@ async def fetch_interaction_message(
         message_id: int,
 ) -> discord.Message | None:
     channel = interaction.channel
-    if channel is None or not hasattr(channel, "fetch_message"):
+    if not isinstance(channel, MessageFetchableChannel):
         return None
 
     try:

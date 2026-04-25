@@ -28,13 +28,15 @@ if TYPE_CHECKING:
 TICKET_OPEN_COLOR = 16_711_680
 TICKET_CLOSED_COLOR = 3_447_003
 SUCCESS_EMOJI_NAME = "correctButton"
+TICKET_CLOSE_LINK_FIELD_KEY = I18N.messages.tickets.close.embed.fields.ticket_link
+TICKET_CLOSE_REASON_FIELD_KEY = I18N.messages.tickets.close.embed.fields.close_reason
 
 
 def build_ticket_message_content(user: discord.abc.User | discord.Member) -> str:
     return user.mention
 
 
-def build_ticket_open_message_content() -> None:
+def build_ticket_open_message_content() -> str | None:
     return None
 
 
@@ -184,22 +186,17 @@ def build_ticket_close_embed(
         value=with_visual_spacing(category_label),
         inline=False,
     )
-    embed.add_field(
-        name=bot.localizer.translate(
-            I18N.messages.tickets.close.embed.fields.ticket_link,
+    if ticket_link is not None:
+        ticket_link_value = bot.localizer.translate(
+            I18N.messages.tickets.close.embed.link_value,
             locale=locale,
-        ),
-        value=with_visual_spacing(
-            (
-                bot.localizer.translate(
-                    I18N.messages.tickets.close.embed.link_value,
-                    locale=locale,
-                    ticket_link=ticket_link,
-                )
-                if ticket_link is not None
-                else "-"
-            )
-        ),
+            ticket_link=ticket_link,
+        )
+    else:
+        ticket_link_value = "-"
+    embed.add_field(
+        name=bot.localizer.translate(TICKET_CLOSE_LINK_FIELD_KEY, locale=locale),
+        value=with_visual_spacing(ticket_link_value),
         inline=False,
     )
     embed.add_field(
@@ -231,15 +228,15 @@ def build_ticket_close_embed(
         value=with_visual_spacing(format_ticket_created_at(closed_at)),
         inline=False,
     )
-    reason_value = close_reason or bot.localizer.translate(
-        I18N.messages.tickets.close.embed.default_reason,
-        locale=locale,
-    )
-    embed.add_field(
-        name=bot.localizer.translate(
-            I18N.messages.tickets.close.embed.fields.close_reason,
+    if close_reason:
+        reason_value = close_reason
+    else:
+        reason_value = bot.localizer.translate(
+            I18N.messages.tickets.close.embed.default_reason,
             locale=locale,
-        ),
+        )
+    embed.add_field(
+        name=bot.localizer.translate(TICKET_CLOSE_REASON_FIELD_KEY, locale=locale),
         value=f"```\n{reason_value}\n```",
         inline=False,
     )
@@ -256,11 +253,10 @@ def resolve_embed_icon_url(
         bot: BignessLeagueBot,
         guild: discord.Guild | None,
 ) -> str | None:
-    if guild is not None and guild.icon is not None:
-        return guild.icon.url
+    if guild is not None and (guild_icon := guild.icon) is not None:
+        return guild_icon.url
 
-    bot_user = bot.user
-    if bot_user is not None:
+    if (bot_user := bot.user) is not None:
         return bot_user.display_avatar.url
 
     return None

@@ -72,7 +72,7 @@ class OllamaClient:
 
         content = message.get("content")
         if not isinstance(content, str) or not content.strip():
-            raise OllamaClientError("Ollama no ha devuelto contenido util en la respuesta.")
+            raise OllamaClientError("Ollama no ha devuelto contenido útil en la respuesta.")
 
         try:
             parsed_payload = json.loads(content)

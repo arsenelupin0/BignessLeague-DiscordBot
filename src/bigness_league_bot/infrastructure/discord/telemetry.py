@@ -44,7 +44,7 @@ def _serialize_payload(payload: Any) -> str:
 def user_label(user: discord.abc.User | discord.Member | None) -> str:
     if user is None:
         return "unknown-user"
-    return f"{user}({user.id})"
+    return f"{user.name}({user.id})"
 
 
 def guild_label(guild: discord.Guild | None) -> str:

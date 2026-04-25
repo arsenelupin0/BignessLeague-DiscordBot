@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 from io import BytesIO
 from pathlib import Path
+from typing import TYPE_CHECKING, Protocol
 
 import discord
 
@@ -34,6 +35,40 @@ TEAM_ROLE_REMOVAL_CARD_FONT_CANDIDATES = (
     Path(r"C:\Windows\Fonts\cour.ttf"),
     Path(r"C:\Windows\Fonts\lucon.ttf"),
 )
+
+Color = tuple[int, int, int]
+Point = tuple[int, int]
+Rectangle = tuple[int, int, int, int]
+Line = tuple[int, int, int, int]
+
+if TYPE_CHECKING:
+    from PIL.ImageDraw import ImageDraw as ImageDrawLike
+    from PIL.ImageFont import FreeTypeFont, ImageFont
+
+    FontLike = ImageFont | FreeTypeFont
+else:
+    class ImageDrawLike(Protocol):
+        def rectangle(self, xy: Rectangle, *, outline: Color, width: int) -> None:
+            ...
+
+        def line(self, xy: Line, *, fill: Color, width: int) -> None:
+            ...
+
+        def text(
+                self,
+                xy: Point,
+                text: str,
+                *,
+                font: "FontLike",
+                fill: Color,
+                anchor: str,
+        ) -> None:
+            ...
+
+
+    class FontLike(Protocol):
+        def getbbox(self, text: str) -> tuple[float, float, float, float]:
+            ...
 
 
 def build_team_role_removal_image_file(
@@ -67,9 +102,9 @@ def _render_team_role_removal_image(
         accent_color: tuple[int, int, int],
 ) -> bytes:
     try:
-        from PIL import Image, ImageDraw, ImageFont
+        from PIL import Image, ImageDraw
     except ImportError as exc:
-        raise RuntimeError("Pillow no esta disponible para renderizar la tarjeta PNG.") from exc
+        raise RuntimeError("Pillow no está disponible para renderizar la tarjeta PNG.") from exc
 
     image = Image.new(
         "RGB",
@@ -78,17 +113,14 @@ def _render_team_role_removal_image(
     )
     draw = ImageDraw.Draw(image)
     line_one_font = _load_font(
-        ImageFont,
         size=TEAM_ROLE_REMOVAL_CARD_LINE_ONE_FONT_SIZE,
         font_path=font_path,
     )
     line_two_font = _load_font(
-        ImageFont,
         size=TEAM_ROLE_REMOVAL_CARD_LINE_TWO_FONT_SIZE,
         font_path=font_path,
     )
     line_three_font = _load_font(
-        ImageFont,
         size=TEAM_ROLE_REMOVAL_CARD_LINE_THREE_FONT_SIZE,
         font_path=font_path,
     )
@@ -189,7 +221,7 @@ def _render_team_role_removal_image(
     return output.getvalue()
 
 
-def _draw_double_border(draw: object) -> None:
+def _draw_double_border(draw: ImageDrawLike) -> None:
     inset = TEAM_ROLE_REMOVAL_CARD_BORDER_WIDTH + TEAM_ROLE_REMOVAL_CARD_BORDER_GAP_WIDTH
     draw.rectangle(
         (
@@ -214,13 +246,13 @@ def _draw_double_border(draw: object) -> None:
 
 
 def _draw_centered_text(
-        draw: object,
-        font: object,
+        draw: ImageDrawLike,
+        font: FontLike,
         text: str,
         center_x: int,
         center_y: int,
         *,
-        fill: tuple[int, int, int],
+        fill: Color,
 ) -> None:
     draw.text(
         (center_x, center_y),
@@ -231,15 +263,15 @@ def _draw_centered_text(
     )
 
 
-def _fit_text_to_pixel_width(font: object, text: str, width: int) -> str:
+def _fit_text_to_pixel_width(font: FontLike, text: str, width: int) -> str:
     normalized_text = " ".join(text.split()).strip()
     if width <= 0:
         return ""
     if _measure_text_width(font, normalized_text) <= width:
         return normalized_text
 
-    ellipsis = "\u2026"
-    ellipsis_width = _measure_text_width(font, ellipsis)
+    ellipsis_text = "\u2026"
+    ellipsis_width = _measure_text_width(font, ellipsis_text)
     if ellipsis_width >= width:
         return ""
 
@@ -252,39 +284,35 @@ def _fit_text_to_pixel_width(font: object, text: str, width: int) -> str:
         characters.append(character)
         current_width += character_width
 
-    return "".join(characters) + ellipsis
+    return "".join(characters) + ellipsis_text
 
 
-def _measure_text_width(font: object, text: str) -> int:
+def _measure_text_width(font: FontLike, text: str) -> int:
     if not text:
         return 0
-
-    getlength = getattr(font, "getlength", None)
-    if callable(getlength):
-        return max(1, int(math.ceil(float(getlength(text)))))
 
     bbox = font.getbbox(text)
     return max(1, int(math.ceil(bbox[2] - bbox[0])))
 
 
-def _measure_line_height(font: object) -> int:
+def _measure_line_height(font: FontLike) -> int:
     bbox = font.getbbox("Mg")
     return max(1, int(math.ceil(bbox[3] - bbox[1])))
 
 
 def _load_font(
-        image_font_module: object,
         *,
         size: int,
         font_path: Path | None,
-) -> object:
-    truetype = getattr(image_font_module, "truetype")
+) -> FontLike:
+    from PIL import ImageFont
+
     if font_path is not None and font_path.exists():
-        return truetype(str(font_path), size)
+        return ImageFont.truetype(str(font_path), size)
 
     for candidate_path in TEAM_ROLE_REMOVAL_CARD_FONT_CANDIDATES:
         if not candidate_path.exists():
             continue
-        return truetype(str(candidate_path), size)
+        return ImageFont.truetype(str(candidate_path), size)
 
-    return getattr(image_font_module, "load_default")()
+    return ImageFont.load_default()
