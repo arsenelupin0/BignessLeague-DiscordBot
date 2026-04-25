@@ -1,0 +1,53 @@
+[importlinter]
+root_package = bigness_league_bot
+
+[importlinter:contract:core-is-independent]
+name = Core does not depend on outer layers
+type = forbidden
+source_modules =
+    bigness_league_bot.core
+forbidden_modules =
+    bigness_league_bot.app
+    bigness_league_bot.application
+    bigness_league_bot.infrastructure
+    bigness_league_bot.presentation
+
+[importlinter:contract:application-boundary]
+name = Application does not depend on presentation or infrastructure
+type = forbidden
+source_modules =
+    bigness_league_bot.application
+forbidden_modules =
+    bigness_league_bot.presentation
+    bigness_league_bot.infrastructure
+ignore_imports =
+    bigness_league_bot.application.services.ticket_ai -> bigness_league_bot.infrastructure.ticket_ai.knowledge_base
+    bigness_league_bot.application.services.ticket_ai -> bigness_league_bot.infrastructure.ticket_ai.ollama
+    bigness_league_bot.application.services.ticket_ai -> bigness_league_bot.infrastructure.ticket_ai.openai_compatible
+
+[importlinter:contract:infrastructure-does-not-depend-on-presentation]
+name = Infrastructure does not depend on presentation
+type = forbidden
+source_modules =
+    bigness_league_bot.infrastructure
+forbidden_modules =
+    bigness_league_bot.presentation
+
+[importlinter:contract:google-adapter-does-not-depend-on-discord-adapter]
+name = Google adapter does not depend on Discord adapter
+type = forbidden
+source_modules =
+    bigness_league_bot.infrastructure.google
+forbidden_modules =
+    bigness_league_bot.infrastructure.discord
+
+[importlinter:contract:i18n-adapter-stays-generic]
+name = I18n adapter stays generic
+type = forbidden
+source_modules =
+    bigness_league_bot.infrastructure.i18n
+forbidden_modules =
+    bigness_league_bot.infrastructure.discord
+    bigness_league_bot.infrastructure.google
+    bigness_league_bot.infrastructure.ticket_ai
+    bigness_league_bot.presentation

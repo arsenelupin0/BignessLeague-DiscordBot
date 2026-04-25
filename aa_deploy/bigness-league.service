@@ -1,5 +1,5 @@
 [Unit]
-Description=Bigness League Bot
+Description=Bigness League Discord Bot
 After=network-online.target
 Wants=network-online.target
 
@@ -7,9 +7,15 @@ Wants=network-online.target
 Type=simple
 User=bigness
 Group=bigness
-WorkingDirectory=/opt/bigness-league
+WorkingDirectory=/home/bigness/DiscordBot/BignessLeague-DiscordBot
+
+EnvironmentFile=-/home/bigness/DiscordBot/BignessLeague-DiscordBot/.env.production
+EnvironmentFile=-/home/bigness/DiscordBot/BignessLeague-DiscordBot/.env
+
+Environment=PYTHONPATH=/home/bigness/DiscordBot/BignessLeague-DiscordBot/src
 Environment=PYTHONUNBUFFERED=1
-ExecStart=/opt/bigness-league/.venv/bin/bigness-bot
+
+ExecStart=/home/bigness/DiscordBot/BignessLeague-DiscordBot/.venv/bin/python -m bigness_league_bot.main
 Restart=always
 RestartSec=5
 
