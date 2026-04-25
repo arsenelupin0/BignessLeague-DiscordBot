@@ -137,8 +137,8 @@ class TeamProfileCog(commands.Cog):
         )
         view.message = message
 
+    @staticmethod
     async def _resolve_guild_and_member(
-            self,
             interaction: discord.Interaction[BignessLeagueBot],
     ) -> tuple[discord.Guild, discord.Member]:
         guild = interaction.guild

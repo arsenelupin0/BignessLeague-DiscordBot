@@ -10,7 +10,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
@@ -51,7 +51,7 @@ def _string_choice(
         name: str | app_commands.locale_str,
         value: str,
 ) -> app_commands.Choice[str]:
-    return cast(app_commands.Choice[str], app_commands.Choice(name=name, value=value))
+    return app_commands.Choice[str](name=name, value=value)
 
 
 CHANNEL_CLOSE_CHOICES: list[app_commands.Choice[str]] = [

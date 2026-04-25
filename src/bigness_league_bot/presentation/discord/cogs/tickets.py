@@ -219,7 +219,8 @@ class TicketsCog(commands.Cog):
             interaction: discord.Interaction[BignessLeagueBot],
             equipo: discord.Role,
     ) -> None:
-        if interaction.guild is None or not isinstance(interaction.user, discord.Member):
+        guild = interaction.guild
+        if guild is None or not isinstance(interaction.user, discord.Member):
             raise CommandUserError(localize(I18N.errors.channel_management.server_only))
 
         try:
@@ -236,7 +237,7 @@ class TicketsCog(commands.Cog):
             raise CommandUserError(localize(I18N.messages.tickets.close.not_active))
 
         role_catalog = get_channel_access_role_catalog(
-            interaction.guild,
+            guild,
             interaction.client.settings.channel_access_range_start_role_id,
             interaction.client.settings.channel_access_range_end_role_id,
         )
@@ -322,13 +323,13 @@ class TicketsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(
             self,
-            before: discord.Message,
+            _before: discord.Message,
             after: discord.Message,
     ) -> None:
-        del before
         if not isinstance(after.channel, discord.Thread):
             return
-        if self.bot.user is None or after.author.id != self.bot.user.id:
+        bot_user = self.bot.user
+        if bot_user is None or after.author.id != bot_user.id:
             return
         pending_initial_task = self._pending_initial_command_mirror_tasks.get(after.id)
         if (
@@ -391,7 +392,8 @@ class TicketsCog(commands.Cog):
             self,
             message: discord.Message,
     ) -> None:
-        if self.bot.user is None or message.author.id != self.bot.user.id:
+        bot_user = self.bot.user
+        if bot_user is None or message.author.id != bot_user.id:
             return
         if not should_relay_bot_thread_message(message):
             return
@@ -421,8 +423,8 @@ class TicketsCog(commands.Cog):
         finally:
             self._pending_initial_command_mirror_tasks.pop(message.id, None)
 
+    @staticmethod
     async def _fetch_thread_message_snapshot(
-            self,
             message: discord.Message,
     ) -> discord.Message:
         channel = message.channel
@@ -489,7 +491,7 @@ class TicketsCog(commands.Cog):
 
     async def _send_dm_with_retry(
             self,
-            recipient: discord.abc.User | discord.Member | discord.User,
+            recipient: discord.User | discord.Member,
             *args: object,
             **kwargs: object,
     ) -> discord.Message:

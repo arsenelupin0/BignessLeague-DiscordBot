@@ -94,7 +94,7 @@ class TeamProfileTeamSelectionView(discord.ui.View):
         self.team_roles = team_roles
         self.localizer = localizer
         self.locale = locale
-        self.message: discord.InteractionMessage | None = None
+        self.message: discord.InteractionMessage | discord.Message | None = None
 
         for index, role in enumerate(team_roles):
             self.add_item(_SelectTeamButton(role=role, row=index // 5))
@@ -177,13 +177,17 @@ class TeamProfileTeamSelectionView(discord.ui.View):
             localizer=interaction.client.localizer,
             locale=interaction.locale,
         )
-        await interaction.message.edit(
+        message = interaction.message
+        if message is None:
+            return
+
+        await message.edit(
             content=None,
             attachments=[image_file],
             view=tracker_view,
         )
-        updated_message = await fetch_interaction_message(interaction, interaction.message.id)
-        tracker_view.message = updated_message or interaction.message
+        updated_message = await fetch_interaction_message(interaction, message.id)
+        tracker_view.message = updated_message or message
         if updated_message is not None:
             await mirror_ticket_command_message_edit(
                 interaction,

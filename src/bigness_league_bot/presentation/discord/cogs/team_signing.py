@@ -257,8 +257,8 @@ class TeamSigningCog(commands.Cog):
             removal_scope="staff",
         )
 
+    @staticmethod
     async def _remove_signing(
-            self,
             interaction: discord.Interaction[BignessLeagueBot],
             *,
             discord_name: str,

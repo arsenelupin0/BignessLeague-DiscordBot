@@ -160,10 +160,10 @@ class TicketParticipantAddition:
         await interaction.followup.send(
             self._build_summary(
                 interaction=interaction,
-                added=successfully_added,
-                already_present=already_present,
-                blocked_by_other_ticket=blocked_by_other_ticket,
-                dm_failed=dm_failed,
+                added_members=successfully_added,
+                already_present_members=already_present,
+                blocked_by_other_ticket_members=blocked_by_other_ticket,
+                dm_failed_members=dm_failed,
             ),
             ephemeral=True,
         )
@@ -217,42 +217,46 @@ class TicketParticipantAddition:
     def _build_summary(
             *,
             interaction: discord.Interaction[BignessLeagueBot],
-            added: list[discord.Member],
-            already_present: list[discord.Member],
-            blocked_by_other_ticket: list[discord.Member],
-            dm_failed: list[discord.Member],
+            added_members: list[discord.Member],
+            already_present_members: list[discord.Member],
+            blocked_by_other_ticket_members: list[discord.Member],
+            dm_failed_members: list[discord.Member],
     ) -> str:
         sections: list[str] = []
-        if added:
+        if added_members:
             sections.append(
                 interaction.client.localizer.translate(
                     I18N.messages.tickets.participants.summary.added,
                     locale=interaction.locale,
-                    users=", ".join(member.mention for member in added),
+                    users=", ".join(member.mention for member in added_members),
                 )
             )
-        if already_present:
+        if already_present_members:
             sections.append(
                 interaction.client.localizer.translate(
                     I18N.messages.tickets.participants.summary.already_present,
                     locale=interaction.locale,
-                    users=", ".join(member.mention for member in already_present),
+                    users=", ".join(
+                        member.mention for member in already_present_members
+                    ),
                 )
             )
-        if blocked_by_other_ticket:
+        if blocked_by_other_ticket_members:
             sections.append(
                 interaction.client.localizer.translate(
                     I18N.messages.tickets.participants.summary.blocked_by_other_ticket,
                     locale=interaction.locale,
-                    users=", ".join(member.mention for member in blocked_by_other_ticket),
+                    users=", ".join(
+                        member.mention for member in blocked_by_other_ticket_members
+                    ),
                 )
             )
-        if dm_failed:
+        if dm_failed_members:
             sections.append(
                 interaction.client.localizer.translate(
                     I18N.messages.tickets.participants.summary.dm_failed,
                     locale=interaction.locale,
-                    users=", ".join(member.mention for member in dm_failed),
+                    users=", ".join(member.mention for member in dm_failed_members),
                 )
             )
 
