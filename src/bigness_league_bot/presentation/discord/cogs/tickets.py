@@ -22,9 +22,7 @@ from bigness_league_bot.application.services.ticket_ai import (
     create_ticket_ai_chat_client,
 )
 from bigness_league_bot.application.services.tickets import (
-    format_ticket_number,
     TicketRecord,
-    require_ticket_category,
 )
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import localize
@@ -60,9 +58,8 @@ from bigness_league_bot.infrastructure.discord.tickets import TicketStateStore
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
 from bigness_league_bot.infrastructure.ticket_ai.ollama import OllamaClientError
-from bigness_league_bot.presentation.discord.views.ticket_message_embeds import (
-    build_ticket_message_content,
-    build_ticket_open_embed,
+from bigness_league_bot.presentation.discord.ticket_participant_addition import (
+    TicketParticipantAddition,
 )
 from bigness_league_bot.presentation.discord.views.ticket_panel import TicketPanelView
 from bigness_league_bot.presentation.discord.views.ticket_thread_controls import (
@@ -80,6 +77,12 @@ class TicketsCog(commands.Cog):
     def __init__(self, bot: BignessLeagueBot, store: TicketStateStore) -> None:
         self.bot = bot
         self.store = store
+        self._pending_initial_command_mirror_tasks: dict[int, asyncio.Task[None]] = {}
+        self._dm_retry_delays: tuple[float, ...] = (0.75, 1.5)
+        self._forum_relay_webhooks: dict[int, discord.Webhook] = {}
+        self._forum_relay_webhook_locks: dict[int, asyncio.Lock] = {}
+        self._thread_user_relay_message_ids: set[int] = set()
+        self._thread_user_relay_message_authors: dict[int, int] = {}
         self.command_mirror = TicketCommandMirror(
             bot=bot,
             store=store,
@@ -93,12 +96,14 @@ class TicketsCog(commands.Cog):
             send_dm=self._send_dm_with_retry,
             relay_mention=self._relay_clickable_mention,
         )
-        self._pending_initial_command_mirror_tasks: dict[int, asyncio.Task[None]] = {}
-        self._dm_retry_delays: tuple[float, ...] = (0.75, 1.5)
-        self._forum_relay_webhooks: dict[int, discord.Webhook] = {}
-        self._forum_relay_webhook_locks: dict[int, asyncio.Lock] = {}
-        self._thread_user_relay_message_ids: set[int] = set()
-        self._thread_user_relay_message_authors: dict[int, int] = {}
+        self.participant_addition = TicketParticipantAddition(
+            bot=bot,
+            store=store,
+            participant_messenger=self.participant_messenger,
+            resolve_ticket_user=self._resolve_ticket_user,
+            send_dm=self._send_dm_with_retry,
+            thread_user_relay_message_ids=self._thread_user_relay_message_ids,
+        )
 
     @app_commands.command(
         name=localized_locale_str(I18N.commands.tickets.publish_panel.name),
@@ -201,7 +206,7 @@ class TicketsCog(commands.Cog):
                 if member is not None
             )
         )
-        await self._add_members_to_ticket(
+        await self.participant_addition.add_members_to_ticket(
             interaction=interaction,
             thread=thread,
             record=record,
@@ -270,121 +275,11 @@ class TicketsCog(commands.Cog):
             )
 
         await interaction.response.defer(ephemeral=True, thinking=True)
-        await self._add_members_to_ticket(
+        await self.participant_addition.add_members_to_ticket(
             interaction=interaction,
             thread=thread,
             record=record,
             requested_members=requested_members,
-        )
-
-    async def _add_members_to_ticket(
-            self,
-            *,
-            interaction: discord.Interaction[BignessLeagueBot],
-            thread: discord.Thread,
-            record: TicketRecord,
-            requested_members: tuple[discord.Member, ...],
-    ) -> None:
-        members_to_add: list[discord.Member] = []
-        already_present: list[discord.Member] = []
-        blocked_by_other_ticket: list[discord.Member] = []
-        dm_failed: list[discord.Member] = []
-
-        for member in requested_members:
-            if member.bot:
-                dm_failed.append(member)
-                continue
-
-            if record.includes_user(member.id):
-                already_present.append(member)
-                continue
-
-            active_ticket = self.store.active_for_user(member.id)
-            if active_ticket is not None and active_ticket.thread_id != record.thread_id:
-                blocked_by_other_ticket.append(member)
-                continue
-
-            members_to_add.append(member)
-
-        if not members_to_add and not already_present and not blocked_by_other_ticket:
-            await interaction.followup.send(
-                interaction.client.localizer.translate(
-                    I18N.messages.tickets.participants.none_added,
-                    locale=interaction.locale,
-                ),
-                ephemeral=True,
-            )
-            return
-
-        owner = await self._resolve_ticket_user(record.user_id)
-        if owner is None:
-            await interaction.followup.send(
-                interaction.client.localizer.translate(
-                    I18N.messages.tickets.participants.owner_unavailable,
-                    locale=interaction.locale,
-                ),
-                ephemeral=True,
-            )
-            return
-
-        category = require_ticket_category(record.category_key)
-        successfully_added: list[discord.Member] = []
-        updated_record = record
-
-        for member in members_to_add:
-            dm_message = await self._send_ticket_participant_welcome(
-                member=member,
-                owner=owner,
-                record=updated_record,
-                category_label=category.label,
-                locale=interaction.locale,
-                guild=interaction.guild,
-            )
-            if dm_message is None:
-                dm_failed.append(member)
-                continue
-
-            updated_record = updated_record.with_added_participants((member.id,))
-            updated_record = updated_record.with_participant_dm(
-                user_id=member.id,
-                dm_channel_id=dm_message.channel.id,
-                dm_start_message_id=dm_message.id,
-            )
-            await self.participant_messenger.sync_history_to_participant(
-                record=updated_record,
-                participant_id=member.id,
-                thread=thread,
-                thread_user_relay_message_ids=self._thread_user_relay_message_ids,
-            )
-            successfully_added.append(member)
-
-        if updated_record != record:
-            self.store.update(updated_record)
-
-        if successfully_added:
-            await thread.send(
-                interaction.client.localizer.translate(
-                    I18N.messages.tickets.participants.added_thread,
-                    locale=interaction.locale,
-                    users=", ".join(member.mention for member in successfully_added),
-                ),
-                allowed_mentions=discord.AllowedMentions(
-                    users=True,
-                    roles=False,
-                    everyone=False,
-                    replied_user=False,
-                ),
-            )
-
-        await interaction.followup.send(
-            self._build_add_participants_summary(
-                interaction=interaction,
-                added=successfully_added,
-                already_present=already_present,
-                blocked_by_other_ticket=blocked_by_other_ticket,
-                dm_failed=dm_failed,
-            ),
-            ephemeral=True,
         )
 
     @app_commands.command(
@@ -850,48 +745,6 @@ class TicketsCog(commands.Cog):
         except discord.HTTPException:
             return None
 
-    async def _send_ticket_participant_welcome(
-            self,
-            *,
-            member: discord.Member,
-            owner: discord.abc.User | discord.Member,
-            record: TicketRecord,
-            category_label: str,
-            locale: str | discord.Locale | None,
-            guild: discord.Guild,
-    ) -> discord.Message | None:
-        try:
-            return await self._send_dm_with_retry(
-                member,
-                content=(
-                    f"{build_ticket_message_content(member)}\n\n"
-                    f"{self.bot.localizer.translate(
-                        I18N.messages.tickets.participants.added_dm,
-                        locale=locale,
-                        ticket_number=format_ticket_number(record.ticket_number),
-                        category=category_label,
-                    )}"
-                ),
-                embed=build_ticket_open_embed(
-                    bot=self.bot,
-                    locale=locale,
-                    guild=guild,
-                    opened_by=owner,
-                    category_label=category_label,
-                    ticket_number=record.ticket_number,
-                    created_at=record.created_at,
-                ),
-                view=TicketThreadControlsView(self.store),
-                allowed_mentions=discord.AllowedMentions(
-                    users=True,
-                    roles=False,
-                    everyone=False,
-                    replied_user=False,
-                ),
-            )
-        except discord.HTTPException:
-            return None
-
     async def _send_dm_with_retry(
             self,
             recipient: discord.abc.User | discord.Member | discord.User,
@@ -920,57 +773,6 @@ class TicketsCog(commands.Cog):
             raise last_error
 
         raise RuntimeError("Unexpected DM retry state")
-
-    def _build_add_participants_summary(
-            self,
-            *,
-            interaction: discord.Interaction[BignessLeagueBot],
-            added: list[discord.Member],
-            already_present: list[discord.Member],
-            blocked_by_other_ticket: list[discord.Member],
-            dm_failed: list[discord.Member],
-    ) -> str:
-        sections: list[str] = []
-        if added:
-            sections.append(
-                interaction.client.localizer.translate(
-                    I18N.messages.tickets.participants.summary.added,
-                    locale=interaction.locale,
-                    users=", ".join(member.mention for member in added),
-                )
-            )
-        if already_present:
-            sections.append(
-                interaction.client.localizer.translate(
-                    I18N.messages.tickets.participants.summary.already_present,
-                    locale=interaction.locale,
-                    users=", ".join(member.mention for member in already_present),
-                )
-            )
-        if blocked_by_other_ticket:
-            sections.append(
-                interaction.client.localizer.translate(
-                    I18N.messages.tickets.participants.summary.blocked_by_other_ticket,
-                    locale=interaction.locale,
-                    users=", ".join(member.mention for member in blocked_by_other_ticket),
-                )
-            )
-        if dm_failed:
-            sections.append(
-                interaction.client.localizer.translate(
-                    I18N.messages.tickets.participants.summary.dm_failed,
-                    locale=interaction.locale,
-                    users=", ".join(member.mention for member in dm_failed),
-                )
-            )
-
-        if not sections:
-            return interaction.client.localizer.translate(
-                I18N.messages.tickets.participants.none_added,
-                locale=interaction.locale,
-            )
-
-        return "\n".join(sections)
 
     async def _ping_ticket_ai_backend(self) -> bool:
         try:
