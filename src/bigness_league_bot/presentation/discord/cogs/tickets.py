@@ -41,18 +41,17 @@ from bigness_league_bot.infrastructure.discord.ticket_ai_messages import (
     build_ticket_ai_thread_message,
     ticket_ai_message_body,
 )
+from bigness_league_bot.infrastructure.discord.ticket_command_mirror import (
+    TicketCommandMirror,
+)
 from bigness_league_bot.infrastructure.discord.ticket_relay_messages import (
     PARTICIPANT_DM_RELAY_COLOR,
     STAFF_DM_RELAY_COLOR,
-    attachment_signature,
     author_avatar_url,
-    build_ticket_command_relay_message,
     build_ticket_dm_relay_embed,
     build_ticket_user_relay_message,
     clone_message_attachments_as_files,
-    clone_message_embeds,
     looks_like_user_relay_message,
-    message_body,
     relay_visual_username,
     should_relay_bot_thread_message,
     should_retry_discord_http_error,
@@ -84,11 +83,12 @@ class TicketsCog(commands.Cog):
     def __init__(self, bot: BignessLeagueBot, store: TicketStateStore) -> None:
         self.bot = bot
         self.store = store
-        self._interaction_command_names: dict[int, str] = {}
-        self._thread_to_dm_command_message_ids: dict[int, dict[int, int]] = {}
-        self._thread_to_dm_command_message_locks: dict[int, asyncio.Lock] = {}
-        self._thread_command_name_overrides: dict[int, str] = {}
-        self._thread_to_dm_command_message_signatures: dict[int, tuple[object, ...]] = {}
+        self.command_mirror = TicketCommandMirror(
+            bot=bot,
+            store=store,
+            resolve_ticket_user=self._resolve_ticket_user,
+            send_dm=self._send_dm_with_retry,
+        )
         self._pending_initial_command_mirror_tasks: dict[int, asyncio.Task[None]] = {}
         self._dm_retry_delays: tuple[float, ...] = (0.75, 1.5)
         self._forum_relay_webhooks: dict[int, discord.Webhook] = {}
@@ -427,21 +427,7 @@ class TicketsCog(commands.Cog):
             self,
             interaction: discord.Interaction[BignessLeagueBot],
     ) -> None:
-        if interaction.type != discord.InteractionType.application_command:
-            return
-
-        command = interaction.command
-        if command is None:
-            return
-
-        qualified_name = getattr(command, "qualified_name", None)
-        if isinstance(qualified_name, str) and qualified_name.strip():
-            self._interaction_command_names[interaction.id] = qualified_name.strip()
-            return
-
-        name = getattr(command, "name", None)
-        if isinstance(name, str) and name.strip():
-            self._interaction_command_names[interaction.id] = name.strip()
+        self.command_mirror.remember_interaction_command(interaction)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -479,11 +465,11 @@ class TicketsCog(commands.Cog):
         if (
                 pending_initial_task is not None
                 and not pending_initial_task.done()
-                and after.id not in self._thread_to_dm_command_message_ids
+                and not self.command_mirror.has_thread_message(after.id)
         ):
             return
         if (
-                after.id not in self._thread_to_dm_command_message_ids
+                not self.command_mirror.has_thread_message(after.id)
                 and not should_relay_bot_thread_message(after)
         ):
             return
@@ -639,7 +625,7 @@ class TicketsCog(commands.Cog):
             return
         if not should_relay_bot_thread_message(message):
             return
-        if message.id in self._thread_to_dm_command_message_ids:
+        if self.command_mirror.has_thread_message(message.id):
             return
 
         pending_task = self._pending_initial_command_mirror_tasks.get(message.id)
@@ -969,99 +955,16 @@ class TicketsCog(commands.Cog):
             content=ai_reply.answer,
         )
 
-    def _interaction_command_name(self, message: discord.Message) -> str | None:
-        interaction_metadata = message.interaction_metadata
-        if interaction_metadata is None:
-            return None
-
-        interaction_id = getattr(interaction_metadata, "id", None)
-        if isinstance(interaction_id, int):
-            resolved_name = self._interaction_command_names.get(interaction_id)
-            if resolved_name:
-                return resolved_name
-
-        name = getattr(interaction_metadata, "name", None)
-        if isinstance(name, str) and name.strip():
-            return name.strip()
-
-        return None
-
     async def mirror_thread_command_message(
             self,
             message: discord.Message,
             *,
             command_name: str | None = None,
     ) -> discord.Message | None:
-        async with self._command_message_mirror_lock(message.id):
-            return await self._mirror_thread_command_message_locked(
-                message,
-                command_name=command_name,
-            )
-
-    async def _mirror_thread_command_message_locked(
-            self,
-            message: discord.Message,
-            *,
-            command_name: str | None = None,
-    ) -> discord.Message | None:
-        self._remember_command_name_override(message, command_name=command_name)
-        record = self.store.active_for_thread(message.channel.id)
-        if record is None:
-            return None
-        if message.id in self._thread_to_dm_command_message_ids:
-            return await self._mirror_thread_command_message_edit_locked(
-                message,
-                command_name=command_name,
-            )
-
-        relay_signature = self._build_command_relay_signature(
+        return await self.command_mirror.mirror_thread_command_message(
             message,
             command_name=command_name,
         )
-
-        dm_message_ids = self._thread_to_dm_command_message_ids.setdefault(message.id, {})
-        latest_dm_message: discord.Message | None = None
-        failed_user_ids: list[int] = []
-        for participant_id in record.participant_ids:
-            try:
-                ticket_user = await self._resolve_ticket_user(participant_id)
-                if ticket_user is None:
-                    failed_user_ids.append(participant_id)
-                    continue
-                dm_message = await self._send_dm_with_retry(
-                    ticket_user,
-                    **await self._build_command_dm_send_kwargs(
-                        message,
-                        command_name=command_name,
-                    ),
-                    allowed_mentions=discord.AllowedMentions.none(),
-                )
-                dm_message_ids[participant_id] = dm_message.id
-                latest_dm_message = dm_message
-            except discord.Forbidden:
-                failed_user_ids.append(participant_id)
-            except discord.HTTPException:
-                LOGGER.exception(
-                    "TICKET_BOT_COMMAND_RELAY_FAILED thread=%s user_id=%s message=%s",
-                    message.channel.id,
-                    participant_id,
-                    message.id,
-                )
-
-        if failed_user_ids:
-            await message.channel.send(
-                self.bot.localizer.translate(
-                    I18N.messages.tickets.relay.dm_failed_for_staff,
-                    user_id=", ".join(str(user_id) for user_id in failed_user_ids),
-                ),
-                allowed_mentions=discord.AllowedMentions.none(),
-            )
-
-        if latest_dm_message is None:
-            return None
-
-        self._thread_to_dm_command_message_signatures[message.id] = relay_signature
-        return latest_dm_message
 
     async def mirror_thread_command_message_edit(
             self,
@@ -1069,215 +972,10 @@ class TicketsCog(commands.Cog):
             *,
             command_name: str | None = None,
     ) -> discord.Message | None:
-        async with self._command_message_mirror_lock(message.id):
-            return await self._mirror_thread_command_message_edit_locked(
-                message,
-                command_name=command_name,
-            )
-
-    async def _mirror_thread_command_message_edit_locked(
-            self,
-            message: discord.Message,
-            *,
-            command_name: str | None = None,
-    ) -> discord.Message | None:
-        self._remember_command_name_override(message, command_name=command_name)
-        record = self.store.active_for_thread(message.channel.id)
-        if record is None:
-            return None
-
-        dm_message_ids = self._thread_to_dm_command_message_ids.get(message.id)
-        if not dm_message_ids:
-            return await self._mirror_thread_command_message_locked(
-                message,
-                command_name=command_name,
-            )
-
-        relay_signature = self._build_command_relay_signature(
+        return await self.command_mirror.mirror_thread_command_message_edit(
             message,
             command_name=command_name,
         )
-        previous_signature = self._thread_to_dm_command_message_signatures.get(message.id)
-
-        latest_dm_message: discord.Message | None = None
-        failed_user_ids: list[int] = []
-        for participant in record.participants:
-            try:
-                ticket_user = await self._resolve_ticket_user(participant.user_id)
-                if ticket_user is None:
-                    failed_user_ids.append(participant.user_id)
-                    continue
-                dm_channel = await ticket_user.create_dm()
-                dm_message_id = dm_message_ids.get(participant.user_id)
-                if previous_signature == relay_signature and dm_message_id is not None:
-                    fetched_dm_message = await dm_channel.fetch_message(dm_message_id)
-                    latest_dm_message = fetched_dm_message
-                    continue
-                if dm_message_id is None:
-                    sent_dm_message = await self._send_dm_with_retry(
-                        ticket_user,
-                        **await self._build_command_dm_send_kwargs(
-                            message,
-                            command_name=command_name,
-                        ),
-                        allowed_mentions=discord.AllowedMentions.none(),
-                    )
-                    dm_message_ids[participant.user_id] = sent_dm_message.id
-                    latest_dm_message = sent_dm_message
-                    continue
-                dm_message = await dm_channel.fetch_message(dm_message_id)
-                await dm_message.edit(
-                    **await self._build_command_dm_edit_kwargs(
-                        message,
-                        dm_message=dm_message,
-                        command_name=command_name,
-                    ),
-                    allowed_mentions=discord.AllowedMentions.none(),
-                    view=None,
-                )
-                latest_dm_message = dm_message
-            except discord.NotFound:
-                dm_message_ids.pop(participant.user_id, None)
-                replacement_dm_message = await self._send_command_result_to_participant(
-                    record=record,
-                    participant_id=participant.user_id,
-                    message=message,
-                    command_name=command_name,
-                )
-                if replacement_dm_message is not None:
-                    dm_message_ids[participant.user_id] = replacement_dm_message.id
-                    latest_dm_message = replacement_dm_message
-            except discord.Forbidden:
-                failed_user_ids.append(participant.user_id)
-            except discord.HTTPException:
-                LOGGER.exception(
-                    "TICKET_BOT_COMMAND_RELAY_EDIT_FAILED thread=%s user_id=%s message=%s dm_message=%s",
-                    message.channel.id,
-                    participant.user_id,
-                    message.id,
-                    dm_message_ids.get(participant.user_id),
-                )
-
-        if failed_user_ids:
-            await message.channel.send(
-                self.bot.localizer.translate(
-                    I18N.messages.tickets.relay.dm_failed_for_staff,
-                    user_id=", ".join(str(user_id) for user_id in failed_user_ids),
-                ),
-                allowed_mentions=discord.AllowedMentions.none(),
-            )
-
-        if latest_dm_message is None:
-            return None
-
-        self._thread_to_dm_command_message_signatures[message.id] = relay_signature
-        self._thread_to_dm_command_message_ids[message.id] = dm_message_ids
-        return latest_dm_message
-
-    def _command_message_mirror_lock(self, message_id: int) -> asyncio.Lock:
-        lock = self._thread_to_dm_command_message_locks.get(message_id)
-        if lock is None:
-            lock = asyncio.Lock()
-            self._thread_to_dm_command_message_locks[message_id] = lock
-
-        return lock
-
-    def _remember_command_name_override(
-            self,
-            message: discord.Message,
-            *,
-            command_name: str | None,
-    ) -> None:
-        if command_name is None:
-            return
-
-        normalized_name = command_name.strip()
-        if not normalized_name:
-            return
-
-        self._thread_command_name_overrides[message.id] = normalized_name
-
-    def _resolved_command_name(
-            self,
-            message: discord.Message,
-            *,
-            command_name: str | None = None,
-    ) -> str:
-        if command_name is not None and command_name.strip():
-            return command_name.strip()
-
-        overridden_name = self._thread_command_name_overrides.get(message.id)
-        if overridden_name:
-            return overridden_name
-
-        return self._interaction_command_name(message) or "comando"
-
-    def _build_command_relay_signature(
-            self,
-            message: discord.Message,
-            *,
-            command_name: str | None = None,
-    ) -> tuple[object, ...]:
-        return (
-            self._resolved_command_name(message, command_name=command_name),
-            message_body(
-                localizer=self.bot.localizer,
-                message=message,
-                attachment_mode="names",
-            ),
-            tuple(embed.to_dict() for embed in message.embeds),
-            attachment_signature(message.attachments),
-        )
-
-    async def _build_command_dm_send_kwargs(
-            self,
-            message: discord.Message,
-            *,
-            command_name: str | None = None,
-    ) -> dict[str, object]:
-        payload: dict[str, object] = {
-            "content": build_ticket_command_relay_message(
-                localizer=self.bot.localizer,
-                message=message,
-                command_name=self._resolved_command_name(
-                    message,
-                    command_name=command_name,
-                ),
-            ),
-            "embeds": clone_message_embeds(message),
-        }
-        files = await clone_message_attachments_as_files(message)
-        if files:
-            payload["files"] = files
-
-        return payload
-
-    async def _build_command_dm_edit_kwargs(
-            self,
-            message: discord.Message,
-            *,
-            dm_message: discord.Message,
-            command_name: str | None = None,
-    ) -> dict[str, object]:
-        payload: dict[str, object] = {
-            "content": build_ticket_command_relay_message(
-                localizer=self.bot.localizer,
-                message=message,
-                command_name=self._resolved_command_name(
-                    message,
-                    command_name=command_name,
-                ),
-            ),
-            "embeds": clone_message_embeds(message),
-        }
-        source_attachments = attachment_signature(message.attachments)
-        mirrored_attachments = attachment_signature(dm_message.attachments)
-        if not source_attachments:
-            payload["attachments"] = []
-        elif source_attachments != mirrored_attachments:
-            payload["attachments"] = await clone_message_attachments_as_files(message)
-
-        return payload
 
     async def _resolve_ticket_user(
             self,
@@ -1290,45 +988,6 @@ class TicketsCog(commands.Cog):
         try:
             return await self.bot.fetch_user(user_id)
         except discord.HTTPException:
-            return None
-
-    async def _send_command_result_to_participant(
-            self,
-            *,
-            record: TicketRecord,
-            participant_id: int,
-            message: discord.Message,
-            command_name: str | None = None,
-    ) -> discord.Message | None:
-        ticket_user = await self._resolve_ticket_user(participant_id)
-        if ticket_user is None:
-            return None
-
-        try:
-            return await self._send_dm_with_retry(
-                ticket_user,
-                **await self._build_command_dm_send_kwargs(
-                    message,
-                    command_name=command_name,
-                ),
-                allowed_mentions=discord.AllowedMentions.none(),
-            )
-        except discord.Forbidden:
-            await message.channel.send(
-                self.bot.localizer.translate(
-                    I18N.messages.tickets.relay.dm_failed_for_staff,
-                    user_id=str(participant_id),
-                ),
-                allowed_mentions=discord.AllowedMentions.none(),
-            )
-            return None
-        except discord.HTTPException:
-            LOGGER.exception(
-                "TICKET_BOT_COMMAND_RELAY_FAILED thread=%s user_id=%s message=%s",
-                record.thread_id,
-                participant_id,
-                message.id,
-            )
             return None
 
     async def _send_ticket_participant_welcome(
@@ -1390,19 +1049,18 @@ class TicketsCog(commands.Cog):
                     continue
 
                 if should_relay_bot_thread_message(history_message):
-                    dm_message = await self._send_command_result_to_participant(
+                    dm_message = await self.command_mirror.send_result_to_participant(
                         record=record,
                         participant_id=participant_id,
                         message=history_message,
                     )
                     if dm_message is None:
                         continue
-                    self._thread_to_dm_command_message_ids.setdefault(
-                        history_message.id,
-                        {},
-                    )[participant_id] = dm_message.id
-                    self._thread_to_dm_command_message_signatures[history_message.id] = (
-                        self._build_command_relay_signature(history_message)
+                    self.command_mirror.remember_participant_message(
+                        thread_message_id=history_message.id,
+                        participant_id=participant_id,
+                        dm_message_id=dm_message.id,
+                        message=history_message,
                     )
                     continue
 
