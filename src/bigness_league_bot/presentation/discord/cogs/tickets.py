@@ -19,8 +19,6 @@ from discord import app_commands
 from discord.ext import commands
 
 from bigness_league_bot.application.services.ticket_ai import (
-    TicketAiConversationTurn,
-    TicketAiReply,
     create_ticket_ai_chat_client,
 )
 from bigness_league_bot.application.services.tickets import (
@@ -37,6 +35,30 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
 )
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
+)
+from bigness_league_bot.infrastructure.discord.ticket_ai_messages import (
+    build_ticket_ai_conversation,
+    build_ticket_ai_thread_message,
+    ticket_ai_message_body,
+)
+from bigness_league_bot.infrastructure.discord.ticket_relay_messages import (
+    PARTICIPANT_DM_RELAY_COLOR,
+    STAFF_DM_RELAY_COLOR,
+    attachment_signature,
+    author_avatar_url,
+    build_ticket_command_relay_message,
+    build_ticket_dm_relay_embed,
+    build_ticket_user_relay_message,
+    clone_message_attachments_as_files,
+    clone_message_embeds,
+    looks_like_user_relay_message,
+    message_body,
+    relay_visual_username,
+    should_relay_bot_thread_message,
+    should_retry_discord_http_error,
+    thread_relay_display_name,
+    truncate_relay_text,
+    yes_no,
 )
 from bigness_league_bot.infrastructure.discord.tickets import TicketStateStore
 from bigness_league_bot.infrastructure.i18n.keys import I18N
@@ -55,9 +77,6 @@ if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
 LOGGER = logging.getLogger(__name__)
-MAX_RELAY_MESSAGE_LENGTH = 1_900
-STAFF_DM_RELAY_COLOR = 0xF1C40F
-PARTICIPANT_DM_RELAY_COLOR = 0x57F287
 THREAD_RELAY_WEBHOOK_NAME = "Bigness League Tickets Relay"
 
 
@@ -386,13 +405,13 @@ class TicketsCog(commands.Cog):
             interaction.client.localizer.translate(
                 I18N.messages.tickets.ai.status.result,
                 locale=interaction.locale,
-                loaded=self._yes_no(self.bot.ticket_ai is not None),
-                enabled=self._yes_no(self.bot.settings.ticket_ai_enabled),
-                auto_reply=self._yes_no(self.bot.settings.ticket_ai_auto_reply_enabled),
+                loaded=yes_no(self.bot.ticket_ai is not None),
+                enabled=yes_no(self.bot.settings.ticket_ai_enabled),
+                auto_reply=yes_no(self.bot.settings.ticket_ai_auto_reply_enabled),
                 provider=self.bot.settings.ticket_ai_provider,
                 model=self.bot.settings.ticket_ai_model,
                 base_url=self.bot.settings.ticket_ai_base_url,
-                backend_reachable=self._yes_no(backend_reachable),
+                backend_reachable=yes_no(backend_reachable),
                 categories=(
                         ", ".join(self.bot.settings.ticket_ai_autoreply_categories)
                         or "-"
@@ -435,7 +454,7 @@ class TicketsCog(commands.Cog):
         if isinstance(message.channel, discord.Thread):
             if (
                     message.webhook_id is not None
-                    and not self._should_relay_bot_thread_message(message)
+                    and not should_relay_bot_thread_message(message)
             ):
                 return
             if message.id in self._thread_user_relay_message_ids:
@@ -465,7 +484,7 @@ class TicketsCog(commands.Cog):
             return
         if (
                 after.id not in self._thread_to_dm_command_message_ids
-                and not self._should_relay_bot_thread_message(after)
+                and not should_relay_bot_thread_message(after)
         ):
             return
 
@@ -602,7 +621,7 @@ class TicketsCog(commands.Cog):
                     continue
                 await self._send_dm_with_retry(
                     ticket_user,
-                    self._truncate(content),
+                    truncate_relay_text(content),
                     allowed_mentions=discord.AllowedMentions.none(),
                 )
             except discord.HTTPException:
@@ -618,7 +637,7 @@ class TicketsCog(commands.Cog):
     ) -> None:
         if self.bot.user is None or message.author.id != self.bot.user.id:
             return
-        if not self._should_relay_bot_thread_message(message):
+        if not should_relay_bot_thread_message(message):
             return
         if message.id in self._thread_to_dm_command_message_ids:
             return
@@ -687,7 +706,10 @@ class TicketsCog(commands.Cog):
         webhook = await self._get_thread_relay_webhook(thread)
         if webhook is None:
             relay_message = await thread.send(
-                self._build_user_relay_message(message),
+                build_ticket_user_relay_message(
+                    localizer=self.bot.localizer,
+                    message=message,
+                ),
                 allowed_mentions=discord.AllowedMentions.none(),
             )
             self._thread_user_relay_message_authors[relay_message.id] = message.author.id
@@ -698,14 +720,14 @@ class TicketsCog(commands.Cog):
             self.store.update(updated_record)
             return
 
-        files = await self._clone_message_attachments_as_files(message)
+        files = await clone_message_attachments_as_files(message)
         content = message.content.strip()
         try:
             webhook_message = await webhook.send(
                 content=(content if content else discord.utils.MISSING),
                 files=(files if files else discord.utils.MISSING),
-                username=self._thread_relay_display_name(thread, message.author),
-                avatar_url=self._author_avatar_url(message.author),
+                username=thread_relay_display_name(thread, message.author),
+                avatar_url=author_avatar_url(message.author),
                 allowed_mentions=discord.AllowedMentions.none(),
                 thread=thread,
                 wait=True,
@@ -718,7 +740,10 @@ class TicketsCog(commands.Cog):
                 message.author.id,
             )
             await thread.send(
-                self._build_user_relay_message(message),
+                build_ticket_user_relay_message(
+                    localizer=self.bot.localizer,
+                    message=message,
+                ),
                 allowed_mentions=discord.AllowedMentions.none(),
             )
             return
@@ -787,32 +812,6 @@ class TicketsCog(commands.Cog):
             self._forum_relay_webhook_locks[forum_channel_id] = lock
         return lock
 
-    def _build_user_relay_message(self, message: discord.Message) -> str:
-        author_label = message.author.mention
-        body = self._message_body(message)
-        return self._truncate(
-            self.bot.localizer.translate(
-                I18N.messages.tickets.relay.from_user,
-                author=author_label,
-                body=body,
-            )
-        )
-
-    def _build_staff_relay_message(self, message: discord.Message) -> str:
-        member_name = (
-            message.author.mention
-            if isinstance(message.author, (discord.Member, discord.User))
-            else str(message.author)
-        )
-        body = self._message_body(message)
-        return self._truncate(
-            self.bot.localizer.translate(
-                I18N.messages.tickets.relay.from_staff,
-                author=member_name,
-                body=body,
-            )
-        )
-
     async def _send_staff_relay_to_dm_participant(
             self,
             *,
@@ -821,12 +820,18 @@ class TicketsCog(commands.Cog):
     ) -> None:
         await self._send_dm_with_retry(
             ticket_user,
-            embed=self._build_dm_relay_embed(
-                message,
+            embed=build_ticket_dm_relay_embed(
+                localizer=self.bot.localizer,
+                message=message,
                 color=STAFF_DM_RELAY_COLOR,
                 is_staff=True,
+                mention_line=(
+                        self._relay_clickable_mention(message)
+                        or relay_visual_username(message)
+                ),
+                avatar_url=author_avatar_url(message.author),
             ),
-            files=await self._clone_message_attachments_as_files(message),
+            files=await clone_message_attachments_as_files(message),
             allowed_mentions=discord.AllowedMentions.none(),
         )
 
@@ -838,75 +843,20 @@ class TicketsCog(commands.Cog):
     ) -> None:
         await self._send_dm_with_retry(
             ticket_user,
-            embed=self._build_dm_relay_embed(
-                message,
+            embed=build_ticket_dm_relay_embed(
+                localizer=self.bot.localizer,
+                message=message,
                 color=PARTICIPANT_DM_RELAY_COLOR,
                 is_staff=False,
+                mention_line=(
+                        self._relay_clickable_mention(message)
+                        or relay_visual_username(message)
+                ),
+                avatar_url=author_avatar_url(message.author),
             ),
-            files=await self._clone_message_attachments_as_files(message),
+            files=await clone_message_attachments_as_files(message),
             allowed_mentions=discord.AllowedMentions.none(),
         )
-
-    def _build_dm_relay_embed(
-            self,
-            message: discord.Message,
-            *,
-            color: int,
-            is_staff: bool,
-    ) -> discord.Embed:
-        body = message.content.strip()
-        mention_line = self._relay_clickable_mention(message) or self._relay_visual_username(message)
-        body_value = (
-            self._truncate(body)
-            if body
-            else self.bot.localizer.translate(I18N.messages.tickets.relay.empty_body)
-        )
-        description = f"{mention_line}**:** {body_value}\n\n_ _"
-        embed = discord.Embed(
-            description=description,
-            color=color,
-            timestamp=message.created_at,
-        )
-        if is_staff:
-            embed.set_author(
-                name="Nuevo mensaje del Staff...",
-                icon_url=self._author_avatar_url(message.author),
-            )
-
-        else:
-            embed.set_author(
-                name="Nuevo mensaje...",
-                icon_url=self._author_avatar_url(message.author),
-            )
-        embed.set_footer(
-            text=self.bot.localizer.translate(
-                I18N.messages.tickets.open.embed.footer,
-            )
-        )
-        return embed
-
-    def _relay_author_name(self, message: discord.Message) -> str:
-        if message.guild is not None:
-            member = message.guild.get_member(message.author.id)
-            if member is not None:
-                return member.display_name
-
-        display_name = getattr(message.author, "display_name", None)
-        if isinstance(display_name, str) and display_name.strip():
-            return display_name
-
-        global_name = getattr(message.author, "global_name", None)
-        if isinstance(global_name, str) and global_name.strip():
-            return global_name
-
-        name = getattr(message.author, "name", None)
-        if isinstance(name, str) and name.strip():
-            return name
-
-        return str(message.author)
-
-    def _relay_visual_username(self, message: discord.Message) -> str:
-        return f"@{self._relay_author_name(message)}"
 
     def _relay_clickable_mention(self, message: discord.Message) -> str | None:
         if message.webhook_id is not None:
@@ -924,67 +874,6 @@ class TicketsCog(commands.Cog):
         if isinstance(message.author, (discord.Member, discord.User)):
             return message.author.mention
         return None
-
-    def _thread_relay_display_name(
-            self,
-            thread: discord.Thread,
-            author: discord.abc.User | discord.User,
-    ) -> str:
-        member = thread.guild.get_member(author.id)
-        if member is not None:
-            return member.display_name
-
-        global_name = getattr(author, "global_name", None)
-        if isinstance(global_name, str) and global_name.strip():
-            return global_name
-
-        return author.name
-
-    @staticmethod
-    def _author_avatar_url(author: discord.abc.User | discord.User) -> str | object:
-        avatar = getattr(author, "display_avatar", None)
-        if avatar is None:
-            return discord.utils.MISSING
-        return avatar.url
-
-    def _guild_icon_url(self, message: discord.Message) -> str | object:
-        if message.guild is not None and message.guild.icon is not None:
-            return message.guild.icon.url
-
-        bot_user = self.bot.user
-        if bot_user is not None:
-            return bot_user.display_avatar.url
-
-        return discord.utils.MISSING
-
-    def _message_body(
-            self,
-            message: discord.Message,
-            *,
-            attachment_mode: str = "urls",
-    ) -> str:
-        content = message.content.strip()
-        attachment_lines: list[str] = []
-        if attachment_mode == "urls":
-            attachment_lines = [
-                f"- {attachment.url}"
-                for attachment in message.attachments
-            ]
-        elif attachment_mode == "names":
-            attachment_lines = [
-                f"- {attachment.filename}"
-                for attachment in message.attachments
-            ]
-        if attachment_lines:
-            attachments = self.bot.localizer.translate(
-                I18N.messages.tickets.relay.attachments,
-                urls="\n".join(attachment_lines),
-            )
-            content = f"{content}\n\n{attachments}" if content else attachments
-
-        return content or self.bot.localizer.translate(
-            I18N.messages.tickets.relay.empty_body
-        )
 
     async def _maybe_auto_reply_to_user_ticket(
             self,
@@ -1008,13 +897,18 @@ class TicketsCog(commands.Cog):
             )
             return
 
-        latest_user_message = self._message_body_for_ai(message)
+        latest_user_message = ticket_ai_message_body(
+            localizer=self.bot.localizer,
+            message=message,
+        )
         if latest_user_message is None:
             return
 
-        conversation = await self._build_ai_conversation(
+        conversation = await build_ticket_ai_conversation(
+            localizer=self.bot.localizer,
             channel=message.channel,
             excluded_message_id=message.id,
+            max_context_messages=self.bot.settings.ticket_ai_max_context_messages,
         )
         try:
             ai_reply = await ticket_ai.generate_reply(
@@ -1040,7 +934,10 @@ class TicketsCog(commands.Cog):
             return
 
         await thread.send(
-            self._build_ai_thread_message(ai_reply),
+            build_ticket_ai_thread_message(
+                localizer=self.bot.localizer,
+                ai_reply=ai_reply,
+            ),
             allowed_mentions=discord.AllowedMentions.none(),
         )
         fallback_required = ai_reply.should_escalate
@@ -1072,121 +969,6 @@ class TicketsCog(commands.Cog):
             content=ai_reply.answer,
         )
 
-    async def _build_ai_conversation(
-            self,
-            *,
-            channel: discord.abc.Messageable,
-            excluded_message_id: int,
-    ) -> tuple[TicketAiConversationTurn, ...]:
-        turns: list[TicketAiConversationTurn] = []
-        async for history_message in channel.history(
-                limit=self.bot.settings.ticket_ai_max_context_messages + 8,
-                oldest_first=False,
-        ):
-            if history_message.id == excluded_message_id:
-                continue
-            body = self._message_body_for_ai(history_message)
-            if body is None:
-                continue
-            role = self._message_role_for_ai(history_message)
-            if role is None:
-                continue
-
-            turns.append(
-                TicketAiConversationTurn(
-                    role=role,
-                    content=body,
-                )
-            )
-
-        turns.reverse()
-        return tuple(turns[-self.bot.settings.ticket_ai_max_context_messages:])
-
-    def _build_ai_thread_message(self, ai_reply: TicketAiReply) -> str:
-        used_entry_ids = ", ".join(ai_reply.used_entry_ids) or "-"
-        return self._truncate(
-            self.bot.localizer.translate(
-                I18N.messages.tickets.ai.thread_response,
-                answer=ai_reply.answer,
-                confidence=str(ai_reply.confidence),
-                should_escalate=("si" if ai_reply.should_escalate else "no"),
-                reason=ai_reply.reason,
-                used_entry_ids=used_entry_ids,
-            )
-        )
-
-    def _message_body_for_ai(
-            self,
-            message: discord.Message,
-    ) -> str | None:
-        content = message.content.strip()
-        if not content:
-            embed_description = self._relay_embed_description_for_ai(message)
-            if embed_description is not None:
-                content = embed_description
-        attachment_lines = [
-            f"- {attachment.url}"
-            for attachment in message.attachments
-        ]
-        if attachment_lines:
-            attachments = self.bot.localizer.translate(
-                I18N.messages.tickets.relay.attachments,
-                urls="\n".join(attachment_lines),
-            )
-            content = f"{content}\n\n{attachments}" if content else attachments
-
-        return content or None
-
-    def _message_role_for_ai(
-            self,
-            message: discord.Message,
-    ) -> str | None:
-        if not message.author.bot:
-            return "user"
-        if self._is_participant_dm_relay_message(message):
-            return "user"
-        if self._is_staff_dm_relay_message(message):
-            return "staff"
-        if self._looks_like_user_relay_message(message.content):
-            return "user"
-        if self._looks_like_staff_relay_message(message.content):
-            return "staff"
-        if self._looks_like_bot_command_relay_message(message.content):
-            return "staff"
-
-        return None
-
-    def _build_bot_command_relay_message(
-            self,
-            message: discord.Message,
-            *,
-            command_name: str | None = None,
-    ) -> str:
-        resolved_command_name = self._resolved_command_name(
-            message,
-            command_name=command_name,
-        )
-        command_label = (
-            resolved_command_name
-            if resolved_command_name.startswith(("/", "!"))
-            else f"/{resolved_command_name}"
-        )
-        body = self._message_body(message, attachment_mode="names")
-        return self._truncate(
-            self.bot.localizer.translate(
-                I18N.messages.tickets.relay.from_command_result,
-                command_name=command_label,
-                body=body,
-            )
-        )
-
-    @staticmethod
-    def _should_relay_bot_thread_message(message: discord.Message) -> bool:
-        if not _message_has_visible_payload(message):
-            return False
-
-        return message.interaction_metadata is not None
-
     def _interaction_command_name(self, message: discord.Message) -> str | None:
         interaction_metadata = message.interaction_metadata
         if interaction_metadata is None:
@@ -1203,46 +985,6 @@ class TicketsCog(commands.Cog):
             return name.strip()
 
         return None
-
-    @staticmethod
-    def _looks_like_staff_relay_message(content: str) -> bool:
-        prefix = I18N.messages.tickets.relay.from_staff.default.split("{author}")[0]
-        return content.startswith(prefix)
-
-    @staticmethod
-    def _looks_like_user_relay_message(content: str) -> bool:
-        prefix = I18N.messages.tickets.relay.from_user.default.split("{author}")[0]
-        return content.startswith(prefix)
-
-    @staticmethod
-    def _looks_like_bot_command_relay_message(content: str) -> bool:
-        prefix = I18N.messages.tickets.relay.from_command_result.default.split("{command_name}")[0]
-        return content.startswith(prefix)
-
-    @staticmethod
-    def _relay_embed_description_for_ai(message: discord.Message) -> str | None:
-        if not message.embeds:
-            return None
-        description = message.embeds[0].description
-        if description is None:
-            return None
-        normalized = description.strip()
-        return normalized or None
-
-    @staticmethod
-    def _relay_embed_color_value(message: discord.Message) -> int | None:
-        if not message.embeds:
-            return None
-        color = message.embeds[0].colour
-        if color is None:
-            return None
-        return color.value
-
-    def _is_staff_dm_relay_message(self, message: discord.Message) -> bool:
-        return self._relay_embed_color_value(message) == STAFF_DM_RELAY_COLOR
-
-    def _is_participant_dm_relay_message(self, message: discord.Message) -> bool:
-        return self._relay_embed_color_value(message) == PARTICIPANT_DM_RELAY_COLOR
 
     async def mirror_thread_command_message(
             self,
@@ -1478,24 +1220,13 @@ class TicketsCog(commands.Cog):
     ) -> tuple[object, ...]:
         return (
             self._resolved_command_name(message, command_name=command_name),
-            self._message_body(message, attachment_mode="names"),
+            message_body(
+                localizer=self.bot.localizer,
+                message=message,
+                attachment_mode="names",
+            ),
             tuple(embed.to_dict() for embed in message.embeds),
-            self._attachment_signature(message.attachments),
-        )
-
-    @staticmethod
-    def _attachment_signature(
-            attachments: list[discord.Attachment],
-    ) -> tuple[tuple[object, ...], ...]:
-        return tuple(
-            (
-                attachment.filename,
-                attachment.size,
-                attachment.content_type,
-                attachment.width,
-                attachment.height,
-            )
-            for attachment in attachments
+            attachment_signature(message.attachments),
         )
 
     async def _build_command_dm_send_kwargs(
@@ -1505,13 +1236,17 @@ class TicketsCog(commands.Cog):
             command_name: str | None = None,
     ) -> dict[str, object]:
         payload: dict[str, object] = {
-            "content": self._build_bot_command_relay_message(
-                message,
-                command_name=command_name,
+            "content": build_ticket_command_relay_message(
+                localizer=self.bot.localizer,
+                message=message,
+                command_name=self._resolved_command_name(
+                    message,
+                    command_name=command_name,
+                ),
             ),
-            "embeds": self._clone_message_embeds(message),
+            "embeds": clone_message_embeds(message),
         }
-        files = await self._clone_message_attachments_as_files(message)
+        files = await clone_message_attachments_as_files(message)
         if files:
             payload["files"] = files
 
@@ -1525,36 +1260,24 @@ class TicketsCog(commands.Cog):
             command_name: str | None = None,
     ) -> dict[str, object]:
         payload: dict[str, object] = {
-            "content": self._build_bot_command_relay_message(
-                message,
-                command_name=command_name,
+            "content": build_ticket_command_relay_message(
+                localizer=self.bot.localizer,
+                message=message,
+                command_name=self._resolved_command_name(
+                    message,
+                    command_name=command_name,
+                ),
             ),
-            "embeds": self._clone_message_embeds(message),
+            "embeds": clone_message_embeds(message),
         }
-        source_attachments = self._attachment_signature(message.attachments)
-        mirrored_attachments = self._attachment_signature(dm_message.attachments)
+        source_attachments = attachment_signature(message.attachments)
+        mirrored_attachments = attachment_signature(dm_message.attachments)
         if not source_attachments:
             payload["attachments"] = []
         elif source_attachments != mirrored_attachments:
-            payload["attachments"] = await self._clone_message_attachments_as_files(message)
+            payload["attachments"] = await clone_message_attachments_as_files(message)
 
         return payload
-
-    @staticmethod
-    def _clone_message_embeds(message: discord.Message) -> list[discord.Embed]:
-        return [
-            discord.Embed.from_dict(embed.to_dict())
-            for embed in message.embeds
-        ]
-
-    @staticmethod
-    async def _clone_message_attachments_as_files(
-            message: discord.Message,
-    ) -> list[discord.File]:
-        return [
-            await attachment.to_file()
-            for attachment in message.attachments
-        ]
 
     async def _resolve_ticket_user(
             self,
@@ -1666,7 +1389,7 @@ class TicketsCog(commands.Cog):
                 if history_message.id == record.thread_start_message_id:
                     continue
 
-                if self._should_relay_bot_thread_message(history_message):
+                if should_relay_bot_thread_message(history_message):
                     dm_message = await self._send_command_result_to_participant(
                         record=record,
                         participant_id=participant_id,
@@ -1695,10 +1418,10 @@ class TicketsCog(commands.Cog):
                     continue
 
                 if history_message.author.bot:
-                    if self._looks_like_user_relay_message(history_message.content):
+                    if looks_like_user_relay_message(history_message.content):
                         await self._send_dm_with_retry(
                             participant_user,
-                            self._truncate(history_message.content),
+                            truncate_relay_text(history_message.content),
                             allowed_mentions=discord.AllowedMentions.none(),
                         )
                     continue
@@ -1730,7 +1453,7 @@ class TicketsCog(commands.Cog):
                 raise
             except discord.HTTPException as error:
                 last_error = error
-                if not self._should_retry_discord_http_error(error):
+                if not should_retry_discord_http_error(error):
                     raise
                 if has_files:
                     raise
@@ -1742,13 +1465,6 @@ class TicketsCog(commands.Cog):
             raise last_error
 
         raise RuntimeError("Unexpected DM retry state")
-
-    @staticmethod
-    def _should_retry_discord_http_error(error: discord.HTTPException) -> bool:
-        return (
-                isinstance(error, discord.DiscordServerError)
-                or getattr(error, "status", None) in {500, 502, 503, 504}
-        )
 
     def _build_add_participants_summary(
             self,
@@ -1817,17 +1533,6 @@ class TicketsCog(commands.Cog):
     def _member_has_ceo_role(member: discord.Member) -> bool:
         return any(role.name.casefold() == "ceo" for role in member.roles)
 
-    @staticmethod
-    def _truncate(value: str) -> str:
-        if len(value) <= MAX_RELAY_MESSAGE_LENGTH:
-            return value
-
-        return f"{value[:MAX_RELAY_MESSAGE_LENGTH]}...<truncated>"
-
-    @staticmethod
-    def _yes_no(value: bool) -> str:
-        return "si" if value else "no"
-
     async def cog_app_command_error(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
@@ -1843,14 +1548,6 @@ class TicketsCog(commands.Cog):
             return
 
         await interaction.response.send_message(message, ephemeral=True)
-
-
-def _message_has_visible_payload(message: discord.Message) -> bool:
-    return bool(
-        message.content.strip()
-        or message.attachments
-        or message.embeds
-    )
 
 
 async def setup(bot: BignessLeagueBot) -> None:

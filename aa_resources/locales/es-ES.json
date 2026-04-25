@@ -306,12 +306,14 @@
         "from_command_result": "**Resultado del comando {command_name}:**\n{body}",
         "attachments": "Adjuntos:\n{urls}",
         "empty_body": "(mensaje sin texto)",
+        "dm_staff_author": "Nuevo mensaje del Staff...",
+        "dm_user_author": "Nuevo mensaje...",
         "thread_missing_for_user": "No he encontrado el hilo interno de tu ticket. Se ha cerrado el registro activo; vuelve a abrirlo desde el panel si necesitas continuar.",
         "dm_failed_for_staff": "No he podido enviar este mensaje por DM al usuario `{user_id}`."
       },
       "ai": {
         "thread_response": "**Respuesta IA local:**\n{answer}\n\nConfianza: `{confidence}` | Escalar: `{should_escalate}`\nMotivo: {reason}\nBase de conocimiento: {used_entry_ids}",
-        "user_fallback": "He recibido tu mensaje. Un miembro del staff revisara tu caso en cuanto sea posible.",
+        "user_fallback": "He recibido tu mensaje. Un miembro del staff revisará tu caso en cuanto sea posible.",
         "user_escalated": "De acuerdo. He dejado el ticket para que lo revise una persona del staff lo antes posible.",
         "unavailable_thread": "La IA local no ha podido responder a este mensaje: {details}",
         "status": {

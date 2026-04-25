@@ -606,6 +606,10 @@ class _MessagesTicketsRelay:
                                                  default_text="Adjuntos:\n{urls}")
     empty_body: TranslationKey = TranslationKey(key="messages.tickets.relay.empty_body",
                                                 default_text="(mensaje sin texto)")
+    dm_staff_author: TranslationKey = TranslationKey(key="messages.tickets.relay.dm_staff_author",
+                                                     default_text="Nuevo mensaje del Staff...")
+    dm_user_author: TranslationKey = TranslationKey(key="messages.tickets.relay.dm_user_author",
+                                                    default_text="Nuevo mensaje...")
     thread_missing_for_user: TranslationKey = TranslationKey(key="messages.tickets.relay.thread_missing_for_user",
                                                              default_text="No he encontrado el hilo interno de tu ticket. Se ha cerrado el registro activo; vuelve a abrirlo desde el panel si necesitas continuar.")
     dm_failed_for_staff: TranslationKey = TranslationKey(key="messages.tickets.relay.dm_failed_for_staff",
