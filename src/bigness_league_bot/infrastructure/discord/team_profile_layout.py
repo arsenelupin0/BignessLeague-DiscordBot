@@ -120,10 +120,10 @@ def truncate_text_to_width(value: str, width: int) -> str:
     if width <= 0:
         return ""
 
-    ellipsis = "\u2026"
-    ellipsis_width = display_width(ellipsis)
+    ellipsis_text = "\u2026"
+    ellipsis_width = display_width(ellipsis_text)
     if width <= ellipsis_width:
-        return ellipsis[:width]
+        return ellipsis_text[:width]
 
     target_width = width - ellipsis_width
     current_width = 0
@@ -136,7 +136,7 @@ def truncate_text_to_width(value: str, width: int) -> str:
         characters.append(character)
         current_width += character_width
 
-    return "".join(characters) + ellipsis
+    return "".join(characters) + ellipsis_text
 
 
 def fit_text(value: str, width: int, *, align: str = "left") -> str:

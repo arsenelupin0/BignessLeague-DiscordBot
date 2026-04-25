@@ -13,7 +13,8 @@ dependencies = [
     "python-dotenv>=1.0,<2",
     "google-api-python-client>=2.0,<3",
     "google-auth>=2.0,<3",
-    "pillow==12.2.0"
+    "pillow==12.2.0",
+    "protobuf>=7.34.1"
 ]
 
 [project.optional-dependencies]

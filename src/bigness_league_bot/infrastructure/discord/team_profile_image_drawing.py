@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
+from typing import Protocol
 
 from bigness_league_bot.infrastructure.discord.team_profile_layout import (
     TEAM_PROFILE_FONT_CANDIDATES,
@@ -24,9 +25,46 @@ from bigness_league_bot.infrastructure.discord.team_profile_layout import (
     sanitize_text,
 )
 
+Color = tuple[int, int, int]
+Point = tuple[int, int]
+Rectangle = tuple[int, int, int, int]
+LinePoints = tuple[Point, Point]
+
+
+class ImageDrawLike(Protocol):
+    def rectangle(self, xy: Rectangle, *, outline: Color, width: int) -> None:
+        ...
+
+    def line(self, xy: LinePoints, *, fill: Color, width: int) -> None:
+        ...
+
+    def text(
+            self,
+            xy: Point,
+            text: str,
+            *,
+            font: "FontLike",
+            fill: Color,
+            anchor: str,
+    ) -> None:
+        ...
+
+
+class FontLike(Protocol):
+    def getbbox(self, text: str) -> tuple[float, float, float, float]:
+        ...
+
+
+class ImageFontModuleLike(Protocol):
+    def truetype(self, font: str, size: int) -> FontLike:
+        ...
+
+    def load_default(self) -> FontLike:
+        ...
+
 
 def _draw_box(
-        draw: object,
+        draw: ImageDrawLike,
         x_position: int,
         y_position: int,
         width: int,
@@ -56,7 +94,7 @@ def _draw_box(
 
 
 def _draw_horizontal_line(
-        draw: object,
+        draw: ImageDrawLike,
         x_start: int,
         x_end: int,
         y_position: int,
@@ -75,7 +113,7 @@ def _draw_horizontal_line(
 
 
 def _draw_vertical_line(
-        draw: object,
+        draw: ImageDrawLike,
         x_position: int,
         y_start: int,
         y_end: int,
@@ -121,12 +159,12 @@ def _build_row_rects(
 
 
 def _draw_cell_text(
-        draw: object,
-        font: object,
-        rect: tuple[int, int, int, int],
+        draw: ImageDrawLike,
+        font: FontLike,
+        rect: Rectangle,
         text: str,
         *,
-        fill: tuple[int, int, int],
+        fill: Color,
         align: str = "left",
         left_padding: int = 0,
         right_padding: int = 0,
@@ -176,7 +214,7 @@ def _draw_cell_text(
     )
 
 
-def fit_text_to_pixel_width(font: object, text: str, width: int) -> str:
+def fit_text_to_pixel_width(font: FontLike, text: str, width: int) -> str:
     normalized_text = sanitize_text(text)
     if width <= 0:
         return ""
@@ -184,8 +222,8 @@ def fit_text_to_pixel_width(font: object, text: str, width: int) -> str:
     if _measure_text_width(font, normalized_text) <= width:
         return normalized_text
 
-    ellipsis = "\u2026"
-    ellipsis_width = _measure_text_width(font, ellipsis)
+    ellipsis_text = "\u2026"
+    ellipsis_width = _measure_text_width(font, ellipsis_text)
     if ellipsis_width >= width:
         return ""
 
@@ -199,32 +237,31 @@ def fit_text_to_pixel_width(font: object, text: str, width: int) -> str:
         characters.append(character)
         current_width += character_width
 
-    return "".join(characters) + ellipsis
+    return "".join(characters) + ellipsis_text
 
 
 def _load_team_profile_font(
-        image_font_module: object,
+        image_font_module: ImageFontModuleLike,
         *,
         font_path: Path | None = None,
-) -> object:
-    truetype = getattr(image_font_module, "truetype")
+) -> FontLike:
     if font_path is not None and font_path.exists():
-        return truetype(str(font_path), TEAM_PROFILE_IMAGE_FONT_SIZE)
+        return image_font_module.truetype(str(font_path), TEAM_PROFILE_IMAGE_FONT_SIZE)
 
     for candidate_path in TEAM_PROFILE_FONT_CANDIDATES:
         if not candidate_path.exists():
             continue
 
-        return truetype(str(candidate_path), TEAM_PROFILE_IMAGE_FONT_SIZE)
+        return image_font_module.truetype(str(candidate_path), TEAM_PROFILE_IMAGE_FONT_SIZE)
 
-    return getattr(image_font_module, "load_default")()
+    return image_font_module.load_default()
 
 
 def _load_team_profile_font_context(
-        image_font_module: object,
+        image_font_module: ImageFontModuleLike,
         *,
         font_path: Path | None = None,
-) -> tuple[object, int, int]:
+) -> tuple[FontLike, int, int]:
     font = _load_team_profile_font(image_font_module, font_path=font_path)
     unit_width = _measure_unit_width(font)
     line_height = _measure_line_height(font)
@@ -232,7 +269,7 @@ def _load_team_profile_font_context(
     return font, unit_width, row_height
 
 
-def _measure_unit_width(font: object) -> int:
+def _measure_unit_width(font: FontLike) -> int:
     return max(
         1,
         _measure_text_width(font, "0"),
@@ -240,7 +277,7 @@ def _measure_unit_width(font: object) -> int:
     )
 
 
-def _measure_text_width(font: object, text: str) -> int:
+def _measure_text_width(font: FontLike, text: str) -> int:
     if not text:
         return 0
 
@@ -252,6 +289,6 @@ def _measure_text_width(font: object, text: str) -> int:
     return max(1, int(math.ceil(bbox[2] - bbox[0])))
 
 
-def _measure_line_height(font: object) -> int:
+def _measure_line_height(font: FontLike) -> int:
     bbox = font.getbbox("Mg")
     return max(1, int(bbox[3] - bbox[1]))

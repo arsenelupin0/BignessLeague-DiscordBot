@@ -14,7 +14,7 @@ from typing import Any
 
 import unicodedata
 
-from bigness_league_bot.core.errors import CommandUserError
+from bigness_league_bot.core.localization import LocalizedText
 from bigness_league_bot.infrastructure.google.team_sheets.errors import TeamSheetLayoutError
 from bigness_league_bot.infrastructure.google.team_sheets.models import SheetCell
 from bigness_league_bot.infrastructure.google.team_sheets.schema import PLACEHOLDER_CELL_VALUE
@@ -132,7 +132,7 @@ def _escape_formula_string(value: str) -> str:
 def _parse_integer_cell_value(
         value: str,
         *,
-        error_message: CommandUserError | Any,
+        error_message: LocalizedText,
 ) -> int:
     normalized_value = _normalize_cell_value(value)
     match = INTEGER_VALUE_PATTERN.search(normalized_value)

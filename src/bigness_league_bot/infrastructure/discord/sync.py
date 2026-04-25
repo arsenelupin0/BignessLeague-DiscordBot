@@ -11,10 +11,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Protocol, runtime_checkable
 
 import discord
 from discord import app_commands
+
+
+@runtime_checkable
+class CommandContextConfig(Protocol):
+    dm_channel: bool
+    private_channel: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,7 +87,8 @@ def _synced_http_command_name(command: object) -> str:
             return name
 
     raise TypeError(
-        f"No se pudo resolver el nombre del comando sincronizado: {command!r}"
+        "No se pudo resolver el nombre del comando sincronizado "
+        f"para un payload de tipo {type(command).__name__}."
     )
 
 
@@ -94,7 +101,7 @@ def _supports_dm_context(
         command: app_commands.Command | app_commands.Group | app_commands.ContextMenu,
 ) -> bool:
     allowed_contexts = getattr(command, "allowed_contexts", None)
-    if allowed_contexts is None:
+    if not isinstance(allowed_contexts, CommandContextConfig):
         return False
 
     return bool(allowed_contexts.dm_channel or allowed_contexts.private_channel)
@@ -112,7 +119,7 @@ def get_dm_command_names(tree: app_commands.CommandTree) -> tuple[str, ...]:
 def _require_application_id(tree: app_commands.CommandTree) -> int:
     application_id = tree.client.application_id
     if application_id is None:
-        raise RuntimeError("La aplicacion aun no tiene application_id disponible.")
+        raise RuntimeError("La aplicación aun no tiene application_id disponible.")
 
     return application_id
 

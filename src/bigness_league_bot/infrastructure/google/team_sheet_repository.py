@@ -70,14 +70,14 @@ class GoogleSheetsTeamRepository:
             self,
             role: discord.Role,
     ) -> TeamProfile:
-        return await asyncio.to_thread(self.queries._find_team_profile_for_role_sync, role)
+        return await asyncio.to_thread(self.queries.find_team_profile_for_role_sync, role)
 
     async def register_team_signings(
             self,
             signing_batch: TeamSigningBatch,
     ) -> TeamSigningWriteResult:
         return await asyncio.to_thread(
-            self.mutations._register_team_signings_sync,
+            self.mutations.register_team_signings_sync,
             signing_batch,
         )
 
@@ -86,7 +86,7 @@ class GoogleSheetsTeamRepository:
             technical_staff_batch: TeamTechnicalStaffBatch,
     ) -> TeamTechnicalStaffWriteResult:
         return await asyncio.to_thread(
-            self.mutations._register_team_technical_staff_sync,
+            self.mutations.register_team_technical_staff_sync,
             technical_staff_batch,
         )
 
@@ -95,7 +95,7 @@ class GoogleSheetsTeamRepository:
             role: discord.Role,
     ) -> TeamRoleSheetMetadata:
         return await asyncio.to_thread(
-            self.queries._find_team_sheet_metadata_for_role_sync,
+            self.queries.find_team_sheet_metadata_for_role_sync,
             role,
         )
 
@@ -104,7 +104,7 @@ class GoogleSheetsTeamRepository:
             discord_name: str,
     ) -> TeamSigningRemovalResult:
         return await asyncio.to_thread(
-            self.mutations._remove_team_player_by_discord_sync,
+            self.mutations.remove_team_player_by_discord_sync,
             discord_name,
         )
 
@@ -113,7 +113,7 @@ class GoogleSheetsTeamRepository:
             discord_name: str,
     ) -> TeamSigningRemovalResult:
         return await asyncio.to_thread(
-            self.mutations._remove_team_staff_by_discord_sync,
+            self.mutations.remove_team_staff_by_discord_sync,
             discord_name,
         )
 
@@ -122,7 +122,7 @@ class GoogleSheetsTeamRepository:
             discord_name: str,
     ) -> TeamSigningRemovalResult:
         return await asyncio.to_thread(
-            self.mutations._remove_team_member_by_discord_sync,
+            self.mutations.remove_team_member_by_discord_sync,
             discord_name,
         )
 
@@ -131,7 +131,7 @@ class GoogleSheetsTeamRepository:
             discord_names: Iterable[str],
     ) -> tuple[TeamPlayerMatch, ...]:
         return await asyncio.to_thread(
-            self.queries._find_player_matches_by_discord_names_sync,
+            self.queries.find_player_matches_by_discord_names_sync,
             tuple(discord_names),
         )
 
@@ -140,7 +140,7 @@ class GoogleSheetsTeamRepository:
             discord_names: Iterable[str],
     ) -> dict[str, TeamMemberSheetAffiliation]:
         return await asyncio.to_thread(
-            self.queries._find_member_affiliations_by_discord_names_sync,
+            self.queries.find_member_affiliations_by_discord_names_sync,
             tuple(discord_names),
         )
 
@@ -149,7 +149,7 @@ class GoogleSheetsTeamRepository:
             discord_names: Iterable[str],
     ) -> tuple[TeamMemberTeamMatch, ...]:
         return await asyncio.to_thread(
-            self.queries._find_member_team_matches_by_discord_names_sync,
+            self.queries.find_member_team_matches_by_discord_names_sync,
             tuple(discord_names),
         )
 

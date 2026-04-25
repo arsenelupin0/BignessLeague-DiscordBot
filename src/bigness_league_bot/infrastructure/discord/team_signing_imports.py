@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import discord
 
 from bigness_league_bot.application.services.team_signing import (
@@ -14,9 +16,12 @@ from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.discord.team_signing import fetch_linked_message
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 
+if TYPE_CHECKING:
+    from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
+
 
 async def parse_player_signing_batch(
-        client: discord.Client,
+        client: BignessLeagueBot,
         *,
         guild: discord.Guild,
         message_link: str | None,
@@ -41,7 +46,7 @@ async def parse_player_signing_batch(
 
 
 async def parse_technical_staff_batch(
-        client: discord.Client,
+        client: BignessLeagueBot,
         *,
         guild: discord.Guild,
         message_link: str | None,

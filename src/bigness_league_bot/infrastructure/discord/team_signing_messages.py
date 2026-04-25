@@ -292,21 +292,16 @@ def format_team_role_removal_message(
             discord_name=discord_name,
         )
     if not removal_summary.removed_roles:
-        member_label = (
-            str(removal_summary.member)
-            if removal_summary.member is not None
-            else discord_name
-        )
         return localizer.translate(
             I18N.actions.team_signing.role_removal_no_changes,
             locale=locale,
-            member_name=member_label,
+            member_name=_format_member_label(removal_summary.member, fallback=discord_name),
         )
 
     return localizer.translate(
         I18N.actions.team_signing.role_removal_completed,
         locale=locale,
-        member_name=str(removal_summary.member),
+        member_name=_format_member_label(removal_summary.member, fallback=discord_name),
         roles=", ".join(role.name for role in removal_summary.removed_roles),
     )
 
@@ -337,3 +332,10 @@ def _build_assignment_detail_lines(
             )
         )
     return message_lines
+
+
+def _format_member_label(member: discord.Member | None, *, fallback: str) -> str:
+    if member is None:
+        return fallback
+
+    return member.display_name or member.name

@@ -4,6 +4,7 @@ import logging
 
 import discord
 
+from bigness_league_bot.core.settings import Settings
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     GoogleSheetsTeamRepository,
     TeamRoleSheetMetadata,
@@ -70,7 +71,7 @@ async def load_team_change_metadata(
 
 
 async def create_team_change_repository(
-        settings: object,
+        settings: Settings,
         *,
         guild: discord.Guild,
 ) -> GoogleSheetsTeamRepository | None:

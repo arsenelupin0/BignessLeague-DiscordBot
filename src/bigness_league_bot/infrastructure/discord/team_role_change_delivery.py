@@ -11,6 +11,7 @@ from bigness_league_bot.infrastructure.discord.emojis import (
     render_custom_emoji,
 )
 from bigness_league_bot.infrastructure.discord.team_change_announcements import (
+    TeamChangeAnnouncementSpec,
     build_team_change_content,
     build_team_change_embed,
 )
@@ -30,7 +31,7 @@ class TeamChangeAnnouncementDeduplicator:
             guild: discord.Guild,
             member: discord.Member,
             team_role: discord.Role,
-            spec: object,
+            spec: TeamChangeAnnouncementSpec,
             staff_role: discord.Role | None = None,
     ) -> tuple[object, ...] | None:
         current_timestamp = monotonic()
@@ -94,7 +95,7 @@ class TeamRoleChangeAnnouncementSender:
             team_role: discord.Role,
             guild: discord.Guild,
             metadata: TeamRoleSheetMetadata,
-            spec: object,
+            spec: TeamChangeAnnouncementSpec,
             channel: discord.abc.Messageable,
             failure_log_code: str,
     ) -> None:
@@ -141,7 +142,7 @@ class TeamRoleChangeAnnouncementSender:
             staff_role: discord.Role,
             guild: discord.Guild,
             metadata: TeamRoleSheetMetadata,
-            spec: object,
+            spec: TeamChangeAnnouncementSpec,
             channel: discord.abc.Messageable,
     ) -> None:
         announcement_key = self.deduplicator.reserve(
@@ -189,7 +190,7 @@ class TeamRoleChangeAnnouncementSender:
             team_role: discord.Role,
             guild: discord.Guild,
             metadata: TeamRoleSheetMetadata,
-            spec: object,
+            spec: TeamChangeAnnouncementSpec,
             channel: discord.abc.Messageable,
             staff_role_name: str | None = None,
     ) -> None:
@@ -198,7 +199,6 @@ class TeamRoleChangeAnnouncementSender:
             spec=spec,
             member=member,
             team_role=team_role,
-            guild=guild,
             staff_role_name=staff_role_name,
         )
         embed, image_file = build_team_change_embed(
@@ -238,10 +238,9 @@ def _build_role_removal_description(*, guild: discord.Guild, bot: Any) -> str:
     )
 
 
-def _resolve_announcement_spec_key(spec: object) -> str:
-    content_key = getattr(spec, "content_key", None)
-    resolved_key = getattr(content_key, "key", None)
-    if isinstance(resolved_key, str) and resolved_key:
-        return resolved_key
+def _resolve_announcement_spec_key(spec: TeamChangeAnnouncementSpec) -> str:
+    content_key = spec.content_key
+    if isinstance(content_key, str):
+        return content_key
 
-    return type(spec).__name__
+    return content_key.key

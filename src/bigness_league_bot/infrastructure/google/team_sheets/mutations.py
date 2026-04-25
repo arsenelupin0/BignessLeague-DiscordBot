@@ -79,6 +79,12 @@ class TeamSheetMutationService:
         self.client = client
         self.config = config
 
+    def register_team_signings_sync(
+            self,
+            signing_batch: TeamSigningBatch,
+    ) -> TeamSigningWriteResult:
+        return self._register_team_signings_sync(signing_batch)
+
     def _register_team_signings_sync(
             self,
             signing_batch: TeamSigningBatch,
@@ -209,6 +215,12 @@ class TeamSheetMutationService:
             total_players=len(merged_players),
         )
 
+    def remove_team_player_by_discord_sync(
+            self,
+            discord_name: str,
+    ) -> TeamSigningRemovalResult:
+        return self._remove_team_player_by_discord_sync(discord_name)
+
     def _remove_team_player_by_discord_sync(
             self,
             discord_name: str,
@@ -219,6 +231,12 @@ class TeamSheetMutationService:
             remove_staff=False,
         )
 
+    def remove_team_staff_by_discord_sync(
+            self,
+            discord_name: str,
+    ) -> TeamSigningRemovalResult:
+        return self._remove_team_staff_by_discord_sync(discord_name)
+
     def _remove_team_staff_by_discord_sync(
             self,
             discord_name: str,
@@ -227,6 +245,19 @@ class TeamSheetMutationService:
             discord_name,
             remove_player=False,
             remove_staff=True,
+        )
+
+    def remove_team_member_by_discord_sync(
+            self,
+            discord_name: str,
+            *,
+            remove_player: bool = True,
+            remove_staff: bool = True,
+    ) -> TeamSigningRemovalResult:
+        return self._remove_team_member_by_discord_sync(
+            discord_name,
+            remove_player=remove_player,
+            remove_staff=remove_staff,
         )
 
     def _remove_team_member_by_discord_sync(
@@ -412,6 +443,12 @@ class TeamSheetMutationService:
             remaining_staff_role_names=remaining_staff_role_names,
             is_player_present_after=is_player_present_after,
         )
+
+    def register_team_technical_staff_sync(
+            self,
+            technical_staff_batch: TeamTechnicalStaffBatch,
+    ) -> TeamTechnicalStaffWriteResult:
+        return self._register_team_technical_staff_sync(technical_staff_batch)
 
     def _register_team_technical_staff_sync(
             self,

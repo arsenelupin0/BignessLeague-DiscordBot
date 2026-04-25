@@ -78,8 +78,8 @@ class TicketAiKnowledgeEntry:
             *,
             category_routing_hints: tuple[str, ...] = (),
     ) -> "TicketAiKnowledgeEntry":
-        entry_id = str(payload["id"]).strip()
-        raw_category = str(payload.get("category", DEFAULT_CATEGORY_KEY)).strip()
+        entry_id = _read_scalar_text(payload["id"])
+        raw_category = _read_scalar_text(payload.get("category", DEFAULT_CATEGORY_KEY))
         category = _normalize_category_key(raw_category)
         category_label = _resolve_category_label(raw_category, category)
         title = _first_non_empty_string(
@@ -93,7 +93,7 @@ class TicketAiKnowledgeEntry:
             question_examples[0] if question_examples else None,
             "",
         )
-        answer = str(payload["answer"]).strip()
+        answer = _read_scalar_text(payload["answer"])
         tags = _read_string_tuple(payload.get("tags"))
         keywords = _read_string_tuple(payload.get("keywords"))
         related_commands = _read_string_tuple(payload.get("related_commands"))
@@ -101,7 +101,7 @@ class TicketAiKnowledgeEntry:
         escalate_when = _read_string_tuple(payload.get("escalate_when"))
         audience = _read_string_tuple(payload.get("audience"))
         source_refs = _read_nested_text_tuple(payload.get("source_refs"))
-        confidence_label = str(payload.get("confidence", "")).strip().lower()
+        confidence_label = _read_scalar_text(payload.get("confidence", "")).lower()
         public_safe = bool(payload.get("public_safe", True))
         requires_staff = _derive_requires_staff(
             payload=payload,
@@ -167,7 +167,7 @@ class TicketAiKnowledgeBase:
         payload = json.loads(path.read_text(encoding="utf-8-sig"))
         raw_entries = payload.get("entries", [])
         if not isinstance(raw_entries, list):
-            raise ValueError(f"La base de conocimiento `{path}` no contiene una lista `entries` valida.")
+            raise ValueError(f"La base de conocimiento `{path}` no contiene una lista `entries` válida.")
 
         category_routing_hints = _read_category_routing_hints(
             payload.get("category_routing_hints")
@@ -177,7 +177,7 @@ class TicketAiKnowledgeBase:
                 raw_entry,
                 category_routing_hints=category_routing_hints.get(
                     _normalize_category_key(
-                        str(raw_entry.get("category", DEFAULT_CATEGORY_KEY))
+                        _read_scalar_text(raw_entry.get("category", DEFAULT_CATEGORY_KEY))
                     ),
                     (),
                 ),
@@ -238,9 +238,9 @@ def _read_string_tuple(value: object) -> tuple[str, ...]:
         return ()
 
     return tuple(
-        str(item).strip()
+        normalized_item
         for item in value
-        if str(item).strip()
+        if (normalized_item := _read_scalar_text(item))
     )
 
 
@@ -261,7 +261,7 @@ def _read_category_routing_hints(
 
     hints_by_category: dict[str, tuple[str, ...]] = {}
     for raw_category, raw_hints in payload.items():
-        normalized_category = _normalize_category_key(str(raw_category))
+        normalized_category = _normalize_category_key(_read_scalar_text(raw_category))
         hints_by_category[normalized_category] = _read_nested_text_tuple(raw_hints)
 
     return hints_by_category
@@ -448,10 +448,7 @@ def _resolve_category_label(
 
 def _first_non_empty_string(*values: object) -> str:
     for value in values:
-        if value is None:
-            continue
-        normalized_value = str(value).strip()
-        if normalized_value:
+        if normalized_value := _read_scalar_text(value):
             return normalized_value
 
     return ""
@@ -519,7 +516,18 @@ def _collect_text_values(value: object) -> tuple[str, ...]:
             blocks.extend(_collect_text_values(item))
         return tuple(blocks)
 
-    return (str(value).strip(),) if str(value).strip() else ()
+    normalized_value = _read_scalar_text(value)
+    return (normalized_value,) if normalized_value else ()
+
+
+def _read_scalar_text(value: object) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, (int, float, bool)):
+        return str(value).strip()
+    return ""
 
 
 def _select_balanced_matches(

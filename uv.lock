@@ -132,6 +132,7 @@ dependencies = [
     { name = "google-api-python-client" },
     { name = "google-auth" },
     { name = "pillow" },
+    { name = "protobuf" },
     { name = "python-dotenv" },
 ]
 
@@ -147,6 +148,7 @@ requires-dist = [
     { name = "google-auth", specifier = ">=2.0,<3" },
     { name = "import-linter", marker = "extra == 'dev'", specifier = ">=2.0,<3" },
     { name = "pillow", specifier = "==12.2.0" },
+    { name = "protobuf", specifier = ">=7.34.1" },
     { name = "python-dotenv", specifier = ">=1.0,<2" },
 ]
 provides-extras = ["dev"]

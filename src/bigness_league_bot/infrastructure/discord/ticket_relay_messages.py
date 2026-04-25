@@ -76,7 +76,7 @@ def build_ticket_dm_relay_embed(
         color: int,
         is_staff: bool,
         mention_line: str,
-        avatar_url: str | object,
+        avatar_url: str,
 ) -> discord.Embed:
     body = message.content.strip()
     body_value = (
@@ -150,7 +150,7 @@ def relay_author_name(message: discord.Message) -> str:
     if isinstance(name, str) and name.strip():
         return name
 
-    return str(message.author)
+    return message.author.name
 
 
 def relay_visual_username(message: discord.Message) -> str:
@@ -172,11 +172,9 @@ def thread_relay_display_name(
     return author.name
 
 
-def author_avatar_url(author: discord.abc.User | discord.User) -> str | object:
+def author_avatar_url(author: discord.abc.User | discord.User) -> str:
     avatar = getattr(author, "display_avatar", None)
-    if avatar is None:
-        return discord.utils.MISSING
-    return avatar.url
+    return "" if avatar is None else avatar.url
 
 
 def should_relay_bot_thread_message(message: discord.Message) -> bool:

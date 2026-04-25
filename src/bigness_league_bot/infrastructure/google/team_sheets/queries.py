@@ -1,4 +1,4 @@
-﻿#  Copyright (c) 2026. Bigness League.
+#  Copyright (c) 2026. Bigness League.
 #
 #  Licensed under the GNU General Public License v3.0
 #
@@ -48,12 +48,18 @@ class TeamSheetQueryService:
     def __init__(self, client: GoogleSheetsClient) -> None:
         self.client = client
 
+    def find_team_profile_for_role_sync(
+            self,
+            role: discord.Role,
+    ) -> TeamProfile:
+        return self._find_team_profile_for_role_sync(role)
+
     def _find_team_profile_for_role_sync(
             self,
             role: discord.Role,
     ) -> TeamProfile:
         service = self.client.build_service(read_only=True)
-        _, sheet_grids = self.client.fetch_sheet_grids(service)
+        sheet_scope, sheet_grids = self.client.fetch_sheet_grids(service)
         if not sheet_grids:
             raise TeamSheetEmptyError(
                 localize(
@@ -107,6 +113,12 @@ class TeamSheetQueryService:
             )
         )
 
+    def find_team_sheet_metadata_for_role_sync(
+            self,
+            role: discord.Role,
+    ) -> TeamRoleSheetMetadata:
+        return self._find_team_sheet_metadata_for_role_sync(role)
+
     def _find_team_sheet_metadata_for_role_sync(
             self,
             role: discord.Role,
@@ -148,6 +160,12 @@ class TeamSheetQueryService:
             )
         )
 
+    def find_player_matches_by_discord_names_sync(
+            self,
+            discord_names: tuple[str, ...],
+    ) -> tuple[TeamPlayerMatch, ...]:
+        return self._find_player_matches_by_discord_names_sync(discord_names)
+
     def _find_player_matches_by_discord_names_sync(
             self,
             discord_names: tuple[str, ...],
@@ -170,6 +188,12 @@ class TeamSheetQueryService:
             sheet_grids,
         )
 
+    def find_member_affiliations_by_discord_names_sync(
+            self,
+            discord_names: tuple[str, ...],
+    ) -> dict[str, TeamMemberSheetAffiliation]:
+        return self._find_member_affiliations_by_discord_names_sync(discord_names)
+
     def _find_member_affiliations_by_discord_names_sync(
             self,
             discord_names: tuple[str, ...],
@@ -191,6 +215,12 @@ class TeamSheetQueryService:
             frozenset(normalized_names),
             sheet_grids,
         )
+
+    def find_member_team_matches_by_discord_names_sync(
+            self,
+            discord_names: tuple[str, ...],
+    ) -> tuple[TeamMemberTeamMatch, ...]:
+        return self._find_member_team_matches_by_discord_names_sync(discord_names)
 
     def _find_member_team_matches_by_discord_names_sync(
             self,
