@@ -78,12 +78,13 @@ def _build_match_channel_overwrites(
         team_roles: tuple[discord.Role, discord.Role],
 ) -> dict[OverwriteTarget, discord.PermissionOverwrite]:
     protected_roles = get_protected_roles(guild)
-    overwrites: dict[OverwriteTarget, discord.PermissionOverwrite] = {}
-    overwrites[guild.default_role] = _set_text_permissions(
-        discord.PermissionOverwrite(),
-        view_channel=False,
-        can_write=False,
-    )
+    overwrites: dict[OverwriteTarget, discord.PermissionOverwrite] = {
+        guild.default_role: _set_text_permissions(
+            discord.PermissionOverwrite(),
+            view_channel=False,
+            can_write=False,
+        )
+    }
 
     for role in (*protected_roles.as_tuple, *team_roles):
         overwrites[role] = _set_text_permissions(

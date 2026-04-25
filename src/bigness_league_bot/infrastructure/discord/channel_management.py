@@ -43,6 +43,10 @@ READ_ONLY_PERMISSION_FIELDS: tuple[str, ...] = (
 )
 
 
+def user_audit_label(user: discord.abc.User | discord.Member) -> str:
+    return f"{user.name} ({user.id})"
+
+
 class ChannelManagementError(CommandUserError):
     """Base error for channel management operations."""
 
@@ -365,7 +369,7 @@ async def apply_match_played_lockdown(
         name=channel_name,
         overwrites=overwrites,
         reason=(
-            f"{actor} ({actor.id}) ejecutó /cerrar_canal "
+            f"{user_audit_label(actor)} ejecutó /cerrar_canal "
             f"accion={ChannelCloseMode.MATCH_PLAYED.value}"
         ),
     )
@@ -373,7 +377,7 @@ async def apply_match_played_lockdown(
         "CHANNEL_LOCKED_READ_ONLY channel=%s(%s) actor=%s(%s)",
         channel.name,
         channel.id,
-        actor,
+        user_audit_label(actor),
         actor.id,
     )
     return ChannelActionResult(
@@ -412,7 +416,7 @@ async def apply_matchday_closed(
         name=channel_name,
         overwrites=overwrites,
         reason=(
-            f"{actor} ({actor.id}) ejecutó /cerrar_canal "
+            f"{user_audit_label(actor)} ejecutó /cerrar_canal "
             f"accion={ChannelCloseMode.MATCHDAY_CLOSED.value}"
         ),
     )
@@ -420,7 +424,7 @@ async def apply_matchday_closed(
         "CHANNEL_MATCHDAY_CLOSED channel=%s(%s) actor=%s(%s)",
         channel.name,
         channel.id,
-        actor,
+        user_audit_label(actor),
         actor.id,
     )
     return ChannelActionResult(
@@ -474,7 +478,7 @@ async def apply_match_reopen(
         name=channel_name,
         overwrites=overwrites,
         reason=(
-            f"{actor} ({actor.id}) ejecutó /cerrar_canal "
+            f"{user_audit_label(actor)} ejecutó /cerrar_canal "
             f"accion={ChannelCloseMode.REOPEN_MATCH.value}"
         ),
     )
@@ -482,7 +486,7 @@ async def apply_match_reopen(
         "CHANNEL_REOPENED channel=%s(%s) actor=%s(%s)",
         channel.name,
         channel.id,
-        actor,
+        user_audit_label(actor),
         actor.id,
     )
     return ChannelActionResult(
@@ -515,7 +519,7 @@ async def add_roles_to_channel(
     await channel.edit(
         overwrites=overwrites,
         reason=(
-            f"{actor} ({actor.id}) ejecutó /anadir_al_canal "
+            f"{user_audit_label(actor)} ejecutó /anadir_al_canal "
             f"roles={','.join(str(role.id) for role in roles)}"
         ),
     )
@@ -523,7 +527,7 @@ async def add_roles_to_channel(
         "CHANNEL_ROLES_ADDED channel=%s(%s) actor=%s(%s) roles=%s",
         channel.name,
         channel.id,
-        actor,
+        user_audit_label(actor),
         actor.id,
         ",".join(str(role.id) for role in roles),
     )
@@ -557,12 +561,12 @@ async def delete_text_channel(
         "CHANNEL_DELETE_REQUEST channel=%s(%s) actor=%s(%s)",
         channel.name,
         channel.id,
-        actor,
+        user_audit_label(actor),
         actor.id,
     )
     await channel.delete(
         reason=(
-            f"{actor} ({actor.id}) confirmó /cerrar_canal "
+            f"{user_audit_label(actor)} confirmó /cerrar_canal "
             f"accion={ChannelCloseMode.DELETE_CHANNEL.value}"
         )
     )

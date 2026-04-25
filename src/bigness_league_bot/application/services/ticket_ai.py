@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, Protocol
+from typing import Any, Literal, Protocol
 
 from bigness_league_bot.application.services.tickets import normalize_ticket_category_key
 from bigness_league_bot.core.settings import Settings
@@ -57,9 +57,9 @@ class TicketAiChatClient(Protocol):
     async def chat_json(
             self,
             *,
-            messages: tuple[object, ...],
+            messages: Any,
             json_schema: dict[str, object],
-    ) -> dict[str, object]:
+    ) -> dict[str, Any]:
         ...
 
     async def ping(self) -> bool:
@@ -164,7 +164,6 @@ class TicketAiService:
         return _parse_ticket_ai_reply(
             payload=response_payload,
             retrieved_matches=matches,
-            category_key=category_key,
             force_escalate_category=self.is_force_escalate_category(category_key),
             requested_human_support=requested_human_support,
         )
@@ -294,28 +293,23 @@ def _parse_ticket_ai_reply(
         *,
         payload: dict[str, object],
         retrieved_matches: tuple[TicketAiKnowledgeMatch, ...],
-        category_key: str,
         force_escalate_category: bool = False,
         requested_human_support: bool = False,
 ) -> TicketAiReply:
-    answer = str(payload.get("answer", "")).strip()
+    answer = _read_text(payload.get("answer"))
     if not answer:
         raise OllamaClientError("La IA local no ha devuelto un texto de respuesta.")
 
-    confidence_raw = payload.get("confidence", 0)
-    try:
-        confidence = max(0, min(100, int(confidence_raw)))
-    except (TypeError, ValueError) as exc:
-        raise OllamaClientError("La IA local ha devuelto una confianza invalida.") from exc
+    confidence = _read_confidence(payload.get("confidence", 0))
 
     should_escalate = requested_human_support
-    reason = str(payload.get("reason", "")).strip() or "Sin motivo especificado."
+    reason = _read_text(payload.get("reason")) or "Sin motivo especificado."
     used_entry_ids_raw = payload.get("used_entry_ids", [])
     if isinstance(used_entry_ids_raw, list):
         used_entry_ids = tuple(
-            str(item).strip()
+            entry_id
             for item in used_entry_ids_raw
-            if str(item).strip()
+            if (entry_id := _read_text(item))
         )
     else:
         used_entry_ids = ()
@@ -336,6 +330,30 @@ def _parse_ticket_ai_reply(
         used_entry_ids=used_entry_ids,
         retrieved_matches=retrieved_matches,
     )
+
+
+def _read_confidence(value: object) -> int:
+    if isinstance(value, bool):
+        raise OllamaClientError("La IA local ha devuelto una confianza inválida.")
+    if isinstance(value, int):
+        return max(0, min(100, value))
+    if isinstance(value, float):
+        return max(0, min(100, int(value)))
+    if isinstance(value, str) and value.strip():
+        try:
+            return max(0, min(100, int(value.strip())))
+        except ValueError as exc:
+            raise OllamaClientError("La IA local ha devuelto una confianza inválida.") from exc
+
+    raise OllamaClientError("La IA local ha devuelto una confianza inválida.")
+
+
+def _read_text(value: object) -> str:
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, (int, float, bool)):
+        return str(value).strip()
+    return ""
 
 
 def detect_human_support_request(message: str) -> bool:

@@ -1,5 +1,7 @@
 .env
 __pycache__/
+.import_linter_cache/
+.uv-cache/
 *.py[cod]
 *.egg-info/
 src/*.egg-info/

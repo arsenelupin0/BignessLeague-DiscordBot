@@ -87,7 +87,8 @@ class TicketPanelView(discord.ui.View):
             interaction: discord.Interaction[BignessLeagueBot],
             category_key: str,
     ) -> None:
-        if interaction.guild is None or not isinstance(interaction.user, discord.Member):
+        guild = interaction.guild
+        if guild is None or not isinstance(interaction.user, discord.Member):
             await self._send_interaction_message(
                 interaction,
                 interaction.client.localizer.translate(
@@ -138,7 +139,7 @@ class TicketPanelView(discord.ui.View):
                 created_at = current_utc_timestamp()
                 forum_channel = await resolve_ticket_forum_channel(
                     interaction.client,
-                    interaction.guild,
+                    guild,
                 )
                 forum_tag = resolve_forum_tag(forum_channel, category)
                 open_status_tag = resolve_ticket_status_tag(
@@ -147,6 +148,7 @@ class TicketPanelView(discord.ui.View):
                 )
                 ticket_thread, thread_start_message_id = await self._create_ticket_thread(
                     interaction=interaction,
+                    guild=guild,
                     forum_channel=forum_channel,
                     forum_tag=forum_tag,
                     open_status_tag=open_status_tag,
@@ -185,7 +187,7 @@ class TicketPanelView(discord.ui.View):
                     embed=build_ticket_open_embed(
                         bot=interaction.client,
                         locale=interaction.locale,
-                        guild=interaction.guild,
+                        guild=guild,
                         opened_by=interaction.user,
                         category_label=category.label,
                         ticket_number=ticket_number,
@@ -285,7 +287,7 @@ class TicketPanelView(discord.ui.View):
                 interaction.client.localizer.translate(
                     I18N.messages.tickets.open.created_ephemeral,
                     locale=interaction.locale,
-                    emoji=resolve_success_emoji(interaction.guild),
+                    emoji=resolve_success_emoji(guild),
                     message_link=dm_message.jump_url,
                 ),
                 ephemeral=True,
@@ -295,6 +297,7 @@ class TicketPanelView(discord.ui.View):
             self,
             *,
             interaction: discord.Interaction[BignessLeagueBot],
+            guild: discord.Guild,
             forum_channel: discord.ForumChannel,
             forum_tag: discord.ForumTag,
             open_status_tag: discord.ForumTag,
@@ -312,7 +315,7 @@ class TicketPanelView(discord.ui.View):
             embed=build_ticket_open_embed(
                 bot=interaction.client,
                 locale=interaction.locale,
-                guild=interaction.guild,
+                guild=guild,
                 opened_by=interaction.user,
                 category_label=category.label,
                 ticket_number=ticket_number,

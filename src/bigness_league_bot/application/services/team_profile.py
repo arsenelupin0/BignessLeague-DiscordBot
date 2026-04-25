@@ -118,23 +118,23 @@ def build_team_profile(
 
     sorted_players = sorted(
         collected_players,
-        key=lambda player: (
-            _parse_mmr_sort_value(player.mmr),
-            player.player_name.casefold(),
+        key=lambda profile_player: (
+            _parse_mmr_sort_value(profile_player.mmr),
+            profile_player.player_name.casefold(),
         ),
         reverse=True,
     )
     normalized_players = [
         TeamProfilePlayer(
             position=index,
-            player_name=player.player_name,
-            discord_name=player.discord_name,
-            epic_name=player.epic_name,
-            rocket_name=player.rocket_name,
-            mmr=player.mmr,
-            tracker_url=player.tracker_url,
+            player_name=sorted_player.player_name,
+            discord_name=sorted_player.discord_name,
+            epic_name=sorted_player.epic_name,
+            rocket_name=sorted_player.rocket_name,
+            mmr=sorted_player.mmr,
+            tracker_url=sorted_player.tracker_url,
         )
-        for index, player in enumerate(
+        for index, sorted_player in enumerate(
             sorted_players[:MAX_TEAM_PROFILE_PLAYERS],
             start=1,
         )

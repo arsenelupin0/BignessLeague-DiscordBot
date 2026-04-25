@@ -25,6 +25,14 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import LocalizationService
+from bigness_league_bot.presentation.discord.views.channel_role_addition_components import (
+    CancelButton,
+    ChannelRoleSelect,
+    ClearFilterButton,
+    ConfirmButton,
+    PageButton,
+    SearchButton,
+)
 
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
@@ -32,209 +40,6 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 ROLES_PER_PAGE = 25
 ROLE_MENTION_PATTERN = re.compile(r"^<@&(\d+)>$")
-
-
-class _ChannelRoleSelect(discord.ui.Select["ChannelRoleAdditionView"]):
-    def __init__(self, *, placeholder: str, empty_label: str) -> None:
-        super().__init__(
-            placeholder=placeholder,
-            min_values=0,
-            max_values=1,
-            options=[discord.SelectOption(label=empty_label, value="0")],
-            row=0,
-        )
-
-    def refresh(
-            self,
-            *,
-            roles: tuple[discord.Role, ...],
-            selected_role_ids: set[int],
-            page_index: int,
-            page_count: int,
-            localizer: LocalizationService,
-            locale: str | discord.Locale,
-    ) -> None:
-        if not roles:
-            self.options = [
-                discord.SelectOption(
-                    label=localizer.translate(
-                        I18N.messages.channel_role_addition.no_results_label,
-                        locale=locale,
-                    ),
-                    value="0",
-                )
-            ]
-            self.max_values = 1
-            self.placeholder = localizer.translate(
-                I18N.messages.channel_role_addition.no_results_placeholder,
-                locale=locale,
-            )
-            self.disabled = True
-            return
-
-        self.options = [
-            discord.SelectOption(
-                label=role.name,
-                value=str(role.id),
-                default=role.id in selected_role_ids,
-            )
-            for role in roles
-        ]
-        self.max_values = len(roles)
-        self.placeholder = localizer.translate(
-            I18N.messages.channel_role_addition.select_placeholder,
-            locale=locale,
-            page=page_index + 1,
-            page_count=page_count,
-        )
-        self.disabled = False
-
-    async def callback(
-            self,
-            interaction: discord.Interaction[BignessLeagueBot],
-    ) -> None:
-        view = self.view
-        if not isinstance(view, ChannelRoleAdditionView):
-            return
-
-        await view.update_page_selection(
-            interaction,
-            {int(role_id) for role_id in self.values},
-        )
-
-
-class _PageButton(discord.ui.Button["ChannelRoleAdditionView"]):
-    def __init__(
-            self,
-            *,
-            label: str,
-            delta: int,
-            row: int,
-            style: discord.ButtonStyle = discord.ButtonStyle.secondary,
-    ) -> None:
-        super().__init__(label=label, style=style, row=row)
-        self.delta = delta
-
-    async def callback(
-            self,
-            interaction: discord.Interaction[BignessLeagueBot],
-    ) -> None:
-        view = self.view
-        if not isinstance(view, ChannelRoleAdditionView):
-            return
-
-        await view.change_page(interaction, self.delta)
-
-
-class _ConfirmButton(discord.ui.Button["ChannelRoleAdditionView"]):
-    def __init__(self, *, label: str) -> None:
-        super().__init__(
-            label=label,
-            style=discord.ButtonStyle.success,
-            row=2,
-        )
-
-    async def callback(
-            self,
-            interaction: discord.Interaction[BignessLeagueBot],
-    ) -> None:
-        view = self.view
-        if not isinstance(view, ChannelRoleAdditionView):
-            return
-
-        await view.confirm_selection(interaction)
-
-
-class _CancelButton(discord.ui.Button["ChannelRoleAdditionView"]):
-    def __init__(self, *, label: str) -> None:
-        super().__init__(
-            label=label,
-            style=discord.ButtonStyle.secondary,
-            row=2,
-        )
-
-    async def callback(
-            self,
-            interaction: discord.Interaction[BignessLeagueBot],
-    ) -> None:
-        view = self.view
-        if not isinstance(view, ChannelRoleAdditionView):
-            return
-
-        await view.cancel_selection(interaction)
-
-
-class _SearchButton(discord.ui.Button["ChannelRoleAdditionView"]):
-    def __init__(self, *, label: str) -> None:
-        super().__init__(
-            label=label,
-            style=discord.ButtonStyle.primary,
-            row=1,
-        )
-
-    async def callback(
-            self,
-            interaction: discord.Interaction[BignessLeagueBot],
-    ) -> None:
-        view = self.view
-        if not isinstance(view, ChannelRoleAdditionView):
-            return
-
-        await interaction.response.send_modal(_RoleSearchModal(view))
-
-
-class _ClearFilterButton(discord.ui.Button["ChannelRoleAdditionView"]):
-    def __init__(self, *, label: str) -> None:
-        super().__init__(
-            label=label,
-            style=discord.ButtonStyle.secondary,
-            row=1,
-        )
-
-    async def callback(
-            self,
-            interaction: discord.Interaction[BignessLeagueBot],
-    ) -> None:
-        view = self.view
-        if not isinstance(view, ChannelRoleAdditionView):
-            return
-
-        await view.clear_search_query(interaction)
-
-
-class _RoleSearchModal(discord.ui.Modal):
-    search_query = discord.ui.TextInput(
-        label=I18N.messages.channel_role_addition.modal.query_label.default,
-        placeholder=I18N.messages.channel_role_addition.modal.query_placeholder.default,
-        max_length=100,
-        required=False,
-    )
-
-    def __init__(self, view: "ChannelRoleAdditionView") -> None:
-        self.channel_role_addition_view = view
-        super().__init__(
-            title=view.localizer.translate(
-                I18N.messages.channel_role_addition.modal.title,
-                locale=view.locale,
-            )
-        )
-        self.search_query.label = view.localizer.translate(
-            I18N.messages.channel_role_addition.modal.query_label,
-            locale=view.locale,
-        )
-        self.search_query.placeholder = view.localizer.translate(
-            I18N.messages.channel_role_addition.modal.query_placeholder,
-            locale=view.locale,
-        )
-
-    async def on_submit(
-            self,
-            interaction: discord.Interaction[BignessLeagueBot],
-    ) -> None:
-        await self.channel_role_addition_view.apply_search_query(
-            interaction,
-            self.search_query.value,
-        )
 
 
 class ChannelRoleAdditionView(discord.ui.View):
@@ -262,7 +67,7 @@ class ChannelRoleAdditionView(discord.ui.View):
         self.search_query: str | None = None
         self.message: discord.InteractionMessage | None = None
 
-        self.role_select = _ChannelRoleSelect(
+        self.role_select = ChannelRoleSelect(
             placeholder=self.localizer.translate(
                 I18N.messages.channel_role_addition.loading_placeholder,
                 locale=self.locale,
@@ -272,7 +77,7 @@ class ChannelRoleAdditionView(discord.ui.View):
                 locale=self.locale,
             ),
         )
-        self.previous_button = _PageButton(
+        self.previous_button = PageButton(
             label=self.localizer.translate(
                 I18N.messages.channel_role_addition.buttons.previous,
                 locale=self.locale,
@@ -280,7 +85,7 @@ class ChannelRoleAdditionView(discord.ui.View):
             delta=-1,
             row=1,
         )
-        self.next_button = _PageButton(
+        self.next_button = PageButton(
             label=self.localizer.translate(
                 I18N.messages.channel_role_addition.buttons.next,
                 locale=self.locale,
@@ -288,25 +93,25 @@ class ChannelRoleAdditionView(discord.ui.View):
             delta=1,
             row=1,
         )
-        self.search_button = _SearchButton(
+        self.search_button = SearchButton(
             label=self.localizer.translate(
                 I18N.messages.channel_role_addition.buttons.search,
                 locale=self.locale,
             )
         )
-        self.clear_filter_button = _ClearFilterButton(
+        self.clear_filter_button = ClearFilterButton(
             label=self.localizer.translate(
                 I18N.messages.channel_role_addition.buttons.clear_filter,
                 locale=self.locale,
             )
         )
-        self.confirm_button = _ConfirmButton(
+        self.confirm_button = ConfirmButton(
             label=self.localizer.translate(
                 I18N.messages.channel_role_addition.buttons.confirm,
                 locale=self.locale,
             )
         )
-        self.cancel_button = _CancelButton(
+        self.cancel_button = CancelButton(
             label=self.localizer.translate(
                 I18N.messages.channel_role_addition.buttons.cancel,
                 locale=self.locale,

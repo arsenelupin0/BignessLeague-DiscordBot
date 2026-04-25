@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import discord
 
+from bigness_league_bot.core.localization import TranslationKeyLike
 from bigness_league_bot.infrastructure.discord.team_role_removal_card import (
     build_team_role_removal_image_file,
 )
@@ -14,7 +15,7 @@ from bigness_league_bot.infrastructure.i18n.keys import I18N
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
-TEAM_CHANGE_FALLBACK_DIVISION_NAME = "Division no disponible"
+TEAM_CHANGE_FALLBACK_DIVISION_NAME = "División no disponible"
 TEAM_CHANGE_REMOVAL_EMBED_COLOR = 15_403_534
 TEAM_CHANGE_SIGNING_EMBED_COLOR = 5_166_352
 TEAM_CHANGE_STAFF_EMBED_COLOR = 14_606_862
@@ -22,8 +23,8 @@ TEAM_CHANGE_STAFF_EMBED_COLOR = 14_606_862
 
 @dataclass(frozen=True, slots=True)
 class TeamChangeAnnouncementSpec:
-    content_key: object
-    action_key: object
+    content_key: TranslationKeyLike
+    action_key: TranslationKeyLike
     embed_color: int
 
 
@@ -65,7 +66,6 @@ def build_team_change_content(
         spec: TeamChangeAnnouncementSpec,
         member: discord.Member,
         team_role: discord.Role,
-        guild: discord.Guild,
         staff_role_name: str | None = None,
 ) -> str:
     translation_kwargs = {
@@ -117,8 +117,8 @@ def build_team_change_embed(
     embed.set_footer(text=footer_text)
 
     thumbnail_url = metadata.team_image_url
-    if not thumbnail_url and guild.icon is not None:
-        thumbnail_url = guild.icon.url
+    if not thumbnail_url and (guild_icon := guild.icon) is not None:
+        thumbnail_url = guild_icon.url
     if thumbnail_url:
         embed.set_thumbnail(url=thumbnail_url)
 

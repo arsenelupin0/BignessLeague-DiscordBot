@@ -74,7 +74,7 @@ class TeamProfileTrackerActionsView(discord.ui.View):
         self.team_profile = team_profile
         self.localizer = localizer
         self.locale = locale
-        self.message: discord.InteractionMessage | None = None
+        self.message: discord.InteractionMessage | discord.Message | None = None
         self.add_item(
             _ListTrackersButton(
                 label=self.localizer.translate(
@@ -128,7 +128,12 @@ class TeamProfileTrackerActionsView(discord.ui.View):
             allowed_mentions=discord.AllowedMentions.none(),
             suppress_embeds=True,
         )
-        updated_message = await fetch_interaction_message(interaction, interaction.message.id)
+        message = interaction.message
+        if message is None:
+            self.stop()
+            return
+
+        updated_message = await fetch_interaction_message(interaction, message.id)
         if updated_message is not None:
             await mirror_ticket_command_message_edit(
                 interaction,

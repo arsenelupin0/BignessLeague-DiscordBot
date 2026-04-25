@@ -12,6 +12,7 @@ from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import TranslationKeyLike, localize
 from bigness_league_bot.infrastructure.discord.channel_management import (
     ChannelAccessRoleCatalog,
+    user_audit_label,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 
@@ -283,8 +284,8 @@ async def sync_team_staff_roles_by_names(
             await member.add_roles(
                 *roles_to_add,
                 reason=(
-                    f"{actor} ({actor.id}) sincronizó roles de staff del equipo "
-                    f"{team_role.name} para {member} ({member.id})"
+                    f"{user_audit_label(actor)} sincronizó roles de staff del equipo "
+                    f"{team_role.name} para {user_audit_label(member)}"
                 ),
             )
             assigned_members.append(member)
@@ -292,8 +293,8 @@ async def sync_team_staff_roles_by_names(
             await member.remove_roles(
                 *roles_to_remove,
                 reason=(
-                    f"{actor} ({actor.id}) actualizó roles de staff del equipo "
-                    f"{team_role.name} para {member} ({member.id})"
+                    f"{user_audit_label(actor)} actualizó roles de staff del equipo "
+                    f"{team_role.name} para {user_audit_label(member)}"
                 ),
             )
             removed_members.append(member)
@@ -356,8 +357,8 @@ async def assign_team_roles_by_names(
         await member.add_roles(
             *roles_to_add,
             reason=(
-                f"{actor} ({actor.id}) sincronizó roles automáticos del equipo "
-                f"{team_role.name} para {member} ({member.id})"
+                f"{user_audit_label(actor)} sincronizó roles automáticos del equipo "
+                f"{team_role.name} para {user_audit_label(member)}"
             ),
         )
         assigned_members.append(member)
@@ -409,8 +410,8 @@ async def remove_roles_from_member_by_name(
     await member.remove_roles(
         *roles_tuple,
         reason=(
-            f"{actor} ({actor.id}) dio de baja a {member_name} y retiró roles de "
-            f"{member} ({member.id})"
+            f"{user_audit_label(actor)} dio de baja a {member_name} y retiró roles de "
+            f"{user_audit_label(member)}"
         ),
     )
     return TeamRoleRemovalSummary(
@@ -595,7 +596,6 @@ def _member_lookup_keys(member: discord.Member) -> set[str]:
     candidate_values = {
         member.name,
         member.display_name,
-        str(member),
     }
     global_name = getattr(member, "global_name", None)
     if isinstance(global_name, str):
@@ -615,7 +615,7 @@ def _normalize_member_lookup_text(value: str | None) -> str:
     if value is None:
         return ""
 
-    normalized = " ".join(str(value).split()).strip()
+    normalized = " ".join(value.split()).strip()
     if normalized.startswith("@"):
         normalized = normalized[1:]
     normalized = unicodedata.normalize("NFKC", normalized).casefold()

@@ -305,14 +305,7 @@ def _resolve_forum_tag(
 
 
 def _resolve_thread_applied_tag_ids(thread: discord.Thread) -> list[int]:
-    resolved_tag_ids: list[int] = []
-    for tag in thread.applied_tags:
-        try:
-            resolved_tag_ids.append(tag.id)
-        except AttributeError:
-            resolved_tag_ids.append(int(tag))
-
-    return resolved_tag_ids
+    return [tag.id for tag in thread.applied_tags]
 
 
 def _deduplicate_forum_tags(
