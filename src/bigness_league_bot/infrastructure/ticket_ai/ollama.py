@@ -68,7 +68,7 @@ class OllamaClient:
         response_payload = await asyncio.to_thread(self._post_json, "/api/chat", payload)
         message = response_payload.get("message")
         if not isinstance(message, dict):
-            raise OllamaClientError("Ollama no ha devuelto un objeto `message` valido.")
+            raise OllamaClientError("Ollama no ha devuelto un objeto `message` válido.")
 
         content = message.get("content")
         if not isinstance(content, str) or not content.strip():
@@ -77,7 +77,7 @@ class OllamaClient:
         try:
             parsed_payload = json.loads(content)
         except json.JSONDecodeError as exc:
-            raise OllamaClientError("Ollama no ha devuelto un JSON valido.") from exc
+            raise OllamaClientError("Ollama no ha devuelto un JSON válido.") from exc
 
         if not isinstance(parsed_payload, dict):
             raise OllamaClientError("Ollama ha devuelto un JSON que no es un objeto.")
@@ -110,7 +110,7 @@ class OllamaClient:
         except error.HTTPError as exc:
             details = exc.read().decode("utf-8", errors="replace").strip()
             raise OllamaClientError(
-                f"Ollama devolvio HTTP {exc.code}: {details or exc.reason}"
+                f"Ollama devolvió HTTP {exc.code}: {details or exc.reason}"
             ) from exc
         except error.URLError as exc:
             raise OllamaClientError(
@@ -120,10 +120,10 @@ class OllamaClient:
         try:
             parsed_payload = json.loads(response_body)
         except json.JSONDecodeError as exc:
-            raise OllamaClientError("La respuesta HTTP de Ollama no es JSON valido.") from exc
+            raise OllamaClientError("La respuesta HTTP de Ollama no es JSON válido.") from exc
 
         if not isinstance(parsed_payload, dict):
-            raise OllamaClientError("Ollama ha devuelto un payload invalido.")
+            raise OllamaClientError("Ollama ha devuelto un payload inválido.")
 
         error_message = parsed_payload.get("error")
         if isinstance(error_message, str) and error_message.strip():

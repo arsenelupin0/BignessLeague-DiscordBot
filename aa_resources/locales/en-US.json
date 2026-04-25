@@ -291,6 +291,9 @@
       }
     },
     "tickets": {
+      "open": {
+        "opening_notice": "\n\n_ _\nHi {user_mention}, your ticket has been opened. Briefly explain what you need. Someone from **Staff** will help you as soon as possible."
+      },
       "participants": {
         "team_role_empty": "That team role has no valid members to add to the ticket."
       },

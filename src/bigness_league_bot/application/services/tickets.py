@@ -527,7 +527,7 @@ def get_ticket_category(category_key: str) -> TicketCategory | None:
 def require_ticket_category(category_key: str) -> TicketCategory:
     category = get_ticket_category(category_key)
     if category is None:
-        raise ValueError(f"Categoria de ticket no soportada: {category_key}")
+        raise ValueError(f"Categoría de ticket no soportada: {category_key}")
 
     return category
 

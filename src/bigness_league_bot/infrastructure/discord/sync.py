@@ -184,7 +184,7 @@ async def prune_command_scope(
     # Bulk overwrite with an empty payload to remove stale registrations in the target scope.
     if prune_scope == "guild":
         if guild_id is None:
-            raise ValueError("No se puede podar comandos de guild sin DISCORD_GUILD_ID.")
+            raise ValueError("No se pueden purgar comandos de guild sin DISCORD_GUILD_ID.")
 
         guild = discord.Object(id=guild_id)
         existing_commands = await tree.fetch_commands(guild=guild)

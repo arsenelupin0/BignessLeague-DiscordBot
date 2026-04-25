@@ -250,9 +250,9 @@ def _build_model_input(
 
     return "\n\n".join(
         [
-            f"Categoria del ticket: {category_key}",
+            f"Categoría del ticket: {category_key}",
             (
-                    "El usuario ha pedido atencion humana o escalar el ticket: "
+                    "El usuario ha pedido atención humana o escalar el ticket: "
                     + ("si" if requested_human_support else "no")
             ),
             f"Ultimo mensaje del usuario:\n{latest_user_message.strip()}",
@@ -323,10 +323,10 @@ def _parse_ticket_ai_reply(
     if force_escalate_category:
         should_escalate = True
         if reason == "Sin motivo especificado.":
-            reason = "La categoria del ticket requiere revision de staff."
+            reason = "La categoría del ticket requiere revisión de staff."
 
     if requested_human_support and reason == "Sin motivo especificado.":
-        reason = "El usuario ha pedido atencion de una persona del staff."
+        reason = "El usuario ha pedido atención de una persona del staff."
 
     return TicketAiReply(
         answer=answer,

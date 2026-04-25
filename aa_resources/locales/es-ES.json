@@ -3,7 +3,7 @@
     "channel_management": {
       "close_channel": {
         "name": "cerrar_canal",
-        "description": "Aplica una accion de cierre sobre el canal actual.",
+        "description": "Aplica una acción de cierre sobre el canal actual.",
         "parameters": {
           "action": {
             "description": "Selecciona el tipo de cierre que quieres aplicar"
@@ -13,14 +13,14 @@
           "match_played": "Partido jugado",
           "matchday_closed": "Jornada cerrada",
           "reopen_match": "Reabrir partido",
-          "delete_channel": "Eliminacion de canal"
+          "delete_channel": "Eliminación de canal"
         }
       }
     },
     "channel_access": {
       "add_to_channel": {
         "name": "anadir_al_canal",
-        "description": "Anade roles al canal actual con un selector filtrado."
+        "description": "Añade roles al canal actual con un selector filtrado."
       }
     },
     "tickets": {
@@ -69,13 +69,13 @@
         "description": "Crea un canal de partido para una jornada concreta.",
         "parameters": {
           "jornada": {
-            "description": "Numero de jornada del partido"
+            "description": "Número de jornada del partido"
           },
           "partido": {
-            "description": "Numero de partido dentro de la jornada"
+            "description": "Número de partido dentro de la jornada"
           },
           "categoria": {
-            "description": "Division donde se creara el canal"
+            "description": "División donde se creará el canal"
           },
           "equipo_1": {
             "description": "Rol del primer equipo"
@@ -84,7 +84,7 @@
             "description": "Rol del segundo equipo"
           },
           "courtesy_minutes": {
-            "description": "Minutos de cortesia antes de iniciar el partido"
+            "description": "Minutos de cortesía antes de iniciar el partido"
           },
           "date": {
             "description": "Fecha del partido en formato DD/MM/YYYY o YYYY-MM-DD"
@@ -93,7 +93,7 @@
             "description": "Hora del partido en formato HH:MM"
           },
           "best_of": {
-            "description": "Numero de partidas del mejor de X"
+            "description": "Número de partidas del mejor de X"
           }
         },
         "choices": {
@@ -105,7 +105,7 @@
     "team_profile": {
       "view_my_team": {
         "name": "ver_mi_equipo",
-        "description": "Muestra la ficha de tu equipo segun tu rol y Google Sheets.",
+        "description": "Muestra la ficha de tu equipo según tu rol y Google Sheets.",
         "parameters": {
           "team_role": {
             "description": "Rol de equipo a consultar. Solo disponible para Staff, Administrador y CEO."
@@ -122,13 +122,13 @@
             "description": "Enlace al mensaje de Discord que contiene la plantilla de jugadores."
           },
           "technical_staff_message_link": {
-            "description": "Enlace al mensaje de Discord que contiene la plantilla de staff tecnico."
+            "description": "Enlace al mensaje de Discord que contiene la plantilla de staff técnico."
           }
         }
       },
       "remove_signing": {
         "name": "dar_de_baja",
-        "description": "Da de baja completamente a un miembro como jugador y staff tecnico en Google Sheets.",
+        "description": "Da de baja completamente a un miembro como jugador y staff técnico en Google Sheets.",
         "parameters": {
           "discord_name": {
             "description": "Nombre de Discord del miembro que quieres eliminar completamente."
@@ -146,7 +146,7 @@
       },
       "remove_staff_signing": {
         "name": "dar_de_baja_staff",
-        "description": "Da de baja solo los cargos de staff tecnico en Google Sheets.",
+        "description": "Da de baja solo los cargos de staff técnico en Google Sheets.",
         "parameters": {
           "discord_name": {
             "description": "Nombre de Discord del miembro que quieres eliminar de STAFF TÉCNICO."
@@ -172,8 +172,8 @@
         "invalid_scope": "Usa `!sync guild` o `!sync global`.",
         "invalid_usage": "Usa `!sync guild`, `!sync global`, `!sync prune guild`, `!sync prune global` o `!sync prune other`.",
         "guild_id_required": "No se puede operar sobre comandos de guild sin `DISCORD_GUILD_ID`.",
-        "scope_locked": "El bot esta configurado para `BOT_SYNC_SCOPE={sync_scope}`. Cambia el `.env` y reinicia si quieres usar el otro scope.",
-        "completed": "Sincronizacion completada: {summary}",
+        "scope_locked": "El bot está configurado para `BOT_SYNC_SCOPE={sync_scope}`. Cambia el `.env` y reinicia si quieres usar el otro scope.",
+        "completed": "Sincronización completada: {summary}",
         "pruned": "Limpieza completada: {summary}"
       },
       "slash_status": {
@@ -203,7 +203,7 @@
           "title": "STAFF TÉCNICO"
         },
         "fallback": {
-          "file_notice": "La ficha completa supera el limite visible de Discord y se adjunta en un unico fichero ANSI."
+          "file_notice": "La ficha completa supera el límite visible de Discord y se adjunta en un único fichero ANSI."
         }
       },
       "buttons": {
@@ -211,8 +211,8 @@
         "cancel": "Cancelar"
       },
       "role_selection": {
-        "prompt": "Tienes varios roles de equipo y no se puede decidir cual usar: {role_names}. Selecciona el equipo que quieres consultar.",
-        "timeout": "La seleccion de equipo ha expirado."
+        "prompt": "Tienes varios roles de equipo y no se puede decidir cuál usar: {role_names}. Selecciona el equipo que quieres consultar.",
+        "timeout": "La selección de equipo ha expirado."
       },
       "trackers": {
         "title": "# Trackers",
@@ -220,11 +220,11 @@
         "empty": "-",
         "missing_value": "-"
       },
-      "only_actor": "Solo quien ejecuto el comando puede usar estos botones."
+      "only_actor": "Solo quien ejecutó el comando puede usar estos botones."
     },
     "team_signing": {
       "guide": {
-        "content": "#  Como hacer una inscripción o fichaje \n_ _\nSi quieres tener un poco más de información de como funcionan los fichajes/inscripciones. Dale click a estos links de aquí abajo:\n - [Información para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)\n - [Información para añadir un rol de Staff Técnico a tu equipo](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\nLa plantilla que hay que seguir para hacer un fichaje correctamente es la siguiente (esta es explicativa).\n```\nDivision: GOLD DIVISIÓN S3 // SILVER DIVISIÓN S3 (TU DIVISIÓN CORRESPONDIENTE)\nEquipo: KE Pensionistas (EQUIPO AL QUE QUIERES HACER EL FICHAJE)\n\nJugador -> Nombre posiblemente a castear\nTracker -> URL del tracker del jugador\nDiscord -> Nombre ID, del jugador. Si no sabes lo que es revisa*1\nEpic Name -> Nombre de Epic. Si no sabes lo que es revisa*2\nRocket In-Game Name -> Nombre en el juego. Si no sabes lo que es revisa*2\n\n⏬⏬⏬⏬⏬⏬⏬⏬\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```\n1* [¿Qué es el Name ID de Discord?](https://canary.discord.com/channels/1016819103555657851/1495742330047561942)\n2* [¿Qué diferencia hay entre Epic Name y Rocket In-Game Name?](https://canary.discord.com/channels/1016819103555657851/1496951199373590629)\n_ _\n## ✅ Plantilla de ejemplo que tendrías que enviar...\n_ _\nEn caso de que tengas más jugadores, lo vas agregando con un salto de línea, como está en la plantilla (máx 6 en la plantilla). **Copia la plantilla tal cual está en este texto de aquí abajo**\n```\nDivision: GOLD DIVISIÓN S3\nEquipo: KE Pensionistas\n\nJugador\nTracker\nDiscord\nEpic Name\nRocket In-Game Name\n\n⏬⏬⏬⏬⏬⏬⏬⏬\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```"
+        "content": "#  Cómo hacer una inscripción o fichaje \n_ _\nSi quieres tener un poco más de información de cómo funcionan los fichajes/inscripciones. Haz clic en estos enlaces de aquí abajo:\n - [Información para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)\n - [Información para añadir un rol de Staff Técnico a tu equipo](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\nLa plantilla que hay que seguir para hacer un fichaje correctamente es la siguiente (esta es explicativa).\n```\nDivisión: GOLD DIVISIÓN S3 // SILVER DIVISIÓN S3 (TU DIVISIÓN CORRESPONDIENTE)\nEquipo: KE Pensionistas (EQUIPO AL QUE QUIERES HACER EL FICHAJE)\n\nJugador -> Nombre posiblemente a castear\nTracker -> URL del tracker del jugador\nDiscord -> Nombre ID, del jugador. Si no sabes lo que es, revisa*1\nEpic Name -> Nombre de Epic. Si no sabes lo que es, revisa*2\nRocket In-Game Name -> Nombre en el juego. Si no sabes lo que es, revisa*2\n\n⏬⏬⏬⏬⏬⏬⏬⏬\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```\n1* [¿Qué es el Name ID de Discord?](https://canary.discord.com/channels/1016819103555657851/1495742330047561942)\n2* [¿Qué diferencia hay entre Epic Name y Rocket In-Game Name?](https://canary.discord.com/channels/1016819103555657851/1496951199373590629)\n_ _\n## ✅ Plantilla de ejemplo que tendrías que enviar...\n_ _\nEn caso de que tengas más jugadores, ve agregándolos con un salto de línea, como está en la plantilla (máx 6 en la plantilla). **Copia la plantilla tal cual está en este texto de aquí abajo**\n```\nDivisión: GOLD DIVISIÓN S3\nEquipo: KE Pensionistas\n\nJugador\nTracker\nDiscord\nEpic Name\nRocket In-Game Name\n\n⏬⏬⏬⏬⏬⏬⏬⏬\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```"
       }
     },
     "team_role_removal_announcement": {
@@ -255,43 +255,44 @@
       "action": "Nuevo cargo en"
     },
     "channel_management": {
-      "delete_prompt": "Vas a eliminar el canal `{channel_name}` de forma permanente.\nRoles protegidos del sistema: {protected_roles}.\nConfirma solo si estas completamente seguro.",
+      "delete_prompt": "Vas a eliminar el canal `{channel_name}` de forma permanente.\nRoles protegidos del sistema: {protected_roles}.\nConfirma solo si estás completamente seguro.",
       "matchday_close_prompt": "Vas a cerrar la jornada en `{channel_name}`.\nSe eliminaran los permisos de los roles no protegidos y solo conservaran acceso: {protected_roles}.\nConfirma solo si quieres aplicar este cierre."
     },
     "tickets": {
       "panel": {
-        "content": "# \uD83D\uDD30 Soporte \uD83D\uDD30\n_ _\n➡\uFE0F Selecciona **una** de las siguientes **opciones** en el **menú desplegable** abajo de este mensaje. Si **no sabes** sobre que **tema** quieres abrir el **ticket**, **lee** atentamente **aquí abajo**.\n\n## 1\uFE0F⃣ Soporte general\n- En caso de que tu duda no esté en ninguna de las otras categorías. Esta es tu categoría.\n## 2\uFE0F⃣ Competición Bigness League\n- Reglamento\n- Código de conducta\n- Cómo funciona la liga (divisiones, inscripción, máx rango, etc)\n- Pricepool\n- ¿Tengo que pagar para entrar?\n- ¿Cómo inscribo a mi equipo a la Bigness League?\n## 3\uFE0F⃣ Mercado de jugadores\n- Inscribir a un nuevo jugador\n- Quitar a un jugador de mi equipo\n- Modificación de rol (ceo, manager, segundo manager, coach o analista)\n## 4\uFE0F⃣ ¿Quieres hacer stream de tu partido?\n- Quiero retrasmitir mi partido\n- Que tengo que hacer para poder retrasmitir una jornada de la liga\n- ¿Puedo castear un partido?\n## 5\uFE0F⃣ Apelaciones, problemas con algún equipo, jugador, etc\n- Sanciones sobre jugadores\n- Problemas con equipos externos\n- Problemas con X jugador ajeno a la liga\n- Apelación sobre decisión de la liga inapropiada\n## 6\uFE0F⃣ Bot de la Bigness League\n- Cómo funciona el bot de la bigness\n- Que comandos puedo hacer\n- No funciona o hay algún error\n- Quiero reportar un error\n## 7\uFE0F⃣ Social\n- Dudas del servidor de discord\n- Colaboraciones\n- Sugerencias",
+        "content": "# \uD83D\uDD30 Soporte \uD83D\uDD30\n_ _\n➡\uFE0F Selecciona **una** de las siguientes **opciones** en el **menú desplegable** abajo de este mensaje. Si **no sabes** sobre qué **tema** quieres abrir el **ticket**, **lee** atentamente **aquí abajo**.\n\n## 1\uFE0F⃣ Soporte general\n- En caso de que tu duda no esté en ninguna de las otras categorías. Esta es tu categoría.\n## 2\uFE0F⃣ Competición Bigness League\n- Reglamento\n- Código de conducta\n- Cómo funciona la liga (divisiones, inscripción, máx rango, etc)\n- Pricepool\n- ¿Tengo que pagar para entrar?\n- ¿Cómo inscribo a mi equipo a la Bigness League?\n## 3\uFE0F⃣ Mercado de jugadores\n- Inscribir a un nuevo jugador\n- Quitar a un jugador de mi equipo\n- Modificación de rol (ceo, manager, segundo manager, coach o analista)\n## 4\uFE0F⃣ ¿Quieres hacer stream de tu partido?\n- Quiero retrasmitir mi partido\n- Qué tengo que hacer para poder retrasmitir una jornada de la liga\n- ¿Puedo castear un partido?\n## 5\uFE0F⃣ Apelaciones, problemas con algún equipo, jugador, etc\n- Sanciones sobre jugadores\n- Problemas con equipos externos\n- Problemas con X jugador ajeno a la liga\n- Apelación sobre decisión de la liga inapropiada\n## 6\uFE0F⃣ Bot de la Bigness League\n- Cómo funciona el bot de la Bigness\n- Qué comandos puedo hacer\n- No funciona o hay algún error\n- Quiero reportar un error\n## 7\uFE0F⃣ Social\n- Dudas del servidor de discord\n- Colaboraciones\n- Sugerencias",
         "select_placeholder": "Soporte General",
         "published": "Panel de tickets publicado."
       },
       "open": {
         "embed": {
           "title": "🔓 Nuevo Ticket Creado",
-          "description": "Tu ticket de soporte ha sido abierto con exito. Un miembro del personal te asistira en breve.\n \n_ _",
+          "description": "Tu ticket de soporte ha sido abierto con éxito. Un miembro del personal te asistirá en breve.\n \n_ _",
           "fields": {
-            "ticket_number": "📝 Numero de Ticket",
+            "ticket_number": "📝 Número de Ticket",
             "opened_by": "👤 Abierto por",
-            "category": "📋 Categoria",
+            "category": "📋 Categoría",
             "created_at": "📅 Creado el",
             "instructions": "ℹ️ Instrucciones"
           },
           "instructions": "- Describe tu problema en detalle\n- Ten paciencia mientras esperas una respuesta\n- Usa los botones de abajo para cerrar el ticket cuando se resuelva",
           "footer": "Desarrollado por el equipo de la Bigness League"
         },
-        "dm_created": "# Ticket abierto\nHas abierto un ticket de **{category}**.\n\nResponde a este mensaje privado para hablar con el staff de Bigness League. Las respuestas del staff tambien llegaran por aqui.",
+        "dm_created": "# Ticket abierto\nHas abierto un ticket de **{category}**.\n\nResponde a este mensaje privado para hablar con el staff de Bigness League. Las respuestas del staff también llegarán por aquí.",
+        "opening_notice": "\n\n_ _\nHola {user_mention}, ¡tu ticket ha sido abierto! Explica brevemente qué necesitas. Alguien del **Staff** te atenderá lo antes posible.",
         "created_ephemeral": "{emoji} Tu nuevo Ticket ha sido creado: {message_link}",
         "already_open": "Ya tienes un ticket activo. Revisa tus mensajes privados. Hilo interno: `{thread_id}`.",
         "already_open_with_link": "Ya tienes un ticket activo. Revisa tus mensajes privados: {message_link}",
-        "dm_failed_ephemeral": "No he podido enviarte un mensaje privado, asi que el ticket se ha cerrado. Activa los DM de este servidor y vuelve a intentarlo.",
-        "dm_failed_thread": "No se pudo abrir DM con {user}. El ticket se cierra automaticamente."
+        "dm_failed_ephemeral": "No he podido enviarte un mensaje privado, así que el ticket se ha cerrado. Activa los DM de este servidor y vuelve a intentarlo.",
+        "dm_failed_thread": "No se pudo abrir DM con {user}. El ticket se cierra automáticamente."
       },
       "participants": {
         "only_ticket_thread": "Este comando solo se puede usar dentro de un hilo de ticket activo.",
         "added_dm": "Has sido añadido al ticket {ticket_number} de **{category}**. Responde por este mensaje privado para participar en la conversación.",
         "added_thread": "Se han añadido al ticket: {users}",
-        "none_added": "No se ha añadido ningun usuario al ticket.",
-        "team_role_empty": "Ese rol de equipo no tiene ningun miembro valido para añadir al ticket.",
-        "owner_unavailable": "No he podido resolver al usuario que abrio originalmente este ticket.",
+        "none_added": "No se ha añadido ningún usuario al ticket.",
+        "team_role_empty": "Ese rol de equipo no tiene ningún miembro válido para añadir al ticket.",
+        "owner_unavailable": "No he podido resolver al usuario que abrió originalmente este ticket.",
         "summary": {
           "added": "Añadidos: {users}",
           "already_present": "Ya estaban en el ticket: {users}",
@@ -314,7 +315,7 @@
         "user_escalated": "De acuerdo. He dejado el ticket para que lo revise una persona del staff lo antes posible.",
         "unavailable_thread": "La IA local no ha podido responder a este mensaje: {details}",
         "status": {
-          "result": "## Estado de la IA de tickets\n- Cargada en runtime: `{loaded}`\n- Activada por configuracion: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Proveedor: `{provider}`\n- Modelo: `{model}`\n- Base URL: `{base_url}`\n- Backend accesible: `{backend_reachable}`\n- Categorias con auto-reply: `{categories}`\n- Base de conocimiento: `{knowledge_base_file}`\n- Prompt del sistema: `{system_prompt_file}`"
+          "result": "## Estado de la IA de tickets\n- Cargada en runtime: `{loaded}`\n- Activada por configuración: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Proveedor: `{provider}`\n- Modelo: `{model}`\n- Base URL: `{base_url}`\n- Backend accesible: `{backend_reachable}`\n- Categorías con auto-reply: `{categories}`\n- Base de conocimiento: `{knowledge_base_file}`\n- Prompt del sistema: `{system_prompt_file}`"
         }
       },
       "buttons": {
@@ -322,43 +323,43 @@
         "close_with_reason": "🔏 Cerrar con razón"
       },
       "close": {
-        "not_ticket_thread": "Este boton solo se puede usar dentro de un hilo de ticket.",
-        "not_active": "No hay ningun ticket activo asociado a este hilo.",
+        "not_ticket_thread": "Este botón solo se puede usar dentro de un hilo de ticket.",
+        "not_active": "No hay ningún ticket activo asociado a este hilo.",
         "thread_closed": "Ticket cerrado por {actor}.",
         "dm_closed": "Tu ticket ha sido cerrado por {actor}.",
         "closed_ephemeral": "Ticket cerrado.",
-        "only_actor": "Solo quien ha iniciado esta confirmacion puede usar estos botones.",
-        "confirm_prompt": "Vas a cerrar este ticket. Confirma la accion si quieres continuar.",
-        "confirm_reason_prompt": "Vas a cerrar este ticket con una razon. Confirma para abrir el formulario de cierre.",
+        "only_actor": "Solo quien ha iniciado esta confirmación puede usar estos botones.",
+        "confirm_prompt": "Vas a cerrar este ticket. Confirma la acción si quieres continuar.",
+        "confirm_reason_prompt": "Vas a cerrar este ticket con una razón. Confirma para abrir el formulario de cierre.",
         "confirm_processing": "Cerrando ticket...",
         "confirm_cancelled": "Cierre cancelado.",
         "confirm": {
           "buttons": {
             "confirm": "Confirmar cierre",
-            "add_reason": "Añadir razon",
+            "add_reason": "Añadir razón",
             "cancel": "Cancelar"
           }
         },
         "reason_modal": {
-          "title": "Cerrar ticket con razon",
+          "title": "Cerrar ticket con razón",
           "label": "Razon de cierre",
           "placeholder": "Ejemplo: Problema resuelto o ticket abierto por error."
         },
         "embed": {
           "title": "🔒 Ticket Cerrado",
-          "description": "Tu ticket de soporte ha sido cerrado con exito. Si necesitas ayuda adicional, puedes abrir un nuevo ticket.\n \n_ _",
+          "description": "Tu ticket de soporte ha sido cerrado con éxito. Si necesitas ayuda adicional, puedes abrir un nuevo ticket.\n \n_ _",
           "fields": {
-            "ticket_number": "📝 Numero de Ticket",
+            "ticket_number": "📝 Número de Ticket",
             "closed_by": "👤 Cerrado por",
-            "category": "📋 Categoria",
+            "category": "📋 Categoría",
             "ticket_link": "🔗 Ir al Ticket",
             "created_at": "📅 Creado el",
-            "duration": "⏱️ Duracion",
+            "duration": "⏱️ Duración",
             "closed_at": "🔒 Cerrado el",
             "close_reason": "📌 Razon de cierre"
           },
           "link_value": "[Enlace directo al mensaje de inicio del ticket]({ticket_link})",
-          "default_reason": "No se ha especificado ninguna razon.",
+          "default_reason": "No se ha especificado ninguna razón.",
           "footer": "Desarrollado por el equipo de la Bigness League"
         }
       }
@@ -368,7 +369,7 @@
       "empty_option_label": "Sin roles",
       "no_results_label": "Sin resultados",
       "no_results_placeholder": "No hay roles para mostrar",
-      "select_placeholder": "Selecciona roles de la pagina {page}/{page_count}",
+      "select_placeholder": "Selecciona roles de la página {page}/{page_count}",
       "buttons": {
         "previous": "Anterior",
         "next": "Siguiente",
@@ -379,29 +380,29 @@
       },
       "modal": {
         "title": "Buscar roles",
-        "query_label": "Nombre, ID o mencion del rol",
+        "query_label": "Nombre, ID o mención del rol",
         "query_placeholder": "Ejemplo: Dragons, 123456789 o \u003c@\u0026123456789\u003e"
       },
-      "render_content": "Selecciona los roles que quieres anadir a este canal.\nRango filtrado: `{range_start}` \u003c roles \u003c `{range_end}`.\nPagina {page}/{page_count} | Seleccionados: {selected_count} | Disponibles: {visible_count}/{candidate_count}.\nBusqueda: {search_query}.\nUsa Confirmar para aplicar los permisos al canal.",
+      "render_content": "Selecciona los roles que quieres añadir a este canal.\nRango filtrado: `{range_start}` \u003c roles \u003c `{range_end}`.\nPágina {page}/{page_count} | Seleccionados: {selected_count} | Disponibles: {visible_count}/{candidate_count}.\nBúsqueda: {search_query}.\nUsa Confirmar para aplicar los permisos al canal.",
       "search_none": "sin filtro",
-      "only_actor": "Solo quien ejecuto el comando puede usar este selector.",
-      "timeout": "La seleccion de roles ha expirado. No se han aplicado cambios.",
+      "only_actor": "Solo quien ejecutó el comando puede usar este selector.",
+      "timeout": "La selección de roles ha expirado. No se han aplicado cambios.",
       "select_before_confirm": "Selecciona al menos un rol antes de confirmar.",
       "selection_cancelled": "Seleccion de roles cancelada."
     },
     "channel_delete_confirmation": {
-      "only_actor": "Solo quien ejecuto el comando puede confirmar esta accion.",
-      "timeout": "La confirmacion ha expirado. No se ha eliminado el canal.",
+      "only_actor": "Solo quien ejecutó el comando puede confirmar esta acción.",
+      "timeout": "La confirmación ha expirado. No se ha eliminado el canal.",
       "deleting": "Eliminando canal...",
-      "cancelled": "Eliminacion cancelada.",
+      "cancelled": "Eliminación cancelada.",
       "buttons": {
         "confirm": "Confirmar eliminacion",
         "cancel": "Cancelar"
       }
     },
     "channel_matchday_close_confirmation": {
-      "only_actor": "Solo quien ejecuto el comando puede confirmar esta accion.",
-      "timeout": "La confirmacion ha expirado. No se ha cerrado la jornada.",
+      "only_actor": "Solo quien ejecutó el comando puede confirmar esta acción.",
+      "timeout": "La confirmación ha expirado. No se ha cerrado la jornada.",
       "closing": "Cerrando jornada...",
       "cancelled": "Cierre de jornada cancelado.",
       "buttons": {
@@ -411,11 +412,11 @@
     },
     "match_channel_creation": {
       "welcome": {
-        "content": "# Jornada {jornada_emoji}　Partido {partido_emoji}\n## Bienvenid@s\n### {team_one} 🆚 {team_two}\n\nEste es el canal privado y autogenerado de vuestro partido. Para acordar fechas, pruebas y todo lo relacionado de esta jornada, deberá hablarse únicamente y exclusivamente por este canal de texto. Si se acuerda el partido por medios externos y surge algún problema a futuro, no se tendrá en cuenta. Casos mas graves lo evaluará el Staff.\n\n🤝¡Mucha suerte a ambos equipos!🤝\n　",
+        "content": "# Jornada {jornada_emoji}　Partido {partido_emoji}\n## Bienvenid@s\n### {team_one} 🆚 {team_two}\n\nEste es el canal privado y autogenerado de vuestro partido. Para acordar fechas, pruebas y todo lo relacionado de esta jornada, deberá hablarse únicamente y exclusivamente por este canal de texto. Si se acuerda el partido por medios externos y surge algún problema a futuro, no se tendrá en cuenta. Los casos más graves lo evaluará el Staff.\n\n🤝¡Mucha suerte a ambos equipos!🤝\n　",
         "embeds": {
           "details": {
             "title": "🔰 Detalles a tener en cuenta 🔰",
-            "description": "- Si nadie se pone **de acuerdo** y no hay una fecha por ninguno de los **dos equipos**, el partido se dara como **nulo**. Ninguno de los dos equipos aquí presentes sumará puntos esta jornada.\n- Pongamos todos de nuestra parte para poder **jugar el partido** y recordad **organizarlo** lo **antes posible**.\n- Intentad ser **flexibles ambos equipos**. Si alguno no puede, debe **proponer** otra **fecha** y así sucesivamente.\n- Habrá **minutos** de **cortesía** según la **hora del partido**. Si la fecha **esta puesta** a las **16:00**, como tarde deberá iniciarse a las **16:10**, salvo **acuerdo expreso** entre **ambos equipos**."
+            "description": "- Si nadie se pone **de acuerdo** y no hay una fecha por ninguno de los **dos equipos**, el partido se dará como **nulo**. Ninguno de los dos equipos aquí presentes sumará puntos esta jornada.\n- Pongamos todos de nuestra parte para poder **jugar el partido** y recordad **organizarlo** lo **antes posible**.\n- Intentad ser **flexibles ambos equipos**. Si alguno no puede, debe **proponer** otra **fecha** y así sucesivamente.\n- Habrá **minutos** de **cortesía** según la **hora del partido**. Si la fecha **está puesta** a las **16:00**, como tarde deberá iniciarse a las **16:10**, salvo **acuerdo expreso** entre **ambos equipos**."
           },
           "issues": {
             "title": "🔰 En caso de problemas 🔰",
@@ -423,7 +424,7 @@
           },
           "match_data": {
             "title": "⚽ 🚗 Datos del partido 🚗 ⚽",
-            "description": "- Informacion de sala\n  - ⌛ {courtesy_minutes} minutos de cortesia\n  - 🗓️ {match_date}\n  - ⏰ {match_time}\n  - ⚔️ {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `{room_name}`\n  - Contrasena: `{room_password}` \n  - Crea: {team_one}"
+            "description": "- Información de sala\n  - ⌛ {courtesy_minutes} minutos de cortesía\n  - 🗓️ {match_date}\n  - ⏰ {match_time}\n  - ⚔️ {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `{room_name}`\n  - Contraseña: `{room_password}` \n  - Crea: {team_one}"
           }
         },
         "buttons": {
@@ -442,33 +443,33 @@
       "protected_roles_missing": "Faltan roles protegidos en el servidor: {missing_roles}.",
       "invalid_role_not_in_guild": "El rol `{role_name}` no pertenece a este servidor.",
       "invalid_role_everyone": "No puedes anadir `@everyone` al canal.",
-      "no_valid_additional_roles": "Selecciona al menos un rol adicional valido.",
+      "no_valid_additional_roles": "Selecciona al menos un rol adicional válido.",
       "range_start_missing": "No existe el rol de inicio configurado para el selector: `{role_id}`.",
       "range_end_missing": "No existe el rol de fin configurado para el selector: `{role_id}`.",
       "range_empty": "No hay roles seleccionables entre los separadores configurados."
     },
     "tickets": {
       "ceo_only": "Solo puede publicar el panel de tickets un miembro con el rol `CEO`.",
-      "category_unknown": "La categoria de ticket seleccionada no es valida.",
+      "category_unknown": "La categoría de ticket seleccionada no es válida.",
       "forum_channel_not_configured": "Falta configurar `BOT_TICKET_FORUM_CHANNEL_ID` con el ID del foro de tickets.",
-      "forum_channel_not_found": "No se encontro el foro de tickets configurado: `{channel_id}`.",
+      "forum_channel_not_found": "No se encontró el foro de tickets configurado: `{channel_id}`.",
       "forum_channel_not_in_guild": "El canal configurado como foro de tickets no pertenece a este servidor: `{channel_id}`.",
       "forum_channel_invalid_type": "El canal configurado como foro de tickets debe ser un foro de Discord: `{channel_id}`.",
-      "forum_tag_missing": "No existe la etiqueta `{tag_name}` en el foro `{forum_name}`. Crea esa etiqueta en el foro o ajusta la configuracion de categorias."
+      "forum_tag_missing": "No existe la etiqueta `{tag_name}` en el foro `{forum_name}`. Crea esa etiqueta en el foro o ajusta la configuración de categorias."
     },
     "match_channel_creation": {
       "same_team_roles": "No puedes crear un partido usando el mismo rol dos veces: `{role_name}`.",
       "invalid_team_role": "El rol `{role_name}` no se puede usar como equipo en un canal de partido.",
-      "team_role_out_of_range": "El rol `{role_name}` no esta dentro del rango de roles de equipos configurado: `{range_start}` \u003c rol \u003c `{range_end}`.",
+      "team_role_out_of_range": "El rol `{role_name}` no está dentro del rango de roles de equipos configurado: `{range_start}` \u003c rol \u003c `{range_end}`.",
       "channel_already_exists": "Ya existe un canal para esa jornada y ese partido: `{channel_name}`.",
       "category_missing": "No existe la categoria configurada para crear este canal: `{category_id}`.",
       "invalid_date_format": "La fecha no es valida. Usa `DD/MM/YYYY` o `YYYY-MM-DD`.",
       "invalid_time_format": "La hora no es valida. Usa el formato `HH:MM` en 24 horas."
     },
     "team_profile": {
-      "team_role_missing": "No tienes ningun rol de equipo dentro del rango configurado para este comando.",
-      "multiple_team_roles": "Tienes varios roles de equipo y no se puede decidir cual usar: {role_names}.",
-      "dm_guild_unavailable": "No se puede resolver este comando por MD porque el servidor principal del bot no esta disponible. Revisa `DISCORD_GUILD_ID` y que el bot siga dentro del servidor.",
+      "team_role_missing": "No tienes ningún rol de equipo dentro del rango configurado para este comando.",
+      "multiple_team_roles": "Tienes varios roles de equipo y no se puede decidir cuál usar: {role_names}.",
+      "dm_guild_unavailable": "No se puede resolver este comando por MD porque el servidor principal del bot no está disponible. Revisa `DISCORD_GUILD_ID` y que el bot siga dentro del servidor.",
       "dm_member_not_found": "No he podido vincular este MD con tu miembro del servidor principal. Asegurate de seguir dentro del servidor de la Bigness League.",
       "google_dependencies_missing": "Faltan las dependencias de Google Sheets en el entorno del bot.",
       "google_service_account_missing": "Falta configurar `BOT_GOOGLE_SERVICE_ACCOUNT_FILE` para usar Google Sheets.",
@@ -478,32 +479,32 @@
       "image_dependencies_missing": "Falta la dependencia `Pillow` para renderizar la ficha del equipo como imagen. Ejecuta `pip install -e .` para instalarla.",
       "team_sheet_empty": "La hoja `{sheet_name}` no tiene datos utilizables.",
       "team_sheet_layout_invalid": "La hoja `{sheet_name}` no sigue el formato esperado para el equipo `{role_name}`.",
-      "team_not_found": "No se encontro ninguna fila en `{sheet_name}` para el rol `{role_name}`."
+      "team_not_found": "No se encontró ninguna fila en `{sheet_name}` para el rol `{role_name}`."
     },
     "team_signing": {
-      "invalid_message_link": "El enlace del mensaje no es valido. Debe ser un enlace de Discord con servidor, canal y mensaje.",
+      "invalid_message_link": "El enlace del mensaje no es válido. Debe ser un enlace de Discord con servidor, canal y mensaje.",
       "foreign_guild_message_link": "El enlace apunta a otro servidor. Guild actual: `{expected_guild_id}`. Guild enlazada: `{linked_guild_id}`.",
-      "message_channel_not_found": "No se encontro el canal del mensaje enlazado: `{channel_id}`.",
+      "message_channel_not_found": "No se encontró el canal del mensaje enlazado: `{channel_id}`.",
       "unsupported_message_channel": "El mensaje enlazado debe pertenecer a un canal de texto o a un hilo.",
-      "message_not_found": "No se encontro el mensaje enlazado: `{message_id}`.",
+      "message_not_found": "No se encontró el mensaje enlazado: `{message_id}`.",
       "message_fetch_forbidden": "El bot no puede acceder al mensaje enlazado. Revisa sus permisos en ese canal.",
       "message_fetch_failed": "No se pudo recuperar el mensaje enlazado desde Discord: {details}.",
       "invalid_message_format": "El mensaje enlazado no sigue el formato esperado para importar fichajes: {details}.",
-      "invalid_technical_staff_message_format": "El mensaje enlazado no sigue el formato esperado para importar staff tecnico: {details}.",
-      "no_import_payload_provided": "Debes indicar al menos un enlace de jugadores o un enlace de staff tecnico.",
-      "import_payload_mismatch": "Los mensajes enlazados no coinciden en Division/Equipo. Jugadores: `{player_division}` / `{player_team}`. Staff: `{staff_division}` / `{staff_team}`.",
-      "division_not_found": "No existe ninguna hoja que coincida con la division `{division_name}`.",
+      "invalid_technical_staff_message_format": "El mensaje enlazado no sigue el formato esperado para importar staff técnico: {details}.",
+      "no_import_payload_provided": "Debes indicar al menos un enlace de jugadores o un enlace de staff técnico.",
+      "import_payload_mismatch": "Los mensajes enlazados no coinciden en División/Equipo. Jugadores: `{player_division}` / `{player_team}`. Staff: `{staff_division}` / `{staff_team}`.",
+      "division_not_found": "No existe ninguna hoja que coincida con la división `{division_name}`.",
       "team_sheet_layout_invalid": "La hoja `{sheet_name}` no sigue el formato esperado para registrar fichajes.",
-      "no_free_team_block": "No hay ningun bloque de equipo libre en `{sheet_name}` para registrar a `{team_name}`.",
-      "technical_staff_role_not_found": "No existe la fila de staff tecnico `{role_name}` para `{team_name}` en `{sheet_name}`.",
-      "technical_staff_player_not_found": "No se pudo completar el staff tecnico `{role_name}` porque el Discord `{discord_name}` no existe en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.",
-      "technical_staff_player_duplicate": "No se pudo completar el staff tecnico `{role_name}` porque el Discord `{discord_name}` aparece duplicado en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.",
-      "player_not_found": "No se encontro ningun jugador con el Discord `{discord_name}` en Google Sheets.",
-      "technical_staff_member_not_found": "No se encontro ningun cargo de staff tecnico con el Discord `{discord_name}` en Google Sheets.",
-      "member_not_found": "No se encontro ningun jugador ni cargo de staff tecnico con el Discord `{discord_name}` en Google Sheets.",
-      "player_duplicate": "Hay varios jugadores con el Discord `{discord_name}` en Google Sheets: {locations}. Corrigelo manualmente antes de continuar.",
-      "member_duplicate": "El Discord `{discord_name}` aparece en mas de un bloque de equipo: {locations}. Corrigelo manualmente antes de continuar.",
-      "remaining_signings_invalid": "La celda de fichajes restantes no es valida para `{team_name}` en `{sheet_name}`.",
+      "no_free_team_block": "No hay ningún bloque de equipo libre en `{sheet_name}` para registrar a `{team_name}`.",
+      "technical_staff_role_not_found": "No existe la fila de staff técnico `{role_name}` para `{team_name}` en `{sheet_name}`.",
+      "technical_staff_player_not_found": "No se pudo completar el staff técnico `{role_name}` porque el Discord `{discord_name}` no existe en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.",
+      "technical_staff_player_duplicate": "No se pudo completar el staff técnico `{role_name}` porque el Discord `{discord_name}` aparece duplicado en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.",
+      "player_not_found": "No se encontró ningún jugador con el Discord `{discord_name}` en Google Sheets.",
+      "technical_staff_member_not_found": "No se encontró ningún cargo de staff técnico con el Discord `{discord_name}` en Google Sheets.",
+      "member_not_found": "No se encontró ningún jugador ni cargo de staff técnico con el Discord `{discord_name}` en Google Sheets.",
+      "player_duplicate": "Hay varios jugadores con el Discord `{discord_name}` en Google Sheets: {locations}. Corrígelo manualmente antes de continuar.",
+      "member_duplicate": "El Discord `{discord_name}` aparece en más de un bloque de equipo: {locations}. Corrígelo manualmente antes de continuar.",
+      "remaining_signings_invalid": "La celda de fichajes restantes no es válida para `{team_name}` en `{sheet_name}`.",
       "remaining_signings_exceeded": "No quedan fichajes suficientes en `{team_name}`. Restantes: {remaining_signings}. Solicitados: {requested_signings}.",
       "team_roster_full": "No hay hueco suficiente en `{team_name}` para estos fichajes. Huecos libres: {available_slots}. Fichajes solicitados: {requested_slots}.",
       "google_write_failed": "Google Sheets ha rechazado la escritura de fichajes: {details}."
@@ -522,7 +523,7 @@
     "slash": {
       "forbidden": "No tienes permisos para ejecutar este comando.",
       "bot_missing_permissions": "El bot necesita permisos suficientes para gestionar el canal.",
-      "discord_forbidden": "Discord ha rechazado la accion. Revisa los permisos del bot.",
+      "discord_forbidden": "Discord ha rechazado la acción. Revisa los permisos del bot.",
       "http_error": "Discord ha devuelto un error al actualizar el canal.",
       "unexpected": "Ha ocurrido un error inesperado al procesar el comando."
     }
@@ -532,7 +533,7 @@
       "match_played_summary": "Canal puesto en modo solo lectura para el resto de roles. Staff, Administrador y Ceo mantienen escritura.",
       "matchday_closed_summary": "Canal cerrado para roles no protegidos. Solo Staff, Administrador y Ceo conservan acceso.",
       "reopen_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal.",
-      "reopen_with_roles_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal y se han anadido estos roles: {roles}.",
+      "reopen_with_roles_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal y se han añadido estos roles: {roles}.",
       "add_roles_summary": "Se han anadido al canal estos roles: {roles}."
     },
     "match_channel_creation": {
@@ -540,22 +541,22 @@
     },
     "team_signing": {
       "completed": "Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.",
-      "technical_staff_completed": "Se ha actualizado el staff tecnico de `{team_name}` en `{division_name}`. Filas actualizadas: {updated_count}.",
-      "staff_role_sync_summary": "Roles de staff tecnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
+      "technical_staff_completed": "Se ha actualizado el staff técnico de `{team_name}` en `{division_name}`. Filas actualizadas: {updated_count}.",
+      "staff_role_sync_summary": "Roles de staff técnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
       "removed": "Se ha dado de baja a `{player_name}` (`{discord_name}`) de `{team_name}` en `{division_name}`. Plantilla actual: {total_players}/6.",
-      "technical_staff_removed": "Se ha dado de baja a `{discord_name}` del staff tecnico de `{team_name}` en `{division_name}`. Cargos retirados: {staff_roles}.",
+      "technical_staff_removed": "Se ha dado de baja a `{discord_name}` del staff técnico de `{team_name}` en `{division_name}`. Cargos retirados: {staff_roles}.",
       "role_removal_completed": "Roles retirados en Discord a `{member_name}`: {roles}.",
-      "role_removal_no_changes": "No habia roles que retirar en Discord para `{member_name}`.",
-      "role_removal_unresolved": "No se encontro ningun miembro de Discord para retirar roles a `{discord_name}`.",
-      "role_removal_ambiguous": "Hay varias coincidencias en Discord para `{discord_name}`. No se retiraron roles automaticamente.",
-      "role_removal_failed": "La baja en Google Sheets se aplico, pero no se pudieron retirar roles en Discord: {details}.",
-      "role_assignment_summary": "Asignacion de roles: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
+      "role_removal_no_changes": "No había roles que retirar en Discord para `{member_name}`.",
+      "role_removal_unresolved": "No se encontró ningún miembro de Discord para retirar roles a `{discord_name}`.",
+      "role_removal_ambiguous": "Hay varias coincidencias en Discord para `{discord_name}`. No se retiraron roles automáticamente.",
+      "role_removal_failed": "La baja en Google Sheets se aplicó, pero no se pudieron retirar roles en Discord: {details}.",
+      "role_assignment_summary": "Asignación de roles: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
       "role_assignment_unresolved": "Sin coincidencia en Discord: {names}.",
       "role_assignment_ambiguous": "Coincidencias ambiguas en Discord: {names}."
     },
     "team_role_assignment": {
-      "completed": "Sincronizacion de roles completada para `{team_name}`: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
-      "staff_role_sync_summary": "Sincronizacion de staff tecnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
+      "completed": "Sincronización de roles completada para `{team_name}`: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
+      "staff_role_sync_summary": "Sincronización de staff técnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
       "unresolved": "Sin coincidencia en Discord: {names}.",
       "ambiguous": "Coincidencias ambiguas en Discord: {names}."
     }

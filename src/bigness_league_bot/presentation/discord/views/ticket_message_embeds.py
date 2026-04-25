@@ -38,11 +38,16 @@ def build_ticket_open_message_content() -> None:
     return None
 
 
-def build_ticket_opening_notice(user: discord.abc.User | discord.Member) -> str:
-    return (
-        f"\n\n_ _\nHola {user.mention}, ¡tu ticket ha sido abierto! "
-        "Explica con brevedad que es lo que necesitas. "
-        "Alguien del **Staff** te atenderá lo antes posible."
+def build_ticket_opening_notice(
+        *,
+        bot: BignessLeagueBot,
+        locale: str | discord.Locale | None,
+        user: discord.abc.User | discord.Member,
+) -> str:
+    return bot.localizer.translate(
+        I18N.messages.tickets.open.opening_notice,
+        locale=locale,
+        user_mention=user.mention,
     )
 
 

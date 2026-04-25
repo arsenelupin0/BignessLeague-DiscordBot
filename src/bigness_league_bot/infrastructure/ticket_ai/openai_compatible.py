@@ -79,15 +79,15 @@ class OpenAiCompatibleClient:
 
         choices = response_payload.get("choices")
         if not isinstance(choices, list) or not choices:
-            raise OllamaClientError("El servidor OpenAI-compatible no ha devuelto `choices` validos.")
+            raise OllamaClientError("El servidor OpenAI-compatible no ha devuelto `choices` válidos.")
 
         first_choice = choices[0]
         if not isinstance(first_choice, dict):
-            raise OllamaClientError("La primera opcion de respuesta no es valida.")
+            raise OllamaClientError("La primera opción de respuesta no es valida.")
 
         message = first_choice.get("message")
         if not isinstance(message, dict):
-            raise OllamaClientError("La respuesta no contiene un objeto `message` valido.")
+            raise OllamaClientError("La respuesta no contiene un objeto `message` válido.")
 
         content = message.get("content")
         if not isinstance(content, str) or not content.strip():
@@ -97,7 +97,7 @@ class OpenAiCompatibleClient:
             parsed_payload = json.loads(content)
         except json.JSONDecodeError as exc:
             raise OllamaClientError(
-                "La respuesta del modelo no es un JSON valido."
+                "La respuesta del modelo no es un JSON válido."
             ) from exc
 
         if not isinstance(parsed_payload, dict):
@@ -169,7 +169,7 @@ class OpenAiCompatibleClient:
         except error.HTTPError as exc:
             details = exc.read().decode("utf-8", errors="replace").strip()
             raise OllamaClientError(
-                f"El servidor OpenAI-compatible devolvio HTTP {exc.code}: {details or exc.reason}"
+                f"El servidor OpenAI-compatible devolvió HTTP {exc.code}: {details or exc.reason}"
             ) from exc
         except error.URLError as exc:
             raise OllamaClientError(
@@ -180,11 +180,11 @@ class OpenAiCompatibleClient:
             parsed_payload = json.loads(response_body)
         except json.JSONDecodeError as exc:
             raise OllamaClientError(
-                "La respuesta del servidor OpenAI-compatible no es JSON valido."
+                "La respuesta del servidor OpenAI-compatible no es JSON válido."
             ) from exc
 
         if not isinstance(parsed_payload, dict):
-            raise OllamaClientError("El servidor OpenAI-compatible ha devuelto un payload invalido.")
+            raise OllamaClientError("El servidor OpenAI-compatible ha devuelto un payload inválido.")
 
         error_payload = parsed_payload.get("error")
         if isinstance(error_payload, dict):

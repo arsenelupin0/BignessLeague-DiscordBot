@@ -200,7 +200,11 @@ class TicketPanelView(discord.ui.View):
                     ),
                 )
                 await interaction.user.send(
-                    build_ticket_opening_notice(interaction.user),
+                    build_ticket_opening_notice(
+                        bot=interaction.client,
+                        locale=interaction.locale,
+                        user=interaction.user,
+                    ),
                     allowed_mentions=discord.AllowedMentions(
                         users=True,
                         roles=False,
@@ -328,7 +332,11 @@ class TicketPanelView(discord.ui.View):
             ),
         )
         await result.thread.send(
-            build_ticket_opening_notice(interaction.user),
+            build_ticket_opening_notice(
+                bot=interaction.client,
+                locale=interaction.locale,
+                user=interaction.user,
+            ),
             allowed_mentions=discord.AllowedMentions(
                 users=True,
                 roles=False,

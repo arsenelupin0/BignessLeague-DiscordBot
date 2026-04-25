@@ -40,7 +40,7 @@ def localized_locale_str(
     else:
         if translation_key is None:
             raise TypeError(
-                "Si usas una cadena como texto base, debes indicar la clave de traduccion."
+                "Si usas una cadena como texto base, debes indicar la clave de traducción."
             )
         entry = TranslationKey(key=translation_key, default_text=key)
 

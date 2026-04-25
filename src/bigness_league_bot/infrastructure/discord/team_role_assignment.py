@@ -283,7 +283,7 @@ async def sync_team_staff_roles_by_names(
             await member.add_roles(
                 *roles_to_add,
                 reason=(
-                    f"{actor} ({actor.id}) sincronizo roles de staff del equipo "
+                    f"{actor} ({actor.id}) sincronizó roles de staff del equipo "
                     f"{team_role.name} para {member} ({member.id})"
                 ),
             )
@@ -292,7 +292,7 @@ async def sync_team_staff_roles_by_names(
             await member.remove_roles(
                 *roles_to_remove,
                 reason=(
-                    f"{actor} ({actor.id}) actualizo roles de staff del equipo "
+                    f"{actor} ({actor.id}) actualizó roles de staff del equipo "
                     f"{team_role.name} para {member} ({member.id})"
                 ),
             )
@@ -356,7 +356,7 @@ async def assign_team_roles_by_names(
         await member.add_roles(
             *roles_to_add,
             reason=(
-                f"{actor} ({actor.id}) sincronizo roles automaticos del equipo "
+                f"{actor} ({actor.id}) sincronizó roles automáticos del equipo "
                 f"{team_role.name} para {member} ({member.id})"
             ),
         )
@@ -409,7 +409,7 @@ async def remove_roles_from_member_by_name(
     await member.remove_roles(
         *roles_tuple,
         reason=(
-            f"{actor} ({actor.id}) dio de baja a {member_name} y retiro roles de "
+            f"{actor} ({actor.id}) dio de baja a {member_name} y retiró roles de "
             f"{member} ({member.id})"
         ),
     )

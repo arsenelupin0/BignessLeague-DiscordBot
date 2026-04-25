@@ -361,8 +361,8 @@ def _build_entry_snippet(
 ) -> str:
     parts = [
         f"ID: {entry.entry_id}",
-        f"Categoria: {entry.category_label}",
-        f"Titulo: {entry.title}",
+        f"Categoría: {entry.category_label}",
+        f"Título: {entry.title}",
         f"Pregunta: {entry.question}" if entry.question else "",
         f"Respuesta: {entry.answer}",
         (

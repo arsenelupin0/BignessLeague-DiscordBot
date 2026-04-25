@@ -255,10 +255,10 @@ async def create_match_channel(
         category=category,
         overwrites=overwrites,
         reason=(
-            f"{actor} ({actor.id}) ejecuto /canal_de_jornada "
+            f"{actor} ({actor.id}) ejecutó /canal_de_jornada "
             f"jornada={specification.jornada} partido={specification.partido} "
             f"equipo_1={team_one.id} equipo_2={team_two.id} "
-            f"categoria={category.id}"
+            f"categoría={category.id}"
         ),
     )
     LOGGER.info(

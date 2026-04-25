@@ -159,11 +159,11 @@ def parse_team_signing_message(content: str) -> TeamSigningBatch:
     division_name = metadata.get("division_name", "")
     team_name = metadata.get("team_name", "")
     if not division_name:
-        raise TeamSigningParseError("Falta la cabecera `Division:` en el mensaje enlazado.")
+        raise TeamSigningParseError("Falta la cabecera `División:` en el mensaje enlazado.")
     if not team_name:
         raise TeamSigningParseError("Falta la cabecera `Equipo:` en el mensaje enlazado.")
     if not _contains_non_empty_lines(player_lines):
-        raise TeamSigningParseError("El mensaje enlazado no contiene ningun bloque de jugador.")
+        raise TeamSigningParseError("El mensaje enlazado no contiene ningún bloque de jugador.")
 
     if not _looks_like_compact_player_format(player_lines):
         raise TeamSigningParseError(
@@ -175,7 +175,7 @@ def parse_team_signing_message(content: str) -> TeamSigningBatch:
         start_line_number=player_start_line,
     )
     if not players:
-        raise TeamSigningParseError("El mensaje enlazado no contiene ningun bloque de jugador.")
+        raise TeamSigningParseError("El mensaje enlazado no contiene ningún bloque de jugador.")
 
     return TeamSigningBatch(
         division_name=division_name,
@@ -194,16 +194,16 @@ def parse_team_technical_staff_message(content: str) -> TeamTechnicalStaffBatch:
     division_name = metadata.get("division_name", "")
     team_name = metadata.get("team_name", "")
     if not division_name:
-        raise TeamSigningParseError("Falta la cabecera `Division:` en el mensaje enlazado.")
+        raise TeamSigningParseError("Falta la cabecera `División:` en el mensaje enlazado.")
     if not team_name:
         raise TeamSigningParseError("Falta la cabecera `Equipo:` en el mensaje enlazado.")
     if not _contains_non_empty_lines(staff_lines):
         raise TeamSigningParseError(
-            "El mensaje enlazado no contiene ningun bloque de staff tecnico."
+            "El mensaje enlazado no contiene ningún bloque de staff técnico."
         )
     if not _looks_like_compact_technical_staff_format(staff_lines):
         raise TeamSigningParseError(
-            "La plantilla de staff tecnico debe empezar con las cabeceras `Rol`, `Discord`, `Epic Name`, `Rocket In-Game Name`."
+            "La plantilla de staff técnico debe empezar con las cabeceras `Rol`, `Discord`, `Epic Name`, `Rocket In-Game Name`."
         )
 
     members = _parse_compact_technical_staff_blocks(
@@ -212,7 +212,7 @@ def parse_team_technical_staff_message(content: str) -> TeamTechnicalStaffBatch:
     )
     if not members:
         raise TeamSigningParseError(
-            "El mensaje enlazado no contiene ningun bloque de staff tecnico."
+            "El mensaje enlazado no contiene ningún bloque de staff técnico."
         )
 
     return TeamTechnicalStaffBatch(
@@ -274,7 +274,7 @@ def _extract_message_metadata_and_body(
             if key in MESSAGE_METADATA_KEYS:
                 if not value:
                     raise TeamSigningParseError(
-                        f"La linea {line_index + 1} no contiene un valor valido para `{raw_key.strip()}`."
+                        f"La línea {line_index + 1} no contiene un valor válido para `{raw_key.strip()}`."
                     )
 
                 metadata[MESSAGE_METADATA_KEYS[key]] = value
@@ -332,13 +332,13 @@ def _parse_compact_player_blocks(
 
     if not data_lines:
         raise TeamSigningParseError(
-            "La plantilla compacta no contiene ningun jugador despues de las cabeceras."
+            "La plantilla compacta no contiene ningún jugador después de las cabeceras."
         )
 
     field_count = len(COMPACT_PLAYER_FIELD_ORDER)
     if len(data_lines) % field_count != 0:
         raise TeamSigningParseError(
-            "La plantilla compacta de jugadores debe contener bloques completos de 6 lineas por jugador."
+            "La plantilla compacta de jugadores debe contener bloques completos de 6 líneas por jugador."
         )
 
     players: list[TeamSigningPlayer] = []
@@ -349,7 +349,7 @@ def _parse_compact_player_blocks(
             normalized_value = _normalize_value(value)
             if not normalized_value:
                 raise TeamSigningParseError(
-                    f"La linea {line_number} no contiene un valor valido."
+                    f"La línea {line_number} no contiene un valor válido."
                 )
             payload[field_name] = normalized_value
 
@@ -382,7 +382,7 @@ def _parse_compact_technical_staff_blocks(
     )
     if not entry_blocks:
         raise TeamSigningParseError(
-            "La plantilla compacta de staff tecnico no contiene ningun bloque despues de las cabeceras."
+            "La plantilla compacta de staff técnico no contiene ningún bloque después de las cabeceras."
         )
 
     members: list[TeamTechnicalStaffMember] = []
@@ -391,7 +391,7 @@ def _parse_compact_technical_staff_blocks(
     for entry_block in entry_blocks:
         if len(entry_block) not in {required_field_count, full_field_count}:
             raise TeamSigningParseError(
-                "Cada bloque de staff tecnico debe contener 2 lineas (`Rol`, `Discord`) o 4 lineas (añadiendo `Epic Name` y `Rocket In-Game Name`)."
+                "Cada bloque de staff técnico debe contener 2 líneas (`Rol`, `Discord`) o 4 líneas (añadiendo `Epic Name` y `Rocket In-Game Name`)."
             )
 
         payload: dict[str, str] = {}
@@ -403,7 +403,7 @@ def _parse_compact_technical_staff_blocks(
             normalized_value = _normalize_value(value)
             if not normalized_value:
                 raise TeamSigningParseError(
-                    f"La linea {line_number} no contiene un valor valido."
+                    f"La línea {line_number} no contiene un valor válido."
                 )
             payload[field_name] = normalized_value
 
@@ -416,7 +416,7 @@ def _parse_compact_technical_staff_blocks(
             normalized_value = _normalize_value(value)
             if not normalized_value:
                 raise TeamSigningParseError(
-                    f"La linea {line_number} no contiene un valor valido."
+                    f"La línea {line_number} no contiene un valor válido."
                 )
             payload[field_name] = normalized_value
 
@@ -485,13 +485,13 @@ def _build_team_signing_player(
     if missing_fields:
         missing_fields_label = ", ".join(missing_fields)
         raise TeamSigningParseError(
-            f"Faltan campos obligatorios en el bloque del jugador cerca de la linea {line_number}: {missing_fields_label}."
+            f"Faltan campos obligatorios en el bloque del jugador cerca de la línea {line_number}: {missing_fields_label}."
         )
 
     mmr_value = payload["mmr"]
     if _parse_mmr_sort_value(mmr_value) < 0:
         raise TeamSigningParseError(
-            f"El valor de `MMR` no es valido en el bloque cerca de la linea {line_number}: `{mmr_value}`."
+            f"El valor de `MMR` no es válido en el bloque cerca de la línea {line_number}: `{mmr_value}`."
         )
 
     return TeamSigningPlayer(
@@ -516,7 +516,7 @@ def _build_team_technical_staff_member(
     if missing_fields:
         missing_fields_label = ", ".join(missing_fields)
         raise TeamSigningParseError(
-            f"Faltan campos obligatorios en el bloque de staff tecnico cerca de la linea {line_number}: {missing_fields_label}."
+            f"Faltan campos obligatorios en el bloque de staff técnico cerca de la línea {line_number}: {missing_fields_label}."
         )
 
     return TeamTechnicalStaffMember(

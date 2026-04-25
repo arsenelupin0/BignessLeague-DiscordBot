@@ -365,7 +365,7 @@ async def apply_match_played_lockdown(
         name=channel_name,
         overwrites=overwrites,
         reason=(
-            f"{actor} ({actor.id}) ejecuto /cerrar_canal "
+            f"{actor} ({actor.id}) ejecutó /cerrar_canal "
             f"accion={ChannelCloseMode.MATCH_PLAYED.value}"
         ),
     )
@@ -412,7 +412,7 @@ async def apply_matchday_closed(
         name=channel_name,
         overwrites=overwrites,
         reason=(
-            f"{actor} ({actor.id}) ejecuto /cerrar_canal "
+            f"{actor} ({actor.id}) ejecutó /cerrar_canal "
             f"accion={ChannelCloseMode.MATCHDAY_CLOSED.value}"
         ),
     )
@@ -474,7 +474,7 @@ async def apply_match_reopen(
         name=channel_name,
         overwrites=overwrites,
         reason=(
-            f"{actor} ({actor.id}) ejecuto /cerrar_canal "
+            f"{actor} ({actor.id}) ejecutó /cerrar_canal "
             f"accion={ChannelCloseMode.REOPEN_MATCH.value}"
         ),
     )
@@ -515,7 +515,7 @@ async def add_roles_to_channel(
     await channel.edit(
         overwrites=overwrites,
         reason=(
-            f"{actor} ({actor.id}) ejecuto /anadir_al_canal "
+            f"{actor} ({actor.id}) ejecutó /anadir_al_canal "
             f"roles={','.join(str(role.id) for role in roles)}"
         ),
     )
@@ -562,7 +562,7 @@ async def delete_text_channel(
     )
     await channel.delete(
         reason=(
-            f"{actor} ({actor.id}) confirmo /cerrar_canal "
+            f"{actor} ({actor.id}) confirmó /cerrar_canal "
             f"accion={ChannelCloseMode.DELETE_CHANNEL.value}"
         )
     )

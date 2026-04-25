@@ -916,7 +916,7 @@ class TeamSigningCog(commands.Cog):
             await member.remove_roles(
                 *roles_to_remove.values(),
                 reason=(
-                    f"{actor} ({actor.id}) sincronizo completamente el equipo "
+                    f"{actor} ({actor.id}) sincronizó completamente el equipo "
                     f"{team_role.name} segun Google Sheets para {member} ({member.id})"
                 ),
             )

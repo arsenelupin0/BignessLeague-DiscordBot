@@ -43,7 +43,7 @@ def _read_bool(name: str, default: bool) -> bool:
     if normalized in {"0", "false", "no", "off"}:
         return False
 
-    raise ValueError(f"{name} debe ser un booleano valido.")
+    raise ValueError(f"{name} debe ser un booleano válido.")
 
 
 def _read_int(name: str, default: int) -> int:
@@ -54,7 +54,7 @@ def _read_int(name: str, default: int) -> int:
     try:
         return int(raw_value.strip())
     except ValueError as exc:
-        raise ValueError(f"{name} debe ser un entero valido.") from exc
+        raise ValueError(f"{name} debe ser un entero válido.") from exc
 
 
 def _read_float(name: str, default: float) -> float:
@@ -65,7 +65,7 @@ def _read_float(name: str, default: float) -> float:
     try:
         return float(raw_value.strip())
     except ValueError as exc:
-        raise ValueError(f"{name} debe ser un numero valido.") from exc
+        raise ValueError(f"{name} debe ser un número válido.") from exc
 
 
 def _read_optional_int(name: str) -> int | None:
@@ -76,7 +76,7 @@ def _read_optional_int(name: str) -> int | None:
     try:
         return int(raw_value.strip())
     except ValueError as exc:
-        raise ValueError(f"{name} debe ser un entero valido.") from exc
+        raise ValueError(f"{name} debe ser un entero válido.") from exc
 
 
 def _read_str(name: str, default: str) -> str:
@@ -268,7 +268,7 @@ class Settings:
             try:
                 guild_id = int(guild_id_raw)
             except ValueError as exc:
-                raise ValueError("DISCORD_GUILD_ID debe ser un entero valido.") from exc
+                raise ValueError("DISCORD_GUILD_ID debe ser un entero válido.") from exc
 
         command_prefix = _read_str("BOT_PREFIX", "!")
         environment_raw = _read_str("BOT_ENV", "development").lower()

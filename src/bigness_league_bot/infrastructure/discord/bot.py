@@ -67,13 +67,13 @@ class BignessLeagueBot(commands.Bot):
             self.settings.sync_scope,
             self.settings.guild_id,
         )
-        LOGGER.info("Sincronizacion completada: %s", sync_report.format_summary())
+        LOGGER.info("Sincronización completada: %s", sync_report.format_summary())
 
         if self.settings.sync_scope == "guild":
             dm_command_names = get_dm_command_names(self.tree)
             dm_sync_report = await sync_dm_commands_globally(self.tree)
             LOGGER.info(
-                "Sincronizacion global para DM completada: %s | Locales DM=[%s]",
+                "Sincronización global para DM completada: %s | Locales DM=[%s]",
                 dm_sync_report.format_summary(),
                 ", ".join(dm_command_names) if dm_command_names else "(ninguno)",
             )

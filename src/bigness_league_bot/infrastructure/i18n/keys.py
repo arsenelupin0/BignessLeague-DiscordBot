@@ -9,8 +9,10 @@ class _CommandsChannelManagementCloseChannelParametersAction:
         key="commands.channel_management.close_channel.parameters.action.description",
         default_text="Selecciona el tipo de cierre que quieres aplicar")
 
+
 class _CommandsChannelManagementCloseChannelParameters:
     action: _CommandsChannelManagementCloseChannelParametersAction = _CommandsChannelManagementCloseChannelParametersAction()
+
 
 class _CommandsChannelManagementCloseChannelChoices:
     match_played: TranslationKey = TranslationKey(key="commands.channel_management.close_channel.choices.match_played",
@@ -20,27 +22,33 @@ class _CommandsChannelManagementCloseChannelChoices:
     reopen_match: TranslationKey = TranslationKey(key="commands.channel_management.close_channel.choices.reopen_match",
                                                   default_text="Reabrir partido")
     delete_channel: TranslationKey = TranslationKey(
-        key="commands.channel_management.close_channel.choices.delete_channel", default_text="Eliminacion de canal")
+        key="commands.channel_management.close_channel.choices.delete_channel",
+        default_text="Eliminaci\u00f3n de canal")
+
 
 class _CommandsChannelManagementCloseChannel:
     name: TranslationKey = TranslationKey(key="commands.channel_management.close_channel.name",
                                           default_text="cerrar_canal")
     description: TranslationKey = TranslationKey(key="commands.channel_management.close_channel.description",
-                                                 default_text="Aplica una accion de cierre sobre el canal actual.")
+                                                 default_text="Aplica una acci\u00f3n de cierre sobre el canal actual.")
     parameters: _CommandsChannelManagementCloseChannelParameters = _CommandsChannelManagementCloseChannelParameters()
     choices: _CommandsChannelManagementCloseChannelChoices = _CommandsChannelManagementCloseChannelChoices()
 
+
 class _CommandsChannelManagement:
     close_channel: _CommandsChannelManagementCloseChannel = _CommandsChannelManagementCloseChannel()
+
 
 class _CommandsChannelAccessAddToChannel:
     name: TranslationKey = TranslationKey(key="commands.channel_access.add_to_channel.name",
                                           default_text="anadir_al_canal")
     description: TranslationKey = TranslationKey(key="commands.channel_access.add_to_channel.description",
-                                                 default_text="Anade roles al canal actual con un selector filtrado.")
+                                                 default_text="A\u00f1ade roles al canal actual con un selector filtrado.")
+
 
 class _CommandsChannelAccess:
     add_to_channel: _CommandsChannelAccessAddToChannel = _CommandsChannelAccessAddToChannel()
+
 
 class _CommandsTicketsPublishPanel:
     name: TranslationKey = TranslationKey(key="commands.tickets.publish_panel.name",
@@ -48,25 +56,31 @@ class _CommandsTicketsPublishPanel:
     description: TranslationKey = TranslationKey(key="commands.tickets.publish_panel.description",
                                                  default_text="Publica el panel de soporte para abrir tickets.")
 
+
 class _CommandsTicketsAddToTicketParametersUser1:
     description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_1.description",
                                                  default_text="Primer usuario que quieres a\u00f1adir al ticket.")
+
 
 class _CommandsTicketsAddToTicketParametersUser2:
     description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_2.description",
                                                  default_text="Segundo usuario que quieres a\u00f1adir al ticket.")
 
+
 class _CommandsTicketsAddToTicketParametersUser3:
     description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_3.description",
                                                  default_text="Tercer usuario que quieres a\u00f1adir al ticket.")
+
 
 class _CommandsTicketsAddToTicketParametersUser4:
     description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_4.description",
                                                  default_text="Cuarto usuario que quieres a\u00f1adir al ticket.")
 
+
 class _CommandsTicketsAddToTicketParametersUser5:
     description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_5.description",
                                                  default_text="Quinto usuario que quieres a\u00f1adir al ticket.")
+
 
 class _CommandsTicketsAddToTicketParameters:
     user_1: _CommandsTicketsAddToTicketParametersUser1 = _CommandsTicketsAddToTicketParametersUser1()
@@ -75,19 +89,23 @@ class _CommandsTicketsAddToTicketParameters:
     user_4: _CommandsTicketsAddToTicketParametersUser4 = _CommandsTicketsAddToTicketParametersUser4()
     user_5: _CommandsTicketsAddToTicketParametersUser5 = _CommandsTicketsAddToTicketParametersUser5()
 
+
 class _CommandsTicketsAddToTicket:
     name: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.name", default_text="anadir_al_ticket")
     description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.description",
                                                  default_text="A\u00f1ade uno o varios usuarios al ticket actual.")
     parameters: _CommandsTicketsAddToTicketParameters = _CommandsTicketsAddToTicketParameters()
 
+
 class _CommandsTicketsAddTeamToTicketParametersTeamRole:
     description: TranslationKey = TranslationKey(
         key="commands.tickets.add_team_to_ticket.parameters.team_role.description",
         default_text="Rol de equipo cuyos miembros quieres a\u00f1adir al ticket.")
 
+
 class _CommandsTicketsAddTeamToTicketParameters:
     team_role: _CommandsTicketsAddTeamToTicketParametersTeamRole = _CommandsTicketsAddTeamToTicketParametersTeamRole()
+
 
 class _CommandsTicketsAddTeamToTicket:
     name: TranslationKey = TranslationKey(key="commands.tickets.add_team_to_ticket.name",
@@ -96,10 +114,12 @@ class _CommandsTicketsAddTeamToTicket:
                                                  default_text="A\u00f1ade al ticket a todos los miembros de un rol de equipo.")
     parameters: _CommandsTicketsAddTeamToTicketParameters = _CommandsTicketsAddTeamToTicketParameters()
 
+
 class _CommandsTicketsAiStatus:
     name: TranslationKey = TranslationKey(key="commands.tickets.ai_status.name", default_text="ai_estado")
     description: TranslationKey = TranslationKey(key="commands.tickets.ai_status.description",
                                                  default_text="Muestra el estado actual de la IA local para tickets.")
+
 
 class _CommandsTickets:
     publish_panel: _CommandsTicketsPublishPanel = _CommandsTicketsPublishPanel()
@@ -107,50 +127,60 @@ class _CommandsTickets:
     add_team_to_ticket: _CommandsTicketsAddTeamToTicket = _CommandsTicketsAddTeamToTicket()
     ai_status: _CommandsTicketsAiStatus = _CommandsTicketsAiStatus()
 
+
 class _CommandsMatchChannelCreationCreateMatchChannelParametersJornada:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.jornada.description",
-        default_text="Numero de jornada del partido")
+        default_text="N\u00famero de jornada del partido")
+
 
 class _CommandsMatchChannelCreationCreateMatchChannelParametersPartido:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.partido.description",
-        default_text="Numero de partido dentro de la jornada")
+        default_text="N\u00famero de partido dentro de la jornada")
+
 
 class _CommandsMatchChannelCreationCreateMatchChannelParametersCategoria:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.categoria.description",
-        default_text="Division donde se creara el canal")
+        default_text="Divisi\u00f3n donde se crear\u00e1 el canal")
+
 
 class _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo1:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.equipo_1.description",
         default_text="Rol del primer equipo")
 
+
 class _CommandsMatchChannelCreationCreateMatchChannelParametersEquipo2:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.equipo_2.description",
         default_text="Rol del segundo equipo")
 
+
 class _CommandsMatchChannelCreationCreateMatchChannelParametersCourtesyMinutes:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.courtesy_minutes.description",
-        default_text="Minutos de cortesia antes de iniciar el partido")
+        default_text="Minutos de cortes\u00eda antes de iniciar el partido")
+
 
 class _CommandsMatchChannelCreationCreateMatchChannelParametersDate:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.date.description",
         default_text="Fecha del partido en formato DD/MM/YYYY o YYYY-MM-DD")
 
+
 class _CommandsMatchChannelCreationCreateMatchChannelParametersTime:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.time.description",
         default_text="Hora del partido en formato HH:MM")
 
+
 class _CommandsMatchChannelCreationCreateMatchChannelParametersBestOf:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.parameters.best_of.description",
-        default_text="Numero de partidas del mejor de X")
+        default_text="N\u00famero de partidas del mejor de X")
+
 
 class _CommandsMatchChannelCreationCreateMatchChannelParameters:
     jornada: _CommandsMatchChannelCreationCreateMatchChannelParametersJornada = _CommandsMatchChannelCreationCreateMatchChannelParametersJornada()
@@ -163,12 +193,14 @@ class _CommandsMatchChannelCreationCreateMatchChannelParameters:
     time: _CommandsMatchChannelCreationCreateMatchChannelParametersTime = _CommandsMatchChannelCreationCreateMatchChannelParametersTime()
     best_of: _CommandsMatchChannelCreationCreateMatchChannelParametersBestOf = _CommandsMatchChannelCreationCreateMatchChannelParametersBestOf()
 
+
 class _CommandsMatchChannelCreationCreateMatchChannelChoices:
     gold_division: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.choices.gold_division", default_text="Gold Division")
     silver_division: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_match_channel.choices.silver_division",
         default_text="Silver Division")
+
 
 class _CommandsMatchChannelCreationCreateMatchChannel:
     name: TranslationKey = TranslationKey(key="commands.match_channel_creation.create_match_channel.name",
@@ -178,39 +210,48 @@ class _CommandsMatchChannelCreationCreateMatchChannel:
     parameters: _CommandsMatchChannelCreationCreateMatchChannelParameters = _CommandsMatchChannelCreationCreateMatchChannelParameters()
     choices: _CommandsMatchChannelCreationCreateMatchChannelChoices = _CommandsMatchChannelCreationCreateMatchChannelChoices()
 
+
 class _CommandsMatchChannelCreation:
     create_match_channel: _CommandsMatchChannelCreationCreateMatchChannel = _CommandsMatchChannelCreationCreateMatchChannel()
+
 
 class _CommandsTeamProfileViewMyTeamParametersTeamRole:
     description: TranslationKey = TranslationKey(
         key="commands.team_profile.view_my_team.parameters.team_role.description",
         default_text="Rol de equipo a consultar. Solo disponible para Staff, Administrador y CEO.")
 
+
 class _CommandsTeamProfileViewMyTeamParameters:
     team_role: _CommandsTeamProfileViewMyTeamParametersTeamRole = _CommandsTeamProfileViewMyTeamParametersTeamRole()
+
 
 class _CommandsTeamProfileViewMyTeam:
     name: TranslationKey = TranslationKey(key="commands.team_profile.view_my_team.name", default_text="ver_mi_equipo")
     description: TranslationKey = TranslationKey(key="commands.team_profile.view_my_team.description",
-                                                 default_text="Muestra la ficha de tu equipo segun tu rol y Google Sheets.")
+                                                 default_text="Muestra la ficha de tu equipo seg\u00fan tu rol y Google Sheets.")
     parameters: _CommandsTeamProfileViewMyTeamParameters = _CommandsTeamProfileViewMyTeamParameters()
+
 
 class _CommandsTeamProfile:
     view_my_team: _CommandsTeamProfileViewMyTeam = _CommandsTeamProfileViewMyTeam()
+
 
 class _CommandsTeamSigningMakeSigningParametersMessageLink:
     description: TranslationKey = TranslationKey(
         key="commands.team_signing.make_signing.parameters.message_link.description",
         default_text="Enlace al mensaje de Discord que contiene la plantilla de jugadores.")
 
+
 class _CommandsTeamSigningMakeSigningParametersTechnicalStaffMessageLink:
     description: TranslationKey = TranslationKey(
         key="commands.team_signing.make_signing.parameters.technical_staff_message_link.description",
-        default_text="Enlace al mensaje de Discord que contiene la plantilla de staff tecnico.")
+        default_text="Enlace al mensaje de Discord que contiene la plantilla de staff t\u00e9cnico.")
+
 
 class _CommandsTeamSigningMakeSigningParameters:
     message_link: _CommandsTeamSigningMakeSigningParametersMessageLink = _CommandsTeamSigningMakeSigningParametersMessageLink()
     technical_staff_message_link: _CommandsTeamSigningMakeSigningParametersTechnicalStaffMessageLink = _CommandsTeamSigningMakeSigningParametersTechnicalStaffMessageLink()
+
 
 class _CommandsTeamSigningMakeSigning:
     name: TranslationKey = TranslationKey(key="commands.team_signing.make_signing.name", default_text="hacer_fichaje")
@@ -218,27 +259,33 @@ class _CommandsTeamSigningMakeSigning:
                                                  default_text="Importa fichajes desde un mensaje enlazado de Discord hacia Google Sheets.")
     parameters: _CommandsTeamSigningMakeSigningParameters = _CommandsTeamSigningMakeSigningParameters()
 
+
 class _CommandsTeamSigningRemoveSigningParametersDiscordName:
     description: TranslationKey = TranslationKey(
         key="commands.team_signing.remove_signing.parameters.discord_name.description",
         default_text="Nombre de Discord del miembro que quieres eliminar completamente.")
 
+
 class _CommandsTeamSigningRemoveSigningParameters:
     discord_name: _CommandsTeamSigningRemoveSigningParametersDiscordName = _CommandsTeamSigningRemoveSigningParametersDiscordName()
+
 
 class _CommandsTeamSigningRemoveSigning:
     name: TranslationKey = TranslationKey(key="commands.team_signing.remove_signing.name", default_text="dar_de_baja")
     description: TranslationKey = TranslationKey(key="commands.team_signing.remove_signing.description",
-                                                 default_text="Da de baja completamente a un miembro como jugador y staff tecnico en Google Sheets.")
+                                                 default_text="Da de baja completamente a un miembro como jugador y staff t\u00e9cnico en Google Sheets.")
     parameters: _CommandsTeamSigningRemoveSigningParameters = _CommandsTeamSigningRemoveSigningParameters()
+
 
 class _CommandsTeamSigningRemovePlayerSigningParametersDiscordName:
     description: TranslationKey = TranslationKey(
         key="commands.team_signing.remove_player_signing.parameters.discord_name.description",
         default_text="Nombre de Discord del jugador que quieres eliminar del roster.")
 
+
 class _CommandsTeamSigningRemovePlayerSigningParameters:
     discord_name: _CommandsTeamSigningRemovePlayerSigningParametersDiscordName = _CommandsTeamSigningRemovePlayerSigningParametersDiscordName()
+
 
 class _CommandsTeamSigningRemovePlayerSigning:
     name: TranslationKey = TranslationKey(key="commands.team_signing.remove_player_signing.name",
@@ -247,20 +294,24 @@ class _CommandsTeamSigningRemovePlayerSigning:
                                                  default_text="Da de baja solo a un jugador del roster en Google Sheets.")
     parameters: _CommandsTeamSigningRemovePlayerSigningParameters = _CommandsTeamSigningRemovePlayerSigningParameters()
 
+
 class _CommandsTeamSigningRemoveStaffSigningParametersDiscordName:
     description: TranslationKey = TranslationKey(
         key="commands.team_signing.remove_staff_signing.parameters.discord_name.description",
         default_text="Nombre de Discord del miembro que quieres eliminar de STAFF T\u00c9CNICO.")
 
+
 class _CommandsTeamSigningRemoveStaffSigningParameters:
     discord_name: _CommandsTeamSigningRemoveStaffSigningParametersDiscordName = _CommandsTeamSigningRemoveStaffSigningParametersDiscordName()
+
 
 class _CommandsTeamSigningRemoveStaffSigning:
     name: TranslationKey = TranslationKey(key="commands.team_signing.remove_staff_signing.name",
                                           default_text="dar_de_baja_staff")
     description: TranslationKey = TranslationKey(key="commands.team_signing.remove_staff_signing.description",
-                                                 default_text="Da de baja solo los cargos de staff tecnico en Google Sheets.")
+                                                 default_text="Da de baja solo los cargos de staff t\u00e9cnico en Google Sheets.")
     parameters: _CommandsTeamSigningRemoveStaffSigningParameters = _CommandsTeamSigningRemoveStaffSigningParameters()
+
 
 class _CommandsTeamSigning:
     make_signing: _CommandsTeamSigningMakeSigning = _CommandsTeamSigningMakeSigning()
@@ -268,13 +319,16 @@ class _CommandsTeamSigning:
     remove_player_signing: _CommandsTeamSigningRemovePlayerSigning = _CommandsTeamSigningRemovePlayerSigning()
     remove_staff_signing: _CommandsTeamSigningRemoveStaffSigning = _CommandsTeamSigningRemoveStaffSigning()
 
+
 class _CommandsTeamRoleAssignmentSyncTeamRoleParametersTeamRole:
     description: TranslationKey = TranslationKey(
         key="commands.team_role_assignment.sync_team_role.parameters.team_role.description",
         default_text="Rol del equipo que quieres recargar desde Google Sheets.")
 
+
 class _CommandsTeamRoleAssignmentSyncTeamRoleParameters:
     team_role: _CommandsTeamRoleAssignmentSyncTeamRoleParametersTeamRole = _CommandsTeamRoleAssignmentSyncTeamRoleParametersTeamRole()
+
 
 class _CommandsTeamRoleAssignmentSyncTeamRole:
     name: TranslationKey = TranslationKey(key="commands.team_role_assignment.sync_team_role.name",
@@ -283,8 +337,10 @@ class _CommandsTeamRoleAssignmentSyncTeamRole:
                                                  default_text="Sincroniza en Discord los roles del equipo a partir de la hoja actual.")
     parameters: _CommandsTeamRoleAssignmentSyncTeamRoleParameters = _CommandsTeamRoleAssignmentSyncTeamRoleParameters()
 
+
 class _CommandsTeamRoleAssignment:
     sync_team_role: _CommandsTeamRoleAssignmentSyncTeamRole = _CommandsTeamRoleAssignmentSyncTeamRole()
+
 
 class _Commands:
     channel_management: _CommandsChannelManagement = _CommandsChannelManagement()
@@ -295,6 +351,7 @@ class _Commands:
     team_signing: _CommandsTeamSigning = _CommandsTeamSigning()
     team_role_assignment: _CommandsTeamRoleAssignment = _CommandsTeamRoleAssignment()
 
+
 class _MessagesAdminSync:
     invalid_scope: TranslationKey = TranslationKey(key="messages.admin.sync.invalid_scope",
                                                    default_text="Usa `!sync guild` o `!sync global`.")
@@ -303,19 +360,22 @@ class _MessagesAdminSync:
     guild_id_required: TranslationKey = TranslationKey(key="messages.admin.sync.guild_id_required",
                                                        default_text="No se puede operar sobre comandos de guild sin `DISCORD_GUILD_ID`.")
     scope_locked: TranslationKey = TranslationKey(key="messages.admin.sync.scope_locked",
-                                                  default_text="El bot esta configurado para `BOT_SYNC_SCOPE={sync_scope}`. Cambia el `.env` y reinicia si quieres usar el otro scope.")
+                                                  default_text="El bot est\u00e1 configurado para `BOT_SYNC_SCOPE={sync_scope}`. Cambia el `.env` y reinicia si quieres usar el otro scope.")
     completed: TranslationKey = TranslationKey(key="messages.admin.sync.completed",
-                                               default_text="Sincronizacion completada: {summary}")
+                                               default_text="Sincronizaci\u00f3n completada: {summary}")
     pruned: TranslationKey = TranslationKey(key="messages.admin.sync.pruned",
                                             default_text="Limpieza completada: {summary}")
+
 
 class _MessagesAdminSlashStatus:
     result: TranslationKey = TranslationKey(key="messages.admin.slash_status.result",
                                             default_text="Estado local de slash commands: guild_id={guild_id} commands=[{commands}]")
 
+
 class _MessagesAdmin:
     sync: _MessagesAdminSync = _MessagesAdminSync()
     slash_status: _MessagesAdminSlashStatus = _MessagesAdminSlashStatus()
+
 
 class _MessagesTeamProfileAnsiHeaders:
     position: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.position", default_text="POS")
@@ -328,11 +388,13 @@ class _MessagesTeamProfileAnsiHeaders:
                                                  default_text="Rocket In-Game Name")
     mmr: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.mmr", default_text="MMR")
 
+
 class _MessagesTeamProfileAnsiSummary:
     remaining_signings: TranslationKey = TranslationKey(key="messages.team_profile.ansi.summary.remaining_signings",
                                                         default_text="Fichajes restantes")
     team_average: TranslationKey = TranslationKey(key="messages.team_profile.ansi.summary.team_average",
                                                   default_text="Media total del equipo (los 3 \"mejores\")")
+
 
 class _MessagesTeamProfileAnsiTracker:
     title: TranslationKey = TranslationKey(key="messages.team_profile.ansi.tracker.title",
@@ -340,13 +402,16 @@ class _MessagesTeamProfileAnsiTracker:
     missing_value: TranslationKey = TranslationKey(key="messages.team_profile.ansi.tracker.missing_value",
                                                    default_text="Sin enlace")
 
+
 class _MessagesTeamProfileAnsiTechnicalStaff:
     title: TranslationKey = TranslationKey(key="messages.team_profile.ansi.technical_staff.title",
                                            default_text="STAFF T\u00c9CNICO")
 
+
 class _MessagesTeamProfileAnsiFallback:
     file_notice: TranslationKey = TranslationKey(key="messages.team_profile.ansi.fallback.file_notice",
-                                                 default_text="La ficha completa supera el limite visible de Discord y se adjunta en un unico fichero ANSI.")
+                                                 default_text="La ficha completa supera el l\u00edmite visible de Discord y se adjunta en un \u00fanico fichero ANSI.")
+
 
 class _MessagesTeamProfileAnsi:
     headers: _MessagesTeamProfileAnsiHeaders = _MessagesTeamProfileAnsiHeaders()
@@ -355,16 +420,19 @@ class _MessagesTeamProfileAnsi:
     technical_staff: _MessagesTeamProfileAnsiTechnicalStaff = _MessagesTeamProfileAnsiTechnicalStaff()
     fallback: _MessagesTeamProfileAnsiFallback = _MessagesTeamProfileAnsiFallback()
 
+
 class _MessagesTeamProfileButtons:
     list_trackers: TranslationKey = TranslationKey(key="messages.team_profile.buttons.list_trackers",
                                                    default_text="Listar trackers")
     cancel: TranslationKey = TranslationKey(key="messages.team_profile.buttons.cancel", default_text="Cancelar")
 
+
 class _MessagesTeamProfileRoleSelection:
     prompt: TranslationKey = TranslationKey(key="messages.team_profile.role_selection.prompt",
-                                            default_text="Tienes varios roles de equipo y no se puede decidir cual usar: {role_names}. Selecciona el equipo que quieres consultar.")
+                                            default_text="Tienes varios roles de equipo y no se puede decidir cu\u00e1l usar: {role_names}. Selecciona el equipo que quieres consultar.")
     timeout: TranslationKey = TranslationKey(key="messages.team_profile.role_selection.timeout",
-                                             default_text="La seleccion de equipo ha expirado.")
+                                             default_text="La selecci\u00f3n de equipo ha expirado.")
+
 
 class _MessagesTeamProfileTrackers:
     title: TranslationKey = TranslationKey(key="messages.team_profile.trackers.title", default_text="# Trackers")
@@ -373,22 +441,24 @@ class _MessagesTeamProfileTrackers:
     empty: TranslationKey = TranslationKey(key="messages.team_profile.trackers.empty", default_text="-")
     missing_value: TranslationKey = TranslationKey(key="messages.team_profile.trackers.missing_value", default_text="-")
 
+
 class _MessagesTeamProfile:
     ansi: _MessagesTeamProfileAnsi = _MessagesTeamProfileAnsi()
     buttons: _MessagesTeamProfileButtons = _MessagesTeamProfileButtons()
     role_selection: _MessagesTeamProfileRoleSelection = _MessagesTeamProfileRoleSelection()
     trackers: _MessagesTeamProfileTrackers = _MessagesTeamProfileTrackers()
     only_actor: TranslationKey = TranslationKey(key="messages.team_profile.only_actor",
-                                                default_text="Solo quien ejecuto el comando puede usar estos botones.")
+                                                default_text="Solo quien ejecut\u00f3 el comando puede usar estos botones.")
 
 
 class _MessagesTeamSigningGuide:
     content: TranslationKey = TranslationKey(key="messages.team_signing.guide.content",
-                                             default_text="#  Como hacer una inscripci\u00f3n o fichaje \n_ _\nSi quieres tener un poco m\u00e1s de informaci\u00f3n de como funcionan los fichajes/inscripciones. Dale click a estos links de aqu\u00ed abajo:\n - [Informaci\u00f3n para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)\n - [Informaci\u00f3n para a\u00f1adir un rol de Staff T\u00e9cnico a tu equipo](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\nLa plantilla que hay que seguir para hacer un fichaje correctamente es la siguiente (esta es explicativa). Recuerda que tienes que copiar todo el contenido del mensaje, incluyendo la parte de arriba y la parte de abajo de todo el texto.\n```\nDivision: GOLD DIVISI\u00d3N S3 // SILVER DIVISI\u00d3N S3 (TU DIVISI\u00d3N CORRESPONDIENTE)\nEquipo: KE Pensionistas (EQUIPO AL QUE QUIERES HACER EL FICHAJE)\n\nJugador -> Nombre posiblemente a castear\nTracker -> URL del tracker del jugador\nDiscord -> Nombre ID, del jugador. Si no sabes lo que es revisa*1\nEpic Name -> Nombre de Epic. Si no sabes lo que es revisa*2\nRocket In-Game Name -> Nombre en el juego. Si no sabes lo que es revisa*2\n\n\u23ec\u23ec\u23ec\u23ec\u23ec\u23ec\u23ec\u23ec\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```\n1* [\u00bfQu\u00e9 es el Name ID de Discord?](https://canary.discord.com/channels/1016819103555657851/1495742330047561942)\n2* [\u00bfQu\u00e9 diferencia hay entre Epic Name y Rocket In-Game Name?](https://canary.discord.com/channels/1016819103555657851/1496951199373590629)\n## \u2705 Plantilla de ejemplo que tendr\u00edas que enviar...\nEn caso de que tengas m\u00e1s jugadores, lo vas agregando con un salto de l\u00ednea, como est\u00e1 en la plantilla (m\u00e1x 6 en la plantilla). **Copia la plantilla tal cual est\u00e1 en este texto de aqu\u00ed abajo**\n```\nDivision: GOLD DIVISI\u00d3N S3\nEquipo: KE Pensionistas\n\nJugador\nTracker\nDiscord\nEpic Name\nRocket In-Game Name\n\n\u23ec\u23ec\u23ec\u23ec\u23ec\u23ec\u23ec\u23ec\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```")
+                                             default_text="#  C\u00f3mo hacer una inscripci\u00f3n o fichaje \n_ _\nSi quieres tener un poco m\u00e1s de informaci\u00f3n de c\u00f3mo funcionan los fichajes/inscripciones. Haz clic en estos enlaces de aqu\u00ed abajo:\n - [Informaci\u00f3n para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)\n - [Informaci\u00f3n para a\u00f1adir un rol de Staff T\u00e9cnico a tu equipo](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\nLa plantilla que hay que seguir para hacer un fichaje correctamente es la siguiente (esta es explicativa).\n```\nDivisi\u00f3n: GOLD DIVISI\u00d3N S3 // SILVER DIVISI\u00d3N S3 (TU DIVISI\u00d3N CORRESPONDIENTE)\nEquipo: KE Pensionistas (EQUIPO AL QUE QUIERES HACER EL FICHAJE)\n\nJugador -> Nombre posiblemente a castear\nTracker -> URL del tracker del jugador\nDiscord -> Nombre ID, del jugador. Si no sabes lo que es, revisa*1\nEpic Name -> Nombre de Epic. Si no sabes lo que es, revisa*2\nRocket In-Game Name -> Nombre en el juego. Si no sabes lo que es, revisa*2\n\n\u23ec\u23ec\u23ec\u23ec\u23ec\u23ec\u23ec\u23ec\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```\n1* [\u00bfQu\u00e9 es el Name ID de Discord?](https://canary.discord.com/channels/1016819103555657851/1495742330047561942)\n2* [\u00bfQu\u00e9 diferencia hay entre Epic Name y Rocket In-Game Name?](https://canary.discord.com/channels/1016819103555657851/1496951199373590629)\n_ _\n## \u2705 Plantilla de ejemplo que tendr\u00edas que enviar...\n_ _\nEn caso de que tengas m\u00e1s jugadores, ve agreg\u00e1ndolos con un salto de l\u00ednea, como est\u00e1 en la plantilla (m\u00e1x 6 en la plantilla). **Copia la plantilla tal cual est\u00e1 en este texto de aqu\u00ed abajo**\n```\nDivisi\u00f3n: GOLD DIVISI\u00d3N S3\nEquipo: KE Pensionistas\n\nJugador\nTracker\nDiscord\nEpic Name\nRocket In-Game Name\n\n\u23ec\u23ec\u23ec\u23ec\u23ec\u23ec\u23ec\u23ec\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```")
 
 
 class _MessagesTeamSigning:
     guide: _MessagesTeamSigningGuide = _MessagesTeamSigningGuide()
+
 
 class _MessagesTeamRoleRemovalAnnouncement:
     content: TranslationKey = TranslationKey(key="messages.team_role_removal_announcement.content",
@@ -402,11 +472,13 @@ class _MessagesTeamRoleRemovalAnnouncement:
     action: TranslationKey = TranslationKey(key="messages.team_role_removal_announcement.action",
                                             default_text="Abandona")
 
+
 class _MessagesTeamPlayerRoleRemovalAnnouncement:
     content: TranslationKey = TranslationKey(key="messages.team_player_role_removal_announcement.content",
                                              default_text="_ _\n-# \ud83d\udce2 Bolet\u00edn oficial: {member_mention} deja de ser jugador en {team_role_mention}\n_ _")
     action: TranslationKey = TranslationKey(key="messages.team_player_role_removal_announcement.action",
                                             default_text="Abandona plantilla en")
+
 
 class _MessagesTeamPlayerRoleSigningAnnouncement:
     content: TranslationKey = TranslationKey(key="messages.team_player_role_signing_announcement.content",
@@ -414,11 +486,13 @@ class _MessagesTeamPlayerRoleSigningAnnouncement:
     action: TranslationKey = TranslationKey(key="messages.team_player_role_signing_announcement.action",
                                             default_text="Sube a plantilla en")
 
+
 class _MessagesTeamRoleSigningAnnouncement:
     content: TranslationKey = TranslationKey(key="messages.team_role_signing_announcement.content",
                                              default_text="_ _\n-# \ud83d\udce2 Bolet\u00edn oficial: {member_mention} es fichado por {team_role_mention}\n_ _")
     action: TranslationKey = TranslationKey(key="messages.team_role_signing_announcement.action",
                                             default_text="Ficha por")
+
 
 class _MessagesTeamStaffRoleRemovalAnnouncement:
     content: TranslationKey = TranslationKey(key="messages.team_staff_role_removal_announcement.content",
@@ -426,53 +500,61 @@ class _MessagesTeamStaffRoleRemovalAnnouncement:
     action: TranslationKey = TranslationKey(key="messages.team_staff_role_removal_announcement.action",
                                             default_text="Abandona cargo en")
 
+
 class _MessagesTeamStaffRoleSigningAnnouncement:
     content: TranslationKey = TranslationKey(key="messages.team_staff_role_signing_announcement.content",
                                              default_text="_ _\n-# \ud83d\udce2 Bolet\u00edn oficial: {member_mention} ficha por el cargo de **{staff_role_name}** en {team_role_mention}\n_ _")
     action: TranslationKey = TranslationKey(key="messages.team_staff_role_signing_announcement.action",
                                             default_text="Nuevo cargo en")
 
+
 class _MessagesChannelManagement:
     delete_prompt: TranslationKey = TranslationKey(key="messages.channel_management.delete_prompt",
-                                                   default_text="Vas a eliminar el canal `{channel_name}` de forma permanente.\nRoles protegidos del sistema: {protected_roles}.\nConfirma solo si estas completamente seguro.")
+                                                   default_text="Vas a eliminar el canal `{channel_name}` de forma permanente.\nRoles protegidos del sistema: {protected_roles}.\nConfirma solo si est\u00e1s completamente seguro.")
     matchday_close_prompt: TranslationKey = TranslationKey(key="messages.channel_management.matchday_close_prompt",
                                                            default_text="Vas a cerrar la jornada en `{channel_name}`.\nSe eliminaran los permisos de los roles no protegidos y solo conservaran acceso: {protected_roles}.\nConfirma solo si quieres aplicar este cierre.")
 
+
 class _MessagesTicketsPanel:
     content: TranslationKey = TranslationKey(key="messages.tickets.panel.content",
-                                             default_text="# \ud83d\udd30 Soporte \ud83d\udd30\n_ _\n\u27a1\ufe0f Selecciona **una** de las siguientes **opciones** en el **men\u00fa desplegable** abajo de este mensaje. Si **no sabes** sobre que **tema** quieres abrir el **ticket**, **lee** atentamente **aqu\u00ed abajo**.\n\n## 1\ufe0f\u20e3 Soporte general\n- En caso de que tu duda no est\u00e9 en ninguna de las otras categor\u00edas. Esta es tu categor\u00eda.\n## 2\ufe0f\u20e3 Competici\u00f3n Bigness League\n- Reglamento\n- C\u00f3digo de conducta\n- C\u00f3mo funciona la liga (divisiones, inscripci\u00f3n, m\u00e1x rango, etc)\n- Pricepool\n- \u00bfTengo que pagar para entrar?\n- \u00bfC\u00f3mo inscribo a mi equipo a la Bigness League?\n## 3\ufe0f\u20e3 Mercado de jugadores\n- Inscribir a un nuevo jugador\n- Quitar a un jugador de mi equipo\n- Modificaci\u00f3n de rol (ceo, manager, segundo manager, coach o analista)\n## 4\ufe0f\u20e3 \u00bfQuieres hacer stream de tu partido?\n- Quiero retrasmitir mi partido\n- Que tengo que hacer para poder retrasmitir una jornada de la liga\n- \u00bfPuedo castear un partido?\n## 5\ufe0f\u20e3 Apelaciones, problemas con alg\u00fan equipo, jugador, etc\n- Sanciones sobre jugadores\n- Problemas con equipos externos\n- Problemas con X jugador ajeno a la liga\n- Apelaci\u00f3n sobre decisi\u00f3n de la liga inapropiada\n## 6\ufe0f\u20e3 Bot de la Bigness League\n- C\u00f3mo funciona el bot de la bigness\n- Que comandos puedo hacer\n- No funciona o hay alg\u00fan error\n- Quiero reportar un error\n## 7\ufe0f\u20e3 Social\n- Dudas del servidor de discord\n- Colaboraciones\n- Sugerencias")
+                                             default_text="# \ud83d\udd30 Soporte \ud83d\udd30\n_ _\n\u27a1\ufe0f Selecciona **una** de las siguientes **opciones** en el **men\u00fa desplegable** abajo de este mensaje. Si **no sabes** sobre qu\u00e9 **tema** quieres abrir el **ticket**, **lee** atentamente **aqu\u00ed abajo**.\n\n## 1\ufe0f\u20e3 Soporte general\n- En caso de que tu duda no est\u00e9 en ninguna de las otras categor\u00edas. Esta es tu categor\u00eda.\n## 2\ufe0f\u20e3 Competici\u00f3n Bigness League\n- Reglamento\n- C\u00f3digo de conducta\n- C\u00f3mo funciona la liga (divisiones, inscripci\u00f3n, m\u00e1x rango, etc)\n- Pricepool\n- \u00bfTengo que pagar para entrar?\n- \u00bfC\u00f3mo inscribo a mi equipo a la Bigness League?\n## 3\ufe0f\u20e3 Mercado de jugadores\n- Inscribir a un nuevo jugador\n- Quitar a un jugador de mi equipo\n- Modificaci\u00f3n de rol (ceo, manager, segundo manager, coach o analista)\n## 4\ufe0f\u20e3 \u00bfQuieres hacer stream de tu partido?\n- Quiero retrasmitir mi partido\n- Qu\u00e9 tengo que hacer para poder retrasmitir una jornada de la liga\n- \u00bfPuedo castear un partido?\n## 5\ufe0f\u20e3 Apelaciones, problemas con alg\u00fan equipo, jugador, etc\n- Sanciones sobre jugadores\n- Problemas con equipos externos\n- Problemas con X jugador ajeno a la liga\n- Apelaci\u00f3n sobre decisi\u00f3n de la liga inapropiada\n## 6\ufe0f\u20e3 Bot de la Bigness League\n- C\u00f3mo funciona el bot de la Bigness\n- Qu\u00e9 comandos puedo hacer\n- No funciona o hay alg\u00fan error\n- Quiero reportar un error\n## 7\ufe0f\u20e3 Social\n- Dudas del servidor de discord\n- Colaboraciones\n- Sugerencias")
     select_placeholder: TranslationKey = TranslationKey(key="messages.tickets.panel.select_placeholder",
                                                         default_text="Soporte General")
     published: TranslationKey = TranslationKey(key="messages.tickets.panel.published",
                                                default_text="Panel de tickets publicado.")
 
+
 class _MessagesTicketsOpenEmbedFields:
     ticket_number: TranslationKey = TranslationKey(key="messages.tickets.open.embed.fields.ticket_number",
-                                                   default_text="\ud83d\udcdd Numero de Ticket")
+                                                   default_text="\ud83d\udcdd N\u00famero de Ticket")
     opened_by: TranslationKey = TranslationKey(key="messages.tickets.open.embed.fields.opened_by",
                                                default_text="\ud83d\udc64 Abierto por")
     category: TranslationKey = TranslationKey(key="messages.tickets.open.embed.fields.category",
-                                              default_text="\ud83d\udccb Categoria")
+                                              default_text="\ud83d\udccb Categor\u00eda")
     created_at: TranslationKey = TranslationKey(key="messages.tickets.open.embed.fields.created_at",
                                                 default_text="\ud83d\udcc5 Creado el")
     instructions: TranslationKey = TranslationKey(key="messages.tickets.open.embed.fields.instructions",
                                                   default_text="\u2139\ufe0f Instrucciones")
 
+
 class _MessagesTicketsOpenEmbed:
     title: TranslationKey = TranslationKey(key="messages.tickets.open.embed.title",
                                            default_text="\ud83d\udd13 Nuevo Ticket Creado")
     description: TranslationKey = TranslationKey(key="messages.tickets.open.embed.description",
-                                                 default_text="Tu ticket de soporte ha sido abierto con exito. Un miembro del personal te asistira en breve.\n \n_ _")
+                                                 default_text="Tu ticket de soporte ha sido abierto con \u00e9xito. Un miembro del personal te asistir\u00e1 en breve.\n \n_ _")
     fields: _MessagesTicketsOpenEmbedFields = _MessagesTicketsOpenEmbedFields()
     instructions: TranslationKey = TranslationKey(key="messages.tickets.open.embed.instructions",
                                                   default_text="- Describe tu problema en detalle\n- Ten paciencia mientras esperas una respuesta\n- Usa los botones de abajo para cerrar el ticket cuando se resuelva")
     footer: TranslationKey = TranslationKey(key="messages.tickets.open.embed.footer",
                                             default_text="Desarrollado por el equipo de la Bigness League")
 
+
 class _MessagesTicketsOpen:
     embed: _MessagesTicketsOpenEmbed = _MessagesTicketsOpenEmbed()
     dm_created: TranslationKey = TranslationKey(key="messages.tickets.open.dm_created",
-                                                default_text="# Ticket abierto\nHas abierto un ticket de **{category}**.\n\nResponde a este mensaje privado para hablar con el staff de Bigness League. Las respuestas del staff tambien llegaran por aqui.")
+                                                default_text="# Ticket abierto\nHas abierto un ticket de **{category}**.\n\nResponde a este mensaje privado para hablar con el staff de Bigness League. Las respuestas del staff tambi\u00e9n llegar\u00e1n por aqu\u00ed.")
+    opening_notice: TranslationKey = TranslationKey(key="messages.tickets.open.opening_notice",
+                                                    default_text="\n\n_ _\nHola {user_mention}, \u00a1tu ticket ha sido abierto! Explica brevemente qu\u00e9 necesitas. Alguien del **Staff** te atender\u00e1 lo antes posible.")
     created_ephemeral: TranslationKey = TranslationKey(key="messages.tickets.open.created_ephemeral",
                                                        default_text="{emoji} Tu nuevo Ticket ha sido creado: {message_link}")
     already_open: TranslationKey = TranslationKey(key="messages.tickets.open.already_open",
@@ -480,9 +562,10 @@ class _MessagesTicketsOpen:
     already_open_with_link: TranslationKey = TranslationKey(key="messages.tickets.open.already_open_with_link",
                                                             default_text="Ya tienes un ticket activo. Revisa tus mensajes privados: {message_link}")
     dm_failed_ephemeral: TranslationKey = TranslationKey(key="messages.tickets.open.dm_failed_ephemeral",
-                                                         default_text="No he podido enviarte un mensaje privado, asi que el ticket se ha cerrado. Activa los DM de este servidor y vuelve a intentarlo.")
+                                                         default_text="No he podido enviarte un mensaje privado, as\u00ed que el ticket se ha cerrado. Activa los DM de este servidor y vuelve a intentarlo.")
     dm_failed_thread: TranslationKey = TranslationKey(key="messages.tickets.open.dm_failed_thread",
-                                                      default_text="No se pudo abrir DM con {user}. El ticket se cierra automaticamente.")
+                                                      default_text="No se pudo abrir DM con {user}. El ticket se cierra autom\u00e1ticamente.")
+
 
 class _MessagesTicketsParticipantsSummary:
     added: TranslationKey = TranslationKey(key="messages.tickets.participants.summary.added",
@@ -495,6 +578,7 @@ class _MessagesTicketsParticipantsSummary:
     dm_failed: TranslationKey = TranslationKey(key="messages.tickets.participants.summary.dm_failed",
                                                default_text="No he podido abrir DM con: {users}")
 
+
 class _MessagesTicketsParticipants:
     only_ticket_thread: TranslationKey = TranslationKey(key="messages.tickets.participants.only_ticket_thread",
                                                         default_text="Este comando solo se puede usar dentro de un hilo de ticket activo.")
@@ -503,12 +587,13 @@ class _MessagesTicketsParticipants:
     added_thread: TranslationKey = TranslationKey(key="messages.tickets.participants.added_thread",
                                                   default_text="Se han a\u00f1adido al ticket: {users}")
     none_added: TranslationKey = TranslationKey(key="messages.tickets.participants.none_added",
-                                                default_text="No se ha a\u00f1adido ningun usuario al ticket.")
+                                                default_text="No se ha a\u00f1adido ning\u00fan usuario al ticket.")
     team_role_empty: TranslationKey = TranslationKey(key="messages.tickets.participants.team_role_empty",
-                                                     default_text="Ese rol de equipo no tiene ningun miembro valido para a\u00f1adir al ticket.")
+                                                     default_text="Ese rol de equipo no tiene ning\u00fan miembro v\u00e1lido para a\u00f1adir al ticket.")
     owner_unavailable: TranslationKey = TranslationKey(key="messages.tickets.participants.owner_unavailable",
-                                                       default_text="No he podido resolver al usuario que abrio originalmente este ticket.")
+                                                       default_text="No he podido resolver al usuario que abri\u00f3 originalmente este ticket.")
     summary: _MessagesTicketsParticipantsSummary = _MessagesTicketsParticipantsSummary()
+
 
 class _MessagesTicketsRelay:
     from_user: TranslationKey = TranslationKey(key="messages.tickets.relay.from_user",
@@ -526,20 +611,23 @@ class _MessagesTicketsRelay:
     dm_failed_for_staff: TranslationKey = TranslationKey(key="messages.tickets.relay.dm_failed_for_staff",
                                                          default_text="No he podido enviar este mensaje por DM al usuario `{user_id}`.")
 
+
 class _MessagesTicketsAiStatus:
     result: TranslationKey = TranslationKey(key="messages.tickets.ai.status.result",
-                                            default_text="## Estado de la IA de tickets\n- Cargada en runtime: `{loaded}`\n- Activada por configuracion: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Proveedor: `{provider}`\n- Modelo: `{model}`\n- Base URL: `{base_url}`\n- Backend accesible: `{backend_reachable}`\n- Categorias con auto-reply: `{categories}`\n- Base de conocimiento: `{knowledge_base_file}`\n- Prompt del sistema: `{system_prompt_file}`")
+                                            default_text="## Estado de la IA de tickets\n- Cargada en runtime: `{loaded}`\n- Activada por configuraci\u00f3n: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Proveedor: `{provider}`\n- Modelo: `{model}`\n- Base URL: `{base_url}`\n- Backend accesible: `{backend_reachable}`\n- Categor\u00edas con auto-reply: `{categories}`\n- Base de conocimiento: `{knowledge_base_file}`\n- Prompt del sistema: `{system_prompt_file}`")
+
 
 class _MessagesTicketsAi:
     thread_response: TranslationKey = TranslationKey(key="messages.tickets.ai.thread_response",
                                                      default_text="**Respuesta IA local:**\n{answer}\n\nConfianza: `{confidence}` | Escalar: `{should_escalate}`\nMotivo: {reason}\nBase de conocimiento: {used_entry_ids}")
     user_fallback: TranslationKey = TranslationKey(key="messages.tickets.ai.user_fallback",
-                                                   default_text="He recibido tu mensaje. Un miembro del staff revisara tu caso en cuanto sea posible.")
+                                                   default_text="He recibido tu mensaje. Un miembro del staff revisará tu caso en cuanto sea posible.")
     user_escalated: TranslationKey = TranslationKey(key="messages.tickets.ai.user_escalated",
                                                     default_text="De acuerdo. He dejado el ticket para que lo revise una persona del staff lo antes posible.")
     unavailable_thread: TranslationKey = TranslationKey(key="messages.tickets.ai.unavailable_thread",
                                                         default_text="La IA local no ha podido responder a este mensaje: {details}")
     status: _MessagesTicketsAiStatus = _MessagesTicketsAiStatus()
+
 
 class _MessagesTicketsButtons:
     close_ticket: TranslationKey = TranslationKey(key="messages.tickets.buttons.close_ticket",
@@ -547,61 +635,67 @@ class _MessagesTicketsButtons:
     close_with_reason: TranslationKey = TranslationKey(key="messages.tickets.buttons.close_with_reason",
                                                        default_text="\ud83d\udd0f Cerrar con raz\u00f3n")
 
+
 class _MessagesTicketsCloseConfirmButtons:
     confirm: TranslationKey = TranslationKey(key="messages.tickets.close.confirm.buttons.confirm",
                                              default_text="Confirmar cierre")
     add_reason: TranslationKey = TranslationKey(key="messages.tickets.close.confirm.buttons.add_reason",
-                                                default_text="A\u00f1adir razon")
+                                                default_text="A\u00f1adir raz\u00f3n")
     cancel: TranslationKey = TranslationKey(key="messages.tickets.close.confirm.buttons.cancel",
                                             default_text="Cancelar")
+
 
 class _MessagesTicketsCloseConfirm:
     buttons: _MessagesTicketsCloseConfirmButtons = _MessagesTicketsCloseConfirmButtons()
 
+
 class _MessagesTicketsCloseReasonModal:
     title: TranslationKey = TranslationKey(key="messages.tickets.close.reason_modal.title",
-                                           default_text="Cerrar ticket con razon")
+                                           default_text="Cerrar ticket con raz\u00f3n")
     label: TranslationKey = TranslationKey(key="messages.tickets.close.reason_modal.label",
                                            default_text="Razon de cierre")
     placeholder: TranslationKey = TranslationKey(key="messages.tickets.close.reason_modal.placeholder",
                                                  default_text="Ejemplo: Problema resuelto o ticket abierto por error.")
 
+
 class _MessagesTicketsCloseEmbedFields:
     ticket_number: TranslationKey = TranslationKey(key="messages.tickets.close.embed.fields.ticket_number",
-                                                   default_text="\ud83d\udcdd Numero de Ticket")
+                                                   default_text="\ud83d\udcdd N\u00famero de Ticket")
     closed_by: TranslationKey = TranslationKey(key="messages.tickets.close.embed.fields.closed_by",
                                                default_text="\ud83d\udc64 Cerrado por")
     category: TranslationKey = TranslationKey(key="messages.tickets.close.embed.fields.category",
-                                              default_text="\ud83d\udccb Categoria")
+                                              default_text="\ud83d\udccb Categor\u00eda")
     ticket_link: TranslationKey = TranslationKey(key="messages.tickets.close.embed.fields.ticket_link",
                                                  default_text="\ud83d\udd17 Ir al Ticket")
     created_at: TranslationKey = TranslationKey(key="messages.tickets.close.embed.fields.created_at",
                                                 default_text="\ud83d\udcc5 Creado el")
     duration: TranslationKey = TranslationKey(key="messages.tickets.close.embed.fields.duration",
-                                              default_text="\u23f1\ufe0f Duracion")
+                                              default_text="\u23f1\ufe0f Duraci\u00f3n")
     closed_at: TranslationKey = TranslationKey(key="messages.tickets.close.embed.fields.closed_at",
                                                default_text="\ud83d\udd12 Cerrado el")
     close_reason: TranslationKey = TranslationKey(key="messages.tickets.close.embed.fields.close_reason",
-                                                  default_text="\ud83d\udccc Razon de cierre")
+                                                  default_text="\ud83d\udccc Razón de cierre")
+
 
 class _MessagesTicketsCloseEmbed:
     title: TranslationKey = TranslationKey(key="messages.tickets.close.embed.title",
                                            default_text="\ud83d\udd12 Ticket Cerrado")
     description: TranslationKey = TranslationKey(key="messages.tickets.close.embed.description",
-                                                 default_text="Tu ticket de soporte ha sido cerrado con exito. Si necesitas ayuda adicional, puedes abrir un nuevo ticket.\n \n_ _")
+                                                 default_text="Tu ticket de soporte ha sido cerrado con \u00e9xito. Si necesitas ayuda adicional, puedes abrir un nuevo ticket.\n \n_ _")
     fields: _MessagesTicketsCloseEmbedFields = _MessagesTicketsCloseEmbedFields()
     link_value: TranslationKey = TranslationKey(key="messages.tickets.close.embed.link_value",
                                                 default_text="[Enlace directo al mensaje de inicio del ticket]({ticket_link})")
     default_reason: TranslationKey = TranslationKey(key="messages.tickets.close.embed.default_reason",
-                                                    default_text="No se ha especificado ninguna razon.")
+                                                    default_text="No se ha especificado ninguna raz\u00f3n.")
     footer: TranslationKey = TranslationKey(key="messages.tickets.close.embed.footer",
                                             default_text="Desarrollado por el equipo de la Bigness League")
 
+
 class _MessagesTicketsClose:
     not_ticket_thread: TranslationKey = TranslationKey(key="messages.tickets.close.not_ticket_thread",
-                                                       default_text="Este boton solo se puede usar dentro de un hilo de ticket.")
+                                                       default_text="Este bot\u00f3n solo se puede usar dentro de un hilo de ticket.")
     not_active: TranslationKey = TranslationKey(key="messages.tickets.close.not_active",
-                                                default_text="No hay ningun ticket activo asociado a este hilo.")
+                                                default_text="No hay ning\u00fan ticket activo asociado a este hilo.")
     thread_closed: TranslationKey = TranslationKey(key="messages.tickets.close.thread_closed",
                                                    default_text="Ticket cerrado por {actor}.")
     dm_closed: TranslationKey = TranslationKey(key="messages.tickets.close.dm_closed",
@@ -609,11 +703,11 @@ class _MessagesTicketsClose:
     closed_ephemeral: TranslationKey = TranslationKey(key="messages.tickets.close.closed_ephemeral",
                                                       default_text="Ticket cerrado.")
     only_actor: TranslationKey = TranslationKey(key="messages.tickets.close.only_actor",
-                                                default_text="Solo quien ha iniciado esta confirmacion puede usar estos botones.")
+                                                default_text="Solo quien ha iniciado esta confirmaci\u00f3n puede usar estos botones.")
     confirm_prompt: TranslationKey = TranslationKey(key="messages.tickets.close.confirm_prompt",
-                                                    default_text="Vas a cerrar este ticket. Confirma la accion si quieres continuar.")
+                                                    default_text="Vas a cerrar este ticket. Confirma la acci\u00f3n si quieres continuar.")
     confirm_reason_prompt: TranslationKey = TranslationKey(key="messages.tickets.close.confirm_reason_prompt",
-                                                           default_text="Vas a cerrar este ticket con una razon. Confirma para abrir el formulario de cierre.")
+                                                           default_text="Vas a cerrar este ticket con una raz\u00f3n. Confirma para abrir el formulario de cierre.")
     confirm_processing: TranslationKey = TranslationKey(key="messages.tickets.close.confirm_processing",
                                                         default_text="Cerrando ticket...")
     confirm_cancelled: TranslationKey = TranslationKey(key="messages.tickets.close.confirm_cancelled",
@@ -621,6 +715,7 @@ class _MessagesTicketsClose:
     confirm: _MessagesTicketsCloseConfirm = _MessagesTicketsCloseConfirm()
     reason_modal: _MessagesTicketsCloseReasonModal = _MessagesTicketsCloseReasonModal()
     embed: _MessagesTicketsCloseEmbed = _MessagesTicketsCloseEmbed()
+
 
 class _MessagesTickets:
     panel: _MessagesTicketsPanel = _MessagesTicketsPanel()
@@ -630,6 +725,7 @@ class _MessagesTickets:
     ai: _MessagesTicketsAi = _MessagesTicketsAi()
     buttons: _MessagesTicketsButtons = _MessagesTicketsButtons()
     close: _MessagesTicketsClose = _MessagesTicketsClose()
+
 
 class _MessagesChannelRoleAdditionButtons:
     previous: TranslationKey = TranslationKey(key="messages.channel_role_addition.buttons.previous",
@@ -643,13 +739,15 @@ class _MessagesChannelRoleAdditionButtons:
     clear_filter: TranslationKey = TranslationKey(key="messages.channel_role_addition.buttons.clear_filter",
                                                   default_text="Limpiar filtro")
 
+
 class _MessagesChannelRoleAdditionModal:
     title: TranslationKey = TranslationKey(key="messages.channel_role_addition.modal.title",
                                            default_text="Buscar roles")
     query_label: TranslationKey = TranslationKey(key="messages.channel_role_addition.modal.query_label",
-                                                 default_text="Nombre, ID o mencion del rol")
+                                                 default_text="Nombre, ID o menci\u00f3n del rol")
     query_placeholder: TranslationKey = TranslationKey(key="messages.channel_role_addition.modal.query_placeholder",
                                                        default_text="Ejemplo: Dragons, 123456789 o <@&123456789>")
+
 
 class _MessagesChannelRoleAddition:
     loading_placeholder: TranslationKey = TranslationKey(key="messages.channel_role_addition.loading_placeholder",
@@ -661,38 +759,41 @@ class _MessagesChannelRoleAddition:
     no_results_placeholder: TranslationKey = TranslationKey(key="messages.channel_role_addition.no_results_placeholder",
                                                             default_text="No hay roles para mostrar")
     select_placeholder: TranslationKey = TranslationKey(key="messages.channel_role_addition.select_placeholder",
-                                                        default_text="Selecciona roles de la pagina {page}/{page_count}")
+                                                        default_text="Selecciona roles de la p\u00e1gina {page}/{page_count}")
     buttons: _MessagesChannelRoleAdditionButtons = _MessagesChannelRoleAdditionButtons()
     modal: _MessagesChannelRoleAdditionModal = _MessagesChannelRoleAdditionModal()
     render_content: TranslationKey = TranslationKey(key="messages.channel_role_addition.render_content",
-                                                    default_text="Selecciona los roles que quieres anadir a este canal.\nRango filtrado: `{range_start}` < roles < `{range_end}`.\nPagina {page}/{page_count} | Seleccionados: {selected_count} | Disponibles: {visible_count}/{candidate_count}.\nBusqueda: {search_query}.\nUsa Confirmar para aplicar los permisos al canal.")
+                                                    default_text="Selecciona los roles que quieres a\u00f1adir a este canal.\nRango filtrado: `{range_start}` < roles < `{range_end}`.\nP\u00e1gina {page}/{page_count} | Seleccionados: {selected_count} | Disponibles: {visible_count}/{candidate_count}.\nB\u00fasqueda: {search_query}.\nUsa Confirmar para aplicar los permisos al canal.")
     search_none: TranslationKey = TranslationKey(key="messages.channel_role_addition.search_none",
                                                  default_text="sin filtro")
     only_actor: TranslationKey = TranslationKey(key="messages.channel_role_addition.only_actor",
-                                                default_text="Solo quien ejecuto el comando puede usar este selector.")
+                                                default_text="Solo quien ejecut\u00f3 el comando puede usar este selector.")
     timeout: TranslationKey = TranslationKey(key="messages.channel_role_addition.timeout",
-                                             default_text="La seleccion de roles ha expirado. No se han aplicado cambios.")
+                                             default_text="La selecci\u00f3n de roles ha expirado. No se han aplicado cambios.")
     select_before_confirm: TranslationKey = TranslationKey(key="messages.channel_role_addition.select_before_confirm",
                                                            default_text="Selecciona al menos un rol antes de confirmar.")
     selection_cancelled: TranslationKey = TranslationKey(key="messages.channel_role_addition.selection_cancelled",
-                                                         default_text="Seleccion de roles cancelada.")
+                                                         default_text="Selección de roles cancelada.")
+
 
 class _MessagesChannelDeleteConfirmationButtons:
     confirm: TranslationKey = TranslationKey(key="messages.channel_delete_confirmation.buttons.confirm",
-                                             default_text="Confirmar eliminacion")
+                                             default_text="Confirmar eliminación")
     cancel: TranslationKey = TranslationKey(key="messages.channel_delete_confirmation.buttons.cancel",
                                             default_text="Cancelar")
 
+
 class _MessagesChannelDeleteConfirmation:
     only_actor: TranslationKey = TranslationKey(key="messages.channel_delete_confirmation.only_actor",
-                                                default_text="Solo quien ejecuto el comando puede confirmar esta accion.")
+                                                default_text="Solo quien ejecut\u00f3 el comando puede confirmar esta acci\u00f3n.")
     timeout: TranslationKey = TranslationKey(key="messages.channel_delete_confirmation.timeout",
-                                             default_text="La confirmacion ha expirado. No se ha eliminado el canal.")
+                                             default_text="La confirmaci\u00f3n ha expirado. No se ha eliminado el canal.")
     deleting: TranslationKey = TranslationKey(key="messages.channel_delete_confirmation.deleting",
                                               default_text="Eliminando canal...")
     cancelled: TranslationKey = TranslationKey(key="messages.channel_delete_confirmation.cancelled",
-                                               default_text="Eliminacion cancelada.")
+                                               default_text="Eliminaci\u00f3n cancelada.")
     buttons: _MessagesChannelDeleteConfirmationButtons = _MessagesChannelDeleteConfirmationButtons()
+
 
 class _MessagesChannelMatchdayCloseConfirmationButtons:
     confirm: TranslationKey = TranslationKey(key="messages.channel_matchday_close_confirmation.buttons.confirm",
@@ -700,23 +801,26 @@ class _MessagesChannelMatchdayCloseConfirmationButtons:
     cancel: TranslationKey = TranslationKey(key="messages.channel_matchday_close_confirmation.buttons.cancel",
                                             default_text="Cancelar")
 
+
 class _MessagesChannelMatchdayCloseConfirmation:
     only_actor: TranslationKey = TranslationKey(key="messages.channel_matchday_close_confirmation.only_actor",
-                                                default_text="Solo quien ejecuto el comando puede confirmar esta accion.")
+                                                default_text="Solo quien ejecut\u00f3 el comando puede confirmar esta acci\u00f3n.")
     timeout: TranslationKey = TranslationKey(key="messages.channel_matchday_close_confirmation.timeout",
-                                             default_text="La confirmacion ha expirado. No se ha cerrado la jornada.")
+                                             default_text="La confirmaci\u00f3n ha expirado. No se ha cerrado la jornada.")
     closing: TranslationKey = TranslationKey(key="messages.channel_matchday_close_confirmation.closing",
                                              default_text="Cerrando jornada...")
     cancelled: TranslationKey = TranslationKey(key="messages.channel_matchday_close_confirmation.cancelled",
                                                default_text="Cierre de jornada cancelado.")
     buttons: _MessagesChannelMatchdayCloseConfirmationButtons = _MessagesChannelMatchdayCloseConfirmationButtons()
 
+
 class _MessagesMatchChannelCreationWelcomeEmbedsDetails:
     title: TranslationKey = TranslationKey(key="messages.match_channel_creation.welcome.embeds.details.title",
                                            default_text="\ud83d\udd30 Detalles a tener en cuenta \ud83d\udd30")
     description: TranslationKey = TranslationKey(
         key="messages.match_channel_creation.welcome.embeds.details.description",
-        default_text="- Si nadie se pone **de acuerdo** y no hay una fecha por ninguno de los **dos equipos**, el partido se dara como **nulo**. Ninguno de los dos equipos aqu\u00ed presentes sumar\u00e1 puntos esta jornada.\n- Pongamos todos de nuestra parte para poder **jugar el partido** y recordad **organizarlo** lo **antes posible**.\n- Intentad ser **flexibles ambos equipos**. Si alguno no puede, debe **proponer** otra **fecha** y as\u00ed sucesivamente.\n- Habr\u00e1 **minutos** de **cortes\u00eda** seg\u00fan la **hora del partido**. Si la fecha **esta puesta** a las **16:00**, como tarde deber\u00e1 iniciarse a las **16:10**, salvo **acuerdo expreso** entre **ambos equipos**.")
+        default_text="- Si nadie se pone **de acuerdo** y no hay una fecha por ninguno de los **dos equipos**, el partido se dar\u00e1 como **nulo**. Ninguno de los dos equipos aqu\u00ed presentes sumar\u00e1 puntos esta jornada.\n- Pongamos todos de nuestra parte para poder **jugar el partido** y recordad **organizarlo** lo **antes posible**.\n- Intentad ser **flexibles ambos equipos**. Si alguno no puede, debe **proponer** otra **fecha** y as\u00ed sucesivamente.\n- Habr\u00e1 **minutos** de **cortes\u00eda** seg\u00fan la **hora del partido**. Si la fecha **est\u00e1 puesta** a las **16:00**, como tarde deber\u00e1 iniciarse a las **16:10**, salvo **acuerdo expreso** entre **ambos equipos**.")
+
 
 class _MessagesMatchChannelCreationWelcomeEmbedsIssues:
     title: TranslationKey = TranslationKey(key="messages.match_channel_creation.welcome.embeds.issues.title",
@@ -725,17 +829,20 @@ class _MessagesMatchChannelCreationWelcomeEmbedsIssues:
         key="messages.match_channel_creation.welcome.embeds.issues.description",
         default_text="- Si se **cancela** el partido **1h antes** porque el equipo **rival** al final **no puede**, muy probablemente sea **Free Win**, salvo que el equipo rival acepte jugarlo en otra fecha. Esta situaci\u00f3n la evaluar\u00e1 el **Staff**.\n- Cualquier **problema** relacionado con el **partido** (in-game):\n  - Sacar **capturas** de incidentes.\n  - Guardad evidencias de comportamientos **t\u00f3xicos**.\n  - Registrad cualquier **incidencia del partido**.\n- El partido se dar\u00e1 como **finalizado** cuando alguien del Staff ponga el canal en **modo lectura**. Para cualquier **apelaci\u00f3n** se deber\u00e1 **abrir un ticket**.")
 
+
 class _MessagesMatchChannelCreationWelcomeEmbedsMatchData:
     title: TranslationKey = TranslationKey(key="messages.match_channel_creation.welcome.embeds.match_data.title",
                                            default_text="\u26bd \ud83d\ude97 Datos del partido \ud83d\ude97 \u26bd")
     description: TranslationKey = TranslationKey(
         key="messages.match_channel_creation.welcome.embeds.match_data.description",
-        default_text="- Informacion de sala\n  - \u231b {courtesy_minutes} minutos de cortesia\n  - \ud83d\uddd3\ufe0f {match_date}\n  - \u23f0 {match_time}\n  - \u2694\ufe0f {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `{room_name}`\n  - Contrasena: `{room_password}` \n  - Crea: {team_one}")
+        default_text="- Informaci\u00f3n de sala\n  - \u231b {courtesy_minutes} minutos de cortes\u00eda\n  - \ud83d\uddd3\ufe0f {match_date}\n  - \u23f0 {match_time}\n  - \u2694\ufe0f {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `{room_name}`\n  - Contrase\u00f1a: `{room_password}` \n  - Crea: {team_one}")
+
 
 class _MessagesMatchChannelCreationWelcomeEmbeds:
     details: _MessagesMatchChannelCreationWelcomeEmbedsDetails = _MessagesMatchChannelCreationWelcomeEmbedsDetails()
     issues: _MessagesMatchChannelCreationWelcomeEmbedsIssues = _MessagesMatchChannelCreationWelcomeEmbedsIssues()
     match_data: _MessagesMatchChannelCreationWelcomeEmbedsMatchData = _MessagesMatchChannelCreationWelcomeEmbedsMatchData()
+
 
 class _MessagesMatchChannelCreationWelcomeButtons:
     create_ticket: TranslationKey = TranslationKey(key="messages.match_channel_creation.welcome.buttons.create_ticket",
@@ -743,14 +850,17 @@ class _MessagesMatchChannelCreationWelcomeButtons:
     rules: TranslationKey = TranslationKey(key="messages.match_channel_creation.welcome.buttons.rules",
                                            default_text="Normativa - Bigness League")
 
+
 class _MessagesMatchChannelCreationWelcome:
     content: TranslationKey = TranslationKey(key="messages.match_channel_creation.welcome.content",
-                                             default_text="# Jornada {jornada_emoji}\u3000Partido {partido_emoji}\n## Bienvenid@s\n### {team_one} \ud83c\udd9a {team_two}\n\nEste es el canal privado y autogenerado de vuestro partido. Para acordar fechas, pruebas y todo lo relacionado de esta jornada, deber\u00e1 hablarse \u00fanicamente y exclusivamente por este canal de texto. Si se acuerda el partido por medios externos y surge alg\u00fan problema a futuro, no se tendr\u00e1 en cuenta. Casos mas graves lo evaluar\u00e1 el Staff.\n\n\ud83e\udd1d\u00a1Mucha suerte a ambos equipos!\ud83e\udd1d\n\u3000")
+                                             default_text="# Jornada {jornada_emoji}\u3000Partido {partido_emoji}\n## Bienvenid@s\n### {team_one} \ud83c\udd9a {team_two}\n\nEste es el canal privado y autogenerado de vuestro partido. Para acordar fechas, pruebas y todo lo relacionado de esta jornada, deber\u00e1 hablarse \u00fanicamente y exclusivamente por este canal de texto. Si se acuerda el partido por medios externos y surge alg\u00fan problema a futuro, no se tendr\u00e1 en cuenta. Los casos m\u00e1s graves lo evaluar\u00e1 el Staff.\n\n\ud83e\udd1d\u00a1Mucha suerte a ambos equipos!\ud83e\udd1d\n\u3000")
     embeds: _MessagesMatchChannelCreationWelcomeEmbeds = _MessagesMatchChannelCreationWelcomeEmbeds()
     buttons: _MessagesMatchChannelCreationWelcomeButtons = _MessagesMatchChannelCreationWelcomeButtons()
 
+
 class _MessagesMatchChannelCreation:
     welcome: _MessagesMatchChannelCreationWelcome = _MessagesMatchChannelCreationWelcome()
+
 
 class _Messages:
     admin: _MessagesAdmin = _MessagesAdmin()
@@ -768,6 +878,7 @@ class _Messages:
     channel_delete_confirmation: _MessagesChannelDeleteConfirmation = _MessagesChannelDeleteConfirmation()
     channel_matchday_close_confirmation: _MessagesChannelMatchdayCloseConfirmation = _MessagesChannelMatchdayCloseConfirmation()
     match_channel_creation: _MessagesMatchChannelCreation = _MessagesMatchChannelCreation()
+
 
 class _ErrorsChannelManagement:
     server_only: TranslationKey = TranslationKey(key="errors.channel_management.server_only",
@@ -787,7 +898,7 @@ class _ErrorsChannelManagement:
                                                            default_text="No puedes anadir `@everyone` al canal.")
     no_valid_additional_roles: TranslationKey = TranslationKey(
         key="errors.channel_management.no_valid_additional_roles",
-        default_text="Selecciona al menos un rol adicional valido.")
+        default_text="Selecciona al menos un rol adicional v\u00e1lido.")
     range_start_missing: TranslationKey = TranslationKey(key="errors.channel_management.range_start_missing",
                                                          default_text="No existe el rol de inicio configurado para el selector: `{role_id}`.")
     range_end_missing: TranslationKey = TranslationKey(key="errors.channel_management.range_end_missing",
@@ -795,21 +906,23 @@ class _ErrorsChannelManagement:
     range_empty: TranslationKey = TranslationKey(key="errors.channel_management.range_empty",
                                                  default_text="No hay roles seleccionables entre los separadores configurados.")
 
+
 class _ErrorsTickets:
     ceo_only: TranslationKey = TranslationKey(key="errors.tickets.ceo_only",
                                               default_text="Solo puede publicar el panel de tickets un miembro con el rol `CEO`.")
     category_unknown: TranslationKey = TranslationKey(key="errors.tickets.category_unknown",
-                                                      default_text="La categoria de ticket seleccionada no es valida.")
+                                                      default_text="La categor\u00eda de ticket seleccionada no es v\u00e1lida.")
     forum_channel_not_configured: TranslationKey = TranslationKey(key="errors.tickets.forum_channel_not_configured",
                                                                   default_text="Falta configurar `BOT_TICKET_FORUM_CHANNEL_ID` con el ID del foro de tickets.")
     forum_channel_not_found: TranslationKey = TranslationKey(key="errors.tickets.forum_channel_not_found",
-                                                             default_text="No se encontro el foro de tickets configurado: `{channel_id}`.")
+                                                             default_text="No se encontr\u00f3 el foro de tickets configurado: `{channel_id}`.")
     forum_channel_not_in_guild: TranslationKey = TranslationKey(key="errors.tickets.forum_channel_not_in_guild",
                                                                 default_text="El canal configurado como foro de tickets no pertenece a este servidor: `{channel_id}`.")
     forum_channel_invalid_type: TranslationKey = TranslationKey(key="errors.tickets.forum_channel_invalid_type",
                                                                 default_text="El canal configurado como foro de tickets debe ser un foro de Discord: `{channel_id}`.")
     forum_tag_missing: TranslationKey = TranslationKey(key="errors.tickets.forum_tag_missing",
-                                                       default_text="No existe la etiqueta `{tag_name}` en el foro `{forum_name}`. Crea esa etiqueta en el foro o ajusta la configuracion de categorias.")
+                                                       default_text="No existe la etiqueta `{tag_name}` en el foro `{forum_name}`. Crea esa etiqueta en el foro o ajusta la configuraci\u00f3n de categorias.")
+
 
 class _ErrorsMatchChannelCreation:
     same_team_roles: TranslationKey = TranslationKey(key="errors.match_channel_creation.same_team_roles",
@@ -817,7 +930,7 @@ class _ErrorsMatchChannelCreation:
     invalid_team_role: TranslationKey = TranslationKey(key="errors.match_channel_creation.invalid_team_role",
                                                        default_text="El rol `{role_name}` no se puede usar como equipo en un canal de partido.")
     team_role_out_of_range: TranslationKey = TranslationKey(key="errors.match_channel_creation.team_role_out_of_range",
-                                                            default_text="El rol `{role_name}` no esta dentro del rango de roles de equipos configurado: `{range_start}` < rol < `{range_end}`.")
+                                                            default_text="El rol `{role_name}` no est\u00e1 dentro del rango de roles de equipos configurado: `{range_start}` < rol < `{range_end}`.")
     channel_already_exists: TranslationKey = TranslationKey(key="errors.match_channel_creation.channel_already_exists",
                                                             default_text="Ya existe un canal para esa jornada y ese partido: `{channel_name}`.")
     category_missing: TranslationKey = TranslationKey(key="errors.match_channel_creation.category_missing",
@@ -827,13 +940,14 @@ class _ErrorsMatchChannelCreation:
     invalid_time_format: TranslationKey = TranslationKey(key="errors.match_channel_creation.invalid_time_format",
                                                          default_text="La hora no es valida. Usa el formato `HH:MM` en 24 horas.")
 
+
 class _ErrorsTeamProfile:
     team_role_missing: TranslationKey = TranslationKey(key="errors.team_profile.team_role_missing",
-                                                       default_text="No tienes ningun rol de equipo dentro del rango configurado para este comando.")
+                                                       default_text="No tienes ning\u00fan rol de equipo dentro del rango configurado para este comando.")
     multiple_team_roles: TranslationKey = TranslationKey(key="errors.team_profile.multiple_team_roles",
-                                                         default_text="Tienes varios roles de equipo y no se puede decidir cual usar: {role_names}.")
+                                                         default_text="Tienes varios roles de equipo y no se puede decidir cu\u00e1l usar: {role_names}.")
     dm_guild_unavailable: TranslationKey = TranslationKey(key="errors.team_profile.dm_guild_unavailable",
-                                                          default_text="No se puede resolver este comando por MD porque el servidor principal del bot no esta disponible. Revisa `DISCORD_GUILD_ID` y que el bot siga dentro del servidor.")
+                                                          default_text="No se puede resolver este comando por MD porque el servidor principal del bot no est\u00e1 disponible. Revisa `DISCORD_GUILD_ID` y que el bot siga dentro del servidor.")
     dm_member_not_found: TranslationKey = TranslationKey(key="errors.team_profile.dm_member_not_found",
                                                          default_text="No he podido vincular este MD con tu miembro del servidor principal. Asegurate de seguir dentro del servidor de la Bigness League.")
     google_dependencies_missing: TranslationKey = TranslationKey(key="errors.team_profile.google_dependencies_missing",
@@ -856,19 +970,20 @@ class _ErrorsTeamProfile:
     team_sheet_layout_invalid: TranslationKey = TranslationKey(key="errors.team_profile.team_sheet_layout_invalid",
                                                                default_text="La hoja `{sheet_name}` no sigue el formato esperado para el equipo `{role_name}`.")
     team_not_found: TranslationKey = TranslationKey(key="errors.team_profile.team_not_found",
-                                                    default_text="No se encontro ninguna fila en `{sheet_name}` para el rol `{role_name}`.")
+                                                    default_text="No se encontr\u00f3 ninguna fila en `{sheet_name}` para el rol `{role_name}`.")
+
 
 class _ErrorsTeamSigning:
     invalid_message_link: TranslationKey = TranslationKey(key="errors.team_signing.invalid_message_link",
-                                                          default_text="El enlace del mensaje no es valido. Debe ser un enlace de Discord con servidor, canal y mensaje.")
+                                                          default_text="El enlace del mensaje no es v\u00e1lido. Debe ser un enlace de Discord con servidor, canal y mensaje.")
     foreign_guild_message_link: TranslationKey = TranslationKey(key="errors.team_signing.foreign_guild_message_link",
                                                                 default_text="El enlace apunta a otro servidor. Guild actual: `{expected_guild_id}`. Guild enlazada: `{linked_guild_id}`.")
     message_channel_not_found: TranslationKey = TranslationKey(key="errors.team_signing.message_channel_not_found",
-                                                               default_text="No se encontro el canal del mensaje enlazado: `{channel_id}`.")
+                                                               default_text="No se encontr\u00f3 el canal del mensaje enlazado: `{channel_id}`.")
     unsupported_message_channel: TranslationKey = TranslationKey(key="errors.team_signing.unsupported_message_channel",
                                                                  default_text="El mensaje enlazado debe pertenecer a un canal de texto o a un hilo.")
     message_not_found: TranslationKey = TranslationKey(key="errors.team_signing.message_not_found",
-                                                       default_text="No se encontro el mensaje enlazado: `{message_id}`.")
+                                                       default_text="No se encontr\u00f3 el mensaje enlazado: `{message_id}`.")
     message_fetch_forbidden: TranslationKey = TranslationKey(key="errors.team_signing.message_fetch_forbidden",
                                                              default_text="El bot no puede acceder al mensaje enlazado. Revisa sus permisos en ese canal.")
     message_fetch_failed: TranslationKey = TranslationKey(key="errors.team_signing.message_fetch_failed",
@@ -877,45 +992,46 @@ class _ErrorsTeamSigning:
                                                             default_text="El mensaje enlazado no sigue el formato esperado para importar fichajes: {details}.")
     invalid_technical_staff_message_format: TranslationKey = TranslationKey(
         key="errors.team_signing.invalid_technical_staff_message_format",
-        default_text="El mensaje enlazado no sigue el formato esperado para importar staff tecnico: {details}.")
+        default_text="El mensaje enlazado no sigue el formato esperado para importar staff t\u00e9cnico: {details}.")
     no_import_payload_provided: TranslationKey = TranslationKey(key="errors.team_signing.no_import_payload_provided",
-                                                                default_text="Debes indicar al menos un enlace de jugadores o un enlace de staff tecnico.")
+                                                                default_text="Debes indicar al menos un enlace de jugadores o un enlace de staff t\u00e9cnico.")
     import_payload_mismatch: TranslationKey = TranslationKey(key="errors.team_signing.import_payload_mismatch",
-                                                             default_text="Los mensajes enlazados no coinciden en Division/Equipo. Jugadores: `{player_division}` / `{player_team}`. Staff: `{staff_division}` / `{staff_team}`.")
+                                                             default_text="Los mensajes enlazados no coinciden en Divisi\u00f3n/Equipo. Jugadores: `{player_division}` / `{player_team}`. Staff: `{staff_division}` / `{staff_team}`.")
     division_not_found: TranslationKey = TranslationKey(key="errors.team_signing.division_not_found",
-                                                        default_text="No existe ninguna hoja que coincida con la division `{division_name}`.")
+                                                        default_text="No existe ninguna hoja que coincida con la divisi\u00f3n `{division_name}`.")
     team_sheet_layout_invalid: TranslationKey = TranslationKey(key="errors.team_signing.team_sheet_layout_invalid",
                                                                default_text="La hoja `{sheet_name}` no sigue el formato esperado para registrar fichajes.")
     no_free_team_block: TranslationKey = TranslationKey(key="errors.team_signing.no_free_team_block",
-                                                        default_text="No hay ningun bloque de equipo libre en `{sheet_name}` para registrar a `{team_name}`.")
+                                                        default_text="No hay ning\u00fan bloque de equipo libre en `{sheet_name}` para registrar a `{team_name}`.")
     technical_staff_role_not_found: TranslationKey = TranslationKey(
         key="errors.team_signing.technical_staff_role_not_found",
-        default_text="No existe la fila de staff tecnico `{role_name}` para `{team_name}` en `{sheet_name}`.")
+        default_text="No existe la fila de staff t\u00e9cnico `{role_name}` para `{team_name}` en `{sheet_name}`.")
     technical_staff_player_not_found: TranslationKey = TranslationKey(
         key="errors.team_signing.technical_staff_player_not_found",
-        default_text="No se pudo completar el staff tecnico `{role_name}` porque el Discord `{discord_name}` no existe en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.")
+        default_text="No se pudo completar el staff t\u00e9cnico `{role_name}` porque el Discord `{discord_name}` no existe en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.")
     technical_staff_player_duplicate: TranslationKey = TranslationKey(
         key="errors.team_signing.technical_staff_player_duplicate",
-        default_text="No se pudo completar el staff tecnico `{role_name}` porque el Discord `{discord_name}` aparece duplicado en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.")
+        default_text="No se pudo completar el staff t\u00e9cnico `{role_name}` porque el Discord `{discord_name}` aparece duplicado en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.")
     player_not_found: TranslationKey = TranslationKey(key="errors.team_signing.player_not_found",
-                                                      default_text="No se encontro ningun jugador con el Discord `{discord_name}` en Google Sheets.")
+                                                      default_text="No se encontr\u00f3 ning\u00fan jugador con el Discord `{discord_name}` en Google Sheets.")
     technical_staff_member_not_found: TranslationKey = TranslationKey(
         key="errors.team_signing.technical_staff_member_not_found",
-        default_text="No se encontro ningun cargo de staff tecnico con el Discord `{discord_name}` en Google Sheets.")
+        default_text="No se encontr\u00f3 ning\u00fan cargo de staff t\u00e9cnico con el Discord `{discord_name}` en Google Sheets.")
     member_not_found: TranslationKey = TranslationKey(key="errors.team_signing.member_not_found",
-                                                      default_text="No se encontro ningun jugador ni cargo de staff tecnico con el Discord `{discord_name}` en Google Sheets.")
+                                                      default_text="No se encontr\u00f3 ning\u00fan jugador ni cargo de staff t\u00e9cnico con el Discord `{discord_name}` en Google Sheets.")
     player_duplicate: TranslationKey = TranslationKey(key="errors.team_signing.player_duplicate",
-                                                      default_text="Hay varios jugadores con el Discord `{discord_name}` en Google Sheets: {locations}. Corrigelo manualmente antes de continuar.")
+                                                      default_text="Hay varios jugadores con el Discord `{discord_name}` en Google Sheets: {locations}. Corr\u00edgelo manualmente antes de continuar.")
     member_duplicate: TranslationKey = TranslationKey(key="errors.team_signing.member_duplicate",
-                                                      default_text="El Discord `{discord_name}` aparece en mas de un bloque de equipo: {locations}. Corrigelo manualmente antes de continuar.")
+                                                      default_text="El Discord `{discord_name}` aparece en m\u00e1s de un bloque de equipo: {locations}. Corr\u00edgelo manualmente antes de continuar.")
     remaining_signings_invalid: TranslationKey = TranslationKey(key="errors.team_signing.remaining_signings_invalid",
-                                                                default_text="La celda de fichajes restantes no es valida para `{team_name}` en `{sheet_name}`.")
+                                                                default_text="La celda de fichajes restantes no es v\u00e1lida para `{team_name}` en `{sheet_name}`.")
     remaining_signings_exceeded: TranslationKey = TranslationKey(key="errors.team_signing.remaining_signings_exceeded",
                                                                  default_text="No quedan fichajes suficientes en `{team_name}`. Restantes: {remaining_signings}. Solicitados: {requested_signings}.")
     team_roster_full: TranslationKey = TranslationKey(key="errors.team_signing.team_roster_full",
                                                       default_text="No hay hueco suficiente en `{team_name}` para estos fichajes. Huecos libres: {available_slots}. Fichajes solicitados: {requested_slots}.")
     google_write_failed: TranslationKey = TranslationKey(key="errors.team_signing.google_write_failed",
                                                          default_text="Google Sheets ha rechazado la escritura de fichajes: {details}.")
+
 
 class _ErrorsTeamRoleAssignment:
     participant_role_missing: TranslationKey = TranslationKey(
@@ -943,17 +1059,19 @@ class _ErrorsTeamRoleAssignment:
     team_role_not_found: TranslationKey = TranslationKey(key="errors.team_role_assignment.team_role_not_found",
                                                          default_text="No existe un rol de equipo en Discord que coincida con `{team_name}`.")
 
+
 class _ErrorsSlash:
     forbidden: TranslationKey = TranslationKey(key="errors.slash.forbidden",
                                                default_text="No tienes permisos para ejecutar este comando.")
     bot_missing_permissions: TranslationKey = TranslationKey(key="errors.slash.bot_missing_permissions",
                                                              default_text="El bot necesita permisos suficientes para gestionar el canal.")
     discord_forbidden: TranslationKey = TranslationKey(key="errors.slash.discord_forbidden",
-                                                       default_text="Discord ha rechazado la accion. Revisa los permisos del bot.")
+                                                       default_text="Discord ha rechazado la acci\u00f3n. Revisa los permisos del bot.")
     http_error: TranslationKey = TranslationKey(key="errors.slash.http_error",
                                                 default_text="Discord ha devuelto un error al actualizar el canal.")
     unexpected: TranslationKey = TranslationKey(key="errors.slash.unexpected",
                                                 default_text="Ha ocurrido un error inesperado al procesar el comando.")
+
 
 class _Errors:
     channel_management: _ErrorsChannelManagement = _ErrorsChannelManagement()
@@ -964,6 +1082,7 @@ class _Errors:
     team_role_assignment: _ErrorsTeamRoleAssignment = _ErrorsTeamRoleAssignment()
     slash: _ErrorsSlash = _ErrorsSlash()
 
+
 class _ActionsChannelManagement:
     match_played_summary: TranslationKey = TranslationKey(key="actions.channel_management.match_played_summary",
                                                           default_text="Canal puesto en modo solo lectura para el resto de roles. Staff, Administrador y Ceo mantienen escritura.")
@@ -973,51 +1092,55 @@ class _ActionsChannelManagement:
                                                     default_text="Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal.")
     reopen_with_roles_summary: TranslationKey = TranslationKey(
         key="actions.channel_management.reopen_with_roles_summary",
-        default_text="Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal y se han anadido estos roles: {roles}.")
+        default_text="Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal y se han a\u00f1adido estos roles: {roles}.")
     add_roles_summary: TranslationKey = TranslationKey(key="actions.channel_management.add_roles_summary",
                                                        default_text="Se han anadido al canal estos roles: {roles}.")
+
 
 class _ActionsMatchChannelCreation:
     created_summary: TranslationKey = TranslationKey(key="actions.match_channel_creation.created_summary",
                                                      default_text="Se ha creado {channel} en `{category}` para la jornada {jornada}, partido {partido}, entre {team_one} y {team_two}, y se ha enviado el mensaje inicial del canal.")
 
+
 class _ActionsTeamSigning:
     completed: TranslationKey = TranslationKey(key="actions.team_signing.completed",
                                                default_text="Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.")
     technical_staff_completed: TranslationKey = TranslationKey(key="actions.team_signing.technical_staff_completed",
-                                                               default_text="Se ha actualizado el staff tecnico de `{team_name}` en `{division_name}`. Filas actualizadas: {updated_count}.")
+                                                               default_text="Se ha actualizado el staff t\u00e9cnico de `{team_name}` en `{division_name}`. Filas actualizadas: {updated_count}.")
     staff_role_sync_summary: TranslationKey = TranslationKey(key="actions.team_signing.staff_role_sync_summary",
-                                                             default_text="Roles de staff tecnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
+                                                             default_text="Roles de staff t\u00e9cnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
     removed: TranslationKey = TranslationKey(key="actions.team_signing.removed",
                                              default_text="Se ha dado de baja a `{player_name}` (`{discord_name}`) de `{team_name}` en `{division_name}`. Plantilla actual: {total_players}/6.")
     technical_staff_removed: TranslationKey = TranslationKey(key="actions.team_signing.technical_staff_removed",
-                                                             default_text="Se ha dado de baja a `{discord_name}` del staff tecnico de `{team_name}` en `{division_name}`. Cargos retirados: {staff_roles}.")
+                                                             default_text="Se ha dado de baja a `{discord_name}` del staff t\u00e9cnico de `{team_name}` en `{division_name}`. Cargos retirados: {staff_roles}.")
     role_removal_completed: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_completed",
                                                             default_text="Roles retirados en Discord a `{member_name}`: {roles}.")
     role_removal_no_changes: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_no_changes",
-                                                             default_text="No habia roles que retirar en Discord para `{member_name}`.")
+                                                             default_text="No hab\u00eda roles que retirar en Discord para `{member_name}`.")
     role_removal_unresolved: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_unresolved",
-                                                             default_text="No se encontro ningun miembro de Discord para retirar roles a `{discord_name}`.")
+                                                             default_text="No se encontr\u00f3 ning\u00fan miembro de Discord para retirar roles a `{discord_name}`.")
     role_removal_ambiguous: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_ambiguous",
-                                                            default_text="Hay varias coincidencias en Discord para `{discord_name}`. No se retiraron roles automaticamente.")
+                                                            default_text="Hay varias coincidencias en Discord para `{discord_name}`. No se retiraron roles autom\u00e1ticamente.")
     role_removal_failed: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_failed",
-                                                         default_text="La baja en Google Sheets se aplico, pero no se pudieron retirar roles en Discord: {details}.")
+                                                         default_text="La baja en Google Sheets se aplic\u00f3, pero no se pudieron retirar roles en Discord: {details}.")
     role_assignment_summary: TranslationKey = TranslationKey(key="actions.team_signing.role_assignment_summary",
-                                                             default_text="Asignacion de roles: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
+                                                             default_text="Asignaci\u00f3n de roles: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
     role_assignment_unresolved: TranslationKey = TranslationKey(key="actions.team_signing.role_assignment_unresolved",
                                                                 default_text="Sin coincidencia en Discord: {names}.")
     role_assignment_ambiguous: TranslationKey = TranslationKey(key="actions.team_signing.role_assignment_ambiguous",
                                                                default_text="Coincidencias ambiguas en Discord: {names}.")
 
+
 class _ActionsTeamRoleAssignment:
     completed: TranslationKey = TranslationKey(key="actions.team_role_assignment.completed",
-                                               default_text="Sincronizacion de roles completada para `{team_name}`: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
+                                               default_text="Sincronizaci\u00f3n de roles completada para `{team_name}`: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
     staff_role_sync_summary: TranslationKey = TranslationKey(key="actions.team_role_assignment.staff_role_sync_summary",
-                                                             default_text="Sincronizacion de staff tecnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
+                                                             default_text="Sincronizaci\u00f3n de staff t\u00e9cnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
     unresolved: TranslationKey = TranslationKey(key="actions.team_role_assignment.unresolved",
                                                 default_text="Sin coincidencia en Discord: {names}.")
     ambiguous: TranslationKey = TranslationKey(key="actions.team_role_assignment.ambiguous",
                                                default_text="Coincidencias ambiguas en Discord: {names}.")
+
 
 class _Actions:
     channel_management: _ActionsChannelManagement = _ActionsChannelManagement()
@@ -1025,11 +1148,13 @@ class _Actions:
     team_signing: _ActionsTeamSigning = _ActionsTeamSigning()
     team_role_assignment: _ActionsTeamRoleAssignment = _ActionsTeamRoleAssignment()
 
+
 class I18nKeys:
     commands: _Commands = _Commands()
     messages: _Messages = _Messages()
     errors: _Errors = _Errors()
     actions: _Actions = _Actions()
+
 
 I18N: I18nKeys = I18nKeys()
 
