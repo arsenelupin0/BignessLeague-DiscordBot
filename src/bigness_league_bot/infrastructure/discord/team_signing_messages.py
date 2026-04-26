@@ -36,10 +36,7 @@ if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.i18n.service import LocalizationService
 
 DISCORD_MESSAGE_CONTENT_LIMIT = 2000
-TEAM_SIGNING_GUIDE_SPLIT_MARKERS = (
-    "Copia la plantilla tal cual",
-    "Copy the template exactly",
-)
+TEAM_SIGNING_GUIDE_TEMPLATE_BLOCK_MARKER = "```"
 
 
 def split_discord_message_content(content: str) -> tuple[str, ...]:
@@ -47,25 +44,12 @@ def split_discord_message_content(content: str) -> tuple[str, ...]:
     remaining = content.strip()
     preferred_separators = ("\n## ", "\n\n", "\n")
 
-    split_marker_start = min(
-        (
-            marker_start_index
-            for marker in TEAM_SIGNING_GUIDE_SPLIT_MARKERS
-            if (marker_start_index := remaining.find(marker)) >= 0
-        ),
-        default=-1,
-    )
-    split_marker_index = -1
-    if split_marker_start >= 0:
-        closing_bold_index = remaining.find("**", split_marker_start)
-        if closing_bold_index >= 0:
-            split_marker_index = closing_bold_index + len("**")
-
+    split_marker_index = remaining.find(TEAM_SIGNING_GUIDE_TEMPLATE_BLOCK_MARKER)
     if 0 < split_marker_index <= DISCORD_MESSAGE_CONTENT_LIMIT:
-        return (
-            remaining[:split_marker_index].strip(),
-            remaining[split_marker_index:].strip(),
-        )
+        first_chunk = remaining[:split_marker_index].strip()
+        template_chunk = remaining[split_marker_index:].strip()
+        if len(template_chunk) <= DISCORD_MESSAGE_CONTENT_LIMIT:
+            return first_chunk, template_chunk
 
     while len(remaining) > DISCORD_MESSAGE_CONTENT_LIMIT:
         split_at = -1
