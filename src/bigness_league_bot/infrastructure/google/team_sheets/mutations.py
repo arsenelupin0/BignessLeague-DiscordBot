@@ -26,6 +26,7 @@ from bigness_league_bot.infrastructure.google.team_sheets.blocks import (
     _resolve_target_team_block,
 )
 from bigness_league_bot.infrastructure.google.team_sheets.cells import (
+    _build_hyperlink_cell_value,
     _is_free_block_title,
     _normalize_member_lookup_text,
     _normalize_technical_staff_role_name,
@@ -145,7 +146,7 @@ class TeamSheetMutationService:
                 "values": _build_player_values_grid(merged_players),
             }
         ]
-        if is_new_team_block:
+        if is_new_team_block or signing_batch.team_logo_url:
             update_data.insert(
                 0,
                 {
@@ -156,7 +157,12 @@ class TeamSheetMutationService:
                         1,
                         1,
                     ),
-                    "values": [[signing_batch.team_name]],
+                    "values": [[
+                        _build_hyperlink_cell_value(
+                            signing_batch.team_name,
+                            signing_batch.team_logo_url,
+                        )
+                    ]],
                 },
             )
         else:

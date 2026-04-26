@@ -12,6 +12,7 @@ MMR_DIGITS_PATTERN = re.compile(r"\d+")
 MESSAGE_METADATA_KEYS = {
     "division": "division_name",
     "equipo": "team_name",
+    "logo": "team_logo_url",
 }
 REQUIRED_PLAYER_FIELDS = (
     "position",
@@ -42,6 +43,15 @@ COMPACT_PLAYER_FIELD_ORDER = (
     "rocket_name",
     "mmr",
 )
+LABELLED_PLAYER_FIELD_KEYS = {
+    "jugador": "player_name",
+    "tracker": "tracker_url",
+    "discord": "discord_name",
+    "epic name": "epic_name",
+    "rocket in-game name": "rocket_name",
+    "mmr": "mmr",
+}
+LABELLED_PLAYER_FIELD_ORDER = tuple(LABELLED_PLAYER_FIELD_KEYS.values())
 COMPACT_TECHNICAL_STAFF_HEADERS = (
     "rol",
     "discord",
@@ -131,6 +141,7 @@ class TeamSigningPlayer:
 class TeamSigningBatch:
     division_name: str
     team_name: str
+    team_logo_url: str | None
     players: tuple[TeamSigningPlayer, ...]
 
 
@@ -158,6 +169,7 @@ def parse_team_signing_message(content: str) -> TeamSigningBatch:
 
     division_name = metadata.get("division_name", "")
     team_name = metadata.get("team_name", "")
+    team_logo_url = metadata.get("team_logo_url") or None
     if not division_name:
         raise TeamSigningParseError("Falta la cabecera `División:` en el mensaje enlazado.")
     if not team_name:
@@ -165,21 +177,27 @@ def parse_team_signing_message(content: str) -> TeamSigningBatch:
     if not _contains_non_empty_lines(player_lines):
         raise TeamSigningParseError("El mensaje enlazado no contiene ningún bloque de jugador.")
 
-    if not _looks_like_compact_player_format(player_lines):
-        raise TeamSigningParseError(
-            "La plantilla de jugadores debe empezar con las cabeceras `Jugador`, `Tracker`, `Discord`, `Epic Name`, `Rocket In-Game Name`, `MMR`."
+    if _looks_like_labelled_player_format(player_lines):
+        players = _parse_labelled_player_blocks(
+            player_lines,
+            start_line_number=player_start_line,
         )
-
-    players = _parse_compact_player_blocks(
-        player_lines,
-        start_line_number=player_start_line,
-    )
+    elif _looks_like_compact_player_format(player_lines):
+        players = _parse_compact_player_blocks(
+            player_lines,
+            start_line_number=player_start_line,
+        )
+    else:
+        raise TeamSigningParseError(
+            "La plantilla de jugadores debe usar bloques `Jugador:`, `Tracker:`, `Discord:`, `Epic Name:`, `Rocket In-Game Name:`, `MMR:`."
+        )
     if not players:
         raise TeamSigningParseError("El mensaje enlazado no contiene ningún bloque de jugador.")
 
     return TeamSigningBatch(
         division_name=division_name,
         team_name=team_name,
+        team_logo_url=team_logo_url,
         players=sort_team_signing_players(players),
     )
 
@@ -273,6 +291,8 @@ def _extract_message_metadata_and_body(
             value = _normalize_value(raw_value)
             if key in MESSAGE_METADATA_KEYS:
                 if not value:
+                    if key == "logo":
+                        continue
                     raise TeamSigningParseError(
                         f"La línea {line_index + 1} no contiene un valor válido para `{raw_key.strip()}`."
                     )
@@ -299,6 +319,123 @@ def _looks_like_compact_player_format(content_lines: list[str]) -> bool:
         for line in non_empty_lines[:len(COMPACT_PLAYER_HEADERS)]
     )
     return normalized_headers == COMPACT_PLAYER_HEADERS
+
+
+def _looks_like_labelled_player_format(content_lines: list[str]) -> bool:
+    for raw_line in content_lines:
+        line = raw_line.strip()
+        if not line or _is_visual_separator_line(line):
+            continue
+        if ":" not in line:
+            return False
+
+        raw_key, _ = line.split(":", 1)
+        return _normalize_key(raw_key) == "jugador"
+
+    return False
+
+
+def _parse_labelled_player_blocks(
+        content_lines: list[str],
+        *,
+        start_line_number: int,
+) -> list[TeamSigningPlayer]:
+    player_blocks = _split_labelled_player_blocks(
+        content_lines,
+        start_line_number=start_line_number,
+    )
+    if len(player_blocks) > MAX_TEAM_SIGNING_PLAYERS:
+        raise TeamSigningParseError(
+            f"La plantilla de jugadores admite como máximo {MAX_TEAM_SIGNING_PLAYERS} jugadores."
+        )
+
+    players: list[TeamSigningPlayer] = []
+    for player_index, block in enumerate(player_blocks, start=1):
+        payload = {"position": str(player_index)}
+        for field_name in LABELLED_PLAYER_FIELD_ORDER:
+            field_value = block.values_by_field.get(field_name, "")
+            if not field_value and block.has_content:
+                label = _labelled_player_field_label(field_name)
+                raise TeamSigningParseError(
+                    f"Falta un valor para `{label}` en el bloque de jugador cerca de la línea {block.start_line_number}."
+                )
+            payload[field_name] = field_value
+
+        if not block.has_content:
+            continue
+
+        players.append(_build_team_signing_player(payload, block.start_line_number))
+
+    return players
+
+
+@dataclass(frozen=True, slots=True)
+class _LabelledPlayerBlock:
+    start_line_number: int
+    values_by_field: dict[str, str]
+
+    @property
+    def has_content(self) -> bool:
+        return any(self.values_by_field.values())
+
+
+def _split_labelled_player_blocks(
+        content_lines: list[str],
+        *,
+        start_line_number: int,
+) -> list[_LabelledPlayerBlock]:
+    blocks: list[_LabelledPlayerBlock] = []
+    current_values: dict[str, str] = {}
+    current_start_line_number = start_line_number
+
+    for line_offset, raw_line in enumerate(content_lines):
+        line_number = start_line_number + line_offset
+        line = raw_line.strip()
+        if not line or _is_visual_separator_line(line):
+            continue
+        if ":" not in line:
+            raise TeamSigningParseError(
+                f"La línea {line_number} debe usar el formato `Campo: valor`."
+            )
+
+        raw_key, raw_value = line.split(":", 1)
+        normalized_key = _normalize_key(raw_key)
+        field_name = LABELLED_PLAYER_FIELD_KEYS.get(normalized_key)
+        if field_name is None:
+            raise TeamSigningParseError(
+                f"La línea {line_number} contiene un campo de jugador no soportado: `{raw_key.strip()}`."
+            )
+        if field_name == "player_name" and current_values:
+            blocks.append(
+                _LabelledPlayerBlock(
+                    start_line_number=current_start_line_number,
+                    values_by_field=current_values,
+                )
+            )
+            current_values = {}
+            current_start_line_number = line_number
+        elif not current_values:
+            current_start_line_number = line_number
+
+        current_values[field_name] = _normalize_value(raw_value)
+
+    if current_values:
+        blocks.append(
+            _LabelledPlayerBlock(
+                start_line_number=current_start_line_number,
+                values_by_field=current_values,
+            )
+        )
+
+    return blocks
+
+
+def _labelled_player_field_label(field_name: str) -> str:
+    for label, mapped_field_name in LABELLED_PLAYER_FIELD_KEYS.items():
+        if mapped_field_name == field_name:
+            return label
+
+    return field_name
 
 
 def _parse_compact_player_blocks(

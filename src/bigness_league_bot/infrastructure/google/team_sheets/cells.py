@@ -34,13 +34,12 @@ def _normalize_cell_value(value: Any) -> str:
 
 def _normalize_lookup_text(value: str) -> str:
     normalized = _normalize_cell_value(value).casefold()
-    return (
-        normalized.replace("á", "a")
-        .replace("é", "e")
-        .replace("í", "i")
-        .replace("ó", "o")
-        .replace("ú", "u")
+    without_marks = "".join(
+        character
+        for character in unicodedata.normalize("NFKD", normalized)
+        if not unicodedata.combining(character)
     )
+    return " ".join(without_marks.split())
 
 
 def _build_sheet_grid(sheet: dict[str, Any]) -> dict[int, dict[int, SheetCell]]:
@@ -116,13 +115,17 @@ def _unescape_formula_string(value: str) -> str:
 
 
 def _build_player_cell_value(player_name: str, tracker_url: str) -> str:
-    normalized_tracker_url = _normalize_cell_value(tracker_url)
-    if not normalized_tracker_url:
-        return player_name
+    return _build_hyperlink_cell_value(player_name, tracker_url)
 
-    escaped_url = _escape_formula_string(normalized_tracker_url)
-    escaped_player_name = _escape_formula_string(player_name)
-    return f'=HYPERLINK("{escaped_url}";"{escaped_player_name}")'
+
+def _build_hyperlink_cell_value(label: str, url: str | None) -> str:
+    normalized_url = _normalize_cell_value(url)
+    if not normalized_url:
+        return label
+
+    escaped_url = _escape_formula_string(normalized_url)
+    escaped_label = _escape_formula_string(label)
+    return f'=HYPERLINK("{escaped_url}";"{escaped_label}")'
 
 
 def _escape_formula_string(value: str) -> str:

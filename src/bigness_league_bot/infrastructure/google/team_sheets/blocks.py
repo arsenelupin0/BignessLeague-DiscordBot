@@ -111,7 +111,7 @@ def _find_division_sheet(
 ) -> tuple[str, dict[int, dict[int, SheetCell]]]:
     normalized_division = _normalize_lookup_text(division_name)
     for worksheet_title, cell_grid in sheet_grids:
-        if _normalize_lookup_text(worksheet_title) == normalized_division:
+        if normalized_division in _division_lookup_aliases(worksheet_title):
             return worksheet_title, cell_grid
 
     raise TeamSheetDivisionNotFoundError(
@@ -120,6 +120,16 @@ def _find_division_sheet(
             division_name=division_name,
         )
     )
+
+
+def _division_lookup_aliases(worksheet_title: str) -> frozenset[str]:
+    normalized_title = _normalize_lookup_text(worksheet_title)
+    aliases = {normalized_title}
+    for suffix in (" test", " dev", " development"):
+        if normalized_title.endswith(suffix):
+            aliases.add(normalized_title.removesuffix(suffix).strip())
+
+    return frozenset(alias for alias in aliases if alias)
 
 
 def _resolve_target_team_block(
