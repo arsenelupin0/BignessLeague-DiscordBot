@@ -344,7 +344,7 @@
         },
         "reason_modal": {
           "title": "Cerrar ticket con razón",
-          "label": "Razon de cierre",
+          "label": "Razón de cierre",
           "placeholder": "Ejemplo: Problema resuelto o ticket abierto por error."
         },
         "embed": {
@@ -358,7 +358,7 @@
             "created_at": "📅 Creado el",
             "duration": "⏱️ Duración",
             "closed_at": "🔒 Cerrado el",
-            "close_reason": "📌 Razon de cierre"
+            "close_reason": "📌 Razón de cierre"
           },
           "link_value": "[Enlace directo al mensaje de inicio del ticket]({ticket_link})",
           "default_reason": "No se ha especificado ninguna razón.",
@@ -390,7 +390,7 @@
       "only_actor": "Solo quien ejecutó el comando puede usar este selector.",
       "timeout": "La selección de roles ha expirado. No se han aplicado cambios.",
       "select_before_confirm": "Selecciona al menos un rol antes de confirmar.",
-      "selection_cancelled": "Seleccion de roles cancelada."
+      "selection_cancelled": "Selección de roles cancelada."
     },
     "channel_delete_confirmation": {
       "only_actor": "Solo quien ejecutó el comando puede confirmar esta acción.",
@@ -398,7 +398,7 @@
       "deleting": "Eliminando canal...",
       "cancelled": "Eliminación cancelada.",
       "buttons": {
-        "confirm": "Confirmar eliminacion",
+        "confirm": "Confirmar eliminación",
         "cancel": "Cancelar"
       }
     },
@@ -444,7 +444,7 @@
       "unauthorized_role": "Solo pueden usar este comando los roles: {protected_roles}.",
       "protected_roles_missing": "Faltan roles protegidos en el servidor: {missing_roles}.",
       "invalid_role_not_in_guild": "El rol `{role_name}` no pertenece a este servidor.",
-      "invalid_role_everyone": "No puedes anadir `@everyone` al canal.",
+      "invalid_role_everyone": "No puedes añadir `@everyone` al canal.",
       "no_valid_additional_roles": "Selecciona al menos un rol adicional válido.",
       "range_start_missing": "No existe el rol de inicio configurado para el selector: `{role_id}`.",
       "range_end_missing": "No existe el rol de fin configurado para el selector: `{role_id}`.",
@@ -457,7 +457,7 @@
       "forum_channel_not_found": "No se encontró el foro de tickets configurado: `{channel_id}`.",
       "forum_channel_not_in_guild": "El canal configurado como foro de tickets no pertenece a este servidor: `{channel_id}`.",
       "forum_channel_invalid_type": "El canal configurado como foro de tickets debe ser un foro de Discord: `{channel_id}`.",
-      "forum_tag_missing": "No existe la etiqueta `{tag_name}` en el foro `{forum_name}`. Crea esa etiqueta en el foro o ajusta la configuración de categorias."
+      "forum_tag_missing": "No existe la etiqueta `{tag_name}` en el foro `{forum_name}`. Crea esa etiqueta en el foro o ajusta la configuración de categorías."
     },
     "match_channel_creation": {
       "same_team_roles": "No puedes crear un partido usando el mismo rol dos veces: `{role_name}`.",
