@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
 LOGGER = logging.getLogger(__name__)
-TICKET_STATE_VERSION = 3
+TICKET_STATE_VERSION = 4
 TICKET_OPEN_STATUS_TAG_NAME = "Abierto"
 TICKET_CLOSED_STATUS_TAG_NAME = "Cerrado"
 

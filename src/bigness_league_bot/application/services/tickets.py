@@ -10,10 +10,19 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 
 import unicodedata
+
+from bigness_league_bot.application.services.ticket_message_links import (
+    DmThreadRelayMessage,
+    ParticipantDmRelayMessage,
+    parse_dm_thread_relay_messages,
+    parse_participant_dm_relay_messages,
+    upsert_dm_thread_relay_message,
+    upsert_participant_dm_relay_message,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,6 +86,8 @@ class TicketRecord:
     status: str = "active"
     closed_at: str | None = None
     thread_relay_message_authors: tuple[tuple[int, int], ...] = ()
+    dm_thread_relay_messages: tuple[DmThreadRelayMessage, ...] = ()
+    participant_dm_relay_messages: tuple[ParticipantDmRelayMessage, ...] = ()
 
     @classmethod
     def create(
@@ -143,6 +154,12 @@ class TicketRecord:
                     continue
                 parsed_mappings.append((message_id, user_id))
             thread_relay_message_authors = tuple(parsed_mappings)
+        dm_thread_relay_messages = parse_dm_thread_relay_messages(
+            payload.get("dm_thread_relay_messages")
+        )
+        participant_dm_relay_messages = parse_participant_dm_relay_messages(
+            payload.get("participant_dm_relay_messages")
+        )
         user_id = _required_int(payload, "user_id")
         return cls(
             ticket_number=_optional_int(payload, "ticket_number") or fallback_ticket_number,
@@ -163,6 +180,8 @@ class TicketRecord:
             status=_optional_text(payload, "status") or "active",
             closed_at=_optional_text(payload, "closed_at"),
             thread_relay_message_authors=thread_relay_message_authors,
+            dm_thread_relay_messages=dm_thread_relay_messages,
+            participant_dm_relay_messages=participant_dm_relay_messages,
         )
 
     def to_dict(self) -> dict[str, object]:
@@ -182,6 +201,14 @@ class TicketRecord:
                 str(message_id): user_id
                 for message_id, user_id in self.thread_relay_message_authors
             },
+            "dm_thread_relay_messages": [
+                relay.to_dict()
+                for relay in self.dm_thread_relay_messages
+            ],
+            "participant_dm_relay_messages": [
+                relay.to_dict()
+                for relay in self.participant_dm_relay_messages
+            ],
             "category_key": self.category_key,
             "created_at": self.created_at,
             "status": self.status,
@@ -189,20 +216,10 @@ class TicketRecord:
         }
 
     def close(self) -> "TicketRecord":
-        return TicketRecord(
-            ticket_number=self.ticket_number,
-            user_id=self.user_id,
-            thread_id=self.thread_id,
-            forum_channel_id=self.forum_channel_id,
-            thread_start_message_id=self.thread_start_message_id,
-            dm_channel_id=self.dm_channel_id,
-            dm_start_message_id=self.dm_start_message_id,
-            participants=self.participants,
-            category_key=self.category_key,
-            created_at=self.created_at,
+        return replace(
+            self,
             status="closed",
             closed_at=current_utc_timestamp(),
-            thread_relay_message_authors=self.thread_relay_message_authors,
         )
 
     def includes_user(self, user_id: int) -> bool:
@@ -244,12 +261,8 @@ class TicketRecord:
             ),
             None,
         )
-        return TicketRecord(
-            ticket_number=self.ticket_number,
-            user_id=self.user_id,
-            thread_id=self.thread_id,
-            forum_channel_id=self.forum_channel_id,
-            thread_start_message_id=self.thread_start_message_id,
+        return replace(
+            self,
             dm_channel_id=(
                 owner_participant.dm_channel_id
                 if owner_participant is not None
@@ -261,11 +274,6 @@ class TicketRecord:
                 else self.dm_start_message_id
             ),
             participants=updated_participants,
-            category_key=self.category_key,
-            created_at=self.created_at,
-            status=self.status,
-            closed_at=self.closed_at,
-            thread_relay_message_authors=self.thread_relay_message_authors,
         )
 
     def with_added_participants(
@@ -280,20 +288,9 @@ class TicketRecord:
             updated_participants.append(TicketParticipant(user_id=user_id))
             existing_user_ids.add(user_id)
 
-        return TicketRecord(
-            ticket_number=self.ticket_number,
-            user_id=self.user_id,
-            thread_id=self.thread_id,
-            forum_channel_id=self.forum_channel_id,
-            thread_start_message_id=self.thread_start_message_id,
-            dm_channel_id=self.dm_channel_id,
-            dm_start_message_id=self.dm_start_message_id,
+        return replace(
+            self,
             participants=tuple(updated_participants),
-            category_key=self.category_key,
-            created_at=self.created_at,
-            status=self.status,
-            closed_at=self.closed_at,
-            thread_relay_message_authors=self.thread_relay_message_authors,
         )
 
     def relay_message_author_id(self, thread_message_id: int) -> int | None:
@@ -313,20 +310,71 @@ class TicketRecord:
             for existing_message_id, existing_user_id in self.thread_relay_message_authors
         }
         mappings[thread_message_id] = user_id
-        return TicketRecord(
-            ticket_number=self.ticket_number,
-            user_id=self.user_id,
-            thread_id=self.thread_id,
-            forum_channel_id=self.forum_channel_id,
-            thread_start_message_id=self.thread_start_message_id,
-            dm_channel_id=self.dm_channel_id,
-            dm_start_message_id=self.dm_start_message_id,
-            participants=self.participants,
-            category_key=self.category_key,
-            created_at=self.created_at,
-            status=self.status,
-            closed_at=self.closed_at,
+        return replace(
+            self,
             thread_relay_message_authors=tuple(mappings.items()),
+        )
+
+    def thread_relay_message_id_for_dm(
+            self,
+            dm_message_id: int,
+    ) -> int | None:
+        for relay in self.dm_thread_relay_messages:
+            if relay.dm_message_id == dm_message_id:
+                return relay.thread_message_id
+        return None
+
+    def dm_message_id_for_thread_relay(
+            self,
+            thread_message_id: int,
+    ) -> int | None:
+        for relay in self.dm_thread_relay_messages:
+            if relay.thread_message_id == thread_message_id:
+                return relay.dm_message_id
+        return None
+
+    def with_dm_thread_relay_message(
+            self,
+            *,
+            dm_message_id: int,
+            thread_message_id: int,
+            user_id: int,
+    ) -> "TicketRecord":
+        return replace(
+            self,
+            dm_thread_relay_messages=upsert_dm_thread_relay_message(
+                self.dm_thread_relay_messages,
+                dm_message_id=dm_message_id,
+                thread_message_id=thread_message_id,
+                user_id=user_id,
+            ),
+        )
+
+    def participant_dm_relay_targets(
+            self,
+            source_message_id: int,
+    ) -> tuple[tuple[int, int], ...]:
+        return tuple(
+            (relay.participant_id, relay.dm_message_id)
+            for relay in self.participant_dm_relay_messages
+            if relay.source_message_id == source_message_id
+        )
+
+    def with_participant_dm_relay_message(
+            self,
+            *,
+            source_message_id: int,
+            participant_id: int,
+            dm_message_id: int,
+    ) -> "TicketRecord":
+        return replace(
+            self,
+            participant_dm_relay_messages=upsert_participant_dm_relay_message(
+                self.participant_dm_relay_messages,
+                source_message_id=source_message_id,
+                participant_id=participant_id,
+                dm_message_id=dm_message_id,
+            ),
         )
 
 

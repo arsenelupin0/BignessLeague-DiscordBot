@@ -76,6 +76,7 @@ class TicketsCog(commands.Cog):
         )
         self.participant_messenger = TicketParticipantMessenger(
             bot=bot,
+            store=store,
             command_mirror=self.command_mirror,
             resolve_ticket_user=self._resolve_ticket_user,
             send_dm=self._send_dm_with_retry,
@@ -326,11 +327,23 @@ class TicketsCog(commands.Cog):
             _before: discord.Message,
             after: discord.Message,
     ) -> None:
+        if after.guild is None:
+            if after.author.bot:
+                return
+            await self._relay_user_dm_edit_to_ticket(after)
+            return
+
         if not isinstance(after.channel, discord.Thread):
             return
         bot_user = self.bot.user
-        if bot_user is None or after.author.id != bot_user.id:
+        if bot_user is None:
             return
+
+        if after.author.id != bot_user.id:
+            if after.webhook_id is None and not after.author.bot:
+                await self._relay_staff_message_edit_to_user(after)
+            return
+
         pending_initial_task = self._pending_initial_command_mirror_tasks.get(after.id)
         if (
                 pending_initial_task is not None
@@ -367,6 +380,7 @@ class TicketsCog(commands.Cog):
             thread=thread,
             message=message,
         )
+        record = self.store.active_for_thread(record.thread_id) or record
         await self.participant_messenger.relay_user_message_to_other_participants(
             record=record,
             thread=thread,
@@ -378,12 +392,42 @@ class TicketsCog(commands.Cog):
             thread=thread,
         )
 
+    async def _relay_user_dm_edit_to_ticket(self, message: discord.Message) -> None:
+        record = self.store.active_for_user(message.author.id)
+        if record is None:
+            return
+
+        thread = await self._resolve_ticket_thread(record)
+        if thread is None:
+            return
+
+        await self.thread_relay.edit_user_relay_message_in_thread(
+            record=record,
+            thread=thread,
+            message=message,
+        )
+        await self.participant_messenger.edit_user_message_for_other_participants(
+            record=record,
+            message=message,
+            notification_channel=thread,
+        )
+
     async def _relay_staff_message_to_user(self, message: discord.Message) -> None:
         record = self.store.active_for_thread(message.channel.id)
         if record is None:
             return
 
         await self.participant_messenger.relay_staff_message_to_participants(
+            record=record,
+            message=message,
+        )
+
+    async def _relay_staff_message_edit_to_user(self, message: discord.Message) -> None:
+        record = self.store.active_for_thread(message.channel.id)
+        if record is None:
+            return
+
+        await self.participant_messenger.edit_staff_message_for_participants(
             record=record,
             message=message,
         )

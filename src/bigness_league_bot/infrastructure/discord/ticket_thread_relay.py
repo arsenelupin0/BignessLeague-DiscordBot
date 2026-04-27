@@ -66,6 +66,10 @@ class TicketThreadRelay:
             updated_record = record.with_thread_relay_message_author(
                 thread_message_id=relay_message.id,
                 user_id=message.author.id,
+            ).with_dm_thread_relay_message(
+                dm_message_id=message.id,
+                thread_message_id=relay_message.id,
+                user_id=message.author.id,
             )
             self.store.update(updated_record)
             return
@@ -89,13 +93,23 @@ class TicketThreadRelay:
                 message.author,
                 message.author.id,
             )
-            await thread.send(
+            relay_message = await thread.send(
                 build_ticket_user_relay_message(
                     localizer=self.bot.localizer,
                     message=message,
                 ),
                 allowed_mentions=discord.AllowedMentions.none(),
             )
+            self._message_authors[relay_message.id] = message.author.id
+            updated_record = record.with_thread_relay_message_author(
+                thread_message_id=relay_message.id,
+                user_id=message.author.id,
+            ).with_dm_thread_relay_message(
+                dm_message_id=message.id,
+                thread_message_id=relay_message.id,
+                user_id=message.author.id,
+            )
+            self.store.update(updated_record)
             return
 
         self.message_ids.add(webhook_message.id)
@@ -103,8 +117,67 @@ class TicketThreadRelay:
         updated_record = record.with_thread_relay_message_author(
             thread_message_id=webhook_message.id,
             user_id=message.author.id,
+        ).with_dm_thread_relay_message(
+            dm_message_id=message.id,
+            thread_message_id=webhook_message.id,
+            user_id=message.author.id,
         )
         self.store.update(updated_record)
+
+    async def edit_user_relay_message_in_thread(
+            self,
+            *,
+            record: TicketRecord,
+            thread: discord.Thread,
+            message: discord.Message,
+    ) -> None:
+        thread_message_id = record.thread_relay_message_id_for_dm(message.id)
+        if thread_message_id is None:
+            return
+
+        try:
+            thread_message = await thread.fetch_message(thread_message_id)
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            return
+
+        content = message.content.strip()
+        if thread_message.webhook_id is not None:
+            webhook = await self._get_thread_relay_webhook(thread)
+            if webhook is None:
+                return
+            try:
+                await webhook.edit_message(
+                    thread_message.id,
+                    content=(content if content else None),
+                    allowed_mentions=discord.AllowedMentions.none(),
+                    thread=thread,
+                )
+            except (discord.NotFound, discord.Forbidden, discord.HTTPException, ValueError):
+                LOGGER.exception(
+                    "TICKET_THREAD_WEBHOOK_RELAY_EDIT_FAILED thread=%s user=%s(%s) message=%s",
+                    record.thread_id,
+                    message.author,
+                    message.author.id,
+                    thread_message.id,
+                )
+            return
+
+        try:
+            await thread_message.edit(
+                content=build_ticket_user_relay_message(
+                    localizer=self.bot.localizer,
+                    message=message,
+                ),
+                allowed_mentions=discord.AllowedMentions.none(),
+            )
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            LOGGER.exception(
+                "TICKET_THREAD_RELAY_EDIT_FAILED thread=%s user=%s(%s) message=%s",
+                record.thread_id,
+                message.author,
+                message.author.id,
+                thread_message.id,
+            )
 
     def relay_clickable_mention(self, message: discord.Message) -> str | None:
         if message.webhook_id is not None:
