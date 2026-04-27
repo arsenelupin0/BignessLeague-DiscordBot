@@ -15,6 +15,7 @@ from bigness_league_bot.application.services.team_profile import TeamProfile
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.discord.team_profile_image_drawing import (
+    FontLike,
     _accumulate_boundaries,
     _build_row_rects,
     _draw_box,
@@ -22,6 +23,7 @@ from bigness_league_bot.infrastructure.discord.team_profile_image_drawing import
     _draw_horizontal_line,
     _draw_vertical_line,
     _load_team_profile_font_context,
+    _measure_text_width,
 )
 from bigness_league_bot.infrastructure.discord.team_profile_layout import (
     ANSI_COLOR_TO_RGB,
@@ -71,8 +73,19 @@ def _render_team_profile_image(
     discord_width = DISCORD_WIDTH * unit_width
     epic_width = EPIC_WIDTH * unit_width
     rocket_width = ROCKET_WIDTH * unit_width
-    mmr_width = MMR_WIDTH * unit_width
     role_width = ROLE_WIDTH * unit_width
+    mmr_left_padding_px = MMR_LEFT_PADDING * unit_width
+    mmr_right_padding_px = MMR_RIGHT_PADDING * unit_width
+    mmr_width = _resolve_mmr_column_width(
+        font=font,
+        unit_width=unit_width,
+        left_padding=mmr_left_padding_px,
+        right_padding=mmr_right_padding_px,
+        values=(
+            *(player.mmr for player in team_profile.players),
+            team_profile.top_three_average,
+        ),
+    )
 
     main_column_widths = (
         position_width,
@@ -127,8 +140,6 @@ def _render_team_profile_image(
     )
     draw = ImageDraw.Draw(image)
     left_padding_px = TEXT_COLUMN_LEFT_PADDING * unit_width
-    mmr_left_padding_px = MMR_LEFT_PADDING * unit_width
-    mmr_right_padding_px = MMR_RIGHT_PADDING * unit_width
 
     positiontranslate_header = translate_header(
         localizer,
@@ -516,3 +527,26 @@ def _render_team_profile_image(
     output = BytesIO()
     image.save(output, format="PNG")
     return output.getvalue()
+
+
+def _resolve_mmr_column_width(
+        *,
+        font: FontLike,
+        unit_width: int,
+        left_padding: int,
+        right_padding: int,
+        values: tuple[str, ...],
+) -> int:
+    minimum_width = MMR_WIDTH * unit_width
+    widest_value_width = max(
+        (_measure_text_width(font, value) for value in values if value),
+        default=0,
+    )
+    safety_margin = max(2, unit_width // 2)
+    required_width = (
+            widest_value_width
+            + left_padding
+            + right_padding
+            + safety_margin
+    )
+    return max(minimum_width, required_width)
