@@ -1,5 +1,8 @@
 # AGENTS.md
 
+Estas instrucciones están en español porque el proyecto, la lógica de negocio y los textos principales del bot se
+mantienen en español.
+
 ## Objetivo del proyecto
 
 Este proyecto es un bot de Discord para Bigness League. El código debe mantenerse escalable, testeable y alineado con
