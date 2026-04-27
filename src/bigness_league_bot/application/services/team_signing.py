@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import unicodedata
 
 MAX_TEAM_SIGNING_PLAYERS = 6
+MAX_TEAM_TECHNICAL_STAFF_MEMBERS = 6
 MMR_DIGITS_PATTERN = re.compile(r"\d+")
 
 MESSAGE_METADATA_KEYS = {
@@ -65,6 +66,19 @@ COMPACT_TECHNICAL_STAFF_REQUIRED_FIELD_ORDER = (
 COMPACT_TECHNICAL_STAFF_OPTIONAL_FIELD_ORDER = (
     "epic_name",
     "rocket_name",
+)
+LABELLED_TECHNICAL_STAFF_FIELD_KEYS = {
+    "rol": "role_name",
+    "discord": "discord_name",
+    "epic name": "epic_name",
+    "rocket in-game name": "rocket_name",
+}
+LABELLED_TECHNICAL_STAFF_FULL_FIELD_ORDER = tuple(
+    LABELLED_TECHNICAL_STAFF_FIELD_KEYS.values()
+)
+LABELLED_TECHNICAL_STAFF_PARTIAL_FIELD_ORDER = (
+    "role_name",
+    "discord_name",
 )
 
 
@@ -219,15 +233,21 @@ def parse_team_technical_staff_message(content: str) -> TeamTechnicalStaffBatch:
         raise TeamSigningParseError(
             "El mensaje enlazado no contiene ningún bloque de staff técnico."
         )
-    if not _looks_like_compact_technical_staff_format(staff_lines):
+    if _looks_like_labelled_technical_staff_format(staff_lines):
+        members = _parse_labelled_technical_staff_blocks(
+            staff_lines,
+            start_line_number=staff_start_line,
+        )
+    elif _looks_like_compact_technical_staff_format(staff_lines):
+        members = _parse_compact_technical_staff_blocks(
+            staff_lines,
+            start_line_number=staff_start_line,
+        )
+    else:
         raise TeamSigningParseError(
-            "La plantilla de staff técnico debe empezar con las cabeceras `Rol`, `Discord`, `Epic Name`, `Rocket In-Game Name`."
+            "La plantilla de staff técnico debe usar bloques `Rol:`, `Discord:` o bloques completos con `Epic Name:` y `Rocket In-Game Name:`."
         )
 
-    members = _parse_compact_technical_staff_blocks(
-        staff_lines,
-        start_line_number=staff_start_line,
-    )
     if not members:
         raise TeamSigningParseError(
             "El mensaje enlazado no contiene ningún bloque de staff técnico."
@@ -521,6 +541,10 @@ def _parse_compact_technical_staff_blocks(
         raise TeamSigningParseError(
             "La plantilla compacta de staff técnico no contiene ningún bloque después de las cabeceras."
         )
+    if len(entry_blocks) > MAX_TEAM_TECHNICAL_STAFF_MEMBERS:
+        raise TeamSigningParseError(
+            f"La plantilla de staff técnico admite como máximo {MAX_TEAM_TECHNICAL_STAFF_MEMBERS} cargos."
+        )
 
     members: list[TeamTechnicalStaffMember] = []
     required_field_count = len(COMPACT_TECHNICAL_STAFF_REQUIRED_FIELD_ORDER)
@@ -565,6 +589,138 @@ def _parse_compact_technical_staff_blocks(
         )
 
     return members
+
+
+def _looks_like_labelled_technical_staff_format(content_lines: list[str]) -> bool:
+    for raw_line in content_lines:
+        line = raw_line.strip()
+        if not line or _is_visual_separator_line(line):
+            continue
+        if ":" not in line:
+            return False
+
+        raw_key, _ = line.split(":", 1)
+        return _normalize_key(raw_key) == "rol"
+
+    return False
+
+
+def _parse_labelled_technical_staff_blocks(
+        content_lines: list[str],
+        *,
+        start_line_number: int,
+) -> list[TeamTechnicalStaffMember]:
+    staff_blocks = _split_labelled_technical_staff_blocks(
+        content_lines,
+        start_line_number=start_line_number,
+    )
+    if len(staff_blocks) > MAX_TEAM_TECHNICAL_STAFF_MEMBERS:
+        raise TeamSigningParseError(
+            f"La plantilla de staff técnico admite como máximo {MAX_TEAM_TECHNICAL_STAFF_MEMBERS} cargos."
+        )
+
+    members: list[TeamTechnicalStaffMember] = []
+    for block in staff_blocks:
+        if not block.has_content:
+            continue
+
+        present_fields = frozenset(block.values_by_field)
+        allowed_field_sets = {
+            frozenset(LABELLED_TECHNICAL_STAFF_PARTIAL_FIELD_ORDER),
+            frozenset(LABELLED_TECHNICAL_STAFF_FULL_FIELD_ORDER),
+        }
+        if present_fields not in allowed_field_sets:
+            raise TeamSigningParseError(
+                "Cada bloque de staff técnico debe contener `Rol` y `Discord`, o también `Epic Name` y `Rocket In-Game Name`."
+            )
+
+        payload: dict[str, str] = {}
+        for field_name in LABELLED_TECHNICAL_STAFF_FULL_FIELD_ORDER:
+            field_value = block.values_by_field.get(field_name, "")
+            if not field_value and field_name in present_fields:
+                label = _labelled_technical_staff_field_label(field_name)
+                raise TeamSigningParseError(
+                    f"Falta un valor para `{label}` en el bloque de staff técnico cerca de la línea {block.start_line_number}."
+                )
+            payload[field_name] = field_value
+
+        members.append(
+            _build_team_technical_staff_member(
+                payload,
+                block.start_line_number,
+            )
+        )
+
+    return members
+
+
+@dataclass(frozen=True, slots=True)
+class _LabelledTechnicalStaffBlock:
+    start_line_number: int
+    values_by_field: dict[str, str]
+
+    @property
+    def has_content(self) -> bool:
+        return any(self.values_by_field.values())
+
+
+def _split_labelled_technical_staff_blocks(
+        content_lines: list[str],
+        *,
+        start_line_number: int,
+) -> list[_LabelledTechnicalStaffBlock]:
+    blocks: list[_LabelledTechnicalStaffBlock] = []
+    current_values: dict[str, str] = {}
+    current_start_line_number = start_line_number
+
+    for line_offset, raw_line in enumerate(content_lines):
+        line_number = start_line_number + line_offset
+        line = raw_line.strip()
+        if not line or _is_visual_separator_line(line):
+            continue
+        if ":" not in line:
+            raise TeamSigningParseError(
+                f"La línea {line_number} debe usar el formato `Campo: valor`."
+            )
+
+        raw_key, raw_value = line.split(":", 1)
+        normalized_key = _normalize_key(raw_key)
+        field_name = LABELLED_TECHNICAL_STAFF_FIELD_KEYS.get(normalized_key)
+        if field_name is None:
+            raise TeamSigningParseError(
+                f"La línea {line_number} contiene un campo de staff técnico no soportado: `{raw_key.strip()}`."
+            )
+        if field_name == "role_name" and current_values:
+            blocks.append(
+                _LabelledTechnicalStaffBlock(
+                    start_line_number=current_start_line_number,
+                    values_by_field=current_values,
+                )
+            )
+            current_values = {}
+            current_start_line_number = line_number
+        elif not current_values:
+            current_start_line_number = line_number
+
+        current_values[field_name] = _normalize_value(raw_value)
+
+    if current_values:
+        blocks.append(
+            _LabelledTechnicalStaffBlock(
+                start_line_number=current_start_line_number,
+                values_by_field=current_values,
+            )
+        )
+
+    return blocks
+
+
+def _labelled_technical_staff_field_label(field_name: str) -> str:
+    for label, mapped_field_name in LABELLED_TECHNICAL_STAFF_FIELD_KEYS.items():
+        if mapped_field_name == field_name:
+            return label
+
+    return field_name
 
 
 def _split_compact_entry_blocks(
