@@ -77,9 +77,15 @@ class TicketParticipantMessenger:
                 if ticket_user is None:
                     failed_user_ids.append(participant_id)
                     continue
+                reply_target_message_id = self._participant_reply_target_for_message(
+                    record=record,
+                    participant_id=participant_id,
+                    message=message,
+                )
                 dm_message = await self.send_staff_relay_to_participant(
                     ticket_user=ticket_user,
                     message=message,
+                    reply_target_message_id=reply_target_message_id,
                 )
                 record = record.with_participant_dm_relay_message(
                     source_message_id=message.id,
@@ -115,9 +121,15 @@ class TicketParticipantMessenger:
                 if ticket_user is None:
                     failed_user_ids.append(participant_id)
                     continue
+                reply_target_message_id = self._participant_reply_target_for_dm_message(
+                    record=record,
+                    participant_id=participant_id,
+                    message=message,
+                )
                 dm_message = await self.send_user_relay_to_participant(
                     ticket_user=ticket_user,
                     message=message,
+                    reply_target_message_id=reply_target_message_id,
                 )
                 record = record.with_participant_dm_relay_message(
                     source_message_id=message.id,
@@ -234,9 +246,15 @@ class TicketParticipantMessenger:
                             record.dm_message_id_for_thread_relay(history_message.id)
                             or history_message.id
                     )
+                    reply_target_message_id = self._participant_reply_target_for_message(
+                        record=record,
+                        participant_id=participant_id,
+                        message=history_message,
+                    )
                     dm_message = await self.send_user_relay_to_participant(
                         ticket_user=participant_user,
                         message=history_message,
+                        reply_target_message_id=reply_target_message_id,
                     )
                     record = record.with_participant_dm_relay_message(
                         source_message_id=source_message_id,
@@ -255,9 +273,15 @@ class TicketParticipantMessenger:
                         )
                     continue
 
+                reply_target_message_id = self._participant_reply_target_for_message(
+                    record=record,
+                    participant_id=participant_id,
+                    message=history_message,
+                )
                 dm_message = await self.send_staff_relay_to_participant(
                     ticket_user=participant_user,
                     message=history_message,
+                    reply_target_message_id=reply_target_message_id,
                 )
                 record = record.with_participant_dm_relay_message(
                     source_message_id=history_message.id,
@@ -277,6 +301,7 @@ class TicketParticipantMessenger:
             *,
             ticket_user: discord.User,
             message: discord.Message,
+            reply_target_message_id: int | None = None,
     ) -> discord.Message:
         return await self._send_dm(
             ticket_user,
@@ -292,6 +317,10 @@ class TicketParticipantMessenger:
                 avatar_url=author_avatar_url(message.author),
             ),
             files=await clone_message_attachments_as_files(message),
+            **await self._build_reply_send_kwargs(
+                ticket_user=ticket_user,
+                reply_target_message_id=reply_target_message_id,
+            ),
             allowed_mentions=discord.AllowedMentions.none(),
         )
 
@@ -300,6 +329,7 @@ class TicketParticipantMessenger:
             *,
             ticket_user: discord.User,
             message: discord.Message,
+            reply_target_message_id: int | None = None,
     ) -> discord.Message:
         return await self._send_dm(
             ticket_user,
@@ -315,6 +345,10 @@ class TicketParticipantMessenger:
                 avatar_url=author_avatar_url(message.author),
             ),
             files=await clone_message_attachments_as_files(message),
+            **await self._build_reply_send_kwargs(
+                ticket_user=ticket_user,
+                reply_target_message_id=reply_target_message_id,
+            ),
             allowed_mentions=discord.AllowedMentions.none(),
         )
 
@@ -372,6 +406,59 @@ class TicketParticipantMessenger:
             )
 
     @staticmethod
+    def _participant_reply_target_for_message(
+            *,
+            record: TicketRecord,
+            participant_id: int,
+            message: discord.Message,
+    ) -> int | None:
+        referenced_message_id = _message_reference_id(message)
+        if referenced_message_id is None:
+            return None
+
+        return record.participant_reply_target_for_thread_reference(
+            participant_id=participant_id,
+            referenced_thread_message_id=referenced_message_id,
+        )
+
+    @staticmethod
+    def _participant_reply_target_for_dm_message(
+            *,
+            record: TicketRecord,
+            participant_id: int,
+            message: discord.Message,
+    ) -> int | None:
+        referenced_message_id = _message_reference_id(message)
+        if referenced_message_id is None:
+            return None
+
+        return record.participant_reply_target_for_dm_reference(
+            participant_id=participant_id,
+            source_participant_id=message.author.id,
+            referenced_dm_message_id=referenced_message_id,
+        )
+
+    @staticmethod
+    async def _build_reply_send_kwargs(
+            *,
+            ticket_user: discord.User,
+            reply_target_message_id: int | None,
+    ) -> dict[str, object]:
+        if reply_target_message_id is None:
+            return {}
+
+        try:
+            dm_channel = await ticket_user.create_dm()
+            reply_target = await dm_channel.fetch_message(reply_target_message_id)
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            return {}
+
+        return {
+            "reference": reply_target,
+            "mention_author": False,
+        }
+
+    @staticmethod
     async def _build_attachment_edit_kwargs(
             *,
             source_message: discord.Message,
@@ -398,3 +485,12 @@ class TicketParticipantMessenger:
             ),
             allowed_mentions=discord.AllowedMentions.none(),
         )
+
+
+def _message_reference_id(message: discord.Message) -> int | None:
+    reference = message.reference
+    if reference is None:
+        return None
+
+    message_id = reference.message_id
+    return message_id if isinstance(message_id, int) else None

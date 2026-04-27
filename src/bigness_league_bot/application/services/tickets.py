@@ -18,8 +18,16 @@ import unicodedata
 from bigness_league_bot.application.services.ticket_message_links import (
     DmThreadRelayMessage,
     ParticipantDmRelayMessage,
+    dm_message_id_for_thread_relay,
+    participant_dm_relay_message_id,
+    participant_dm_relay_source_message_id,
+    participant_reply_target_for_dm_reference,
+    participant_reply_target_for_thread_reference,
     parse_dm_thread_relay_messages,
     parse_participant_dm_relay_messages,
+    thread_relay_author_id,
+    thread_relay_message_id_for_dm,
+    thread_reply_target_for_dm_reference,
     upsert_dm_thread_relay_message,
     upsert_participant_dm_relay_message,
 )
@@ -319,19 +327,32 @@ class TicketRecord:
             self,
             dm_message_id: int,
     ) -> int | None:
-        for relay in self.dm_thread_relay_messages:
-            if relay.dm_message_id == dm_message_id:
-                return relay.thread_message_id
-        return None
+        return thread_relay_message_id_for_dm(self.dm_thread_relay_messages, dm_message_id)
 
     def dm_message_id_for_thread_relay(
             self,
             thread_message_id: int,
     ) -> int | None:
-        for relay in self.dm_thread_relay_messages:
-            if relay.thread_message_id == thread_message_id:
-                return relay.dm_message_id
-        return None
+        return dm_message_id_for_thread_relay(self.dm_thread_relay_messages, thread_message_id)
+
+    def thread_relay_author_id(
+            self,
+            thread_message_id: int,
+    ) -> int | None:
+        return thread_relay_author_id(self.dm_thread_relay_messages, thread_message_id)
+
+    def thread_reply_target_for_dm_reference(
+            self,
+            *,
+            participant_id: int,
+            referenced_dm_message_id: int,
+    ) -> int | None:
+        return thread_reply_target_for_dm_reference(
+            dm_thread_relays=self.dm_thread_relay_messages,
+            participant_dm_relays=self.participant_dm_relay_messages,
+            participant_id=participant_id,
+            referenced_dm_message_id=referenced_dm_message_id,
+        )
 
     def with_dm_thread_relay_message(
             self,
@@ -358,6 +379,58 @@ class TicketRecord:
             (relay.participant_id, relay.dm_message_id)
             for relay in self.participant_dm_relay_messages
             if relay.source_message_id == source_message_id
+        )
+
+    def participant_dm_relay_message_id(
+            self,
+            *,
+            source_message_id: int,
+            participant_id: int,
+    ) -> int | None:
+        return participant_dm_relay_message_id(
+            self.participant_dm_relay_messages,
+            source_message_id=source_message_id,
+            participant_id=participant_id,
+        )
+
+    def participant_dm_relay_source_message_id(
+            self,
+            *,
+            participant_id: int,
+            dm_message_id: int,
+    ) -> int | None:
+        return participant_dm_relay_source_message_id(
+            self.participant_dm_relay_messages,
+            participant_id=participant_id,
+            dm_message_id=dm_message_id,
+        )
+
+    def participant_reply_target_for_thread_reference(
+            self,
+            *,
+            participant_id: int,
+            referenced_thread_message_id: int,
+    ) -> int | None:
+        return participant_reply_target_for_thread_reference(
+            dm_thread_relays=self.dm_thread_relay_messages,
+            participant_dm_relays=self.participant_dm_relay_messages,
+            participant_id=participant_id,
+            referenced_thread_message_id=referenced_thread_message_id,
+        )
+
+    def participant_reply_target_for_dm_reference(
+            self,
+            *,
+            participant_id: int,
+            source_participant_id: int,
+            referenced_dm_message_id: int,
+    ) -> int | None:
+        return participant_reply_target_for_dm_reference(
+            dm_thread_relays=self.dm_thread_relay_messages,
+            participant_dm_relays=self.participant_dm_relay_messages,
+            participant_id=participant_id,
+            source_participant_id=source_participant_id,
+            referenced_dm_message_id=referenced_dm_message_id,
         )
 
     def with_participant_dm_relay_message(

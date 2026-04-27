@@ -53,6 +53,36 @@ class TicketThreadRelay:
             thread: discord.Thread,
             message: discord.Message,
     ) -> None:
+        reply_target = await self._resolve_thread_reply_target(
+            record=record,
+            thread=thread,
+            message=message,
+        )
+        if reply_target is not None:
+            try:
+                relay_message = await reply_target.reply(
+                    build_ticket_user_relay_message(
+                        localizer=self.bot.localizer,
+                        message=message,
+                    ),
+                    files=await clone_message_attachments_as_files(message),
+                    mention_author=False,
+                    allowed_mentions=discord.AllowedMentions.none(),
+                )
+                self._remember_user_relay(
+                    record=record,
+                    source_message=message,
+                    relay_message=relay_message,
+                )
+                return
+            except discord.HTTPException:
+                LOGGER.exception(
+                    "TICKET_THREAD_REPLY_RELAY_FAILED thread=%s user=%s(%s)",
+                    record.thread_id,
+                    message.author,
+                    message.author.id,
+                )
+
         webhook = await self._get_thread_relay_webhook(thread)
         if webhook is None:
             relay_message = await thread.send(
@@ -62,16 +92,11 @@ class TicketThreadRelay:
                 ),
                 allowed_mentions=discord.AllowedMentions.none(),
             )
-            self._message_authors[relay_message.id] = message.author.id
-            updated_record = record.with_thread_relay_message_author(
-                thread_message_id=relay_message.id,
-                user_id=message.author.id,
-            ).with_dm_thread_relay_message(
-                dm_message_id=message.id,
-                thread_message_id=relay_message.id,
-                user_id=message.author.id,
+            self._remember_user_relay(
+                record=record,
+                source_message=message,
+                relay_message=relay_message,
             )
-            self.store.update(updated_record)
             return
 
         files = await clone_message_attachments_as_files(message)
@@ -100,29 +125,19 @@ class TicketThreadRelay:
                 ),
                 allowed_mentions=discord.AllowedMentions.none(),
             )
-            self._message_authors[relay_message.id] = message.author.id
-            updated_record = record.with_thread_relay_message_author(
-                thread_message_id=relay_message.id,
-                user_id=message.author.id,
-            ).with_dm_thread_relay_message(
-                dm_message_id=message.id,
-                thread_message_id=relay_message.id,
-                user_id=message.author.id,
+            self._remember_user_relay(
+                record=record,
+                source_message=message,
+                relay_message=relay_message,
             )
-            self.store.update(updated_record)
             return
 
         self.message_ids.add(webhook_message.id)
-        self._message_authors[webhook_message.id] = message.author.id
-        updated_record = record.with_thread_relay_message_author(
-            thread_message_id=webhook_message.id,
-            user_id=message.author.id,
-        ).with_dm_thread_relay_message(
-            dm_message_id=message.id,
-            thread_message_id=webhook_message.id,
-            user_id=message.author.id,
+        self._remember_user_relay(
+            record=record,
+            source_message=message,
+            relay_message=webhook_message,
         )
-        self.store.update(updated_record)
 
     async def edit_user_relay_message_in_thread(
             self,
@@ -178,6 +193,47 @@ class TicketThreadRelay:
                 message.author.id,
                 thread_message.id,
             )
+
+    async def _resolve_thread_reply_target(
+            self,
+            *,
+            record: TicketRecord,
+            thread: discord.Thread,
+            message: discord.Message,
+    ) -> discord.Message | None:
+        referenced_message_id = _message_reference_id(message)
+        if referenced_message_id is None:
+            return None
+
+        thread_message_id = record.thread_reply_target_for_dm_reference(
+            participant_id=message.author.id,
+            referenced_dm_message_id=referenced_message_id,
+        )
+        if thread_message_id is None:
+            return None
+
+        try:
+            return await thread.fetch_message(thread_message_id)
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            return None
+
+    def _remember_user_relay(
+            self,
+            *,
+            record: TicketRecord,
+            source_message: discord.Message,
+            relay_message: discord.Message,
+    ) -> None:
+        self._message_authors[relay_message.id] = source_message.author.id
+        updated_record = record.with_thread_relay_message_author(
+            thread_message_id=relay_message.id,
+            user_id=source_message.author.id,
+        ).with_dm_thread_relay_message(
+            dm_message_id=source_message.id,
+            thread_message_id=relay_message.id,
+            user_id=source_message.author.id,
+        )
+        self.store.update(updated_record)
 
     def relay_clickable_mention(self, message: discord.Message) -> str | None:
         if message.webhook_id is not None:
@@ -251,3 +307,12 @@ class TicketThreadRelay:
             lock = asyncio.Lock()
             self._forum_webhook_locks[forum_channel_id] = lock
         return lock
+
+
+def _message_reference_id(message: discord.Message) -> int | None:
+    reference = message.reference
+    if reference is None:
+        return None
+
+    message_id = reference.message_id
+    return message_id if isinstance(message_id, int) else None

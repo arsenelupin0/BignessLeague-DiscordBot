@@ -135,6 +135,143 @@ def upsert_participant_dm_relay_message(
     return tuple(mappings.values())
 
 
+def thread_relay_message_id_for_dm(
+        relays: tuple[DmThreadRelayMessage, ...],
+        dm_message_id: int,
+) -> int | None:
+    for relay in relays:
+        if relay.dm_message_id == dm_message_id:
+            return relay.thread_message_id
+    return None
+
+
+def dm_message_id_for_thread_relay(
+        relays: tuple[DmThreadRelayMessage, ...],
+        thread_message_id: int,
+) -> int | None:
+    for relay in relays:
+        if relay.thread_message_id == thread_message_id:
+            return relay.dm_message_id
+    return None
+
+
+def thread_relay_author_id(
+        relays: tuple[DmThreadRelayMessage, ...],
+        thread_message_id: int,
+) -> int | None:
+    for relay in relays:
+        if relay.thread_message_id == thread_message_id:
+            return relay.user_id
+    return None
+
+
+def participant_dm_relay_message_id(
+        relays: tuple[ParticipantDmRelayMessage, ...],
+        *,
+        source_message_id: int,
+        participant_id: int,
+) -> int | None:
+    for relay in relays:
+        if (
+                relay.source_message_id == source_message_id
+                and relay.participant_id == participant_id
+        ):
+            return relay.dm_message_id
+    return None
+
+
+def participant_dm_relay_source_message_id(
+        relays: tuple[ParticipantDmRelayMessage, ...],
+        *,
+        participant_id: int,
+        dm_message_id: int,
+) -> int | None:
+    for relay in relays:
+        if relay.participant_id == participant_id and relay.dm_message_id == dm_message_id:
+            return relay.source_message_id
+    return None
+
+
+def thread_reply_target_for_dm_reference(
+        *,
+        dm_thread_relays: tuple[DmThreadRelayMessage, ...],
+        participant_dm_relays: tuple[ParticipantDmRelayMessage, ...],
+        participant_id: int,
+        referenced_dm_message_id: int,
+) -> int | None:
+    source_message_id = participant_dm_relay_source_message_id(
+        participant_dm_relays,
+        participant_id=participant_id,
+        dm_message_id=referenced_dm_message_id,
+    )
+    if source_message_id is None:
+        return thread_relay_message_id_for_dm(
+            dm_thread_relays,
+            referenced_dm_message_id,
+        )
+
+    return (
+            thread_relay_message_id_for_dm(dm_thread_relays, source_message_id)
+            or source_message_id
+    )
+
+
+def participant_reply_target_for_thread_reference(
+        *,
+        dm_thread_relays: tuple[DmThreadRelayMessage, ...],
+        participant_dm_relays: tuple[ParticipantDmRelayMessage, ...],
+        participant_id: int,
+        referenced_thread_message_id: int,
+) -> int | None:
+    source_dm_message_id = dm_message_id_for_thread_relay(
+        dm_thread_relays,
+        referenced_thread_message_id,
+    )
+    if source_dm_message_id is None:
+        return participant_dm_relay_message_id(
+            participant_dm_relays,
+            source_message_id=referenced_thread_message_id,
+            participant_id=participant_id,
+        )
+
+    if thread_relay_author_id(dm_thread_relays, referenced_thread_message_id) == participant_id:
+        return source_dm_message_id
+
+    return participant_dm_relay_message_id(
+        participant_dm_relays,
+        source_message_id=source_dm_message_id,
+        participant_id=participant_id,
+    )
+
+
+def participant_reply_target_for_dm_reference(
+        *,
+        dm_thread_relays: tuple[DmThreadRelayMessage, ...],
+        participant_dm_relays: tuple[ParticipantDmRelayMessage, ...],
+        participant_id: int,
+        source_participant_id: int,
+        referenced_dm_message_id: int,
+) -> int | None:
+    source_message_id = participant_dm_relay_source_message_id(
+        participant_dm_relays,
+        participant_id=source_participant_id,
+        dm_message_id=referenced_dm_message_id,
+    )
+    if source_message_id is None:
+        if thread_relay_message_id_for_dm(dm_thread_relays, referenced_dm_message_id) is None:
+            return None
+        source_message_id = referenced_dm_message_id
+
+    if participant_id == source_participant_id:
+        return referenced_dm_message_id
+
+    return participant_dm_relay_message_id(
+        participant_dm_relays,
+        source_message_id=source_message_id,
+        participant_id=participant_id,
+    )
+
+
 def _parse_relay_messages(
         value: object,
         parser: Callable[[dict[str, object]], T | None],
