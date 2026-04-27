@@ -27,6 +27,7 @@ if TYPE_CHECKING:
 
 TICKET_OPEN_COLOR = 16_711_680
 TICKET_CLOSED_COLOR = 3_447_003
+TICKET_INACTIVITY_COLOR = 15_158_332
 SUCCESS_EMOJI_NAME = "correctButton"
 TICKET_CLOSE_LINK_FIELD_KEY = I18N.messages.tickets.close.embed.fields.ticket_link
 TICKET_CLOSE_REASON_FIELD_KEY = I18N.messages.tickets.close.embed.fields.close_reason
@@ -243,6 +244,48 @@ def build_ticket_close_embed(
     embed.set_footer(
         text=bot.localizer.translate(
             I18N.messages.tickets.close.embed.footer,
+            locale=locale,
+        )
+    )
+    return embed
+
+
+def build_ticket_inactivity_embed(
+        *,
+        bot: BignessLeagueBot,
+        locale: str | discord.Locale | None,
+        guild: discord.Guild | None,
+        notice_number: int,
+        inactive_hours: int,
+        sent_at: str,
+) -> discord.Embed:
+    notice_labels = {
+        1: "Primer",
+        2: "Segundo",
+        3: "Tercer",
+        4: "Cuarto",
+        5: "Quinto",
+    }
+    embed = discord.Embed(
+        title=bot.localizer.translate(
+            I18N.messages.tickets.inactivity.embed.title,
+            locale=locale,
+        ),
+        description=bot.localizer.translate(
+            I18N.messages.tickets.inactivity.embed.description,
+            locale=locale,
+            inactive_hours=str(inactive_hours),
+            notice_label=notice_labels.get(notice_number, f"{notice_number}."),
+        ),
+        color=TICKET_INACTIVITY_COLOR,
+        timestamp=parse_utc_timestamp(sent_at),
+    )
+    thumbnail_url = resolve_embed_icon_url(bot, guild)
+    if thumbnail_url is not None:
+        embed.set_thumbnail(url=thumbnail_url)
+    embed.set_footer(
+        text=bot.localizer.translate(
+            I18N.messages.tickets.inactivity.embed.footer,
             locale=locale,
         )
     )

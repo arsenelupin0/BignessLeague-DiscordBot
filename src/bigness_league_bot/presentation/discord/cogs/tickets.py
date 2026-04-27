@@ -49,6 +49,9 @@ from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
 from bigness_league_bot.presentation.discord.ticket_ai_interactions import (
     TicketAiInteractions,
 )
+from bigness_league_bot.presentation.discord.ticket_inactivity import (
+    TicketInactivityMonitor,
+)
 from bigness_league_bot.presentation.discord.ticket_participant_addition import (
     TicketParticipantAddition,
 )
@@ -94,6 +97,13 @@ class TicketsCog(commands.Cog):
             send_dm=self._send_dm_with_retry,
             thread_user_relay_message_ids=self.thread_relay.message_ids,
         )
+        self.inactivity_monitor = TicketInactivityMonitor(bot=bot, store=store)
+
+    async def cog_load(self) -> None:
+        self.inactivity_monitor.start()
+
+    async def cog_unload(self) -> None:
+        self.inactivity_monitor.stop()
 
     @app_commands.command(
         name=localized_locale_str(I18N.commands.tickets.publish_panel.name),
@@ -375,6 +385,7 @@ class TicketsCog(commands.Cog):
             )
             return
 
+        record = self.store.mark_activity(record.thread_id) or record
         await self.thread_relay.relay_user_message_to_thread(
             record=record,
             thread=thread,
@@ -417,6 +428,7 @@ class TicketsCog(commands.Cog):
         if record is None:
             return
 
+        record = self.store.mark_activity(record.thread_id) or record
         await self.participant_messenger.relay_staff_message_to_participants(
             record=record,
             message=message,

@@ -341,6 +341,14 @@
           "result": "## Estado de la IA de tickets\n- Cargada en runtime: `{loaded}`\n- Activada por configuración: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Proveedor: `{provider}`\n- Modelo: `{model}`\n- Base URL: `{base_url}`\n- Backend accesible: `{backend_reachable}`\n- Categorías con auto-reply: `{categories}`\n- Base de conocimiento: `{knowledge_base_file}`\n- Prompt del sistema: `{system_prompt_file}`"
         }
       },
+      "inactivity": {
+        "close_reason": "Su ticket ha sido cerrado automáticamente por inactividad. Si sigue necesitando ayuda, vuelva a abrir otro ticket.",
+        "embed": {
+          "title": "⚠️ Inactividad en el ticket ⚠️",
+          "description": "_ _\nHan pasado más de {inactive_hours}h sin que nadie interactúe en el chat.\n_ _\nEste es el **{notice_label}** aviso. Al quinto aviso se cerrará el ticket automáticamente. Si esto ocurre, deberá de volver a abrir otro ticket.\n_ _\nRecuerda abrir el ticket cuando tengas todo disponible, para así evitar mucha cola de tickets.\n_ _\nMuchas gracias por su comprensión.",
+          "footer": "Desarrollado por el equipo de la Bigness League"
+        }
+      },
       "buttons": {
         "close_ticket": "🔒 Cerrar ticket",
         "close_with_reason": "🔏 Cerrar con razón"

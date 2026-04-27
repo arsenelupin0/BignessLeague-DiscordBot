@@ -586,6 +586,21 @@ class _MessagesTicketsAi:
                                                         default_text="La IA local no ha podido responder a este mensaje: {details}")
     status: _MessagesTicketsAiStatus = _MessagesTicketsAiStatus()
 
+
+class _MessagesTicketsInactivityEmbed:
+    title: TranslationKey = TranslationKey(key="messages.tickets.inactivity.embed.title",
+                                           default_text="\u26a0\ufe0f Inactividad en el ticket \u26a0\ufe0f")
+    description: TranslationKey = TranslationKey(key="messages.tickets.inactivity.embed.description",
+                                                 default_text="_ _\nHan pasado m\u00e1s de {inactive_hours}h sin que nadie interact\u00fae en el chat.\n_ _\nEste es el **{notice_label}** aviso. Al quinto aviso se cerrar\u00e1 el ticket autom\u00e1ticamente. Si esto ocurre, deber\u00e1 de volver a abrir otro ticket.\n_ _\nRecuerda abrir el ticket cuando tengas todo disponible, para as\u00ed evitar mucha cola de tickets.\n_ _\nMuchas gracias por su comprensi\u00f3n.")
+    footer: TranslationKey = TranslationKey(key="messages.tickets.inactivity.embed.footer",
+                                            default_text="Desarrollado por el equipo de la Bigness League")
+
+
+class _MessagesTicketsInactivity:
+    close_reason: TranslationKey = TranslationKey(key="messages.tickets.inactivity.close_reason",
+                                                  default_text="Su ticket ha sido cerrado autom\u00e1ticamente por inactividad. Si sigue necesitando ayuda, vuelva a abrir otro ticket.")
+    embed: _MessagesTicketsInactivityEmbed = _MessagesTicketsInactivityEmbed()
+
 class _MessagesTicketsButtons:
     close_ticket: TranslationKey = TranslationKey(key="messages.tickets.buttons.close_ticket",
                                                   default_text="\ud83d\udd12 Cerrar ticket")
@@ -673,6 +688,7 @@ class _MessagesTickets:
     participants: _MessagesTicketsParticipants = _MessagesTicketsParticipants()
     relay: _MessagesTicketsRelay = _MessagesTicketsRelay()
     ai: _MessagesTicketsAi = _MessagesTicketsAi()
+    inactivity: _MessagesTicketsInactivity = _MessagesTicketsInactivity()
     buttons: _MessagesTicketsButtons = _MessagesTicketsButtons()
     close: _MessagesTicketsClose = _MessagesTicketsClose()
 

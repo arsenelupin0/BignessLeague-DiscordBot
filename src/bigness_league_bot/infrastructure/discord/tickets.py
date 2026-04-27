@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
 LOGGER = logging.getLogger(__name__)
-TICKET_STATE_VERSION = 4
+TICKET_STATE_VERSION = 5
 TICKET_OPEN_STATUS_TAG_NAME = "Abierto"
 TICKET_CLOSED_STATUS_TAG_NAME = "Cerrado"
 
@@ -71,6 +71,13 @@ class TicketStateStore:
 
         return record
 
+    def active_records(self) -> tuple[TicketRecord, ...]:
+        return tuple(
+            record
+            for record in self._records.values()
+            if record.status == "active"
+        )
+
     def add(self, record: TicketRecord) -> None:
         self._records[record.thread_id] = record
         self._save_records()
@@ -78,6 +85,16 @@ class TicketStateStore:
     def update(self, record: TicketRecord) -> None:
         self._records[record.thread_id] = record
         self._save_records()
+
+    def mark_activity(self, thread_id: int) -> TicketRecord | None:
+        record = self.active_for_thread(thread_id)
+        if record is None:
+            return None
+
+        updated_record = record.mark_activity()
+        self._records[thread_id] = updated_record
+        self._save_records()
+        return updated_record
 
     def close_thread(self, thread_id: int) -> TicketRecord | None:
         record = self._records.get(thread_id)

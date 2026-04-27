@@ -53,8 +53,22 @@ async def execute_ticket_close(
     if resolved_context is None:
         return
 
-    closed_record = store.close_thread(resolved_context.record.thread_id)
-    if closed_record is None or closed_record.closed_at is None:
+    closed_record = await close_ticket_thread(
+        bot=interaction.client,
+        store=store,
+        thread=resolved_context.thread,
+        record=resolved_context.record,
+        closed_by=interaction.user,
+        locale=interaction.locale,
+        close_reason=close_reason,
+        is_dm_interaction=resolved_context.is_dm_interaction,
+        origin_dm_channel=(
+            interaction.channel
+            if isinstance(interaction.channel, discord.DMChannel)
+            else None
+        ),
+    )
+    if closed_record is None:
         await send_interaction_message(
             interaction,
             interaction.client.localizer.translate(
@@ -65,17 +79,44 @@ async def execute_ticket_close(
         )
         return
 
+    if not resolved_context.is_dm_interaction:
+        await send_interaction_message(
+            interaction,
+            interaction.client.localizer.translate(
+                I18N.messages.tickets.close.closed_ephemeral,
+                locale=interaction.locale,
+            ),
+            ephemeral=True,
+        )
+
+
+async def close_ticket_thread(
+        *,
+        bot: BignessLeagueBot,
+        store: TicketStateStore,
+        thread: discord.Thread,
+        record: TicketRecord,
+        closed_by: discord.abc.User | discord.Member,
+        locale: str | discord.Locale | None,
+        close_reason: str | None,
+        is_dm_interaction: bool = False,
+        origin_dm_channel: discord.DMChannel | None = None,
+) -> TicketRecord | None:
+    closed_record = store.close_thread(record.thread_id)
+    if closed_record is None or closed_record.closed_at is None:
+        return None
+
     category_label = _resolve_category_label(closed_record)
     thread_ticket_link = build_guild_message_link(
-        guild_id=resolved_context.thread.guild.id,
-        channel_id=resolved_context.thread.id,
+        guild_id=thread.guild.id,
+        channel_id=thread.id,
         message_id=closed_record.thread_start_message_id,
     )
     thread_close_embed = build_ticket_close_embed(
-        bot=interaction.client,
-        locale=interaction.locale,
-        guild=resolved_context.thread.guild,
-        closed_by=interaction.user,
+        bot=bot,
+        locale=locale,
+        guild=thread.guild,
+        closed_by=closed_by,
         category_label=category_label,
         ticket_number=closed_record.ticket_number,
         ticket_link=thread_ticket_link,
@@ -83,7 +124,7 @@ async def execute_ticket_close(
         closed_at=closed_record.closed_at,
         close_reason=close_reason,
     )
-    await resolved_context.thread.send(
+    await thread.send(
         embed=thread_close_embed,
         allowed_mentions=discord.AllowedMentions(
             users=True,
@@ -94,38 +135,33 @@ async def execute_ticket_close(
     )
 
     await _send_close_dm(
-        interaction=interaction,
+        bot=bot,
+        locale=locale,
         record=closed_record,
         category_label=category_label,
-        guild=resolved_context.thread.guild,
-        is_dm_interaction=resolved_context.is_dm_interaction,
+        guild=thread.guild,
+        closed_by=closed_by,
+        is_dm_interaction=is_dm_interaction,
+        origin_dm_channel=origin_dm_channel,
         close_reason=close_reason,
     )
     await _disable_ticket_start_controls(
         store=store,
-        interaction=interaction,
+        bot=bot,
         record=closed_record,
-        thread=resolved_context.thread,
+        thread=thread,
     )
 
-    await resolved_context.thread.edit(
-        applied_tags=_build_closed_thread_tags(resolved_context.thread),
+    await thread.edit(
+        applied_tags=_build_closed_thread_tags(thread),
+        reason=f"{closed_by} ({closed_by.id}) actualizo tags de ticket={thread.id}",
+    )
+    await thread.edit(
         archived=True,
         locked=True,
-        reason=(
-            f"{interaction.user} ({interaction.user.id}) cerró "
-            f"ticket={resolved_context.thread.id}"
-        ),
+        reason=f"{closed_by} ({closed_by.id}) cerro publicacion ticket={thread.id}",
     )
-    if not resolved_context.is_dm_interaction:
-        await send_interaction_message(
-            interaction,
-            interaction.client.localizer.translate(
-                I18N.messages.tickets.close.closed_ephemeral,
-                locale=interaction.locale,
-            ),
-            ephemeral=True,
-        )
+    return closed_record
 
 
 async def resolve_close_context(
@@ -241,11 +277,14 @@ async def send_interaction_message(
 
 async def _send_close_dm(
         *,
-        interaction: discord.Interaction[BignessLeagueBot],
+        bot: BignessLeagueBot,
+        locale: str | discord.Locale | None,
         record: TicketRecord,
         category_label: str,
         guild: discord.Guild,
+        closed_by: discord.abc.User | discord.Member,
         is_dm_interaction: bool,
+        origin_dm_channel: discord.DMChannel | None,
         close_reason: str | None,
 ) -> None:
     for participant in record.participants:
@@ -255,10 +294,10 @@ async def _send_close_dm(
                 message_id=participant.dm_start_message_id,
             )
             close_embed = build_ticket_close_embed(
-                bot=interaction.client,
-                locale=interaction.locale,
+                bot=bot,
+                locale=locale,
                 guild=guild,
-                closed_by=interaction.user,
+                closed_by=closed_by,
                 category_label=category_label,
                 ticket_number=record.ticket_number,
                 ticket_link=dm_ticket_link,
@@ -268,13 +307,13 @@ async def _send_close_dm(
             )
             if (
                     is_dm_interaction
-                    and interaction.user.id == participant.user_id
-                    and isinstance(interaction.channel, discord.DMChannel)
+                    and closed_by.id == participant.user_id
+                    and origin_dm_channel is not None
             ):
-                await interaction.channel.send(embed=close_embed)
+                await origin_dm_channel.send(embed=close_embed)
                 continue
 
-            ticket_user = await interaction.client.fetch_user(participant.user_id)
+            ticket_user = await bot.fetch_user(participant.user_id)
             await ticket_user.send(embed=close_embed)
         except discord.HTTPException:
             continue
@@ -283,7 +322,7 @@ async def _send_close_dm(
 async def _disable_ticket_start_controls(
         *,
         store: TicketStateStore,
-        interaction: discord.Interaction[BignessLeagueBot],
+        bot: BignessLeagueBot,
         record: TicketRecord,
         thread: discord.Thread,
 ) -> None:
@@ -294,7 +333,7 @@ async def _disable_ticket_start_controls(
     )
     for participant in record.participants:
         dm_channel = await _resolve_dm_channel(
-            interaction=interaction,
+            bot=bot,
             participant=participant,
         )
         if dm_channel is None:
@@ -309,16 +348,16 @@ async def _disable_ticket_start_controls(
 
 async def _resolve_dm_channel(
         *,
-        interaction: discord.Interaction[BignessLeagueBot],
+        bot: BignessLeagueBot,
         participant: TicketParticipant,
 ) -> discord.DMChannel | None:
     if participant.dm_channel_id is not None:
-        cached_channel = interaction.client.get_channel(participant.dm_channel_id)
+        cached_channel = bot.get_channel(participant.dm_channel_id)
         if isinstance(cached_channel, discord.DMChannel):
             return cached_channel
 
     try:
-        ticket_user = await interaction.client.fetch_user(participant.user_id)
+        ticket_user = await bot.fetch_user(participant.user_id)
         return await ticket_user.create_dm()
     except discord.HTTPException:
         return None

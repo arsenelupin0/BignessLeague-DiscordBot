@@ -93,6 +93,8 @@ class TicketRecord:
     created_at: str
     status: str = "active"
     closed_at: str | None = None
+    last_activity_at: str | None = None
+    inactivity_notice_count: int = 0
     thread_relay_message_authors: tuple[tuple[int, int], ...] = ()
     dm_thread_relay_messages: tuple[DmThreadRelayMessage, ...] = ()
     participant_dm_relay_messages: tuple[ParticipantDmRelayMessage, ...] = ()
@@ -112,6 +114,7 @@ class TicketRecord:
             category_key: str,
             created_at: str | None = None,
     ) -> "TicketRecord":
+        resolved_created_at = created_at or current_utc_timestamp()
         normalized_participants = _normalize_ticket_participants(
             participants=participants,
             owner_user_id=user_id,
@@ -128,7 +131,8 @@ class TicketRecord:
             dm_start_message_id=dm_start_message_id,
             participants=normalized_participants,
             category_key=category_key,
-            created_at=created_at or current_utc_timestamp(),
+            created_at=resolved_created_at,
+            last_activity_at=resolved_created_at,
             thread_relay_message_authors=(),
         )
 
@@ -187,6 +191,11 @@ class TicketRecord:
             created_at=_required_text(payload, "created_at"),
             status=_optional_text(payload, "status") or "active",
             closed_at=_optional_text(payload, "closed_at"),
+            last_activity_at=_optional_text(payload, "last_activity_at"),
+            inactivity_notice_count=max(
+                0,
+                _optional_int(payload, "inactivity_notice_count") or 0,
+            ),
             thread_relay_message_authors=thread_relay_message_authors,
             dm_thread_relay_messages=dm_thread_relay_messages,
             participant_dm_relay_messages=participant_dm_relay_messages,
@@ -221,6 +230,8 @@ class TicketRecord:
             "created_at": self.created_at,
             "status": self.status,
             "closed_at": self.closed_at,
+            "last_activity_at": self.last_activity_at,
+            "inactivity_notice_count": self.inactivity_notice_count,
         }
 
     def close(self) -> "TicketRecord":
@@ -228,6 +239,20 @@ class TicketRecord:
             self,
             status="closed",
             closed_at=current_utc_timestamp(),
+        )
+
+    def mark_activity(self, *, occurred_at: str | None = None) -> "TicketRecord":
+        return replace(
+            self,
+            last_activity_at=occurred_at or current_utc_timestamp(),
+            inactivity_notice_count=0,
+        )
+
+    def mark_inactivity_notice(self, *, sent_at: str | None = None) -> "TicketRecord":
+        return replace(
+            self,
+            last_activity_at=sent_at or current_utc_timestamp(),
+            inactivity_notice_count=self.inactivity_notice_count + 1,
         )
 
     def includes_user(self, user_id: int) -> bool:

@@ -320,6 +320,14 @@
       },
       "relay": {
         "from_command_result": "**Command result {command_name}:**\n{body}"
+      },
+      "inactivity": {
+        "close_reason": "Your ticket has been closed automatically because of inactivity. If you still need help, open another ticket.",
+        "embed": {
+          "title": "⚠️ Ticket inactivity ⚠️",
+          "description": "_ _\nMore than {inactive_hours}h have passed without anyone interacting in the chat.\n_ _\nThis is the **{notice_label}** notice. On the fifth notice, the ticket will be closed automatically. If that happens, you will need to open another ticket.\n_ _\nRemember to open a ticket when you have everything available, so the ticket queue stays manageable.\n_ _\nThank you for your understanding.",
+          "footer": "Developed by the Bigness League team"
+        }
       }
     }
   },
