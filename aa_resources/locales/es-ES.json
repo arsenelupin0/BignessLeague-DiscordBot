@@ -426,7 +426,7 @@
           },
           "match_data": {
             "title": "⚽ 🚗 Datos del partido 🚗 ⚽",
-            "description": "- Información de sala\n  - ⌛ {courtesy_minutes} minutos de cortesía\n  - 🗓️ {match_date}\n  - ⏰ {match_time}\n  - ⚔️ {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `{room_name}`\n  - Contraseña: `{room_password}` \n  - Crea: {team_one}"
+            "description": "- Información de sala\n  - ⌛ {courtesy_minutes} minutos de cortesía\n  - 🗓️ {match_date}\n  - ⏰ {match_time}\n  - ⚔️ {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `{room_name}`\n  - Contraseña: `{room_password}` \n  - Crea: {team_one}\n_ _\n_**Se necesita confirmación de ambos equipos en caso de que quieran jugar en el horario establecido.**_"
           }
         },
         "buttons": {
