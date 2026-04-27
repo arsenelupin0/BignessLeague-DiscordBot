@@ -223,6 +223,7 @@ class Settings:
     timezone: str = "local"
     match_channel_ticket_url: str = "https://canary.discord.com/channels/1016819103555657851/1016824990949179512"
     match_channel_rules_url: str = "https://canary.discord.com/channels/1016819103555657851/1363537934665515351"
+    mmr_media_limit: int = 1_400
     google_service_account_file: Path | None = None
     google_sheets_spreadsheet_id: str = ""
     google_sheets_team_sheet_name: str = DEFAULT_GOOGLE_SHEETS_TEAM_WORKSHEETS_RAW
@@ -363,6 +364,7 @@ class Settings:
             "BOT_MATCH_CHANNEL_RULES_URL",
             "https://canary.discord.com/channels/1016819103555657851/1363537934665515351",
         )
+        mmr_media_limit = _read_int("BOT_MMR_MEDIA_LIMIT", 1_400)
         google_service_account_file = _resolve_optional_storage_path(
             "BOT_GOOGLE_SERVICE_ACCOUNT_FILE"
         )
@@ -503,6 +505,7 @@ class Settings:
             timezone=timezone,
             match_channel_ticket_url=match_channel_ticket_url,
             match_channel_rules_url=match_channel_rules_url,
+            mmr_media_limit=mmr_media_limit,
             google_service_account_file=google_service_account_file,
             google_sheets_spreadsheet_id=google_sheets_spreadsheet_id,
             google_sheets_team_sheet_name=google_sheets_team_sheet_name,

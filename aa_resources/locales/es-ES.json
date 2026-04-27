@@ -102,6 +102,23 @@
         }
       }
     },
+    "mmr_media": {
+      "calculate": {
+        "name": "mmr_media",
+        "description": "Calcula la media de 3 valores de MMR.",
+        "parameters": {
+          "mmr_1": {
+            "description": "Primer valor de MMR."
+          },
+          "mmr_2": {
+            "description": "Segundo valor de MMR."
+          },
+          "mmr_3": {
+            "description": "Tercer valor de MMR."
+          }
+        }
+      }
+    },
     "team_profile": {
       "view_my_team": {
         "name": "ver_mi_equipo",
@@ -221,6 +238,10 @@
         "missing_value": "-"
       },
       "only_actor": "Solo quien ejecutó el comando puede usar estos botones."
+    },
+    "mmr_media": {
+      "eligible": "- MMR introducidos: \n  - Primer valor: `{mmr_1}`\n  - Segundo valor: `{mmr_2}`\n  - Tercer valor: `{mmr_3}`\n- Media MMR: `{average}`\n\nTu equipo es **apto** para la **Bigness League S3**. \n\n_Límite actual: `{limit}`._",
+      "too_high": "- MMR introducidos: \n  - Primer valor: `{mmr_1}`\n  - Segundo valor: `{mmr_2}`\n  - Tercer valor: `{mmr_3}`\n- Media MMR: `{average}`\n\nTu equipo tiene demasiado **MMR**, **no** es **apto** para la **Bigness League S3**. \n\n_Límite actual: `{limit}`.\n\nEn caso que se supere por +30, consultar con staff._"
     },
     "team_signing": {
       "guide": {

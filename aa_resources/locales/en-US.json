@@ -62,6 +62,23 @@
         }
       }
     },
+    "mmr_media": {
+      "calculate": {
+        "name": "mmr_media",
+        "description": "Calculates the rounded-down average of 3 MMR values.",
+        "parameters": {
+          "mmr_1": {
+            "description": "First MMR value."
+          },
+          "mmr_2": {
+            "description": "Second MMR value."
+          },
+          "mmr_3": {
+            "description": "Third MMR value."
+          }
+        }
+      }
+    },
     "team_profile": {
       "view_my_team": {
         "name": "view_my_team",
@@ -192,6 +209,10 @@
         "missing_value": "-"
       },
       "only_actor": "Only the user who ran the command can use these buttons."
+    },
+    "mmr_media": {
+      "eligible": "Entered MMR values: `{mmr_1}`, `{mmr_2}`, `{mmr_3}`.\nAverage MMR: `{average}`. Your team is eligible for Bigness League S3. Current limit: `{limit}`.",
+      "too_high": "Entered MMR values: `{mmr_1}`, `{mmr_2}`, `{mmr_3}`.\nAverage MMR: `{average}`. Your team has too much MMR for Bigness League S3. Current limit: `{limit}`."
     },
     "team_signing": {
       "guide": {
