@@ -589,7 +589,13 @@
       "role_removal_failed": "La baja en Google Sheets se aplicó, pero no se pudieron retirar roles en Discord: {details}.",
       "role_assignment_summary": "Asignación de roles: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
       "role_assignment_unresolved": "Sin coincidencia en Discord: {names}.",
-      "role_assignment_ambiguous": "Coincidencias ambiguas en Discord: {names}."
+      "role_assignment_ambiguous": "Coincidencias ambiguas en Discord: {names}.",
+      "visibility": {
+        "content": "\n\n# ¿Dónde ver mi fichaje?\n{team_lines}{staff_lines}",
+        "team_line": "- [Fichado por]({team_message_url}) {team_role_mention}",
+        "team_line_unlinked": "- Fichado por {team_role_mention}",
+        "staff_line": "  - [Nuevo cargo de {staff_role_name} para]({staff_message_url}) {member_mention} >> {team_role_mention}"
+      }
     },
     "team_role_assignment": {
       "completed": "Sincronización de roles completada para `{team_name}`: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",

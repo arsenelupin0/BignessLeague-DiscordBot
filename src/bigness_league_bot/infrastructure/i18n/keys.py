@@ -1179,6 +1179,17 @@ class _ActionsMatchChannelCreation:
                                                      default_text="Se ha creado {channel} en `{category}` para la jornada {jornada}, partido {partido}, entre {team_one} y {team_two}, y se ha enviado el mensaje inicial del canal.")
 
 
+class _ActionsTeamSigningVisibility:
+    content: TranslationKey = TranslationKey(key="actions.team_signing.visibility.content",
+                                             default_text="\n\n# \u00bfD\u00f3nde ver mi fichaje?\n{team_lines}{staff_lines}")
+    team_line: TranslationKey = TranslationKey(key="actions.team_signing.visibility.team_line",
+                                               default_text="- [Fichado por]({team_message_url}) {team_role_mention}")
+    team_line_unlinked: TranslationKey = TranslationKey(key="actions.team_signing.visibility.team_line_unlinked",
+                                                        default_text="- Fichado por {team_role_mention}")
+    staff_line: TranslationKey = TranslationKey(key="actions.team_signing.visibility.staff_line",
+                                                default_text="  - [Nuevo cargo de {staff_role_name} para]({staff_message_url}) {member_mention} >> {team_role_mention}")
+
+
 class _ActionsTeamSigning:
     completed: TranslationKey = TranslationKey(key="actions.team_signing.completed",
                                                default_text="Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.")
@@ -1206,6 +1217,7 @@ class _ActionsTeamSigning:
                                                                 default_text="Sin coincidencia en Discord: {names}.")
     role_assignment_ambiguous: TranslationKey = TranslationKey(key="actions.team_signing.role_assignment_ambiguous",
                                                                default_text="Coincidencias ambiguas en Discord: {names}.")
+    visibility: _ActionsTeamSigningVisibility = _ActionsTeamSigningVisibility()
 
 
 class _ActionsTeamRoleAssignment:

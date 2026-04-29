@@ -10,13 +10,15 @@ from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     build_member_lookup_keys,
     normalize_member_lookup_text,
     remove_roles_from_member_by_name,
-    resolve_optional_team_staff_roles,
     resolve_participant_role,
     resolve_player_role,
     resolve_team_role_by_name,
 )
 from bigness_league_bot.infrastructure.discord.team_signing_messages import (
     format_team_role_removal_message,
+)
+from bigness_league_bot.infrastructure.discord.team_staff_roles import (
+    resolve_optional_team_staff_roles,
 )
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     TeamMemberSheetAffiliation,

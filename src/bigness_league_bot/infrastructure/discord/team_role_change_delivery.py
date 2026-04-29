@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import logging
+from dataclasses import dataclass
 from time import monotonic
 from typing import Any
 
@@ -19,6 +21,75 @@ from bigness_league_bot.infrastructure.google.team_sheet_repository import TeamR
 
 LOGGER = logging.getLogger("bigness_league_bot.activity")
 ANNOUNCEMENT_DEDUPLICATION_WINDOW_SECONDS = 3.0
+ANNOUNCEMENT_REGISTRY_RETENTION_SECONDS = 30.0
+
+
+@dataclass(frozen=True, slots=True)
+class SentTeamChangeAnnouncement:
+    guild_id: int
+    member_id: int
+    team_role_id: int
+    spec_key: str
+    message_id: int
+    channel_id: int
+    jump_url: str
+    created_at: float
+    staff_role_id: int | None = None
+
+
+_sent_announcements: list[SentTeamChangeAnnouncement] = []
+_sent_announcements_condition = asyncio.Condition()
+
+
+async def wait_for_team_change_announcement(
+        *,
+        guild_id: int,
+        member_id: int,
+        team_role_id: int,
+        spec: TeamChangeAnnouncementSpec,
+        since: float,
+        staff_role_id: int | None = None,
+        timeout: float = 3.0,
+) -> SentTeamChangeAnnouncement | None:
+    spec_key = _resolve_announcement_spec_key(spec)
+
+    async with _sent_announcements_condition:
+        found_announcement = _find_sent_announcement(
+            guild_id=guild_id,
+            member_id=member_id,
+            team_role_id=team_role_id,
+            spec_key=spec_key,
+            staff_role_id=staff_role_id,
+            since=since,
+        )
+        if found_announcement is not None:
+            return found_announcement
+
+        try:
+            await asyncio.wait_for(
+                _sent_announcements_condition.wait_for(
+                    lambda: _find_sent_announcement(
+                        guild_id=guild_id,
+                        member_id=member_id,
+                        team_role_id=team_role_id,
+                        spec_key=spec_key,
+                        staff_role_id=staff_role_id,
+                        since=since,
+                    ) is not None
+                ),
+                timeout=timeout,
+            )
+        except TimeoutError:
+            return None
+
+        return _find_sent_announcement(
+            guild_id=guild_id,
+            member_id=member_id,
+            team_role_id=team_role_id,
+            spec_key=spec_key,
+            staff_role_id=staff_role_id,
+            since=since,
+        )
 
 
 class TeamChangeAnnouncementDeduplicator:
@@ -98,7 +169,7 @@ class TeamRoleChangeAnnouncementSender:
             spec: TeamChangeAnnouncementSpec,
             channel: discord.abc.Messageable,
             failure_log_code: str,
-    ) -> None:
+    ) -> discord.Message | None:
         announcement_key = self.deduplicator.reserve(
             guild=guild,
             member=member,
@@ -106,10 +177,10 @@ class TeamRoleChangeAnnouncementSender:
             spec=spec,
         )
         if announcement_key is None:
-            return
+            return None
 
         try:
-            await self._send_announcement(
+            message = await self._send_announcement(
                 member=member,
                 team_role=team_role,
                 guild=guild,
@@ -117,6 +188,14 @@ class TeamRoleChangeAnnouncementSender:
                 spec=spec,
                 channel=channel,
             )
+            await _remember_sent_announcement(
+                guild=guild,
+                member=member,
+                team_role=team_role,
+                spec=spec,
+                message=message,
+            )
+            return message
         except (discord.Forbidden, discord.HTTPException) as exc:
             self.deduplicator.release(announcement_key)
             LOGGER.warning(
@@ -130,6 +209,7 @@ class TeamRoleChangeAnnouncementSender:
                 team_role.id,
                 exc,
             )
+            return None
         except Exception:
             self.deduplicator.release(announcement_key)
             raise
@@ -144,7 +224,7 @@ class TeamRoleChangeAnnouncementSender:
             metadata: TeamRoleSheetMetadata,
             spec: TeamChangeAnnouncementSpec,
             channel: discord.abc.Messageable,
-    ) -> None:
+    ) -> discord.Message | None:
         announcement_key = self.deduplicator.reserve(
             guild=guild,
             member=member,
@@ -153,10 +233,10 @@ class TeamRoleChangeAnnouncementSender:
             staff_role=staff_role,
         )
         if announcement_key is None:
-            return
+            return None
 
         try:
-            await self._send_announcement(
+            message = await self._send_announcement(
                 member=member,
                 team_role=team_role,
                 guild=guild,
@@ -165,6 +245,15 @@ class TeamRoleChangeAnnouncementSender:
                 channel=channel,
                 staff_role_name=staff_role.name,
             )
+            await _remember_sent_announcement(
+                guild=guild,
+                member=member,
+                team_role=team_role,
+                spec=spec,
+                message=message,
+                staff_role=staff_role,
+            )
+            return message
         except (discord.Forbidden, discord.HTTPException) as exc:
             self.deduplicator.release(announcement_key)
             LOGGER.warning(
@@ -179,6 +268,7 @@ class TeamRoleChangeAnnouncementSender:
                 staff_role.id,
                 exc,
             )
+            return None
         except Exception:
             self.deduplicator.release(announcement_key)
             raise
@@ -193,7 +283,7 @@ class TeamRoleChangeAnnouncementSender:
             spec: TeamChangeAnnouncementSpec,
             channel: discord.abc.Messageable,
             staff_role_name: str | None = None,
-    ) -> None:
+    ) -> discord.Message:
         content = build_team_change_content(
             bot=self.bot,
             spec=spec,
@@ -223,7 +313,66 @@ class TeamRoleChangeAnnouncementSender:
         }
         if image_file is not None:
             send_kwargs["file"] = image_file
-        await channel.send(**send_kwargs)
+        return await channel.send(**send_kwargs)
+
+
+async def _remember_sent_announcement(
+        *,
+        guild: discord.Guild,
+        member: discord.Member,
+        team_role: discord.Role,
+        spec: TeamChangeAnnouncementSpec,
+        message: discord.Message,
+        staff_role: discord.Role | None = None,
+) -> None:
+    current_timestamp = monotonic()
+    announcement = SentTeamChangeAnnouncement(
+        guild_id=guild.id,
+        member_id=member.id,
+        team_role_id=team_role.id,
+        spec_key=_resolve_announcement_spec_key(spec),
+        staff_role_id=staff_role.id if staff_role is not None else None,
+        message_id=message.id,
+        channel_id=message.channel.id,
+        jump_url=message.jump_url,
+        created_at=current_timestamp,
+    )
+    async with _sent_announcements_condition:
+        _prune_sent_announcements(current_timestamp)
+        _sent_announcements.append(announcement)
+        _sent_announcements_condition.notify_all()
+
+
+def _find_sent_announcement(
+        *,
+        guild_id: int,
+        member_id: int,
+        team_role_id: int,
+        spec_key: str,
+        staff_role_id: int | None,
+        since: float,
+) -> SentTeamChangeAnnouncement | None:
+    for announcement in reversed(_sent_announcements):
+        if announcement.created_at < since:
+            continue
+        if (
+                announcement.guild_id == guild_id
+                and announcement.member_id == member_id
+                and announcement.team_role_id == team_role_id
+                and announcement.spec_key == spec_key
+                and announcement.staff_role_id == staff_role_id
+        ):
+            return announcement
+    return None
+
+
+def _prune_sent_announcements(current_timestamp: float) -> None:
+    retained_announcements = [
+        announcement
+        for announcement in _sent_announcements
+        if current_timestamp - announcement.created_at < ANNOUNCEMENT_REGISTRY_RETENTION_SECONDS
+    ]
+    _sent_announcements[:] = retained_announcements
 
 
 def _build_role_removal_description(*, guild: discord.Guild, bot: Any) -> str:

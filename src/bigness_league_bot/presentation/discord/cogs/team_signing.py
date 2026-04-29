@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from time import monotonic
 from typing import TYPE_CHECKING
 
 import discord
@@ -34,12 +35,16 @@ from bigness_league_bot.infrastructure.discord.team_signing_messages import (
     build_team_role_sync_message,
     build_team_signing_import_completed_message,
     build_team_signing_removal_completed_message,
+    build_team_signing_visibility_message,
     collect_technical_staff_role_entries,
     split_discord_message_content,
 )
 from bigness_league_bot.infrastructure.discord.team_signing_role_reconciliation import (
     reconcile_team_role_assignment,
     remove_discord_roles_after_signing_removal,
+)
+from bigness_league_bot.infrastructure.discord.team_signing_visibility import (
+    collect_team_signing_visibility_links,
 )
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     GoogleSheetsTeamRepository,
@@ -137,6 +142,7 @@ class TeamSigningCog(commands.Cog):
         repository = GoogleSheetsTeamRepository(interaction.client.settings)
         team_role = resolve_team_role_by_name(team_name, role_catalog)
         participant_role = resolve_participant_role(guild, settings.participant_role_id)
+        announcement_since = monotonic()
         player_result = None
         assignment_summary = None
         if signing_batch is not None:
@@ -172,19 +178,36 @@ class TeamSigningCog(commands.Cog):
                 ),
             )
 
+        visibility_links = await collect_team_signing_visibility_links(
+            settings=settings,
+            guild=guild,
+            team_role=team_role,
+            assignment_summary=assignment_summary,
+            technical_staff_batch=technical_staff_batch,
+            staff_sync_summary=staff_role_sync_summary,
+            since=announcement_since,
+        )
+        completed_message = build_team_signing_import_completed_message(
+            localizer=interaction.client.localizer,
+            locale=interaction.locale,
+            division_name=division_name,
+            team_name=team_name,
+            signing_batch=signing_batch,
+            technical_staff_batch=technical_staff_batch,
+            player_result=player_result,
+            technical_staff_result=technical_staff_result,
+            assignment_summary=assignment_summary,
+            staff_sync_summary=staff_role_sync_summary,
+        )
+        visibility_message = build_team_signing_visibility_message(
+            localizer=interaction.client.localizer,
+            locale=interaction.locale,
+            team_role_mention=team_role.mention,
+            team_links=visibility_links.team_links,
+            staff_links=visibility_links.staff_links,
+        )
         await interaction.followup.send(
-            build_team_signing_import_completed_message(
-                localizer=interaction.client.localizer,
-                locale=interaction.locale,
-                division_name=division_name,
-                team_name=team_name,
-                signing_batch=signing_batch,
-                technical_staff_batch=technical_staff_batch,
-                player_result=player_result,
-                technical_staff_result=technical_staff_result,
-                assignment_summary=assignment_summary,
-                staff_sync_summary=staff_role_sync_summary,
-            ),
+            f"{completed_message}{visibility_message}",
             allowed_mentions=discord.AllowedMentions.none(),
         )
 

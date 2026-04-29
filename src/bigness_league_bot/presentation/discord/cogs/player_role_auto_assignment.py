@@ -12,10 +12,12 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
     get_channel_access_role_catalog,
 )
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
-    resolve_optional_team_staff_roles,
     resolve_participant_role,
     resolve_player_role,
     resolve_team_role_by_name,
+)
+from bigness_league_bot.infrastructure.discord.team_staff_roles import (
+    resolve_optional_team_staff_roles,
 )
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     GoogleSheetsTeamRepository,

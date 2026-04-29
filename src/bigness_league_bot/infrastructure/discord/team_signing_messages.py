@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import discord
@@ -37,6 +38,18 @@ if TYPE_CHECKING:
 
 DISCORD_MESSAGE_CONTENT_LIMIT = 2000
 TEAM_SIGNING_GUIDE_TEMPLATE_BLOCK_MARKER = "```"
+
+
+@dataclass(frozen=True, slots=True)
+class TeamSigningTeamAnnouncementLink:
+    url: str
+
+
+@dataclass(frozen=True, slots=True)
+class TeamSigningStaffAnnouncementLink:
+    staff_role_name: str
+    member_mention: str
+    url: str
 
 
 def split_discord_message_content(content: str) -> tuple[str, ...]:
@@ -155,6 +168,53 @@ def build_team_signing_import_completed_message(
             )
 
     return "\n".join(message_lines)
+
+
+def build_team_signing_visibility_message(
+        *,
+        localizer: LocalizationService,
+        locale: str | discord.Locale | None,
+        team_role_mention: str,
+        team_links: tuple[TeamSigningTeamAnnouncementLink, ...] = (),
+        staff_links: tuple[TeamSigningStaffAnnouncementLink, ...] = (),
+) -> str:
+    if not team_links and not staff_links:
+        return ""
+
+    team_lines = "\n".join(
+        localizer.translate(
+            I18N.actions.team_signing.visibility.team_line,
+            locale=locale,
+            team_message_url=link.url,
+            team_role_mention=team_role_mention,
+        )
+        for link in team_links
+    )
+    if not team_lines:
+        team_lines = localizer.translate(
+            I18N.actions.team_signing.visibility.team_line_unlinked,
+            locale=locale,
+            team_role_mention=team_role_mention,
+        )
+
+    staff_lines = "\n".join(
+        localizer.translate(
+            I18N.actions.team_signing.visibility.staff_line,
+            locale=locale,
+            staff_role_name=discord.utils.escape_markdown(link.staff_role_name),
+            staff_message_url=link.url,
+            member_mention=link.member_mention,
+            team_role_mention=team_role_mention,
+        )
+        for link in staff_links
+    )
+
+    return localizer.translate(
+        I18N.actions.team_signing.visibility.content,
+        locale=locale,
+        team_lines=team_lines,
+        staff_lines=f"\n{staff_lines}" if staff_lines else "",
+    )
 
 
 def build_team_role_sync_message(
