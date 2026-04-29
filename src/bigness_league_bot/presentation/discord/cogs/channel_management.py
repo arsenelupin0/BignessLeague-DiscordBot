@@ -36,8 +36,8 @@ from bigness_league_bot.infrastructure.discord.error_handling import (
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
-from bigness_league_bot.presentation.discord.views.channel_delete_confirmation import (
-    ChannelDeleteConfirmationView,
+from bigness_league_bot.presentation.discord.views.channel_archive_confirmation import (
+    ChannelArchiveConfirmationView,
 )
 from bigness_league_bot.presentation.discord.views.channel_matchday_close_confirmation import (
     ChannelMatchdayCloseConfirmationView,
@@ -75,9 +75,9 @@ CHANNEL_CLOSE_CHOICES: list[app_commands.Choice[str]] = [
     ),
     _string_choice(
         name=localized_locale_str(
-            I18N.commands.channel_management.close_channel.choices.delete_channel
+            I18N.commands.channel_management.close_channel.choices.archive_channel
         ),
-        value=ChannelCloseMode.DELETE_CHANNEL.value,
+        value=ChannelCloseMode.ARCHIVE_CHANNEL.value,
     ),
 ]
 
@@ -111,8 +111,8 @@ class ChannelManagement(commands.Cog):
         ensure_allowed_member(interaction.user)
         selected_action = ChannelCloseMode(accion.value)
 
-        if selected_action is ChannelCloseMode.DELETE_CHANNEL:
-            await self._prompt_channel_deletion(interaction, channel)
+        if selected_action is ChannelCloseMode.ARCHIVE_CHANNEL:
+            await self._prompt_channel_archive(interaction, channel)
             return
 
         if selected_action is ChannelCloseMode.MATCHDAY_CLOSED:
@@ -133,7 +133,7 @@ class ChannelManagement(commands.Cog):
         )
 
     @staticmethod
-    async def _prompt_channel_deletion(
+    async def _prompt_channel_archive(
             interaction: discord.Interaction[BignessLeagueBot],
             channel: discord.TextChannel,
     ) -> None:
@@ -142,8 +142,7 @@ class ChannelManagement(commands.Cog):
                 localize(I18N.errors.channel_management.server_only)
             )
 
-        protected_roles = protected_role_names_label()
-        view = ChannelDeleteConfirmationView(
+        view = ChannelArchiveConfirmationView(
             channel=channel,
             actor=interaction.user,
             localizer=interaction.client.localizer,
@@ -151,10 +150,9 @@ class ChannelManagement(commands.Cog):
         )
         await interaction.response.send_message(
             interaction.client.localizer.translate(
-                I18N.messages.channel_management.delete_prompt,
+                I18N.messages.channel_management.archive_prompt,
                 locale=interaction.locale,
                 channel_name=channel.name,
-                protected_roles=protected_roles,
             ),
             view=view,
         )

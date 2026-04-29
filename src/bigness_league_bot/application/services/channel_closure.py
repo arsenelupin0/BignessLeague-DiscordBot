@@ -91,7 +91,7 @@ class ChannelCloseMode(StrEnum):
     MATCH_PLAYED = "partido_jugado"
     MATCHDAY_CLOSED = "jornada_cerrada"
     REOPEN_MATCH = "reabrir_partido"
-    DELETE_CHANNEL = "eliminacion_canal"
+    ARCHIVE_CHANNEL = "archivar_canal"
 
 
 @dataclass(frozen=True, slots=True)

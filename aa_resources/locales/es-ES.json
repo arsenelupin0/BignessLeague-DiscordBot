@@ -13,7 +13,7 @@
           "match_played": "Partido jugado",
           "matchday_closed": "Jornada cerrada",
           "reopen_match": "Reabrir partido",
-          "delete_channel": "Eliminación de canal"
+          "archive_channel": "Archivar canal"
         }
       }
     },
@@ -276,7 +276,7 @@
       "action": "Nuevo cargo en"
     },
     "channel_management": {
-      "delete_prompt": "Vas a eliminar el canal `{channel_name}` de forma permanente.\nRoles protegidos del sistema: {protected_roles}.\nConfirma solo si estás completamente seguro.",
+      "archive_prompt": "Vas a mover el canal `{channel_name}` a la categoría de archivo configurada.\nSi viene de Oro se colocará por encima del separador y si viene de Plata se colocará por debajo.\nConfirma solo si quieres aplicar este archivado.",
       "matchday_close_prompt": "Vas a cerrar la jornada en `{channel_name}`.\nSe eliminaran los permisos de los roles no protegidos y solo conservaran acceso: {protected_roles}.\nConfirma solo si quieres aplicar este cierre."
     },
     "tickets": {
@@ -421,13 +421,13 @@
       "select_before_confirm": "Selecciona al menos un rol antes de confirmar.",
       "selection_cancelled": "Selección de roles cancelada."
     },
-    "channel_delete_confirmation": {
+    "channel_archive_confirmation": {
       "only_actor": "Solo quien ejecutó el comando puede confirmar esta acción.",
-      "timeout": "La confirmación ha expirado. No se ha eliminado el canal.",
-      "deleting": "Eliminando canal...",
-      "cancelled": "Eliminación cancelada.",
+      "timeout": "La confirmación ha expirado. No se ha movido el canal.",
+      "processing": "Moviendo canal...",
+      "cancelled": "Archivado cancelado.",
       "buttons": {
-        "confirm": "Confirmar eliminación",
+        "confirm": "Confirmar archivado",
         "cancel": "Cancelar"
       }
     },
@@ -477,7 +477,11 @@
       "no_valid_additional_roles": "Selecciona al menos un rol adicional válido.",
       "range_start_missing": "No existe el rol de inicio configurado para el selector: `{role_id}`.",
       "range_end_missing": "No existe el rol de fin configurado para el selector: `{role_id}`.",
-      "range_empty": "No hay roles seleccionables entre los separadores configurados."
+      "range_empty": "No hay roles seleccionables entre los separadores configurados.",
+      "archive_source_category_unsupported": "Este archivado solo está soportado para canales que pertenezcan a las categorías configuradas de Oro o Plata.",
+      "archive_category_missing": "No existe la categoría de archivo configurada: `{category_id}`.",
+      "archive_separator_missing": "No existe el canal separador configurado: `{channel_id}`.",
+      "archive_separator_not_in_category": "El canal separador `{channel_id}` no pertenece a la categoría de archivo configurada: `{category_id}`."
     },
     "tickets": {
       "ceo_only": "Solo puede publicar el panel de tickets un miembro con el rol `CEO`.",
@@ -563,6 +567,8 @@
     "channel_management": {
       "match_played_summary": "Canal puesto en modo solo lectura para el resto de roles. Staff, Administrador y Ceo mantienen escritura.",
       "matchday_closed_summary": "Canal cerrado para roles no protegidos. Solo Staff, Administrador y Ceo conservan acceso.",
+      "archive_above_separator_summary": "Canal archivado. Se ha movido a la categoría configurada por encima del separador.",
+      "archive_below_separator_summary": "Canal archivado. Se ha movido a la categoría configurada por debajo del separador.",
       "reopen_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal.",
       "reopen_with_roles_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal y se han añadido estos roles: {roles}.",
       "add_roles_summary": "Se han anadido al canal estos roles: {roles}."

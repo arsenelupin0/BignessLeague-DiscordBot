@@ -17,18 +17,19 @@ from dataclasses import dataclass
 import discord
 
 from bigness_league_bot.application.services.channel_closure import (
-    ChannelActionResult,
-    ChannelCloseMode,
-    PROTECTED_ROLE_NAMES,
     MATCH_CHANNEL_STATUS_CLOSED,
     MATCH_CHANNEL_STATUS_OPEN,
     MATCH_CHANNEL_STATUS_PLAYED,
+    ChannelActionResult,
+    ChannelCloseMode,
+    PROTECTED_ROLE_NAMES,
     is_match_channel_name,
     protected_role_names_label,
     with_match_channel_status,
 )
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import LocalizedText, localize
+from bigness_league_bot.core.settings import Settings
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 
 LOGGER = logging.getLogger(__name__)
@@ -99,6 +100,13 @@ class ChannelAccessRoleCatalog:
     range_start: discord.Role
     range_end: discord.Role
     roles: tuple[discord.Role, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class MatchChannelArchiveDestination:
+    category: discord.CategoryChannel
+    separator: discord.TextChannel
+    place_before_separator: bool
 
 
 def require_text_channel(channel: object) -> discord.TextChannel:
@@ -553,7 +561,102 @@ def _add_roles_summary(roles: tuple[discord.Role, ...]) -> LocalizedText:
     )
 
 
-async def delete_text_channel(
+def _resolve_match_channel_archive_destination(
+        channel: discord.TextChannel,
+        settings: Settings,
+) -> MatchChannelArchiveDestination:
+    if channel.category_id == settings.gold_division_category_id:
+        place_before_separator = True
+    elif channel.category_id == settings.silver_division_category_id:
+        place_before_separator = False
+    else:
+        raise ChannelManagementError(
+            localize(I18N.errors.channel_management.archive_source_category_unsupported)
+        )
+
+    archive_category = channel.guild.get_channel(
+        settings.archived_match_channel_category_id
+    )
+    if not isinstance(archive_category, discord.CategoryChannel):
+        raise ChannelManagementError(
+            localize(
+                I18N.errors.channel_management.archive_category_missing,
+                category_id=settings.archived_match_channel_category_id,
+            )
+        )
+
+    separator = channel.guild.get_channel(settings.archived_match_channel_separator_id)
+    if not isinstance(separator, discord.TextChannel):
+        raise ChannelManagementError(
+            localize(
+                I18N.errors.channel_management.archive_separator_missing,
+                channel_id=settings.archived_match_channel_separator_id,
+            )
+        )
+
+    if separator.category_id != archive_category.id:
+        raise ChannelManagementError(
+            localize(
+                I18N.errors.channel_management.archive_separator_not_in_category,
+                channel_id=separator.id,
+                category_id=archive_category.id,
+            )
+        )
+
+    return MatchChannelArchiveDestination(
+        category=archive_category,
+        separator=separator,
+        place_before_separator=place_before_separator,
+    )
+
+
+async def archive_text_channel(
+        channel: discord.TextChannel,
+        actor: discord.abc.User,
+        settings: Settings,
+) -> ChannelActionResult:
+    destination = _resolve_match_channel_archive_destination(channel, settings)
+    placement = "encima" if destination.place_before_separator else "debajo"
+    LOGGER.info(
+        "CHANNEL_ARCHIVE_REQUEST channel=%s(%s) actor=%s(%s) archive_category=%s separator=%s placement=%s",
+        channel.name,
+        channel.id,
+        user_audit_label(actor),
+        actor.id,
+        destination.category.id,
+        destination.separator.id,
+        placement,
+    )
+    move_kwargs: dict[str, object] = {
+        "category": destination.category,
+        "reason": (
+            f"{user_audit_label(actor)} confirmo /cerrar_canal "
+            f"accion={ChannelCloseMode.ARCHIVE_CHANNEL.value} "
+            f"destino_categoria={destination.category.id} "
+            f"separador={destination.separator.id} "
+            f"ubicacion={placement}"
+        ),
+        "sync_permissions": False,
+    }
+    if destination.place_before_separator:
+        move_kwargs["before"] = destination.separator
+    else:
+        move_kwargs["after"] = destination.separator
+
+    await channel.move(**move_kwargs)
+
+    summary_key = (
+        I18N.actions.channel_management.archive_above_separator_summary
+        if destination.place_before_separator
+        else I18N.actions.channel_management.archive_below_separator_summary
+    )
+    return ChannelActionResult(
+        action=ChannelCloseMode.ARCHIVE_CHANNEL,
+        summary=localize(summary_key),
+    )
+
+
+async def _legacy_delete_text_channel_unused(
         channel: discord.TextChannel,
         actor: discord.abc.User,
 ) -> None:
@@ -567,6 +670,6 @@ async def delete_text_channel(
     await channel.delete(
         reason=(
             f"{user_audit_label(actor)} confirmó /cerrar_canal "
-            f"accion={ChannelCloseMode.DELETE_CHANNEL.value}"
+            f"accion={ChannelCloseMode.ARCHIVE_CHANNEL.value}"
         )
     )

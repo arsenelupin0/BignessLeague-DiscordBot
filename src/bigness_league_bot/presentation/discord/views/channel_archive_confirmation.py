@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 import discord
 
 from bigness_league_bot.infrastructure.discord.channel_management import (
-    delete_text_channel,
+    archive_text_channel,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import LocalizationService
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
 
-class _ConfirmDeleteButton(discord.ui.Button["ChannelDeleteConfirmationView"]):
+class _ConfirmArchiveButton(discord.ui.Button["ChannelArchiveConfirmationView"]):
     def __init__(self, *, label: str) -> None:
         super().__init__(label=label, style=discord.ButtonStyle.danger)
 
@@ -33,13 +33,13 @@ class _ConfirmDeleteButton(discord.ui.Button["ChannelDeleteConfirmationView"]):
             interaction: discord.Interaction[BignessLeagueBot],
     ) -> None:
         view = self.view
-        if not isinstance(view, ChannelDeleteConfirmationView):
+        if not isinstance(view, ChannelArchiveConfirmationView):
             return
 
-        await view.confirm_delete(interaction)
+        await view.confirm_archive(interaction)
 
 
-class _CancelDeleteButton(discord.ui.Button["ChannelDeleteConfirmationView"]):
+class _CancelArchiveButton(discord.ui.Button["ChannelArchiveConfirmationView"]):
     def __init__(self, *, label: str) -> None:
         super().__init__(label=label, style=discord.ButtonStyle.secondary)
 
@@ -48,13 +48,13 @@ class _CancelDeleteButton(discord.ui.Button["ChannelDeleteConfirmationView"]):
             interaction: discord.Interaction[BignessLeagueBot],
     ) -> None:
         view = self.view
-        if not isinstance(view, ChannelDeleteConfirmationView):
+        if not isinstance(view, ChannelArchiveConfirmationView):
             return
 
-        await view.cancel_delete(interaction)
+        await view.cancel_archive(interaction)
 
 
-class ChannelDeleteConfirmationView(discord.ui.View):
+class ChannelArchiveConfirmationView(discord.ui.View):
     def __init__(
             self,
             *,
@@ -71,17 +71,17 @@ class ChannelDeleteConfirmationView(discord.ui.View):
         self.locale = locale
         self.message: discord.InteractionMessage | None = None
         self.add_item(
-            _ConfirmDeleteButton(
+            _ConfirmArchiveButton(
                 label=self.localizer.translate(
-                    I18N.messages.channel_delete_confirmation.buttons.confirm,
+                    I18N.messages.channel_archive_confirmation.buttons.confirm,
                     locale=self.locale,
                 )
             )
         )
         self.add_item(
-            _CancelDeleteButton(
+            _CancelArchiveButton(
                 label=self.localizer.translate(
-                    I18N.messages.channel_delete_confirmation.buttons.cancel,
+                    I18N.messages.channel_archive_confirmation.buttons.cancel,
                     locale=self.locale,
                 )
             )
@@ -96,7 +96,7 @@ class ChannelDeleteConfirmationView(discord.ui.View):
 
         await interaction.response.send_message(
             self.localizer.translate(
-                I18N.messages.channel_delete_confirmation.only_actor,
+                I18N.messages.channel_archive_confirmation.only_actor,
                 locale=interaction.locale,
             ),
             ephemeral=True,
@@ -108,13 +108,13 @@ class ChannelDeleteConfirmationView(discord.ui.View):
         if self.message is not None:
             await self.message.edit(
                 content=self.localizer.translate(
-                    I18N.messages.channel_delete_confirmation.timeout,
+                    I18N.messages.channel_archive_confirmation.timeout,
                     locale=self.locale,
                 ),
                 view=self,
             )
 
-    async def confirm_delete(
+    async def confirm_archive(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
     ) -> None:
@@ -122,15 +122,26 @@ class ChannelDeleteConfirmationView(discord.ui.View):
         self._disable_children()
         await interaction.response.edit_message(
             content=self.localizer.translate(
-                I18N.messages.channel_delete_confirmation.deleting,
+                I18N.messages.channel_archive_confirmation.processing,
                 locale=interaction.locale,
             ),
             view=self,
         )
         self.stop()
-        await delete_text_channel(self.channel, self.actor)
+        action_result = await archive_text_channel(
+            self.channel,
+            self.actor,
+            interaction.client.settings,
+        )
+        await interaction.edit_original_response(
+            content=self.localizer.render(
+                action_result.summary,
+                locale=interaction.locale,
+            ),
+            view=self,
+        )
 
-    async def cancel_delete(
+    async def cancel_archive(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
     ) -> None:
@@ -138,7 +149,7 @@ class ChannelDeleteConfirmationView(discord.ui.View):
         self._disable_children()
         await interaction.response.edit_message(
             content=self.localizer.translate(
-                I18N.messages.channel_delete_confirmation.cancelled,
+                I18N.messages.channel_archive_confirmation.cancelled,
                 locale=interaction.locale,
             ),
             view=self,

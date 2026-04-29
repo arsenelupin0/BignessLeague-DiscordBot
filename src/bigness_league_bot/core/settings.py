@@ -220,6 +220,8 @@ class Settings:
     staff_captain_role_id: int = 1_493_595_896_179_327_097
     gold_division_category_id: int = 1_487_858_997_812_789_298
     silver_division_category_id: int = 1_487_859_192_256_790_630
+    archived_match_channel_category_id: int = 1_498_977_374_786_818_118
+    archived_match_channel_separator_id: int = 1_498_977_799_426_277_376
     timezone: str = "local"
     match_channel_ticket_url: str = "https://canary.discord.com/channels/1016819103555657851/1016824990949179512"
     match_channel_rules_url: str = "https://canary.discord.com/channels/1016819103555657851/1363537934665515351"
@@ -348,6 +350,14 @@ class Settings:
         silver_division_category_id = _read_int(
             "BOT_SILVER_DIVISION_CATEGORY_ID",
             1_487_859_192_256_790_630,
+        )
+        archived_match_channel_category_id = _read_int(
+            "BOT_ARCHIVED_MATCH_CHANNEL_CATEGORY_ID",
+            1_498_977_374_786_818_118,
+        )
+        archived_match_channel_separator_id = _read_int(
+            "BOT_ARCHIVED_MATCH_CHANNEL_SEPARATOR_ID",
+            1_498_977_799_426_277_376,
         )
         timezone = _read_str("BOT_TIMEZONE", "local")
         try:
@@ -502,6 +512,8 @@ class Settings:
             staff_captain_role_id=staff_captain_role_id,
             gold_division_category_id=gold_division_category_id,
             silver_division_category_id=silver_division_category_id,
+            archived_match_channel_category_id=archived_match_channel_category_id,
+            archived_match_channel_separator_id=archived_match_channel_separator_id,
             timezone=timezone,
             match_channel_ticket_url=match_channel_ticket_url,
             match_channel_rules_url=match_channel_rules_url,
