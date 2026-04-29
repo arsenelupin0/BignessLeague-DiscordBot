@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import discord
@@ -7,6 +8,7 @@ import discord
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.infrastructure.discord.channel_management import get_channel_access_role_catalog
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
+    TeamRoleRemovalSummary,
     build_member_lookup_keys,
     normalize_member_lookup_text,
     remove_roles_from_member_by_name,
@@ -27,15 +29,21 @@ from bigness_league_bot.infrastructure.google.team_sheet_repository import (
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 
 
+@dataclass(frozen=True, slots=True)
+class TeamSigningRoleRemovalReport:
+    message: str | None
+    summary: TeamRoleRemovalSummary | None
+
+
 async def remove_discord_roles_after_signing_removal(
         interaction: discord.Interaction[Any],
         *,
         discord_name: str,
         result: TeamSigningRemovalResult,
-) -> str | None:
+) -> TeamSigningRoleRemovalReport:
     guild = interaction.guild
     if guild is None:
-        return None
+        return TeamSigningRoleRemovalReport(message=None, summary=None)
 
     settings = interaction.client.settings
     role_catalog = get_channel_access_role_catalog(
@@ -84,17 +92,23 @@ async def remove_discord_roles_after_signing_removal(
             roles_to_remove=roles_to_remove,
         )
     except (CommandUserError, discord.Forbidden, discord.HTTPException) as exc:
-        return localizer.translate(
-            I18N.actions.team_signing.role_removal_failed,
-            locale=locale,
-            details=str(exc),
+        return TeamSigningRoleRemovalReport(
+            message=localizer.translate(
+                I18N.actions.team_signing.role_removal_failed,
+                locale=locale,
+                details=str(exc),
+            ),
+            summary=None,
         )
 
-    return format_team_role_removal_message(
-        localizer=localizer,
-        locale=locale,
-        discord_name=discord_name,
-        removal_summary=removal_summary,
+    return TeamSigningRoleRemovalReport(
+        message=format_team_role_removal_message(
+            localizer=localizer,
+            locale=locale,
+            discord_name=discord_name,
+            removal_summary=removal_summary,
+        ),
+        summary=removal_summary,
     )
 
 

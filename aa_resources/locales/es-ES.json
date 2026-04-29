@@ -595,6 +595,12 @@
         "team_line": "- [Fichado por]({team_message_url}) {team_role_mention}",
         "team_line_unlinked": "- Fichado por {team_role_mention}",
         "staff_line": "  - [Nuevo cargo de {staff_role_name} para]({staff_message_url}) {member_mention} >> {team_role_mention}"
+      },
+      "removal_visibility": {
+        "content": "\n\n# ¿Dónde ver mi baja?\n{lines}",
+        "team_line": "- [Baja del club]({team_message_url}) {team_role_mention}",
+        "player_line": "- [Baja como jugador para]({player_message_url}) {member_mention} >> {team_role_mention}",
+        "staff_line": "- [Baja del cargo de {staff_role_name} para]({staff_message_url}) {member_mention} >> {team_role_mention}"
       }
     },
     "team_role_assignment": {

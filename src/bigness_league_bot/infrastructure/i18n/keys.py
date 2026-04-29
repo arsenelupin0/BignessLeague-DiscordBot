@@ -1190,6 +1190,17 @@ class _ActionsTeamSigningVisibility:
                                                 default_text="  - [Nuevo cargo de {staff_role_name} para]({staff_message_url}) {member_mention} >> {team_role_mention}")
 
 
+class _ActionsTeamSigningRemovalVisibility:
+    content: TranslationKey = TranslationKey(key="actions.team_signing.removal_visibility.content",
+                                             default_text="\n\n# \u00bfD\u00f3nde ver mi baja?\n{lines}")
+    team_line: TranslationKey = TranslationKey(key="actions.team_signing.removal_visibility.team_line",
+                                               default_text="- [Baja del club]({team_message_url}) {team_role_mention}")
+    player_line: TranslationKey = TranslationKey(key="actions.team_signing.removal_visibility.player_line",
+                                                 default_text="- [Baja como jugador para]({player_message_url}) {member_mention} >> {team_role_mention}")
+    staff_line: TranslationKey = TranslationKey(key="actions.team_signing.removal_visibility.staff_line",
+                                                default_text="- [Baja del cargo de {staff_role_name} para]({staff_message_url}) {member_mention} >> {team_role_mention}")
+
+
 class _ActionsTeamSigning:
     completed: TranslationKey = TranslationKey(key="actions.team_signing.completed",
                                                default_text="Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.")
@@ -1218,6 +1229,7 @@ class _ActionsTeamSigning:
     role_assignment_ambiguous: TranslationKey = TranslationKey(key="actions.team_signing.role_assignment_ambiguous",
                                                                default_text="Coincidencias ambiguas en Discord: {names}.")
     visibility: _ActionsTeamSigningVisibility = _ActionsTeamSigningVisibility()
+    removal_visibility: _ActionsTeamSigningRemovalVisibility = _ActionsTeamSigningRemovalVisibility()
 
 
 class _ActionsTeamRoleAssignment:

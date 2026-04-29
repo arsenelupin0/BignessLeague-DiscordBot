@@ -446,6 +446,12 @@
         "team_line": "- [Signed by]({team_message_url}) {team_role_mention}",
         "team_line_unlinked": "- Signed by {team_role_mention}",
         "staff_line": "  - [New {staff_role_name} role for]({staff_message_url}) {member_mention} >> {team_role_mention}"
+      },
+      "removal_visibility": {
+        "content": "\n\n# Where can I see my removal?\n{lines}",
+        "team_line": "- [Club removal]({team_message_url}) {team_role_mention}",
+        "player_line": "- [Player removal for]({player_message_url}) {member_mention} >> {team_role_mention}",
+        "staff_line": "- [Removal from {staff_role_name} role for]({staff_message_url}) {member_mention} >> {team_role_mention}"
       }
     },
     "team_role_assignment": {

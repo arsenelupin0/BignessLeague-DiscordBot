@@ -52,6 +52,24 @@ class TeamSigningStaffAnnouncementLink:
     url: str
 
 
+@dataclass(frozen=True, slots=True)
+class TeamRemovalAnnouncementLink:
+    url: str
+
+
+@dataclass(frozen=True, slots=True)
+class PlayerRemovalAnnouncementLink:
+    member_mention: str
+    url: str
+
+
+@dataclass(frozen=True, slots=True)
+class StaffRemovalAnnouncementLink:
+    staff_role_name: str
+    member_mention: str
+    url: str
+
+
 def split_discord_message_content(content: str) -> tuple[str, ...]:
     chunks: list[str] = []
     remaining = content.strip()
@@ -214,6 +232,57 @@ def build_team_signing_visibility_message(
         locale=locale,
         team_lines=team_lines,
         staff_lines=f"\n{staff_lines}" if staff_lines else "",
+    )
+
+
+def build_team_signing_removal_visibility_message(
+        *,
+        localizer: LocalizationService,
+        locale: str | discord.Locale | None,
+        team_role_mention: str,
+        team_links: tuple[TeamRemovalAnnouncementLink, ...] = (),
+        player_links: tuple[PlayerRemovalAnnouncementLink, ...] = (),
+        staff_links: tuple[StaffRemovalAnnouncementLink, ...] = (),
+) -> str:
+    if not team_links and not player_links and not staff_links:
+        return ""
+
+    visibility_lines = [
+        *(
+            localizer.translate(
+                I18N.actions.team_signing.removal_visibility.team_line,
+                locale=locale,
+                team_message_url=link.url,
+                team_role_mention=team_role_mention,
+            )
+            for link in team_links
+        ),
+        *(
+            localizer.translate(
+                I18N.actions.team_signing.removal_visibility.player_line,
+                locale=locale,
+                player_message_url=link.url,
+                member_mention=link.member_mention,
+                team_role_mention=team_role_mention,
+            )
+            for link in player_links
+        ),
+        *(
+            localizer.translate(
+                I18N.actions.team_signing.removal_visibility.staff_line,
+                locale=locale,
+                staff_role_name=discord.utils.escape_markdown(link.staff_role_name),
+                staff_message_url=link.url,
+                member_mention=link.member_mention,
+                team_role_mention=team_role_mention,
+            )
+            for link in staff_links
+        ),
+    ]
+    return localizer.translate(
+        I18N.actions.team_signing.removal_visibility.content,
+        locale=locale,
+        lines="\n".join(visibility_lines),
     )
 
 

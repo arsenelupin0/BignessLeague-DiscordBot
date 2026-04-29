@@ -35,6 +35,7 @@ from bigness_league_bot.infrastructure.discord.team_signing_messages import (
     build_team_role_sync_message,
     build_team_signing_import_completed_message,
     build_team_signing_removal_completed_message,
+    build_team_signing_removal_visibility_message,
     build_team_signing_visibility_message,
     collect_technical_staff_role_entries,
     split_discord_message_content,
@@ -44,6 +45,7 @@ from bigness_league_bot.infrastructure.discord.team_signing_role_reconciliation 
     remove_discord_roles_after_signing_removal,
 )
 from bigness_league_bot.infrastructure.discord.team_signing_visibility import (
+    collect_team_signing_removal_visibility_links,
     collect_team_signing_visibility_links,
 )
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
@@ -295,7 +297,8 @@ class TeamSigningCog(commands.Cog):
 
         ensure_allowed_member(interaction.user)
         await interaction.response.defer(thinking=True)
-        repository = GoogleSheetsTeamRepository(interaction.client.settings)
+        settings = interaction.client.settings
+        repository = GoogleSheetsTeamRepository(settings)
         if removal_scope == "player":
             result = await repository.remove_team_player_by_discord(discord_name)
         elif removal_scope == "staff":
@@ -303,10 +306,27 @@ class TeamSigningCog(commands.Cog):
         else:
             result = await repository.remove_team_member_by_discord(discord_name)
 
-        role_removal_message = await remove_discord_roles_after_signing_removal(
+        role_catalog = get_channel_access_role_catalog(
+            guild,
+            settings.channel_access_range_start_role_id,
+            settings.channel_access_range_end_role_id,
+        )
+        team_role = resolve_team_role_by_name(result.team_name, role_catalog)
+        player_role = resolve_player_role(guild, settings.player_role_id)
+        announcement_since = monotonic()
+        role_removal_report = await remove_discord_roles_after_signing_removal(
             interaction,
             discord_name=discord_name,
             result=result,
+        )
+        visibility_links = await collect_team_signing_removal_visibility_links(
+            settings=settings,
+            guild=guild,
+            team_role=team_role,
+            player_role=player_role,
+            result=result,
+            removal_summary=role_removal_report.summary,
+            since=announcement_since,
         )
         followup_message = build_team_signing_removal_completed_message(
             localizer=interaction.client.localizer,
@@ -314,11 +334,20 @@ class TeamSigningCog(commands.Cog):
             discord_name=discord_name,
             result=result,
         )
-        if role_removal_message:
-            followup_message = f"{followup_message}\n{role_removal_message}"
+        if role_removal_report.message:
+            followup_message = f"{followup_message}\n{role_removal_report.message}"
+
+        visibility_message = build_team_signing_removal_visibility_message(
+            localizer=interaction.client.localizer,
+            locale=interaction.locale,
+            team_role_mention=team_role.mention,
+            team_links=visibility_links.team_links,
+            player_links=visibility_links.player_links,
+            staff_links=visibility_links.staff_links,
+        )
 
         await interaction.followup.send(
-            followup_message,
+            f"{followup_message}{visibility_message}",
             allowed_mentions=discord.AllowedMentions.none(),
         )
 
