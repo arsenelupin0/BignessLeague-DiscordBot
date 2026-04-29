@@ -7,6 +7,10 @@ import discord
 
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.infrastructure.discord.channel_management import get_channel_access_role_catalog
+from bigness_league_bot.infrastructure.discord.team_change_announcements import (
+    TEAM_PLAYER_ROLE_REMOVAL_SPEC,
+    TEAM_STAFF_ROLE_REMOVAL_SPEC,
+)
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     TeamRoleRemovalSummary,
     build_member_lookup_keys,
@@ -16,10 +20,15 @@ from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     resolve_player_role,
     resolve_team_role_by_name,
 )
+from bigness_league_bot.infrastructure.discord.team_role_change_delivery import (
+    suppress_team_change_announcement,
+)
 from bigness_league_bot.infrastructure.discord.team_signing_messages import (
     format_team_role_removal_message,
 )
 from bigness_league_bot.infrastructure.discord.team_staff_roles import (
+    filter_team_staff_role_names_for_player_status,
+    normalize_team_staff_role_name,
     resolve_optional_team_staff_roles,
 )
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
@@ -41,9 +50,10 @@ async def remove_discord_roles_after_signing_removal(
         discord_name: str,
         result: TeamSigningRemovalResult,
 ) -> TeamSigningRoleRemovalReport:
-    guild = interaction.guild
-    if guild is None:
+    interaction_guild = interaction.guild
+    if interaction_guild is None:
         return TeamSigningRoleRemovalReport(message=None, summary=None)
+    guild: discord.Guild = interaction_guild
 
     settings = interaction.client.settings
     role_catalog = get_channel_access_role_catalog(
@@ -63,12 +73,27 @@ async def remove_discord_roles_after_signing_removal(
             guild,
             settings.player_role_id,
         )
-        has_team_affiliation_after = (
+        has_target_team_affiliation_after = (
                 result.is_player_present_after
                 or bool(result.remaining_staff_role_names)
         )
+        remaining_staff_role_keys_after_any_team = {
+            role_key
+            for role_key in (
+                normalize_team_staff_role_name(role_name)
+                for role_name in result.remaining_staff_role_names_after_any_team
+            )
+            if role_key is not None
+        }
         roles_to_remove: list[discord.Role] = []
-        if result.removed_player_name is not None:
+        if not has_target_team_affiliation_after:
+            roles_to_remove.append(team_role)
+        if not result.has_any_team_affiliation_after:
+            roles_to_remove.append(participant_role)
+        if (
+                result.removed_player_name is not None
+                and not result.is_player_present_after_any_team
+        ):
             roles_to_remove.append(player_role)
 
         staff_roles = resolve_optional_team_staff_roles(
@@ -79,17 +104,28 @@ async def remove_discord_roles_after_signing_removal(
             manager_role_id=settings.staff_manager_role_id,
             second_manager_role_id=settings.staff_second_manager_role_id,
             captain_role_id=settings.staff_captain_role_id,
-            staff_role_names=result.removed_staff_role_names,
+            staff_role_names=(
+                role_name
+                for role_name in result.removed_staff_role_names
+                if normalize_team_staff_role_name(role_name)
+                   not in remaining_staff_role_keys_after_any_team
+            ),
         )
         roles_to_remove.extend(staff_roles)
-        if not has_team_affiliation_after:
-            roles_to_remove.extend((participant_role, team_role))
 
         removal_summary = await remove_roles_from_member_by_name(
             guild,
             actor=interaction.user,
             member_name=discord_name,
             roles_to_remove=roles_to_remove,
+            before_remove=lambda member, roles: _suppress_secondary_removal_announcements_when_leaving_team(
+                guild=guild,
+                member=member,
+                team_role=team_role,
+                player_role=player_role,
+                staff_roles=staff_roles,
+                roles_to_remove=roles,
+            ),
         )
     except (CommandUserError, discord.Forbidden, discord.HTTPException) as exc:
         return TeamSigningRoleRemovalReport(
@@ -110,6 +146,40 @@ async def remove_discord_roles_after_signing_removal(
         ),
         summary=removal_summary,
     )
+
+
+def _suppress_secondary_removal_announcements_when_leaving_team(
+        *,
+        guild: discord.Guild,
+        member: discord.Member,
+        team_role: discord.Role,
+        player_role: discord.Role,
+        staff_roles: tuple[discord.Role, ...],
+        roles_to_remove: tuple[discord.Role, ...],
+) -> None:
+    removed_role_ids = {role.id for role in roles_to_remove}
+    if team_role.id not in removed_role_ids:
+        return
+
+    if player_role.id in removed_role_ids:
+        suppress_team_change_announcement(
+            guild_id=guild.id,
+            member_id=member.id,
+            team_role_id=None,
+            spec=TEAM_PLAYER_ROLE_REMOVAL_SPEC,
+        )
+
+    for staff_role in staff_roles:
+        if staff_role.id not in removed_role_ids:
+            continue
+
+        suppress_team_change_announcement(
+            guild_id=guild.id,
+            member_id=member.id,
+            team_role_id=None,
+            spec=TEAM_STAFF_ROLE_REMOVAL_SPEC,
+            staff_role_id=staff_role.id,
+        )
 
 
 async def reconcile_team_role_assignment(
@@ -146,7 +216,10 @@ async def reconcile_team_role_assignment(
                 manager_role_id=bot.settings.staff_manager_role_id,
                 second_manager_role_id=bot.settings.staff_second_manager_role_id,
                 captain_role_id=bot.settings.staff_captain_role_id,
-                staff_role_names=member_affiliation.staff_role_names,
+                staff_role_names=filter_team_staff_role_names_for_player_status(
+                    member_affiliation.staff_role_names,
+                    is_player_in_same_team=member_affiliation.is_player,
+                ),
             )
 
         roles_to_remove: dict[int, discord.Role] = {}

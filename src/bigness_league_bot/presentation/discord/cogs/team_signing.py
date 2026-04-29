@@ -156,6 +156,7 @@ class TeamSigningCog(commands.Cog):
                 common_roles=(participant_role, player_role),
                 actor=interaction.user,
                 member_names=(player.discord_name for player in signing_batch.players),
+                suppress_player_signing_announcements=True,
             )
 
         technical_staff_result = None
@@ -163,6 +164,13 @@ class TeamSigningCog(commands.Cog):
         if technical_staff_batch is not None:
             technical_staff_result = await repository.register_team_technical_staff(
                 technical_staff_batch
+            )
+            player_member_names = (
+                tuple(player.discord_name for player in signing_batch.players)
+                if signing_batch is not None
+                else collect_team_profile_player_names(
+                    await repository.find_team_profile_for_role(team_role)
+                )
             )
             staff_role_sync_summary = await sync_team_staff_roles_by_names(
                 guild,
@@ -178,11 +186,15 @@ class TeamSigningCog(commands.Cog):
                 staff_entries=collect_technical_staff_role_entries(
                     technical_staff_batch
                 ),
+                player_member_names=player_member_names,
+                count_existing_staff_roles_as_assigned=True,
+                suppress_staff_signing_announcements=True,
             )
 
         visibility_links = await collect_team_signing_visibility_links(
             settings=settings,
             guild=guild,
+            bot=self.bot,
             team_role=team_role,
             assignment_summary=assignment_summary,
             technical_staff_batch=technical_staff_batch,
@@ -223,16 +235,21 @@ class TeamSigningCog(commands.Cog):
     @app_commands.describe(
         discord_jugador=localized_locale_str(
             I18N.commands.team_signing.remove_signing.parameters.discord_name.description
+        ),
+        equipo=localized_locale_str(
+            I18N.commands.team_signing.remove_signing.parameters.team_role.description
         )
     )
     async def remove_signing(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
             discord_jugador: str,
+            equipo: discord.Role,
     ) -> None:
         await self._remove_signing(
             interaction,
             discord_name=discord_jugador,
+            team_role=equipo,
             removal_scope="all",
         )
 
@@ -246,16 +263,21 @@ class TeamSigningCog(commands.Cog):
     @app_commands.describe(
         discord_jugador=localized_locale_str(
             I18N.commands.team_signing.remove_player_signing.parameters.discord_name.description
+        ),
+        equipo=localized_locale_str(
+            I18N.commands.team_signing.remove_player_signing.parameters.team_role.description
         )
     )
     async def remove_player_signing(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
             discord_jugador: str,
+            equipo: discord.Role,
     ) -> None:
         await self._remove_signing(
             interaction,
             discord_name=discord_jugador,
+            team_role=equipo,
             removal_scope="player",
         )
 
@@ -269,16 +291,21 @@ class TeamSigningCog(commands.Cog):
     @app_commands.describe(
         discord_staff=localized_locale_str(
             I18N.commands.team_signing.remove_staff_signing.parameters.discord_name.description
+        ),
+        equipo=localized_locale_str(
+            I18N.commands.team_signing.remove_staff_signing.parameters.team_role.description
         )
     )
     async def remove_staff_signing(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
             discord_staff: str,
+            equipo: discord.Role,
     ) -> None:
         await self._remove_signing(
             interaction,
             discord_name=discord_staff,
+            team_role=equipo,
             removal_scope="staff",
         )
 
@@ -287,6 +314,7 @@ class TeamSigningCog(commands.Cog):
             interaction: discord.Interaction[BignessLeagueBot],
             *,
             discord_name: str,
+            team_role: discord.Role,
             removal_scope: str,
     ) -> None:
         guild = interaction.guild
@@ -298,20 +326,38 @@ class TeamSigningCog(commands.Cog):
         ensure_allowed_member(interaction.user)
         await interaction.response.defer(thinking=True)
         settings = interaction.client.settings
-        repository = GoogleSheetsTeamRepository(settings)
-        if removal_scope == "player":
-            result = await repository.remove_team_player_by_discord(discord_name)
-        elif removal_scope == "staff":
-            result = await repository.remove_team_staff_by_discord(discord_name)
-        else:
-            result = await repository.remove_team_member_by_discord(discord_name)
-
         role_catalog = get_channel_access_role_catalog(
             guild,
             settings.channel_access_range_start_role_id,
             settings.channel_access_range_end_role_id,
         )
-        team_role = resolve_team_role_by_name(result.team_name, role_catalog)
+        if team_role.id not in {role.id for role in role_catalog.roles}:
+            raise CommandUserError(
+                localize(
+                    I18N.errors.match_channel_creation.team_role_out_of_range,
+                    role_name=team_role.name,
+                    range_start=role_catalog.range_start.name,
+                    range_end=role_catalog.range_end.name,
+                )
+            )
+
+        repository = GoogleSheetsTeamRepository(settings)
+        if removal_scope == "player":
+            result = await repository.remove_team_player_by_discord(
+                discord_name,
+                team_name=team_role.name,
+            )
+        elif removal_scope == "staff":
+            result = await repository.remove_team_staff_by_discord(
+                discord_name,
+                team_name=team_role.name,
+            )
+        else:
+            result = await repository.remove_team_member_by_discord(
+                discord_name,
+                team_name=team_role.name,
+            )
+
         player_role = resolve_player_role(guild, settings.player_role_id)
         announcement_since = monotonic()
         role_removal_report = await remove_discord_roles_after_signing_removal(
@@ -421,6 +467,7 @@ class TeamSigningCog(commands.Cog):
             captain_role_id=settings.staff_captain_role_id,
             actor=interaction.user,
             staff_entries=collect_team_profile_staff_role_entries(team_profile),
+            player_member_names=collect_team_profile_player_names(team_profile),
         )
         await reconcile_team_role_assignment(
             bot=self.bot,

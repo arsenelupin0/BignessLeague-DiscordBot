@@ -224,15 +224,23 @@ class TeamSheetMutationService:
     def remove_team_player_by_discord_sync(
             self,
             discord_name: str,
+            *,
+            team_name: str | None = None,
     ) -> TeamSigningRemovalResult:
-        return self._remove_team_player_by_discord_sync(discord_name)
+        return self._remove_team_player_by_discord_sync(
+            discord_name,
+            team_name=team_name,
+        )
 
     def _remove_team_player_by_discord_sync(
             self,
             discord_name: str,
+            *,
+            team_name: str | None = None,
     ) -> TeamSigningRemovalResult:
         return self._remove_team_member_by_discord_sync(
             discord_name,
+            team_name=team_name,
             remove_player=True,
             remove_staff=False,
         )
@@ -240,15 +248,23 @@ class TeamSheetMutationService:
     def remove_team_staff_by_discord_sync(
             self,
             discord_name: str,
+            *,
+            team_name: str | None = None,
     ) -> TeamSigningRemovalResult:
-        return self._remove_team_staff_by_discord_sync(discord_name)
+        return self._remove_team_staff_by_discord_sync(
+            discord_name,
+            team_name=team_name,
+        )
 
     def _remove_team_staff_by_discord_sync(
             self,
             discord_name: str,
+            *,
+            team_name: str | None = None,
     ) -> TeamSigningRemovalResult:
         return self._remove_team_member_by_discord_sync(
             discord_name,
+            team_name=team_name,
             remove_player=False,
             remove_staff=True,
         )
@@ -257,11 +273,13 @@ class TeamSheetMutationService:
             self,
             discord_name: str,
             *,
+            team_name: str | None = None,
             remove_player: bool = True,
             remove_staff: bool = True,
     ) -> TeamSigningRemovalResult:
         return self._remove_team_member_by_discord_sync(
             discord_name,
+            team_name=team_name,
             remove_player=remove_player,
             remove_staff=remove_staff,
         )
@@ -270,10 +288,12 @@ class TeamSheetMutationService:
             self,
             discord_name: str,
             *,
+            team_name: str | None = None,
             remove_player: bool = True,
             remove_staff: bool = True,
     ) -> TeamSigningRemovalResult:
         normalized_discord_name = _normalize_member_lookup_text(discord_name)
+        normalized_team_name = _normalize_member_lookup_text(team_name)
         if not normalized_discord_name:
             _raise_removal_not_found_error(
                 discord_name,
@@ -300,6 +320,12 @@ class TeamSheetMutationService:
                 candidate_contexts[
                     (match.worksheet_title, match.block.title_row, match.block.start_column)
                 ] = match.block
+        if normalized_team_name:
+            candidate_contexts = {
+                context_key: block
+                for context_key, block in candidate_contexts.items()
+                if _normalize_member_lookup_text(block.title) == normalized_team_name
+            }
 
         if not candidate_contexts:
             _raise_removal_not_found_error(
@@ -419,6 +445,46 @@ class TeamSheetMutationService:
                     }
                 )
 
+        after_player_matches = tuple(
+            match
+            for match in player_matches
+            if (
+                    not remove_player
+                    or (match.worksheet_title, match.block.title_row, match.block.start_column)
+                    != target_context_key
+            )
+        )
+        after_staff_matches = tuple(
+            match
+            for match in staff_matches
+            if (
+                    not remove_staff
+                    or (match.worksheet_title, match.block.title_row, match.block.start_column)
+                    != target_context_key
+            )
+        )
+        after_player_contexts = {
+            (match.worksheet_title, match.block.title_row, match.block.start_column)
+            for match in after_player_matches
+        }
+        remaining_staff_role_names_after_any_team = tuple(
+            sorted(
+                {
+                    match.member.role_name
+                    for match in after_staff_matches
+                    if (
+                        _normalize_technical_staff_role_name(match.member.role_name)
+                        not in {"capitan", "captain"}
+                        or (
+                            match.worksheet_title,
+                            match.block.title_row,
+                            match.block.start_column,
+                        ) in after_player_contexts
+                )
+                }
+            )
+        )
+
         try:
             if update_data:
                 service.spreadsheets().values().batchUpdate(
@@ -448,6 +514,9 @@ class TeamSheetMutationService:
             removed_staff_role_names=removed_staff_role_names,
             remaining_staff_role_names=remaining_staff_role_names,
             is_player_present_after=is_player_present_after,
+            is_player_present_after_any_team=bool(after_player_matches),
+            remaining_staff_role_names_after_any_team=remaining_staff_role_names_after_any_team,
+            has_any_team_affiliation_after=bool(after_player_matches or after_staff_matches),
         )
 
     def register_team_technical_staff_sync(

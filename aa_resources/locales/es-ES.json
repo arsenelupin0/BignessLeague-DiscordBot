@@ -149,6 +149,9 @@
         "parameters": {
           "discord_name": {
             "description": "Nombre de Discord del miembro que quieres eliminar completamente."
+          },
+          "team_role": {
+            "description": "Equipo del que quieres dar de baja al miembro."
           }
         }
       },
@@ -158,6 +161,9 @@
         "parameters": {
           "discord_name": {
             "description": "Nombre de Discord del jugador que quieres eliminar del roster."
+          },
+          "team_role": {
+            "description": "Equipo del que quieres dar de baja al jugador."
           }
         }
       },
@@ -167,6 +173,9 @@
         "parameters": {
           "discord_name": {
             "description": "Nombre de Discord del miembro que quieres eliminar de STAFF TÉCNICO."
+          },
+          "team_role": {
+            "description": "Equipo del que quieres dar de baja al staff técnico."
           }
         }
       }

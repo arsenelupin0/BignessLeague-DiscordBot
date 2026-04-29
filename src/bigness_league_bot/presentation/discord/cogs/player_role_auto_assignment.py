@@ -17,6 +17,7 @@ from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     resolve_team_role_by_name,
 )
 from bigness_league_bot.infrastructure.discord.team_staff_roles import (
+    filter_team_staff_role_names_for_player_status,
     resolve_optional_team_staff_roles,
 )
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
@@ -102,7 +103,10 @@ class PlayerRoleAutoAssignment(commands.Cog):
                 manager_role_id=self.bot.settings.staff_manager_role_id,
                 second_manager_role_id=self.bot.settings.staff_second_manager_role_id,
                 captain_role_id=self.bot.settings.staff_captain_role_id,
-                staff_role_names=match.affiliation.staff_role_names,
+                staff_role_names=filter_team_staff_role_names_for_player_status(
+                    match.affiliation.staff_role_names,
+                    is_player_in_same_team=match.affiliation.is_player,
+                ),
             )
         except CommandUserError as exc:
             LOGGER.warning(

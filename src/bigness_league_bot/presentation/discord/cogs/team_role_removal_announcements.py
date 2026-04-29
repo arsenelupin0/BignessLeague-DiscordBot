@@ -169,7 +169,9 @@ class TeamRoleRemovalAnnouncements(commands.Cog):
                 failure_log_code="TEAM_ROLE_SIGNING_ANNOUNCEMENT_SEND_FAILED",
             )
 
-        if has_team_role_change:
+        if removed_team_roles and not added_team_roles:
+            return
+        if has_team_role_change and not removed_staff_roles and not added_staff_roles:
             return
 
         if player_role_removed:

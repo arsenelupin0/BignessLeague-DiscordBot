@@ -49,6 +49,9 @@ class TeamSigningRemovalResult:
     removed_staff_role_names: tuple[str, ...] = ()
     remaining_staff_role_names: tuple[str, ...] = ()
     is_player_present_after: bool = False
+    is_player_present_after_any_team: bool = False
+    remaining_staff_role_names_after_any_team: tuple[str, ...] = ()
+    has_any_team_affiliation_after: bool = False
 
 
 @dataclass(frozen=True, slots=True)

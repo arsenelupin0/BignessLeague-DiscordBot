@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
 import discord
@@ -14,8 +14,16 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
     ChannelAccessRoleCatalog,
     user_audit_label,
 )
+from bigness_league_bot.infrastructure.discord.team_change_announcements import (
+    TEAM_PLAYER_ROLE_SIGNING_SPEC,
+    TEAM_STAFF_ROLE_SIGNING_SPEC,
+)
+from bigness_league_bot.infrastructure.discord.team_role_change_delivery import (
+    suppress_team_change_announcement,
+)
 from bigness_league_bot.infrastructure.discord.team_staff_roles import (
     collect_staff_role_entries_by_member,
+    filter_team_staff_role_names_for_player_status,
     resolve_configured_team_staff_roles,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
@@ -54,6 +62,7 @@ class TeamStaffRoleSyncSummary:
     already_configured_members: tuple[discord.Member, ...]
     unresolved_names: tuple[str, ...]
     ambiguous_names: tuple[str, ...]
+    assigned_staff_entries: tuple[TeamStaffRoleEntry, ...] = ()
 
 
 def build_member_lookup_keys(member: discord.Member) -> tuple[str, ...]:
@@ -132,6 +141,9 @@ async def sync_team_staff_roles_by_names(
         captain_role_id: int,
         actor: discord.abc.User,
         staff_entries: Iterable[TeamStaffRoleEntry],
+        player_member_names: Iterable[str] = (),
+        count_existing_staff_roles_as_assigned: bool = False,
+        suppress_staff_signing_announcements: bool = False,
 ) -> TeamStaffRoleSyncSummary:
     normalized_entries = collect_staff_role_entries_by_member(staff_entries)
     if not normalized_entries:
@@ -141,6 +153,7 @@ async def sync_team_staff_roles_by_names(
             already_configured_members=(),
             unresolved_names=(),
             ambiguous_names=(),
+            assigned_staff_entries=(),
         )
 
     configured_staff_roles = resolve_configured_team_staff_roles(
@@ -152,6 +165,13 @@ async def sync_team_staff_roles_by_names(
         second_manager_role_id=second_manager_role_id,
         captain_role_id=captain_role_id,
     )
+    player_lookup_keys = {
+        normalized_name
+        for player_member_name in player_member_names
+        if (
+               normalized_name := _normalize_member_lookup_text(player_member_name)
+           ) not in PLACEHOLDER_MEMBER_NAMES
+    }
     members = await _load_guild_members(guild)
     members_by_lookup = _index_members_by_lookup_keys(members)
     assigned_members: list[discord.Member] = []
@@ -159,6 +179,7 @@ async def sync_team_staff_roles_by_names(
     already_configured_members: list[discord.Member] = []
     unresolved_names: list[str] = []
     ambiguous_names: list[str] = []
+    assigned_staff_entries: list[TeamStaffRoleEntry] = []
 
     for entry in normalized_entries.values():
         matches = _resolve_members_for_name(
@@ -175,10 +196,17 @@ async def sync_team_staff_roles_by_names(
             continue
 
         member = matches[0]
+        filtered_role_names = filter_team_staff_role_names_for_player_status(
+            entry.role_keys,
+            is_player_in_same_team=any(
+                lookup_key in player_lookup_keys
+                for lookup_key in build_member_lookup_keys(member)
+            ),
+        )
         desired_staff_roles = tuple(
             {
                 configured_staff_roles[role_key].id: configured_staff_roles[role_key]
-                for role_key in sorted(entry.role_keys)
+                for role_key in sorted(filtered_role_names)
                 if role_key in configured_staff_roles
             }.values()
         )
@@ -200,24 +228,52 @@ async def sync_team_staff_roles_by_names(
             }.values()
         )
 
-        if base_roles_to_add:
+        roles_to_add = tuple(
+            {
+                role.id: role
+                for role in (*base_roles_to_add, *staff_roles_to_add)
+            }.values()
+        )
+        if count_existing_staff_roles_as_assigned:
+            assigned_role_keys = {
+                role_key
+                for role_key in filtered_role_names
+                if role_key in configured_staff_roles
+            }
+        else:
+            staff_role_ids_to_add = {role.id for role in staff_roles_to_add}
+            assigned_role_keys = {
+                role_key
+                for role_key in filtered_role_names
+                if (
+                        role_key in configured_staff_roles
+                        and configured_staff_roles[role_key].id in staff_role_ids_to_add
+                )
+            }
+        if suppress_staff_signing_announcements:
+            _suppress_staff_signing_announcements(
+                guild=guild,
+                member=member,
+                team_role=team_role,
+                configured_staff_roles=configured_staff_roles,
+                role_keys=assigned_role_keys,
+            )
+        if roles_to_add:
             await member.add_roles(
-                *base_roles_to_add,
+                *roles_to_add,
                 reason=(
                     f"{user_audit_label(actor)} sincronizó roles de staff del equipo "
                     f"{team_role.name} para {user_audit_label(member)}"
                 ),
             )
-        if staff_roles_to_add:
-            await member.add_roles(
-                *staff_roles_to_add,
-                reason=(
-                    f"{user_audit_label(actor)} sincronizó cargos de staff del equipo "
-                    f"{team_role.name} para {user_audit_label(member)}"
-                ),
-            )
-        if base_roles_to_add or staff_roles_to_add:
+        if roles_to_add:
             assigned_members.append(member)
+        elif count_existing_staff_roles_as_assigned and desired_staff_roles:
+            assigned_members.append(member)
+        assigned_staff_entries.extend(
+            TeamStaffRoleEntry(role_name=role_key, member_name=entry.member_name)
+            for role_key in sorted(assigned_role_keys)
+        )
         if roles_to_remove:
             await member.remove_roles(
                 *roles_to_remove,
@@ -236,7 +292,30 @@ async def sync_team_staff_roles_by_names(
         already_configured_members=tuple(_deduplicate_members(already_configured_members)),
         unresolved_names=tuple(unresolved_names),
         ambiguous_names=tuple(ambiguous_names),
+        assigned_staff_entries=tuple(assigned_staff_entries),
     )
+
+
+def _suppress_staff_signing_announcements(
+        *,
+        guild: discord.Guild,
+        member: discord.Member,
+        team_role: discord.Role,
+        configured_staff_roles: dict[str, discord.Role],
+        role_keys: Iterable[str],
+) -> None:
+    for role_key in role_keys:
+        staff_role = configured_staff_roles.get(role_key)
+        if staff_role is None:
+            continue
+
+        suppress_team_change_announcement(
+            guild_id=guild.id,
+            member_id=member.id,
+            team_role_id=team_role.id,
+            spec=TEAM_STAFF_ROLE_SIGNING_SPEC,
+            staff_role_id=staff_role.id,
+        )
 
 
 async def assign_team_roles_by_names(
@@ -246,6 +325,7 @@ async def assign_team_roles_by_names(
         common_roles: tuple[discord.Role, ...],
         actor: discord.abc.User,
         member_names: Iterable[str],
+        suppress_player_signing_announcements: bool = False,
 ) -> TeamRoleAssignmentSummary:
     members = await _load_guild_members(guild)
     members_by_lookup = _index_members_by_lookup_keys(members)
@@ -283,6 +363,13 @@ async def assign_team_roles_by_names(
             already_configured_members.append(member)
             continue
 
+        if suppress_player_signing_announcements:
+            _suppress_player_signing_announcement(
+                guild=guild,
+                member=member,
+                team_role=team_role,
+                roles_to_add=roles_to_add,
+            )
         await member.add_roles(
             *roles_to_add,
             reason=(
@@ -300,12 +387,32 @@ async def assign_team_roles_by_names(
     )
 
 
+def _suppress_player_signing_announcement(
+        *,
+        guild: discord.Guild,
+        member: discord.Member,
+        team_role: discord.Role,
+        roles_to_add: tuple[discord.Role, ...],
+) -> None:
+    added_role_ids = {role.id for role in roles_to_add}
+    if team_role.id not in added_role_ids:
+        return
+
+    suppress_team_change_announcement(
+        guild_id=guild.id,
+        member_id=member.id,
+        team_role_id=None,
+        spec=TEAM_PLAYER_ROLE_SIGNING_SPEC,
+    )
+
+
 async def remove_roles_from_member_by_name(
         guild: discord.Guild,
         *,
         actor: discord.abc.User,
         member_name: str,
         roles_to_remove: Iterable[discord.Role],
+        before_remove: Callable[[discord.Member, tuple[discord.Role, ...]], None] | None = None,
 ) -> TeamRoleRemovalSummary:
     members = await _load_guild_members(guild)
     members_by_lookup = _index_members_by_lookup_keys(members)
@@ -336,6 +443,8 @@ async def remove_roles_from_member_by_name(
         )
 
     roles_tuple = tuple(unique_roles_to_remove.values())
+    if before_remove is not None:
+        before_remove(member, roles_tuple)
     await member.remove_roles(
         *roles_tuple,
         reason=(

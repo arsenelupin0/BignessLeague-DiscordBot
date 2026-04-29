@@ -22,6 +22,7 @@ from bigness_league_bot.infrastructure.google.team_sheet_repository import TeamR
 LOGGER = logging.getLogger("bigness_league_bot.activity")
 ANNOUNCEMENT_DEDUPLICATION_WINDOW_SECONDS = 3.0
 ANNOUNCEMENT_REGISTRY_RETENTION_SECONDS = 30.0
+ANNOUNCEMENT_SUPPRESSION_WINDOW_SECONDS = 8.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,6 +40,7 @@ class SentTeamChangeAnnouncement:
 
 _sent_announcements: list[SentTeamChangeAnnouncement] = []
 _sent_announcements_condition = asyncio.Condition()
+_suppressed_announcement_keys: dict[tuple[object, ...], float] = {}
 
 
 async def wait_for_team_change_announcement(
@@ -92,6 +94,27 @@ async def wait_for_team_change_announcement(
         )
 
 
+def suppress_team_change_announcement(
+        *,
+        guild_id: int,
+        member_id: int,
+        team_role_id: int | None,
+        spec: TeamChangeAnnouncementSpec,
+        staff_role_id: int | None = None,
+) -> None:
+    current_timestamp = monotonic()
+    _prune_suppressed_announcements(current_timestamp)
+    _suppressed_announcement_keys[
+        (
+            guild_id,
+            member_id,
+            team_role_id,
+            _resolve_announcement_spec_key(spec),
+            staff_role_id,
+        )
+    ] = current_timestamp
+
+
 class TeamChangeAnnouncementDeduplicator:
     def __init__(self) -> None:
         self._recent_announcement_keys: dict[tuple[object, ...], float] = {}
@@ -104,6 +127,7 @@ class TeamChangeAnnouncementDeduplicator:
             team_role: discord.Role,
             spec: TeamChangeAnnouncementSpec,
             staff_role: discord.Role | None = None,
+            ignore_suppression: bool = False,
     ) -> tuple[object, ...] | None:
         current_timestamp = monotonic()
         self._prune_recent_announcements(current_timestamp)
@@ -115,6 +139,26 @@ class TeamChangeAnnouncementDeduplicator:
             staff_role.id if staff_role is not None else None,
         )
         previous_timestamp = self._recent_announcement_keys.get(announcement_key)
+        if (
+                not ignore_suppression
+                and _is_announcement_suppressed(announcement_key, current_timestamp)
+        ):
+            LOGGER.info(
+                "TEAM_CHANGE_ANNOUNCEMENT_SUPPRESSED guild=%s(%s) user=%s(%s) team_role=%s(%s) spec=%s staff_role=%s",
+                guild.name,
+                guild.id,
+                member,
+                member.id,
+                team_role.name,
+                team_role.id,
+                announcement_key[3],
+                (
+                    f"{staff_role.name}({staff_role.id})"
+                    if staff_role is not None
+                    else "-"
+                ),
+            )
+            return None
         if previous_timestamp is not None:
             LOGGER.info(
                 "TEAM_CHANGE_ANNOUNCEMENT_DUPLICATE_SKIPPED guild=%s(%s) user=%s(%s) team_role=%s(%s) spec=%s staff_role=%s",
@@ -169,12 +213,14 @@ class TeamRoleChangeAnnouncementSender:
             spec: TeamChangeAnnouncementSpec,
             channel: discord.abc.Messageable,
             failure_log_code: str,
+            ignore_suppression: bool = False,
     ) -> discord.Message | None:
         announcement_key = self.deduplicator.reserve(
             guild=guild,
             member=member,
             team_role=team_role,
             spec=spec,
+            ignore_suppression=ignore_suppression,
         )
         if announcement_key is None:
             return None
@@ -224,6 +270,7 @@ class TeamRoleChangeAnnouncementSender:
             metadata: TeamRoleSheetMetadata,
             spec: TeamChangeAnnouncementSpec,
             channel: discord.abc.Messageable,
+            ignore_suppression: bool = False,
     ) -> discord.Message | None:
         announcement_key = self.deduplicator.reserve(
             guild=guild,
@@ -231,6 +278,7 @@ class TeamRoleChangeAnnouncementSender:
             team_role=team_role,
             spec=spec,
             staff_role=staff_role,
+            ignore_suppression=ignore_suppression,
         )
         if announcement_key is None:
             return None
@@ -373,6 +421,29 @@ def _prune_sent_announcements(current_timestamp: float) -> None:
         if current_timestamp - announcement.created_at < ANNOUNCEMENT_REGISTRY_RETENTION_SECONDS
     ]
     _sent_announcements[:] = retained_announcements
+
+
+def _is_announcement_suppressed(
+        announcement_key: tuple[object, ...],
+        current_timestamp: float,
+) -> bool:
+    _prune_suppressed_announcements(current_timestamp)
+    if announcement_key in _suppressed_announcement_keys:
+        return True
+
+    guild_id, member_id, _, spec_key, staff_role_id = announcement_key
+    wildcard_team_key = (guild_id, member_id, None, spec_key, staff_role_id)
+    return wildcard_team_key in _suppressed_announcement_keys
+
+
+def _prune_suppressed_announcements(current_timestamp: float) -> None:
+    stale_keys = tuple(
+        announcement_key
+        for announcement_key, timestamp in _suppressed_announcement_keys.items()
+        if current_timestamp - timestamp >= ANNOUNCEMENT_SUPPRESSION_WINDOW_SECONDS
+    )
+    for stale_key in stale_keys:
+        _suppressed_announcement_keys.pop(stale_key, None)
 
 
 def _build_role_removal_description(*, guild: discord.Guild, bot: Any) -> str:

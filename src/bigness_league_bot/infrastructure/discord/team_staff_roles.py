@@ -13,10 +13,10 @@ from bigness_league_bot.infrastructure.i18n.keys import I18N
 
 PLACEHOLDER_MEMBER_NAMES = {"", "-"}
 TEAM_STAFF_ROLE_MANAGER_ALIASES = {"manager"}
-TEAM_STAFF_ROLE_SECOND_MANAGER_ALIASES = {"segundo manager"}
+TEAM_STAFF_ROLE_SECOND_MANAGER_ALIASES = {"segundo manager", "second_manager"}
 TEAM_STAFF_ROLE_CEO = "ceo"
 TEAM_STAFF_ROLE_COACH_ALIASES = {"coach"}
-TEAM_STAFF_ROLE_ANALYST_ALIASES = {"analista"}
+TEAM_STAFF_ROLE_ANALYST_ALIASES = {"analista", "analyst"}
 TEAM_STAFF_ROLE_CAPTAIN_ALIASES = {"capitan", "captain"}
 TEAM_STAFF_ROLE_MANAGER = "manager"
 TEAM_STAFF_ROLE_SECOND_MANAGER = "second_manager"
@@ -80,6 +80,25 @@ def resolve_optional_team_staff_roles(
         unique_roles[role.id] = role
 
     return tuple(unique_roles.values())
+
+
+def filter_team_staff_role_names_for_player_status(
+        staff_role_names: Iterable[str],
+        *,
+        is_player_in_same_team: bool,
+) -> tuple[str, ...]:
+    return tuple(
+        role_name
+        for role_name in staff_role_names
+        if (
+                is_player_in_same_team
+                or _normalize_team_staff_role_name(role_name) != TEAM_STAFF_ROLE_CAPTAIN
+        )
+    )
+
+
+def normalize_team_staff_role_name(role_name: str | None) -> str | None:
+    return _normalize_team_staff_role_name(role_name)
 
 
 def resolve_team_staff_role_by_name(

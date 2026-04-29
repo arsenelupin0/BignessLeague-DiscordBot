@@ -88,9 +88,10 @@ crea un canal de partido con permisos para ambos equipos.
 - `/ver_mi_equipo`: busca tu equipo en Google Sheets a partir de tu rol de Discord y muestra su ficha.
 - `/hacer_fichaje enlace_jugadores:<url> enlace_staff_tecnico:<url>`: importa jugadores, staff tecnico o ambos desde
   mensajes de Discord hacia Google Sheets.
-- `/dar_de_baja discord_jugador:<texto>`: elimina completamente a un miembro como jugador y staff tecnico.
-- `/dar_de_baja_jugador discord_jugador:<texto>`: elimina solo al jugador del roster.
-- `/dar_de_baja_staff discord_staff:<texto>`: elimina solo sus cargos de `STAFF TÉCNICO`.
+- `/dar_de_baja discord_jugador:<texto> equipo:<rol>`: elimina completamente a un miembro como jugador y staff tecnico
+  en ese equipo.
+- `/dar_de_baja_jugador discord_jugador:<texto> equipo:<rol>`: elimina solo al jugador del roster de ese equipo.
+- `/dar_de_baja_staff discord_staff:<texto> equipo:<rol>`: elimina solo sus cargos de `STAFF TÉCNICO` en ese equipo.
 - `/asignar_rol_equipo_automatico equipo:<rol>`: revisa la hoja del equipo y sincroniza los roles en Discord.
 - `/integracion_de_tickets`: publica el panel de soporte para abrir tickets desde un menu desplegable.
 
@@ -175,6 +176,7 @@ Restricciones de `/cerrar_canal`:
 `/dar_de_baja`, `/dar_de_baja_jugador` y `/dar_de_baja_staff`:
 
 - solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
+- requieren indicar el `equipo` para resolver correctamente Discords que aparecen en varios bloques
 - `/dar_de_baja` elimina al miembro del roster y de `STAFF TÉCNICO` si aparece en ambos sitios
 - `/dar_de_baja_jugador` solo reescribe el roster; si el miembro sigue en `STAFF TÉCNICO`, conserva el rol de equipo
 - `/dar_de_baja_staff` solo limpia sus filas de staff; si el miembro sigue como jugador, conserva `Participante`,

@@ -14,13 +14,22 @@ from bigness_league_bot.infrastructure.discord.team_change_announcements import 
     TEAM_ROLE_SIGNING_SPEC,
     TEAM_STAFF_ROLE_REMOVAL_SPEC,
     TEAM_STAFF_ROLE_SIGNING_SPEC,
+    build_team_role_sheet_metadata_fallback,
+)
+from bigness_league_bot.infrastructure.discord.team_change_bulletin import (
+    create_team_change_repository,
+    load_team_change_metadata,
+    resolve_team_change_bulletin_channel,
 )
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
+    TeamStaffRoleEntry,
     build_member_lookup_keys,
     normalize_member_lookup_text,
 )
 from bigness_league_bot.infrastructure.discord.team_role_change_delivery import (
     SentTeamChangeAnnouncement,
+    TeamChangeAnnouncementDeduplicator,
+    TeamRoleChangeAnnouncementSender,
     wait_for_team_change_announcement,
 )
 from bigness_league_bot.infrastructure.discord.team_signing_messages import (
@@ -39,6 +48,7 @@ if TYPE_CHECKING:
         TeamTechnicalStaffBatch,
     )
     from bigness_league_bot.core.settings import Settings
+    from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
     from bigness_league_bot.infrastructure.discord.team_role_assignment import (
         TeamRoleAssignmentSummary,
         TeamRoleRemovalSummary,
@@ -68,6 +78,7 @@ async def collect_team_signing_visibility_links(
         *,
         settings: Settings,
         guild: discord.Guild,
+        bot: BignessLeagueBot,
         team_role: discord.Role,
         assignment_summary: TeamRoleAssignmentSummary | None,
         technical_staff_batch: TeamTechnicalStaffBatch | None,
@@ -90,6 +101,7 @@ async def collect_team_signing_visibility_links(
         _collect_staff_announcement_links(
             settings=settings,
             guild=guild,
+            bot=bot,
             team_role=team_role,
             technical_staff_batch=technical_staff_batch,
             staff_sync_summary=staff_sync_summary,
@@ -223,6 +235,7 @@ async def _collect_staff_announcement_links(
         *,
         settings: Settings,
         guild: discord.Guild,
+        bot: BignessLeagueBot,
         team_role: discord.Role,
         technical_staff_batch: TeamTechnicalStaffBatch | None,
         staff_sync_summary: TeamStaffRoleSyncSummary | None,
@@ -237,9 +250,19 @@ async def _collect_staff_announcement_links(
 
     tasks: list[Awaitable[SentTeamChangeAnnouncement | None]] = []
     link_specs: list[tuple[discord.Role, discord.Member]] = []
-    for staff_member in technical_staff_batch.members:
+    staff_entries = staff_sync_summary.assigned_staff_entries
+    if not staff_entries:
+        staff_entries = tuple(
+            TeamStaffRoleEntry(
+                role_name=member.role_name,
+                member_name=member.discord_name,
+            )
+            for member in technical_staff_batch.members
+        )
+
+    for staff_member in staff_entries:
         member = _resolve_synced_member(
-            staff_member.discord_name,
+            staff_member.member_name,
             staff_sync_summary.assigned_members,
         )
         if member is None:
@@ -274,10 +297,79 @@ async def _collect_staff_announcement_links(
         return ()
 
     announcements = await asyncio.gather(*tasks)
-    return _staff_links_from_announcements(
+    links = list(_staff_links_from_announcements(
         link_specs=link_specs,
         announcements=announcements,
+    ))
+    missing_link_specs = tuple(
+        link_spec
+        for link_spec, announcement in zip(link_specs, announcements, strict=True)
+        if not isinstance(announcement, SentTeamChangeAnnouncement)
     )
+    if missing_link_specs:
+        links.extend(
+            await _send_missing_staff_signing_announcements(
+                settings=settings,
+                guild=guild,
+                bot=bot,
+                team_role=team_role,
+                link_specs=missing_link_specs,
+            )
+        )
+
+    return _deduplicate_staff_links(links)
+
+
+async def _send_missing_staff_signing_announcements(
+        *,
+        settings: Settings,
+        guild: discord.Guild,
+        bot: BignessLeagueBot,
+        team_role: discord.Role,
+        link_specs: Iterable[tuple[discord.Role, discord.Member]],
+) -> tuple[TeamSigningStaffAnnouncementLink, ...]:
+    channel = await resolve_team_change_bulletin_channel(
+        guild=guild,
+        channel_id=settings.team_role_removal_announcement_channel_id,
+    )
+    if channel is None:
+        return ()
+
+    repository = await create_team_change_repository(settings, guild=guild)
+    metadata = await load_team_change_metadata(
+        repository=repository,
+        team_role=team_role,
+        fallback=build_team_role_sheet_metadata_fallback(team_role),
+        guild=guild,
+    )
+    sender = TeamRoleChangeAnnouncementSender(
+        bot=bot,
+        deduplicator=TeamChangeAnnouncementDeduplicator(),
+    )
+    links: list[TeamSigningStaffAnnouncementLink] = []
+    for staff_role, member in link_specs:
+        message = await sender.send_staff_role_change_announcement(
+            member=member,
+            team_role=team_role,
+            staff_role=staff_role,
+            guild=guild,
+            metadata=metadata,
+            spec=TEAM_STAFF_ROLE_SIGNING_SPEC,
+            channel=channel,
+            ignore_suppression=True,
+        )
+        if message is None:
+            continue
+
+        links.append(
+            TeamSigningStaffAnnouncementLink(
+                staff_role_name=staff_role.name,
+                member_mention=member.mention,
+                url=message.jump_url,
+            )
+        )
+
+    return tuple(links)
 
 
 async def _collect_staff_removal_announcement_links(

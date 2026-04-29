@@ -102,28 +102,37 @@ class GoogleSheetsTeamRepository:
     async def remove_team_player_by_discord(
             self,
             discord_name: str,
+            *,
+            team_name: str | None = None,
     ) -> TeamSigningRemovalResult:
         return await asyncio.to_thread(
             self.mutations.remove_team_player_by_discord_sync,
             discord_name,
+            team_name=team_name,
         )
 
     async def remove_team_staff_by_discord(
             self,
             discord_name: str,
+            *,
+            team_name: str | None = None,
     ) -> TeamSigningRemovalResult:
         return await asyncio.to_thread(
             self.mutations.remove_team_staff_by_discord_sync,
             discord_name,
+            team_name=team_name,
         )
 
     async def remove_team_member_by_discord(
             self,
             discord_name: str,
+            *,
+            team_name: str | None = None,
     ) -> TeamSigningRemovalResult:
         return await asyncio.to_thread(
             self.mutations.remove_team_member_by_discord_sync,
             discord_name,
+            team_name=team_name,
         )
 
     async def find_player_matches_by_discord_names(
