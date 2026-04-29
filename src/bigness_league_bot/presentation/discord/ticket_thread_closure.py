@@ -154,12 +154,18 @@ async def close_ticket_thread(
 
     await thread.edit(
         applied_tags=_build_closed_thread_tags(thread),
-        reason=f"{closed_by} ({closed_by.id}) actualizo tags de ticket={thread.id}",
+        reason=(
+            f"{_format_audit_actor(closed_by)} actualizo tags "
+            f"de ticket={thread.id}"
+        ),
     )
     await thread.edit(
         archived=True,
         locked=True,
-        reason=f"{closed_by} ({closed_by.id}) cerro publicacion ticket={thread.id}",
+        reason=(
+            f"{_format_audit_actor(closed_by)} cerro publicacion "
+            f"ticket={thread.id}"
+        ),
     )
     return closed_record
 
@@ -409,6 +415,16 @@ def _resolve_category_label(record: TicketRecord) -> str:
         return require_ticket_category(record.category_key).label
     except ValueError:
         return record.category_key
+
+
+def _format_audit_actor(actor: discord.abc.User | discord.Member) -> str:
+    display_name = (
+            getattr(actor, "display_name", None)
+            or getattr(actor, "global_name", None)
+            or getattr(actor, "name", None)
+            or "usuario"
+    )
+    return f"{display_name} ({actor.id})"
 
 
 async def _resolve_thread(
