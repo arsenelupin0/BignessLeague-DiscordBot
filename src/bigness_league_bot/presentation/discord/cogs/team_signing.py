@@ -26,6 +26,9 @@ from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     resolve_team_role_by_name,
     sync_team_staff_roles_by_names,
 )
+from bigness_league_bot.infrastructure.discord.team_role_provisioning import (
+    resolve_or_create_team_role,
+)
 from bigness_league_bot.infrastructure.discord.team_signing_imports import (
     parse_player_signing_batch,
     parse_technical_staff_batch,
@@ -142,17 +145,31 @@ class TeamSigningCog(commands.Cog):
         )
 
         repository = GoogleSheetsTeamRepository(interaction.client.settings)
-        team_role = resolve_team_role_by_name(team_name, role_catalog)
         participant_role = resolve_participant_role(guild, settings.participant_role_id)
         announcement_since = monotonic()
         player_result = None
         assignment_summary = None
+        team_role_created = False
+        team_role: discord.Role | None = None
+        if signing_batch is None:
+            team_role = resolve_team_role_by_name(team_name, role_catalog)
+
         if signing_batch is not None:
             player_role = resolve_player_role(guild, settings.player_role_id)
             player_result = await repository.register_team_signings(signing_batch)
+            team_role_result = await resolve_or_create_team_role(
+                guild,
+                team_name=team_name,
+                role_catalog=role_catalog,
+                actor=interaction.user,
+                create_if_missing=player_result.created_team_block,
+            )
+            provisioned_team_role = team_role_result.role
+            team_role = provisioned_team_role
+            team_role_created = team_role_result.created
             assignment_summary = await assign_team_roles_by_names(
                 guild,
-                team_role=team_role,
+                team_role=provisioned_team_role,
                 common_roles=(participant_role, player_role),
                 actor=interaction.user,
                 member_names=(player.discord_name for player in signing_batch.players),
@@ -161,6 +178,11 @@ class TeamSigningCog(commands.Cog):
 
         technical_staff_result = None
         staff_role_sync_summary = None
+        resolved_team_role = (
+            team_role
+            if team_role is not None
+            else resolve_team_role_by_name(team_name, role_catalog)
+        )
         if technical_staff_batch is not None:
             technical_staff_result = await repository.register_team_technical_staff(
                 technical_staff_batch
@@ -169,12 +191,12 @@ class TeamSigningCog(commands.Cog):
                 tuple(player.discord_name for player in signing_batch.players)
                 if signing_batch is not None
                 else collect_team_profile_player_names(
-                    await repository.find_team_profile_for_role(team_role)
+                    await repository.find_team_profile_for_role(resolved_team_role)
                 )
             )
             staff_role_sync_summary = await sync_team_staff_roles_by_names(
                 guild,
-                team_role=team_role,
+                team_role=resolved_team_role,
                 participant_role=participant_role,
                 ceo_role_id=settings.staff_ceo_role_id,
                 analyst_role_id=settings.staff_analyst_role_id,
@@ -195,7 +217,7 @@ class TeamSigningCog(commands.Cog):
             settings=settings,
             guild=guild,
             bot=self.bot,
-            team_role=team_role,
+            team_role=resolved_team_role,
             assignment_summary=assignment_summary,
             technical_staff_batch=technical_staff_batch,
             staff_sync_summary=staff_role_sync_summary,
@@ -212,11 +234,12 @@ class TeamSigningCog(commands.Cog):
             technical_staff_result=technical_staff_result,
             assignment_summary=assignment_summary,
             staff_sync_summary=staff_role_sync_summary,
+            created_team_role=team_role_created,
         )
         visibility_message = build_team_signing_visibility_message(
             localizer=interaction.client.localizer,
             locale=interaction.locale,
-            team_role_mention=team_role.mention,
+            team_role_mention=resolved_team_role.mention,
             team_links=visibility_links.team_links,
             staff_links=visibility_links.staff_links,
         )

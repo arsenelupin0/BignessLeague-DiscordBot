@@ -12,12 +12,9 @@ from __future__ import annotations
 from typing import Any
 
 from bigness_league_bot.application.services.team_signing import (
-    MAX_TEAM_SIGNING_PLAYERS,
     TeamSigningBatch,
-    TeamSigningCapacityError,
     TeamTechnicalStaffBatch,
-    merge_team_signing_players,
-    sort_team_signing_players, TeamSigningPlayer,
+    sort_team_signing_players,
 )
 from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.google.team_sheets.blocks import (
@@ -26,7 +23,6 @@ from bigness_league_bot.infrastructure.google.team_sheets.blocks import (
     _resolve_target_team_block,
 )
 from bigness_league_bot.infrastructure.google.team_sheets.cells import (
-    _build_hyperlink_cell_value,
     _is_free_block_title,
     _normalize_member_lookup_text,
     _normalize_technical_staff_role_name,
@@ -36,8 +32,6 @@ from bigness_league_bot.infrastructure.google.team_sheets.config import TeamShee
 from bigness_league_bot.infrastructure.google.team_sheets.errors import (
     TeamSheetDuplicatePlayerError,
     TeamSheetLayoutError,
-    TeamSheetRemainingSigningsExceededError,
-    TeamSheetRosterFullError,
     TeamSheetTechnicalStaffRoleNotFoundError,
     TeamSheetWriteError,
 )
@@ -51,26 +45,23 @@ from bigness_league_bot.infrastructure.google.team_sheets.http_errors import (
     _maybe_wrap_google_http_error,
 )
 from bigness_league_bot.infrastructure.google.team_sheets.models import (
+    TeamBlockAnchor,
     TeamSigningRemovalResult,
     TeamSigningWriteResult,
-    TeamTechnicalStaffWriteResult, TeamBlockAnchor,
+    TeamTechnicalStaffWriteResult,
 )
 from bigness_league_bot.infrastructure.google.team_sheets.parser import (
-    _build_player_values_grid,
     _collect_players_by_discord,
     _collect_technical_staff_rows,
     _parse_players,
-    _parse_remaining_signings_count,
-    _resolve_technical_staff_values,
-    _to_team_signing_player,
+    _resolve_technical_staff_values, _to_team_signing_player, _build_player_values_grid,
+)
+from bigness_league_bot.infrastructure.google.team_sheets.player_signing_mutations import (
+    register_team_signings_sync as _register_team_signings_sync,
 )
 from bigness_league_bot.infrastructure.google.team_sheets.ranges import _build_a1_range
 from bigness_league_bot.infrastructure.google.team_sheets.schema import (
-    PLACEHOLDER_CELL_VALUE,
-    TEAM_BLOCK_COLUMN_COUNT,
-    TEAM_BLOCK_MAX_PLAYERS,
-    TEAM_BLOCK_PLAYERS_ROW_OFFSET,
-    TEAM_BLOCK_SUMMARY_ROW_OFFSET,
+    PLACEHOLDER_CELL_VALUE, TEAM_BLOCK_PLAYERS_ROW_OFFSET, TEAM_BLOCK_MAX_PLAYERS, TEAM_BLOCK_COLUMN_COUNT,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 
@@ -84,141 +75,10 @@ class TeamSheetMutationService:
             self,
             signing_batch: TeamSigningBatch,
     ) -> TeamSigningWriteResult:
-        return self._register_team_signings_sync(signing_batch)
-
-    def _register_team_signings_sync(
-            self,
-            signing_batch: TeamSigningBatch,
-    ) -> TeamSigningWriteResult:
-        service = self.client.build_service(read_only=False)
-        _, sheet_grids = self.client.fetch_sheet_grids(service)
-        worksheet_title, cell_grid = _find_division_sheet(
-            signing_batch.division_name,
-            sheet_grids,
-        )
-        team_blocks = _collect_team_blocks(cell_grid)
-        if not team_blocks:
-            raise TeamSheetLayoutError(
-                localize(
-                    I18N.errors.team_signing.team_sheet_layout_invalid,
-                    sheet_name=worksheet_title,
-                )
-            )
-
-        target_block = _resolve_target_team_block(
-            signing_batch.team_name,
-            team_blocks,
-            worksheet_title=worksheet_title,
-        )
-        is_new_team_block = _is_free_block_title(target_block.title)
-        if is_new_team_block:
-            existing_players: tuple[TeamSigningPlayer, ...] = ()
-        else:
-            existing_players = tuple(
-                _to_team_signing_player(player)
-                for player in _parse_players(cell_grid, target_block)
-            )
-        try:
-            merged_players = merge_team_signing_players(
-                existing_players,
-                signing_batch.players,
-                capacity=MAX_TEAM_SIGNING_PLAYERS,
-            )
-        except TeamSigningCapacityError as exc:
-            raise TeamSheetRosterFullError(
-                localize(
-                    I18N.errors.team_signing.team_roster_full,
-                    team_name=signing_batch.team_name,
-                    available_slots=str(exc.available_slots),
-                    requested_slots=str(exc.requested_count),
-                )
-            ) from exc
-
-        update_data: list[dict[str, Any]] = [
-            {
-                "range": _build_a1_range(
-                    worksheet_title,
-                    target_block.title_row + TEAM_BLOCK_PLAYERS_ROW_OFFSET,
-                    target_block.start_column,
-                    TEAM_BLOCK_MAX_PLAYERS,
-                    TEAM_BLOCK_COLUMN_COUNT,
-                ),
-                "values": _build_player_values_grid(merged_players),
-            }
-        ]
-        if is_new_team_block or signing_batch.team_logo_url:
-            update_data.insert(
-                0,
-                {
-                    "range": _build_a1_range(
-                        worksheet_title,
-                        target_block.title_row,
-                        target_block.start_column,
-                        1,
-                        1,
-                    ),
-                    "values": [[
-                        _build_hyperlink_cell_value(
-                            signing_batch.team_name,
-                            signing_batch.team_logo_url,
-                        )
-                    ]],
-                },
-            )
-        else:
-            remaining_signings = _parse_remaining_signings_count(
-                cell_grid,
-                target_block,
-                worksheet_name=worksheet_title,
-            )
-            requested_signings = len(signing_batch.players)
-            if requested_signings > remaining_signings:
-                raise TeamSheetRemainingSigningsExceededError(
-                    localize(
-                        I18N.errors.team_signing.remaining_signings_exceeded,
-                        team_name=signing_batch.team_name,
-                        remaining_signings=str(remaining_signings),
-                        requested_signings=str(requested_signings),
-                    )
-                )
-
-            update_data.append(
-                {
-                    "range": _build_a1_range(
-                        worksheet_title,
-                        target_block.title_row + TEAM_BLOCK_SUMMARY_ROW_OFFSET,
-                        target_block.start_column,
-                        1,
-                        1,
-                    ),
-                    "values": [[str(remaining_signings - requested_signings)]],
-                }
-            )
-
-        try:
-            service.spreadsheets().values().batchUpdate(
-                spreadsheetId=self.config.spreadsheet_id,
-                body={
-                    "valueInputOption": "USER_ENTERED",
-                    "data": update_data,
-                },
-            ).execute()
-        except Exception as exc:
-            http_error = _maybe_wrap_google_http_error(exc)
-            if http_error is not None:
-                raise TeamSheetWriteError(
-                    localize(
-                        I18N.errors.team_signing.google_write_failed,
-                        details=_extract_http_error_message(http_error),
-                    )
-                ) from exc
-            raise
-
-        return TeamSigningWriteResult(
-            worksheet_title=worksheet_title,
-            team_name=signing_batch.team_name,
-            inserted_count=len(signing_batch.players),
-            total_players=len(merged_players),
+        return _register_team_signings_sync(
+            self.client,
+            self.config,
+            signing_batch,
         )
 
     def remove_team_player_by_discord_sync(

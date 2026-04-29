@@ -56,6 +56,10 @@ class TeamSheetRosterFullError(TeamSheetError):
     """Raised when the target team block does not have enough free slots."""
 
 
+class TeamSheetNewTeamMinimumPlayersError(TeamSheetError):
+    """Raised when a new team is registered with too few players."""
+
+
 class TeamSheetRemainingSigningsExceededError(TeamSheetError):
     """Raised when the requested signings exceed the remaining signing quota."""
 

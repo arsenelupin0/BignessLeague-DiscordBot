@@ -392,6 +392,8 @@
       "member_not_found": "No player or technical staff role with Discord `{discord_name}` was found in Google Sheets.",
       "player_duplicate": "There are multiple players with Discord `{discord_name}` in Google Sheets: {locations}. Fix it manually before continuing.",
       "member_duplicate": "Discord `{discord_name}` appears in more than one team block: {locations}. Fix it manually before continuing.",
+      "new_team_min_players": "To register the new team `{team_name}`, you must provide at least 3 players. Provided players: {player_count}.",
+      "player_already_registered_in_team": "The new team `{team_name}` cannot be registered because Discord `{discord_name}` already belongs to another team as a player: {locations}.",
       "remaining_signings_invalid": "The remaining signings cell is invalid for `{team_name}` in `{sheet_name}`.",
       "remaining_signings_exceeded": "There are not enough remaining signings in `{team_name}`. Remaining: {remaining_signings}. Requested: {requested_signings}.",
       "team_roster_full": "There is not enough room in `{team_name}` for these signings. Free slots: {available_slots}. Requested signings: {requested_slots}.",
@@ -429,6 +431,7 @@
     },
     "team_signing": {
       "completed": "Registered {inserted_count} signings in `{team_name}` within `{division_name}`. Current roster: {total_players}/6.",
+      "team_role_created": "Created the Discord role for `{team_name}` with a random color, shown separately in the member list, and sorted it alphabetically inside the team-role range.",
       "technical_staff_completed": "Updated technical staff for `{team_name}` in `{division_name}`. Updated rows: {updated_count}.",
       "staff_role_sync_summary": "Technical staff roles: new={assigned_count}, removed={removed_count}, already_set={already_count}, unresolved={unresolved_count}, ambiguous={ambiguous_count}.",
       "removed": "Removed `{player_name}` (`{discord_name}`) from `{team_name}` in `{division_name}`. Current roster: {total_players}/6.",

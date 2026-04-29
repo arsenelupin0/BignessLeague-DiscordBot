@@ -120,6 +120,7 @@ def build_team_signing_import_completed_message(
         technical_staff_result: TeamTechnicalStaffWriteResult | None,
         assignment_summary: TeamRoleAssignmentSummary | None,
         staff_sync_summary: TeamStaffRoleSyncSummary | None,
+        created_team_role: bool = False,
 ) -> str:
     message_lines: list[str] = []
     if player_result is not None and signing_batch is not None and assignment_summary is not None:
@@ -133,6 +134,14 @@ def build_team_signing_import_completed_message(
                 total_players=str(player_result.total_players),
             )
         )
+        if created_team_role:
+            message_lines.append(
+                localizer.translate(
+                    I18N.actions.team_signing.team_role_created,
+                    locale=locale,
+                    team_name=team_name,
+                )
+            )
         message_lines.append(
             localizer.translate(
                 I18N.actions.team_signing.role_assignment_summary,

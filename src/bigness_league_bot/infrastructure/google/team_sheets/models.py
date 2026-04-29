@@ -37,6 +37,7 @@ class TeamSigningWriteResult:
     team_name: str
     inserted_count: int
     total_players: int
+    created_team_block: bool = False
 
 
 @dataclass(frozen=True, slots=True)

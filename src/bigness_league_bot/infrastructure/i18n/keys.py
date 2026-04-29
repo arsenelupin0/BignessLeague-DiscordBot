@@ -1115,6 +1115,11 @@ class _ErrorsTeamSigning:
                                                       default_text="Hay varios jugadores con el Discord `{discord_name}` en Google Sheets: {locations}. Corr\u00edgelo manualmente antes de continuar.")
     member_duplicate: TranslationKey = TranslationKey(key="errors.team_signing.member_duplicate",
                                                       default_text="El Discord `{discord_name}` aparece en m\u00e1s de un bloque de equipo: {locations}. Corr\u00edgelo manualmente antes de continuar.")
+    new_team_min_players: TranslationKey = TranslationKey(key="errors.team_signing.new_team_min_players",
+                                                          default_text="Para registrar el equipo nuevo `{team_name}` debes indicar al menos 3 jugadores. Jugadores indicados: {player_count}.")
+    player_already_registered_in_team: TranslationKey = TranslationKey(
+        key="errors.team_signing.player_already_registered_in_team",
+        default_text="No se puede registrar el equipo nuevo `{team_name}` porque el Discord `{discord_name}` ya pertenece como jugador a otro equipo: {locations}.")
     remaining_signings_invalid: TranslationKey = TranslationKey(key="errors.team_signing.remaining_signings_invalid",
                                                                 default_text="La celda de fichajes restantes no es v\u00e1lida para `{team_name}` en `{sheet_name}`.")
     remaining_signings_exceeded: TranslationKey = TranslationKey(key="errors.team_signing.remaining_signings_exceeded",
@@ -1225,6 +1230,8 @@ class _ActionsTeamSigningRemovalVisibility:
 class _ActionsTeamSigning:
     completed: TranslationKey = TranslationKey(key="actions.team_signing.completed",
                                                default_text="Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.")
+    team_role_created: TranslationKey = TranslationKey(key="actions.team_signing.team_role_created",
+                                                       default_text="Se ha creado el rol de Discord para `{team_name}` con color aleatorio, visible por separado en la lista de miembros, y se ha ordenado alfab\u00e9ticamente dentro del rango de roles de equipo.")
     technical_staff_completed: TranslationKey = TranslationKey(key="actions.team_signing.technical_staff_completed",
                                                                default_text="Se ha actualizado el staff t\u00e9cnico de `{team_name}` en `{division_name}`. Filas actualizadas: {updated_count}.")
     staff_role_sync_summary: TranslationKey = TranslationKey(key="actions.team_signing.staff_role_sync_summary",
