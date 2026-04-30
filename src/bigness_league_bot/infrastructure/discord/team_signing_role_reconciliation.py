@@ -11,10 +11,12 @@ from bigness_league_bot.infrastructure.discord.team_change_announcements import 
     TEAM_PLAYER_ROLE_REMOVAL_SPEC,
     TEAM_STAFF_ROLE_REMOVAL_SPEC,
 )
-from bigness_league_bot.infrastructure.discord.team_role_assignment import (
-    TeamRoleRemovalSummary,
+from bigness_league_bot.infrastructure.discord.team_member_lookup import (
     build_member_lookup_keys,
     normalize_member_lookup_text,
+)
+from bigness_league_bot.infrastructure.discord.team_role_assignment import (
+    TeamRoleRemovalSummary,
     remove_roles_from_member_by_name,
     resolve_participant_role,
     resolve_player_role,

@@ -12,7 +12,7 @@ from bigness_league_bot.infrastructure.discord.channel_access_management import 
     ChannelAccessRoleCatalog,
     user_audit_label,
 )
-from bigness_league_bot.infrastructure.discord.team_role_assignment import normalize_member_lookup_text
+from bigness_league_bot.infrastructure.discord.team_member_lookup import normalize_member_lookup_text
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 
 

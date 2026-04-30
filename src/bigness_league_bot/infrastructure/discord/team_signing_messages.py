@@ -355,6 +355,7 @@ def collect_technical_staff_role_entries(
             member_name=member.discord_name,
         )
         for member in technical_staff_batch.members
+        if member.discord_name.strip()
     )
 
 

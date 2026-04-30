@@ -21,10 +21,12 @@ from bigness_league_bot.infrastructure.discord.team_change_bulletin import (
     load_team_change_metadata,
     resolve_team_change_bulletin_channel,
 )
-from bigness_league_bot.infrastructure.discord.team_role_assignment import (
-    TeamStaffRoleEntry,
+from bigness_league_bot.infrastructure.discord.team_member_lookup import (
     build_member_lookup_keys,
     normalize_member_lookup_text,
+)
+from bigness_league_bot.infrastructure.discord.team_role_assignment import (
+    TeamStaffRoleEntry,
 )
 from bigness_league_bot.infrastructure.discord.team_role_change_delivery import (
     SentTeamChangeAnnouncement,
@@ -38,6 +40,16 @@ from bigness_league_bot.infrastructure.discord.team_signing_messages import (
     TeamRemovalAnnouncementLink,
     TeamSigningStaffAnnouncementLink,
     TeamSigningTeamAnnouncementLink,
+)
+from bigness_league_bot.infrastructure.discord.team_signing_visibility_links import (
+    deduplicate_staff_links,
+    deduplicate_team_links,
+    player_removal_links_from_announcements,
+    staff_links_from_announcements,
+    staff_removal_links_from_announcements,
+    staff_sync_removal_links_from_announcements,
+    team_links_from_announcements,
+    team_removal_links_from_announcements,
 )
 from bigness_league_bot.infrastructure.discord.team_staff_roles import (
     resolve_team_staff_role_by_name,
@@ -65,6 +77,7 @@ DISCORD_MEMBER_REFERENCE_PATTERN = re.compile(r"^<@!?(\d+)>$|^(\d{15,20})$")
 class TeamSigningVisibilityLinks:
     team_links: tuple[TeamSigningTeamAnnouncementLink, ...]
     staff_links: tuple[TeamSigningStaffAnnouncementLink, ...]
+    staff_removal_links: tuple[StaffRemovalAnnouncementLink, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,7 +98,7 @@ async def collect_team_signing_visibility_links(
         staff_sync_summary: TeamStaffRoleSyncSummary | None,
         since: float,
 ) -> TeamSigningVisibilityLinks:
-    team_links, staff_team_links, staff_links = await asyncio.gather(
+    team_links, staff_team_links, staff_links, staff_removal_links = await asyncio.gather(
         _collect_player_team_links(
             guild=guild,
             team_role=team_role,
@@ -107,10 +120,18 @@ async def collect_team_signing_visibility_links(
             staff_sync_summary=staff_sync_summary,
             since=since,
         ),
+        _collect_staff_sync_removal_announcement_links(
+            settings=settings,
+            guild=guild,
+            team_role=team_role,
+            staff_sync_summary=staff_sync_summary,
+            since=since,
+        ),
     )
     return TeamSigningVisibilityLinks(
-        team_links=_deduplicate_team_links((*team_links, *staff_team_links)),
+        team_links=deduplicate_team_links((*team_links, *staff_team_links)),
         staff_links=staff_links,
+        staff_removal_links=staff_removal_links,
     )
 
 
@@ -142,7 +163,7 @@ async def collect_team_signing_removal_visibility_links(
             since=since,
         )
         return TeamSigningRemovalVisibilityLinks(
-            team_links=_team_removal_links_from_announcements((announcement,)),
+            team_links=team_removal_links_from_announcements((announcement,)),
             player_links=(),
             staff_links=(),
         )
@@ -156,7 +177,7 @@ async def collect_team_signing_removal_visibility_links(
             spec=TEAM_PLAYER_ROLE_REMOVAL_SPEC,
             since=since,
         )
-        player_links = _player_removal_links_from_announcements(
+        player_links = player_removal_links_from_announcements(
             member=member,
             announcements=(announcement,),
         )
@@ -201,7 +222,7 @@ async def _collect_player_team_links(
         return ()
 
     announcements = await asyncio.gather(*tasks)
-    return _team_links_from_announcements(announcements)
+    return team_links_from_announcements(announcements)
 
 
 async def _collect_staff_team_links(
@@ -228,7 +249,7 @@ async def _collect_staff_team_links(
         return ()
 
     announcements = await asyncio.gather(*tasks)
-    return _team_links_from_announcements(announcements)
+    return team_links_from_announcements(announcements)
 
 
 async def _collect_staff_announcement_links(
@@ -297,7 +318,7 @@ async def _collect_staff_announcement_links(
         return ()
 
     announcements = await asyncio.gather(*tasks)
-    links = list(_staff_links_from_announcements(
+    links = list(staff_links_from_announcements(
         link_specs=link_specs,
         announcements=announcements,
     ))
@@ -317,7 +338,7 @@ async def _collect_staff_announcement_links(
             )
         )
 
-    return _deduplicate_staff_links(links)
+    return deduplicate_staff_links(links)
 
 
 async def _send_missing_staff_signing_announcements(
@@ -414,8 +435,68 @@ async def _collect_staff_removal_announcement_links(
         return ()
 
     announcements = await asyncio.gather(*tasks)
-    return _staff_removal_links_from_announcements(
+    return staff_removal_links_from_announcements(
         member=member,
+        link_specs=link_specs,
+        announcements=announcements,
+    )
+
+
+async def _collect_staff_sync_removal_announcement_links(
+        *,
+        settings: Settings,
+        guild: discord.Guild,
+        team_role: discord.Role,
+        staff_sync_summary: TeamStaffRoleSyncSummary | None,
+        since: float,
+) -> tuple[StaffRemovalAnnouncementLink, ...]:
+    if (
+            staff_sync_summary is None
+            or not staff_sync_summary.removed_members
+            or not staff_sync_summary.removed_staff_entries
+    ):
+        return ()
+
+    tasks: list[Awaitable[SentTeamChangeAnnouncement | None]] = []
+    link_specs: list[tuple[discord.Role, discord.Member]] = []
+    for entry in staff_sync_summary.removed_staff_entries:
+        member = _resolve_synced_member(
+            entry.member_name,
+            staff_sync_summary.removed_members,
+        )
+        if member is None:
+            continue
+
+        staff_role = resolve_team_staff_role_by_name(
+            guild,
+            role_name=entry.role_name,
+            ceo_role_id=settings.staff_ceo_role_id,
+            analyst_role_id=settings.staff_analyst_role_id,
+            coach_role_id=settings.staff_coach_role_id,
+            manager_role_id=settings.staff_manager_role_id,
+            second_manager_role_id=settings.staff_second_manager_role_id,
+            captain_role_id=settings.staff_captain_role_id,
+        )
+        if staff_role is None:
+            continue
+
+        link_specs.append((staff_role, member))
+        tasks.append(
+            wait_for_team_change_announcement(
+                guild_id=guild.id,
+                member_id=member.id,
+                team_role_id=team_role.id,
+                spec=TEAM_STAFF_ROLE_REMOVAL_SPEC,
+                staff_role_id=staff_role.id,
+                since=since,
+            )
+        )
+
+    if not tasks:
+        return ()
+
+    announcements = await asyncio.gather(*tasks)
+    return staff_sync_removal_links_from_announcements(
         link_specs=link_specs,
         announcements=announcements,
     )
@@ -450,141 +531,3 @@ def _parse_member_reference_id(value: str) -> int | None:
 
     raw_member_id = match.group(1) or match.group(2)
     return int(raw_member_id)
-
-
-def _deduplicate_team_links(
-        links: Iterable[TeamSigningTeamAnnouncementLink],
-) -> tuple[TeamSigningTeamAnnouncementLink, ...]:
-    deduplicated_links: dict[str, TeamSigningTeamAnnouncementLink] = {}
-    for link in links:
-        deduplicated_links.setdefault(link.url, link)
-    return tuple(deduplicated_links.values())
-
-
-def _team_links_from_announcements(
-        announcements: Iterable[SentTeamChangeAnnouncement | None],
-) -> tuple[TeamSigningTeamAnnouncementLink, ...]:
-    links: list[TeamSigningTeamAnnouncementLink] = []
-    for announcement in announcements:
-        if not isinstance(announcement, SentTeamChangeAnnouncement):
-            continue
-
-        links.append(TeamSigningTeamAnnouncementLink(url=announcement.jump_url))
-
-    return _deduplicate_team_links(links)
-
-
-def _staff_links_from_announcements(
-        *,
-        link_specs: Iterable[tuple[discord.Role, discord.Member]],
-        announcements: Iterable[SentTeamChangeAnnouncement | None],
-) -> tuple[TeamSigningStaffAnnouncementLink, ...]:
-    links: list[TeamSigningStaffAnnouncementLink] = []
-    for (staff_role, member), announcement in zip(
-            link_specs,
-            announcements,
-            strict=True,
-    ):
-        if not isinstance(announcement, SentTeamChangeAnnouncement):
-            continue
-
-        links.append(
-            TeamSigningStaffAnnouncementLink(
-                staff_role_name=staff_role.name,
-                member_mention=member.mention,
-                url=announcement.jump_url,
-            )
-        )
-
-    return _deduplicate_staff_links(links)
-
-
-def _team_removal_links_from_announcements(
-        announcements: Iterable[SentTeamChangeAnnouncement | None],
-) -> tuple[TeamRemovalAnnouncementLink, ...]:
-    links: list[TeamRemovalAnnouncementLink] = []
-    for announcement in announcements:
-        if not isinstance(announcement, SentTeamChangeAnnouncement):
-            continue
-
-        links.append(TeamRemovalAnnouncementLink(url=announcement.jump_url))
-
-    return _deduplicate_team_removal_links(links)
-
-
-def _player_removal_links_from_announcements(
-        *,
-        member: discord.Member,
-        announcements: Iterable[SentTeamChangeAnnouncement | None],
-) -> tuple[PlayerRemovalAnnouncementLink, ...]:
-    links: list[PlayerRemovalAnnouncementLink] = []
-    for announcement in announcements:
-        if not isinstance(announcement, SentTeamChangeAnnouncement):
-            continue
-
-        links.append(
-            PlayerRemovalAnnouncementLink(
-                member_mention=member.mention,
-                url=announcement.jump_url,
-            )
-        )
-
-    return _deduplicate_player_removal_links(links)
-
-
-def _staff_removal_links_from_announcements(
-        *,
-        member: discord.Member,
-        link_specs: Iterable[discord.Role],
-        announcements: Iterable[SentTeamChangeAnnouncement | None],
-) -> tuple[StaffRemovalAnnouncementLink, ...]:
-    links: list[StaffRemovalAnnouncementLink] = []
-    for staff_role, announcement in zip(link_specs, announcements, strict=True):
-        if not isinstance(announcement, SentTeamChangeAnnouncement):
-            continue
-
-        links.append(
-            StaffRemovalAnnouncementLink(
-                staff_role_name=staff_role.name,
-                member_mention=member.mention,
-                url=announcement.jump_url,
-            )
-        )
-
-    return _deduplicate_staff_removal_links(links)
-
-
-def _deduplicate_staff_links(
-        links: Iterable[TeamSigningStaffAnnouncementLink],
-) -> tuple[TeamSigningStaffAnnouncementLink, ...]:
-    deduplicated_links: dict[str, TeamSigningStaffAnnouncementLink] = {}
-    for link in links:
-        deduplicated_links.setdefault(link.url, link)
-    return tuple(deduplicated_links.values())
-
-
-def _deduplicate_team_removal_links(
-        links: Iterable[TeamRemovalAnnouncementLink],
-) -> tuple[TeamRemovalAnnouncementLink, ...]:
-    deduplicated_links: dict[str, TeamRemovalAnnouncementLink] = {}
-    for link in links:
-        deduplicated_links.setdefault(link.url, link)
-    return tuple(deduplicated_links.values())
-
-
-def _deduplicate_player_removal_links(
-        links: Iterable[PlayerRemovalAnnouncementLink],
-) -> tuple[PlayerRemovalAnnouncementLink, ...]:
-    deduplicated_links: dict[str, PlayerRemovalAnnouncementLink] = {}
-    for link in links:
-        deduplicated_links.setdefault(link.url, link)
-    return tuple(deduplicated_links.values())
-
-
-def _deduplicate_staff_removal_links(
-        links: Iterable[StaffRemovalAnnouncementLink],
-) -> tuple[StaffRemovalAnnouncementLink, ...]:
-    deduplicated_links: dict[str, StaffRemovalAnnouncementLink] = {}
-    for link in links:
-        deduplicated_links.setdefault(link.url, link)
-    return tuple(deduplicated_links.values())

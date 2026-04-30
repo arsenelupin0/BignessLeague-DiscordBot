@@ -14,10 +14,14 @@ import discord
 from bigness_league_bot.application.services.team_profile import TeamProfile, build_team_profile
 from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.google.team_sheets.blocks import (
+    _collect_team_blocks,
     _extract_block_title_cell,
     _find_team_block,
 )
-from bigness_league_bot.infrastructure.google.team_sheets.cells import _normalize_member_lookup_text
+from bigness_league_bot.infrastructure.google.team_sheets.cells import (
+    _is_free_block_title,
+    _normalize_member_lookup_text,
+)
 from bigness_league_bot.infrastructure.google.team_sheets.client import GoogleSheetsClient
 from bigness_league_bot.infrastructure.google.team_sheets.errors import (
     TeamSheetEmptyError,
@@ -118,6 +122,41 @@ class TeamSheetQueryService:
             role: discord.Role,
     ) -> TeamRoleSheetMetadata:
         return self._find_team_sheet_metadata_for_role_sync(role)
+
+    def list_team_sheet_metadata_sync(self) -> tuple[TeamRoleSheetMetadata, ...]:
+        service = self.client.build_service(read_only=True)
+        sheet_scope, sheet_grids = self.client.fetch_sheet_grids(service)
+        if not sheet_grids:
+            raise TeamSheetEmptyError(
+                localize(
+                    I18N.errors.team_profile.team_sheet_empty,
+                    sheet_name=sheet_scope,
+                )
+            )
+
+        metadata: list[TeamRoleSheetMetadata] = []
+        for worksheet_title, cell_grid in sheet_grids:
+            if not cell_grid:
+                continue
+
+            for team_block in _collect_team_blocks(cell_grid):
+                if _is_free_block_title(team_block.title):
+                    continue
+
+                title_cell = _extract_block_title_cell(
+                    cell_grid,
+                    team_block.title_row,
+                    team_block.start_column,
+                )
+                metadata.append(
+                    TeamRoleSheetMetadata(
+                        worksheet_title=worksheet_title,
+                        team_name=team_block.title,
+                        team_image_url=title_cell.hyperlink,
+                    )
+                )
+
+        return tuple(metadata)
 
     def _find_team_sheet_metadata_for_role_sync(
             self,

@@ -104,6 +104,11 @@ class GoogleSheetsTeamRepository:
             role,
         )
 
+    async def list_team_sheet_metadata(self) -> tuple[TeamRoleSheetMetadata, ...]:
+        return await asyncio.to_thread(
+            self.queries.list_team_sheet_metadata_sync,
+        )
+
     async def remove_team_player_by_discord(
             self,
             discord_name: str,

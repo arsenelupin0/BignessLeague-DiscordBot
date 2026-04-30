@@ -132,6 +132,18 @@
           }
         }
       },
+      "make_interactive_staff_signing": {
+        "name": "interactive_staff_signing",
+        "description": "Signs technical staff by selecting an available team, player, and staff role.",
+        "parameters": {
+          "team": {
+            "description": "Team where the technical staff role will be added."
+          },
+          "discord_name": {
+            "description": "Team player who will receive the technical staff role."
+          }
+        }
+      },
       "remove_signing": {
         "name": "remove_signing",
         "description": "Fully removes a member as player and technical staff from Google Sheets.",
@@ -235,6 +247,13 @@
     "team_signing": {
       "guide": {
         "content": "#  How to submit a registration or signing \n_ _\nIf you want a bit more information about how signings and registrations work, click these links below:\n - [Information for submitting a signing](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)\n - [Information for adding a Technical Staff role to your team](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\nThe template you need to follow to submit a signing correctly is the following one (this one is explanatory). Remember that you have to copy all the message content, including the text above and below everything.\n```\nDivision: GOLD DIVISIÓN S3 // SILVER DIVISIÓN S3 (YOUR CORRESPONDING DIVISION)\nEquipo: KE Pensionistas (TEAM YOU WANT TO SIGN FOR)\n\nJugador -> Name that may be used for casting\nTracker -> Player tracker URL\nDiscord -> Discord Name ID. If you do not know what it is, see*1\nEpic Name -> Epic name. If you do not know what it is, see*2\nRocket In-Game Name -> In-game name. If you do not know what it is, see*2\n\n⏬⏬⏬⏬⏬⏬⏬⏬\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```\n1* [What is the Discord Name ID?](https://canary.discord.com/channels/1016819103555657851/1495742330047561942)\n2* [What is the difference between Epic Name and Rocket In-Game Name?](https://canary.discord.com/channels/1016819103555657851/1496951199373590629)\n## ✅ Example template you should send...\nIf you have more players, add them with a blank line between each one, just like in the template (max 6 in the template). **Copy the template exactly as it appears in the text below**\n```\nDivision: GOLD DIVISIÓN S3\nEquipo: KE Pensionistas\n\nJugador\nTracker\nDiscord\nEpic Name\nRocket In-Game Name\n\n⏬⏬⏬⏬⏬⏬⏬⏬\n\nArsene\nhttps://rocketleague.tracker.network/rocket-league/profile/epic/ArseneLupin0/overview\narsenelupin0\narsenelupin0\nArsene Lupin\n\nSr.M\nhttps://rocketleague.tracker.network/rocket-league/profile/steam/76561198275468215/overview\nmplay\nmplay\nSr. Mplay\n```"
+      },
+      "interactive_staff_role_selection": {
+        "prompt": "Select one or more available roles for `{discord_name}`.",
+        "placeholder": "Select available roles",
+        "processing": "Applying technical staff roles...",
+        "timeout": "The role selection expired. No signing was applied.",
+        "only_actor": "Only the command author can use this selector."
       }
     },
     "team_role_removal_announcement": {
@@ -412,6 +431,11 @@
       "invalid_message_format": "The linked message does not follow the expected signing import format: {details}.",
       "invalid_technical_staff_message_format": "The linked message does not follow the expected technical staff import format: {details}.",
       "no_import_payload_provided": "You must provide at least a player message link or a technical staff message link.",
+      "invalid_interactive_team": "You must select a valid team from the interactive command list.",
+      "unsupported_interactive_staff_role": "The technical staff role `{staff_role}` is not supported.",
+      "interactive_player_not_found": "Discord `{discord_name}` was not found as a player in `{team_name}`.",
+      "interactive_staff_role_occupied": "The role `{staff_role}` is already occupied in `{team_name}`.",
+      "no_available_interactive_staff_roles": "There are no available technical staff roles for that team.",
       "import_payload_mismatch": "The linked messages do not match on Division/Team. Players: `{player_division}` / `{player_team}`. Staff: `{staff_division}` / `{staff_team}`.",
       "division_not_found": "No sheet matches the division `{division_name}`.",
       "team_sheet_layout_invalid": "The sheet `{sheet_name}` does not follow the expected layout for signing imports.",

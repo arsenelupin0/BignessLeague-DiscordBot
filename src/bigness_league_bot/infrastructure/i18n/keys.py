@@ -328,6 +328,31 @@ class _CommandsTeamSigningMakeSigning:
     parameters: _CommandsTeamSigningMakeSigningParameters = _CommandsTeamSigningMakeSigningParameters()
 
 
+class _CommandsTeamSigningMakeInteractiveStaffSigningParametersTeam:
+    description: TranslationKey = TranslationKey(
+        key="commands.team_signing.make_interactive_staff_signing.parameters.team.description",
+        default_text="Equipo donde quieres a\u00f1adir el cargo de staff t\u00e9cnico.")
+
+
+class _CommandsTeamSigningMakeInteractiveStaffSigningParametersDiscordName:
+    description: TranslationKey = TranslationKey(
+        key="commands.team_signing.make_interactive_staff_signing.parameters.discord_name.description",
+        default_text="Jugador del equipo que recibir\u00e1 el cargo de staff t\u00e9cnico.")
+
+
+class _CommandsTeamSigningMakeInteractiveStaffSigningParameters:
+    team: _CommandsTeamSigningMakeInteractiveStaffSigningParametersTeam = _CommandsTeamSigningMakeInteractiveStaffSigningParametersTeam()
+    discord_name: _CommandsTeamSigningMakeInteractiveStaffSigningParametersDiscordName = _CommandsTeamSigningMakeInteractiveStaffSigningParametersDiscordName()
+
+
+class _CommandsTeamSigningMakeInteractiveStaffSigning:
+    name: TranslationKey = TranslationKey(key="commands.team_signing.make_interactive_staff_signing.name",
+                                          default_text="fichaje_staff_interactivo")
+    description: TranslationKey = TranslationKey(key="commands.team_signing.make_interactive_staff_signing.description",
+                                                 default_text="Ficha staff t\u00e9cnico seleccionando equipo, jugador y cargo disponibles.")
+    parameters: _CommandsTeamSigningMakeInteractiveStaffSigningParameters = _CommandsTeamSigningMakeInteractiveStaffSigningParameters()
+
+
 class _CommandsTeamSigningRemoveSigningParametersDiscordName:
     description: TranslationKey = TranslationKey(
         key="commands.team_signing.remove_signing.parameters.discord_name.description",
@@ -405,6 +430,7 @@ class _CommandsTeamSigningRemoveStaffSigning:
 class _CommandsTeamSigning:
     make_registration: _CommandsTeamSigningMakeRegistration = _CommandsTeamSigningMakeRegistration()
     make_signing: _CommandsTeamSigningMakeSigning = _CommandsTeamSigningMakeSigning()
+    make_interactive_staff_signing: _CommandsTeamSigningMakeInteractiveStaffSigning = _CommandsTeamSigningMakeInteractiveStaffSigning()
     remove_signing: _CommandsTeamSigningRemoveSigning = _CommandsTeamSigningRemoveSigning()
     remove_player_signing: _CommandsTeamSigningRemovePlayerSigning = _CommandsTeamSigningRemovePlayerSigning()
     remove_staff_signing: _CommandsTeamSigningRemoveStaffSigning = _CommandsTeamSigningRemoveStaffSigning()
@@ -554,8 +580,23 @@ class _MessagesTeamSigningGuide:
                                              default_text="# \ud83d\udd30 Como hacer una inscripci\u00f3n o fichaje \ud83d\udd30\n_ _\nSi quieres tener un poco m\u00e1s de informaci\u00f3n de como funcionan los fichajes/inscripciones. Dale click a estos links de aqu\u00ed abajo:\n - [Informaci\u00f3n para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)\n - [Informaci\u00f3n para a\u00f1adir un rol de Staff T\u00e9cnico a tu equipo](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\n## \u2705 Plantilla de ejemplo que tendr\u00edas que enviar...\nSi no sabes que hay que poner en cada parte, por favor revisa la [documentaci\u00f3n para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818). Recuerdo que tiene que estar todo correcto y con el formato correcto.\nEn caso de que tengas m\u00e1s jugadores lo vas agregando con un salto de l\u00ednea, como est\u00e1 en esta plantilla con un m\u00e1ximo de 6 jugadores. \n\n### Plantilla a copiar tal cual esta de aqu\u00ed abajo pero con tus datos...\n_ _\n```\nDivisi\u00f3n: \nEquipo: \nLogo: \n\nJugador: \nTracker: \nDiscord: \nEpic Name:  \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n```")
 
 
+class _MessagesTeamSigningInteractiveStaffRoleSelection:
+    prompt: TranslationKey = TranslationKey(key="messages.team_signing.interactive_staff_role_selection.prompt",
+                                            default_text="Selecciona uno o varios cargos disponibles para `{discord_name}`.")
+    placeholder: TranslationKey = TranslationKey(
+        key="messages.team_signing.interactive_staff_role_selection.placeholder",
+        default_text="Selecciona cargos disponibles")
+    processing: TranslationKey = TranslationKey(key="messages.team_signing.interactive_staff_role_selection.processing",
+                                                default_text="Aplicando cargos de staff t\u00e9cnico...")
+    timeout: TranslationKey = TranslationKey(key="messages.team_signing.interactive_staff_role_selection.timeout",
+                                             default_text="La selecci\u00f3n de cargos ha expirado. No se ha aplicado ning\u00fan fichaje.")
+    only_actor: TranslationKey = TranslationKey(key="messages.team_signing.interactive_staff_role_selection.only_actor",
+                                                default_text="Solo quien ejecut\u00f3 el comando puede usar este selector.")
+
+
 class _MessagesTeamSigning:
     guide: _MessagesTeamSigningGuide = _MessagesTeamSigningGuide()
+    interactive_staff_role_selection: _MessagesTeamSigningInteractiveStaffRoleSelection = _MessagesTeamSigningInteractiveStaffRoleSelection()
 
 
 class _MessagesTeamRoleRemovalAnnouncement:
@@ -1156,6 +1197,20 @@ class _ErrorsTeamSigning:
         default_text="El mensaje enlazado no sigue el formato esperado para importar staff t\u00e9cnico: {details}.")
     no_import_payload_provided: TranslationKey = TranslationKey(key="errors.team_signing.no_import_payload_provided",
                                                                 default_text="Debes indicar al menos un enlace de jugadores o un enlace de staff t\u00e9cnico.")
+    invalid_interactive_team: TranslationKey = TranslationKey(key="errors.team_signing.invalid_interactive_team",
+                                                              default_text="Debes seleccionar un equipo v\u00e1lido desde la lista del comando interactivo.")
+    unsupported_interactive_staff_role: TranslationKey = TranslationKey(
+        key="errors.team_signing.unsupported_interactive_staff_role",
+        default_text="El cargo de staff t\u00e9cnico `{staff_role}` no est\u00e1 soportado.")
+    interactive_player_not_found: TranslationKey = TranslationKey(
+        key="errors.team_signing.interactive_player_not_found",
+        default_text="No se encontr\u00f3 el Discord `{discord_name}` como jugador de `{team_name}`.")
+    interactive_staff_role_occupied: TranslationKey = TranslationKey(
+        key="errors.team_signing.interactive_staff_role_occupied",
+        default_text="El cargo `{staff_role}` ya est\u00e1 ocupado en `{team_name}`.")
+    no_available_interactive_staff_roles: TranslationKey = TranslationKey(
+        key="errors.team_signing.no_available_interactive_staff_roles",
+        default_text="No hay cargos de staff t\u00e9cnico disponibles para ese equipo.")
     import_payload_mismatch: TranslationKey = TranslationKey(key="errors.team_signing.import_payload_mismatch",
                                                              default_text="Los mensajes enlazados no coinciden en Divisi\u00f3n/Equipo. Jugadores: `{player_division}` / `{player_team}`. Staff: `{staff_division}` / `{staff_team}`.")
     division_not_found: TranslationKey = TranslationKey(key="errors.team_signing.division_not_found",

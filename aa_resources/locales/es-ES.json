@@ -161,6 +161,18 @@
           }
         }
       },
+      "make_interactive_staff_signing": {
+        "name": "fichaje_staff_interactivo",
+        "description": "Ficha staff técnico seleccionando equipo, jugador y cargo disponibles.",
+        "parameters": {
+          "team": {
+            "description": "Equipo donde quieres añadir el cargo de staff técnico."
+          },
+          "discord_name": {
+            "description": "Jugador del equipo que recibirá el cargo de staff técnico."
+          }
+        }
+      },
       "remove_signing": {
         "name": "dar_de_baja",
         "description": "Da de baja completamente a un miembro como jugador y staff técnico en Google Sheets.",
@@ -273,6 +285,13 @@
     "team_signing": {
       "guide": {
         "content": "# 🔰 Como hacer una inscripción o fichaje 🔰\n_ _\nSi quieres tener un poco más de información de como funcionan los fichajes/inscripciones. Dale click a estos links de aquí abajo:\n - [Información para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)\n - [Información para añadir un rol de Staff Técnico a tu equipo](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\n## ✅ Plantilla de ejemplo que tendrías que enviar...\nSi no sabes que hay que poner en cada parte, por favor revisa la [documentación para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818). Recuerdo que tiene que estar todo correcto y con el formato correcto.\nEn caso de que tengas más jugadores lo vas agregando con un salto de línea, como está en esta plantilla con un máximo de 6 jugadores. \n\n### Plantilla a copiar tal cual esta de aquí abajo pero con tus datos...\n_ _\n```\nDivisión: \nEquipo: \nLogo: \n\nJugador: \nTracker: \nDiscord: \nEpic Name:  \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n```"
+      },
+      "interactive_staff_role_selection": {
+        "prompt": "Selecciona uno o varios cargos disponibles para `{discord_name}`.",
+        "placeholder": "Selecciona cargos disponibles",
+        "processing": "Aplicando cargos de staff técnico...",
+        "timeout": "La selección de cargos ha expirado. No se ha aplicado ningún fichaje.",
+        "only_actor": "Solo quien ejecutó el comando puede usar este selector."
       }
     },
     "team_role_removal_announcement": {
@@ -568,6 +587,11 @@
       "invalid_message_format": "El mensaje enlazado no sigue el formato esperado para importar fichajes: {details}.",
       "invalid_technical_staff_message_format": "El mensaje enlazado no sigue el formato esperado para importar staff técnico: {details}.",
       "no_import_payload_provided": "Debes indicar al menos un enlace de jugadores o un enlace de staff técnico.",
+      "invalid_interactive_team": "Debes seleccionar un equipo válido desde la lista del comando interactivo.",
+      "unsupported_interactive_staff_role": "El cargo de staff técnico `{staff_role}` no está soportado.",
+      "interactive_player_not_found": "No se encontró el Discord `{discord_name}` como jugador de `{team_name}`.",
+      "interactive_staff_role_occupied": "El cargo `{staff_role}` ya está ocupado en `{team_name}`.",
+      "no_available_interactive_staff_roles": "No hay cargos de staff técnico disponibles para ese equipo.",
       "import_payload_mismatch": "Los mensajes enlazados no coinciden en División/Equipo. Jugadores: `{player_division}` / `{player_team}`. Staff: `{staff_division}` / `{staff_team}`.",
       "division_not_found": "No existe ninguna hoja que coincida con la división `{division_name}`.",
       "team_sheet_layout_invalid": "La hoja `{sheet_name}` no sigue el formato esperado para registrar fichajes.",

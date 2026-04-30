@@ -14,6 +14,7 @@ from typing import Any
 from bigness_league_bot.application.services.team_signing import (
     TeamSigningBatch,
     TeamTechnicalStaffBatch,
+    TeamTechnicalStaffMember,
     sort_team_signing_players,
 )
 from bigness_league_bot.core.localization import localize
@@ -54,7 +55,9 @@ from bigness_league_bot.infrastructure.google.team_sheets.parser import (
     _collect_players_by_discord,
     _collect_technical_staff_rows,
     _parse_players,
-    _resolve_technical_staff_values, _to_team_signing_player, _build_player_values_grid,
+    _resolve_technical_staff_values,
+    _to_team_signing_player,
+    _build_player_values_grid,
 )
 from bigness_league_bot.infrastructure.google.team_sheets.player_signing_mutations import (
     register_team_signings_sync as _register_team_signings_sync,
@@ -450,12 +453,17 @@ class TeamSheetMutationService:
                     )
                 )
 
-            discord_name, epic_name, rocket_name = _resolve_technical_staff_values(
-                member,
-                players_by_discord,
-                team_name=technical_staff_batch.team_name,
-                worksheet_name=worksheet_title,
-            )
+            if _is_technical_staff_clear_request(member):
+                discord_name = PLACEHOLDER_CELL_VALUE
+                epic_name = PLACEHOLDER_CELL_VALUE
+                rocket_name = PLACEHOLDER_CELL_VALUE
+            else:
+                discord_name, epic_name, rocket_name = _resolve_technical_staff_values(
+                    member,
+                    players_by_discord,
+                    team_name=technical_staff_batch.team_name,
+                    worksheet_name=worksheet_title,
+                )
             update_data.append(
                 {
                     "range": _build_a1_range(
@@ -497,3 +505,11 @@ class TeamSheetMutationService:
             team_name=technical_staff_batch.team_name,
             updated_count=len(technical_staff_batch.members),
         )
+
+
+def _is_technical_staff_clear_request(member: TeamTechnicalStaffMember) -> bool:
+    return (
+            not member.discord_name.strip()
+            and not member.epic_name.strip()
+            and not member.rocket_name.strip()
+    )

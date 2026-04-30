@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
 import discord
-import unicodedata
 
 from bigness_league_bot.application.services.team_profile import TeamProfile
 from bigness_league_bot.core.errors import CommandUserError
@@ -19,19 +17,26 @@ from bigness_league_bot.infrastructure.discord.team_change_announcements import 
     TEAM_ROLE_SIGNING_SPEC,
     TEAM_STAFF_ROLE_SIGNING_SPEC,
 )
+from bigness_league_bot.infrastructure.discord.team_member_lookup import (
+    PLACEHOLDER_MEMBER_NAMES,
+    build_member_lookup_keys,
+    deduplicate_member_names as _deduplicate_member_names,
+    deduplicate_members as _deduplicate_members,
+    index_members_by_lookup_keys as _index_members_by_lookup_keys,
+    load_guild_members as _load_guild_members,
+    normalize_member_lookup_text as _normalize_member_lookup_text,
+    resolve_members_for_name as _resolve_members_for_name,
+)
 from bigness_league_bot.infrastructure.discord.team_role_change_delivery import (
     suppress_team_change_announcement,
 )
 from bigness_league_bot.infrastructure.discord.team_staff_roles import (
+    CollectedStaffRoleEntry,
     collect_staff_role_entries_by_member,
     filter_team_staff_role_names_for_player_status,
     resolve_configured_team_staff_roles,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
-
-DISCORD_MEMBER_MENTION_PATTERN = re.compile(r"^<@!?(\d+)>$")
-DISCORD_MEMBER_ID_PATTERN = re.compile(r"^\d{15,20}$")
-PLACEHOLDER_MEMBER_NAMES = {"", "-"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,14 +69,8 @@ class TeamStaffRoleSyncSummary:
     unresolved_names: tuple[str, ...]
     ambiguous_names: tuple[str, ...]
     assigned_staff_entries: tuple[TeamStaffRoleEntry, ...] = ()
+    removed_staff_entries: tuple[TeamStaffRoleEntry, ...] = ()
 
-
-def build_member_lookup_keys(member: discord.Member) -> tuple[str, ...]:
-    return tuple(_member_lookup_keys(member))
-
-
-def normalize_member_lookup_text(value: str | None) -> str:
-    return _normalize_member_lookup_text(value)
 
 def collect_team_profile_player_names(team_profile: TeamProfile) -> tuple[str, ...]:
     return _deduplicate_member_names(player.discord_name for player in team_profile.players)
@@ -143,11 +142,16 @@ async def sync_team_staff_roles_by_names(
         actor: discord.abc.User,
         staff_entries: Iterable[TeamStaffRoleEntry],
         player_member_names: Iterable[str] = (),
+        staff_member_names_to_prune: Iterable[str] = (),
         count_existing_staff_roles_as_assigned: bool = False,
         suppress_staff_signing_announcements: bool = False,
 ) -> TeamStaffRoleSyncSummary:
     normalized_entries = collect_staff_role_entries_by_member(staff_entries)
-    if not normalized_entries:
+    prune_entries = _collect_staff_prune_entries(
+        staff_member_names_to_prune,
+        excluded_lookup_keys=normalized_entries.keys(),
+    )
+    if not normalized_entries and not prune_entries:
         return TeamStaffRoleSyncSummary(
             assigned_members=(),
             removed_members=(),
@@ -155,6 +159,7 @@ async def sync_team_staff_roles_by_names(
             unresolved_names=(),
             ambiguous_names=(),
             assigned_staff_entries=(),
+            removed_staff_entries=(),
         )
 
     configured_staff_roles = resolve_configured_team_staff_roles(
@@ -181,8 +186,9 @@ async def sync_team_staff_roles_by_names(
     unresolved_names: list[str] = []
     ambiguous_names: list[str] = []
     assigned_staff_entries: list[TeamStaffRoleEntry] = []
+    removed_staff_entries: list[TeamStaffRoleEntry] = []
 
-    for entry in normalized_entries.values():
+    for entry in (*normalized_entries.values(), *prune_entries):
         matches = _resolve_members_for_name(
             entry.member_name,
             members_by_lookup,
@@ -284,6 +290,18 @@ async def sync_team_staff_roles_by_names(
                 ),
             )
             removed_members.append(member)
+            configured_staff_role_keys_by_id = {
+                role.id: role_key
+                for role_key, role in configured_staff_roles.items()
+            }
+            removed_staff_entries.extend(
+                TeamStaffRoleEntry(
+                    role_name=configured_staff_role_keys_by_id[role.id],
+                    member_name=entry.member_name,
+                )
+                for role in roles_to_remove
+                if role.id in configured_staff_role_keys_by_id
+            )
         if not base_roles_to_add and not staff_roles_to_add and not roles_to_remove:
             already_configured_members.append(member)
 
@@ -294,6 +312,7 @@ async def sync_team_staff_roles_by_names(
         unresolved_names=tuple(unresolved_names),
         ambiguous_names=tuple(ambiguous_names),
         assigned_staff_entries=tuple(assigned_staff_entries),
+        removed_staff_entries=tuple(removed_staff_entries),
     )
 
 
@@ -317,6 +336,32 @@ def _suppress_staff_signing_announcements(
             spec=TEAM_STAFF_ROLE_SIGNING_SPEC,
             staff_role_id=staff_role.id,
         )
+
+
+def _collect_staff_prune_entries(
+        member_names: Iterable[str],
+        *,
+        excluded_lookup_keys: Iterable[str],
+) -> tuple[CollectedStaffRoleEntry, ...]:
+    excluded_keys = set(excluded_lookup_keys)
+    entries_by_lookup: dict[str, CollectedStaffRoleEntry] = {}
+    for member_name in member_names:
+        normalized_member_name = _normalize_member_lookup_text(member_name)
+        if (
+                normalized_member_name in PLACEHOLDER_MEMBER_NAMES
+                or normalized_member_name in excluded_keys
+        ):
+            continue
+
+        entries_by_lookup.setdefault(
+            normalized_member_name,
+            CollectedStaffRoleEntry(
+                member_name=member_name,
+                role_keys=frozenset(),
+            ),
+        )
+
+    return tuple(entries_by_lookup.values())
 
 
 async def assign_team_roles_by_names(
@@ -514,111 +559,3 @@ def _resolve_required_role(
             role_id=str(role_id),
         )
     )
-
-
-def _deduplicate_member_names(member_names: Iterable[str]) -> tuple[str, ...]:
-    collected_names: list[str] = []
-    seen_names: set[str] = set()
-    for member_name in member_names:
-        normalized_name = _normalize_member_lookup_text(member_name)
-        if normalized_name in PLACEHOLDER_MEMBER_NAMES or normalized_name in seen_names:
-            continue
-
-        seen_names.add(normalized_name)
-        collected_names.append(member_name)
-
-    return tuple(collected_names)
-
-
-def _deduplicate_members(
-        members: Iterable[discord.Member],
-) -> tuple[discord.Member, ...]:
-    deduplicated_members: dict[int, discord.Member] = {}
-    for member in members:
-        deduplicated_members[member.id] = member
-
-    return tuple(deduplicated_members.values())
-
-
-async def _load_guild_members(guild: discord.Guild) -> tuple[discord.Member, ...]:
-    try:
-        fetched_members = [
-            member
-            async for member in guild.fetch_members(limit=None)
-            if not member.bot
-        ]
-    except discord.HTTPException:
-        return tuple(member for member in guild.members if not member.bot)
-
-    return tuple(fetched_members)
-
-
-def _index_members_by_lookup_keys(
-        members: Iterable[discord.Member],
-) -> dict[str, tuple[discord.Member, ...]]:
-    indexed_members: dict[str, dict[int, discord.Member]] = {}
-    for member in members:
-        for key in _member_lookup_keys(member):
-            indexed_members.setdefault(key, {})[member.id] = member
-
-    return {
-        key: tuple(value.values())
-        for key, value in indexed_members.items()
-    }
-
-
-def _resolve_members_for_name(
-        raw_name: str,
-        members_by_lookup: dict[str, tuple[discord.Member, ...]],
-        guild: discord.Guild,
-) -> tuple[discord.Member, ...]:
-    member_id = _parse_member_id(raw_name)
-    if member_id is not None:
-        member = guild.get_member(member_id)
-        if member is None or member.bot:
-            return ()
-        return (member,)
-
-    return members_by_lookup.get(_normalize_member_lookup_text(raw_name), ())
-
-
-def _parse_member_id(value: str) -> int | None:
-    stripped_value = value.strip()
-    mention_match = DISCORD_MEMBER_MENTION_PATTERN.fullmatch(stripped_value)
-    if mention_match is not None:
-        return int(mention_match.group(1))
-
-    if DISCORD_MEMBER_ID_PATTERN.fullmatch(stripped_value):
-        return int(stripped_value)
-
-    return None
-
-
-def _member_lookup_keys(member: discord.Member) -> set[str]:
-    candidate_values = {
-        member.name,
-        member.display_name,
-    }
-    global_name = getattr(member, "global_name", None)
-    if isinstance(global_name, str):
-        candidate_values.add(global_name)
-
-    return {
-        normalized
-        for normalized in (
-            _normalize_member_lookup_text(value)
-            for value in candidate_values
-        )
-        if normalized not in PLACEHOLDER_MEMBER_NAMES
-    }
-
-
-def _normalize_member_lookup_text(value: str | None) -> str:
-    if value is None:
-        return ""
-
-    normalized = " ".join(value.split()).strip()
-    if normalized.startswith("@"):
-        normalized = normalized[1:]
-    normalized = unicodedata.normalize("NFKC", normalized).casefold()
-    return normalized
