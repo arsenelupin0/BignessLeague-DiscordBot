@@ -34,8 +34,27 @@ class _CommandsChannelManagementCloseChannel:
     choices: _CommandsChannelManagementCloseChannelChoices = _CommandsChannelManagementCloseChannelChoices()
 
 
+class _CommandsChannelManagementBulkDeleteParametersCategory:
+    description: TranslationKey = TranslationKey(
+        key="commands.channel_management.bulk_delete.parameters.category.description",
+        default_text="Categor\u00eda cuyos canales quieres eliminar")
+
+
+class _CommandsChannelManagementBulkDeleteParameters:
+    category: _CommandsChannelManagementBulkDeleteParametersCategory = _CommandsChannelManagementBulkDeleteParametersCategory()
+
+
+class _CommandsChannelManagementBulkDelete:
+    name: TranslationKey = TranslationKey(key="commands.channel_management.bulk_delete.name",
+                                          default_text="borrado_masivo")
+    description: TranslationKey = TranslationKey(key="commands.channel_management.bulk_delete.description",
+                                                 default_text="Elimina todos los canales de una categor\u00eda concreta.")
+    parameters: _CommandsChannelManagementBulkDeleteParameters = _CommandsChannelManagementBulkDeleteParameters()
+
+
 class _CommandsChannelManagement:
     close_channel: _CommandsChannelManagementCloseChannel = _CommandsChannelManagementCloseChannel()
+    bulk_delete: _CommandsChannelManagementBulkDelete = _CommandsChannelManagementBulkDelete()
 
 
 class _CommandsChannelAccessAddToChannel:
@@ -573,6 +592,8 @@ class _MessagesChannelManagement:
                                                     default_text="Vas a mover el canal `{channel_name}` a la categor\u00eda de archivo configurada.\nSi viene de Oro se colocar\u00e1 por encima del separador y si viene de Plata se colocar\u00e1 por debajo.\nConfirma solo si quieres aplicar este archivado.")
     matchday_close_prompt: TranslationKey = TranslationKey(key="messages.channel_management.matchday_close_prompt",
                                                            default_text="Vas a cerrar la jornada en `{channel_name}`.\nSe eliminaran los permisos de los roles no protegidos y solo conservaran acceso: {protected_roles}.\nConfirma solo si quieres aplicar este cierre.")
+    bulk_delete_prompt: TranslationKey = TranslationKey(key="messages.channel_management.bulk_delete_prompt",
+                                                        default_text="Vas a eliminar todos los canales de la categor\u00eda `{category_name}`.\nCanales detectados: {channel_count}.\nEsta acci\u00f3n es irreversible. Confirma solo si quieres borrar esos canales.")
 
 
 class _MessagesTicketsPanel:
@@ -894,6 +915,25 @@ class _MessagesChannelMatchdayCloseConfirmation:
     buttons: _MessagesChannelMatchdayCloseConfirmationButtons = _MessagesChannelMatchdayCloseConfirmationButtons()
 
 
+class _MessagesCategoryBulkDeleteConfirmationButtons:
+    confirm: TranslationKey = TranslationKey(key="messages.category_bulk_delete_confirmation.buttons.confirm",
+                                             default_text="Confirmar borrado")
+    cancel: TranslationKey = TranslationKey(key="messages.category_bulk_delete_confirmation.buttons.cancel",
+                                            default_text="Cancelar")
+
+
+class _MessagesCategoryBulkDeleteConfirmation:
+    only_actor: TranslationKey = TranslationKey(key="messages.category_bulk_delete_confirmation.only_actor",
+                                                default_text="Solo quien ejecut\u00f3 el comando puede confirmar esta acci\u00f3n.")
+    timeout: TranslationKey = TranslationKey(key="messages.category_bulk_delete_confirmation.timeout",
+                                             default_text="La confirmaci\u00f3n ha expirado. No se ha eliminado ning\u00fan canal.")
+    processing: TranslationKey = TranslationKey(key="messages.category_bulk_delete_confirmation.processing",
+                                                default_text="Eliminando canales de `{category_name}`...")
+    cancelled: TranslationKey = TranslationKey(key="messages.category_bulk_delete_confirmation.cancelled",
+                                               default_text="Borrado masivo cancelado.")
+    buttons: _MessagesCategoryBulkDeleteConfirmationButtons = _MessagesCategoryBulkDeleteConfirmationButtons()
+
+
 class _MessagesMatchChannelCreationWelcomeEmbedsDetails:
     title: TranslationKey = TranslationKey(key="messages.match_channel_creation.welcome.embeds.details.title",
                                            default_text="\ud83d\udd30 Detalles a tener en cuenta \ud83d\udd30")
@@ -958,6 +998,7 @@ class _Messages:
     channel_role_addition: _MessagesChannelRoleAddition = _MessagesChannelRoleAddition()
     channel_archive_confirmation: _MessagesChannelArchiveConfirmation = _MessagesChannelArchiveConfirmation()
     channel_matchday_close_confirmation: _MessagesChannelMatchdayCloseConfirmation = _MessagesChannelMatchdayCloseConfirmation()
+    category_bulk_delete_confirmation: _MessagesCategoryBulkDeleteConfirmation = _MessagesCategoryBulkDeleteConfirmation()
     match_channel_creation: _MessagesMatchChannelCreation = _MessagesMatchChannelCreation()
 
 
@@ -997,6 +1038,15 @@ class _ErrorsChannelManagement:
     archive_separator_not_in_category: TranslationKey = TranslationKey(
         key="errors.channel_management.archive_separator_not_in_category",
         default_text="El canal separador `{channel_id}` no pertenece a la categor\u00eda de archivo configurada: `{category_id}`.")
+    bulk_delete_category_not_found: TranslationKey = TranslationKey(
+        key="errors.channel_management.bulk_delete_category_not_found",
+        default_text="No existe ninguna categor\u00eda con nombre o ID `{category_name}`.")
+    bulk_delete_category_ambiguous: TranslationKey = TranslationKey(
+        key="errors.channel_management.bulk_delete_category_ambiguous",
+        default_text="Hay varias categor\u00edas llamadas `{category_name}`. Usa una opci\u00f3n del autocompletado para seleccionar la categor\u00eda exacta.")
+    bulk_delete_category_empty: TranslationKey = TranslationKey(
+        key="errors.channel_management.bulk_delete_category_empty",
+        default_text="La categor\u00eda `{category_name}` no tiene canales que eliminar.")
 
 
 class _ErrorsTickets:
@@ -1191,6 +1241,8 @@ class _ActionsChannelManagement:
     archive_below_separator_summary: TranslationKey = TranslationKey(
         key="actions.channel_management.archive_below_separator_summary",
         default_text="Canal archivado. Se ha movido a la categor\u00eda configurada por debajo del separador.")
+    bulk_delete_summary: TranslationKey = TranslationKey(key="actions.channel_management.bulk_delete_summary",
+                                                         default_text="Borrado masivo completado. Se han eliminado {deleted_count} canales de la categor\u00eda `{category_name}`.")
     reopen_summary: TranslationKey = TranslationKey(key="actions.channel_management.reopen_summary",
                                                     default_text="Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal.")
     reopen_with_roles_summary: TranslationKey = TranslationKey(

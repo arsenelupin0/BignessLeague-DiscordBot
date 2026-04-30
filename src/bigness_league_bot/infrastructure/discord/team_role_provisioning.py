@@ -8,7 +8,7 @@ import discord
 
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import localize
-from bigness_league_bot.infrastructure.discord.channel_management import (
+from bigness_league_bot.infrastructure.discord.channel_access_management import (
     ChannelAccessRoleCatalog,
     user_audit_label,
 )
@@ -91,7 +91,7 @@ async def sort_team_roles_alphabetically(
     await guild.edit_role_positions(
         positions=positions,
         reason=(
-            f"{user_audit_label(actor)} ordeno alfabéticamente los roles de equipo "
+            f"{user_audit_label(actor)} ordenó alfabéticamente los roles de equipo "
             "tras crear un rol nuevo"
         ),
     )

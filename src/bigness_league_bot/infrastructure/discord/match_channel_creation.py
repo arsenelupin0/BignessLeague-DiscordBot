@@ -22,12 +22,14 @@ from bigness_league_bot.application.services.match_channel_creation import (
     build_match_start_at,
 )
 from bigness_league_bot.core.localization import LocalizedText, localize
-from bigness_league_bot.infrastructure.discord.channel_management import (
+from bigness_league_bot.infrastructure.discord.channel_access_management import (
     ChannelAccessRoleCatalog,
     ChannelManagementError,
-    OverwriteTarget,
     get_channel_access_role_catalog,
     get_protected_roles,
+)
+from bigness_league_bot.infrastructure.discord.channel_management import (
+    OverwriteTarget,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 

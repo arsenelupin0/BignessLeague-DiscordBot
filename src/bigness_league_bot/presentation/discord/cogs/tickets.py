@@ -22,7 +22,7 @@ from bigness_league_bot.application.services.tickets import (
 )
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import localize
-from bigness_league_bot.infrastructure.discord.channel_management import (
+from bigness_league_bot.infrastructure.discord.channel_access_management import (
     ChannelManagementError,
     ensure_allowed_member,
     get_channel_access_role_catalog,

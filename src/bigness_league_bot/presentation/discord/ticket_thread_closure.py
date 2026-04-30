@@ -10,7 +10,7 @@ from bigness_league_bot.application.services.tickets import (
     build_guild_message_link,
     require_ticket_category,
 )
-from bigness_league_bot.infrastructure.discord.channel_management import (
+from bigness_league_bot.infrastructure.discord.channel_access_management import (
     ChannelManagementError,
     ensure_allowed_member,
 )

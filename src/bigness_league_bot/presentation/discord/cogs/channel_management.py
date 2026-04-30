@@ -22,20 +22,27 @@ from bigness_league_bot.application.services.channel_closure import (
     protected_role_names_label,
 )
 from bigness_league_bot.core.localization import localize
-from bigness_league_bot.infrastructure.discord.channel_management import (
+from bigness_league_bot.infrastructure.discord.channel_access_management import (
+    ChannelManagementError,
     UnsupportedChannelError,
+    ensure_allowed_member,
+)
+from bigness_league_bot.infrastructure.discord.channel_management import (
     apply_match_reopen,
     apply_match_played_lockdown,
     apply_matchday_closed,
-    ensure_allowed_member,
     ensure_valid_match_channel_name,
     require_text_channel,
+    resolve_category_by_identifier,
 )
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
+from bigness_league_bot.presentation.discord.views.category_bulk_delete_confirmation import (
+    CategoryBulkDeleteConfirmationView,
+)
 from bigness_league_bot.presentation.discord.views.channel_archive_confirmation import (
     ChannelArchiveConfirmationView,
 )
@@ -80,6 +87,34 @@ CHANNEL_CLOSE_CHOICES: list[app_commands.Choice[str]] = [
         value=ChannelCloseMode.ARCHIVE_CHANNEL.value,
     ),
 ]
+
+
+def _category_choice_name(category: discord.CategoryChannel) -> str:
+    option_name = f"{category.name} ({len(category.channels)} canales)"
+    return option_name[:100]
+
+
+async def _category_autocomplete(
+        interaction: discord.Interaction[BignessLeagueBot],
+        current: str,
+) -> list[app_commands.Choice[str]]:
+    guild = interaction.guild
+    if guild is None:
+        return []
+
+    normalized_current = current.casefold().strip()
+    matching_categories = (
+        category
+        for category in guild.categories
+        if not normalized_current or normalized_current in category.name.casefold()
+    )
+    return [
+        app_commands.Choice[str](
+            name=_category_choice_name(category),
+            value=str(category.id),
+        )
+        for category in sorted(matching_categories, key=lambda item: item.name.casefold())[:25]
+    ]
 
 
 class ChannelManagement(commands.Cog):
@@ -131,6 +166,62 @@ class ChannelManagement(commands.Cog):
                 locale=interaction.locale,
             )
         )
+
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.channel_management.bulk_delete.name),
+        description=localized_locale_str(
+            I18N.commands.channel_management.bulk_delete.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        categoria=localized_locale_str(
+            I18N.commands.channel_management.bulk_delete.parameters.category.description
+        ),
+    )
+    @app_commands.autocomplete(categoria=_category_autocomplete)
+    async def bulk_delete(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            categoria: str,
+    ) -> None:
+        if not isinstance(interaction.user, discord.Member):
+            raise UnsupportedChannelError(
+                localize(I18N.errors.channel_management.server_only)
+            )
+        actor = interaction.user
+        if interaction.guild is None:
+            raise UnsupportedChannelError(
+                localize(I18N.errors.channel_management.server_only)
+            )
+
+        guild = actor.guild
+        ensure_allowed_member(actor)
+        category = resolve_category_by_identifier(guild, categoria)
+        if not category.channels:
+            raise ChannelManagementError(
+                localize(
+                    I18N.errors.channel_management.bulk_delete_category_empty,
+                    category_name=category.name,
+                )
+            )
+
+        view = CategoryBulkDeleteConfirmationView(
+            category=category,
+            actor=actor,
+            localizer=interaction.client.localizer,
+            locale=interaction.locale,
+        )
+        await interaction.response.send_message(
+            interaction.client.localizer.translate(
+                I18N.messages.channel_management.bulk_delete_prompt,
+                locale=interaction.locale,
+                category_name=category.name,
+                channel_count=str(len(category.channels)),
+            ),
+            view=view,
+        )
+        view.message = await interaction.original_response()
 
     @staticmethod
     async def _prompt_channel_archive(

@@ -17,11 +17,13 @@ from discord import app_commands
 from discord.ext import commands
 
 from bigness_league_bot.core.localization import localize
-from bigness_league_bot.infrastructure.discord.channel_management import (
+from bigness_league_bot.infrastructure.discord.channel_access_management import (
     UnsupportedChannelError,
     ensure_allowed_member,
-    ensure_valid_match_channel_name,
     get_channel_access_role_catalog,
+)
+from bigness_league_bot.infrastructure.discord.channel_management import (
+    ensure_valid_match_channel_name,
     require_text_channel,
 )
 from bigness_league_bot.infrastructure.discord.error_handling import (

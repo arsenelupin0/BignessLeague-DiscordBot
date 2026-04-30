@@ -15,6 +15,15 @@
           "reopen_match": "Reabrir partido",
           "archive_channel": "Archivar canal"
         }
+      },
+      "bulk_delete": {
+        "name": "borrado_masivo",
+        "description": "Elimina todos los canales de una categoría concreta.",
+        "parameters": {
+          "category": {
+            "description": "Categoría cuyos canales quieres eliminar"
+          }
+        }
       }
     },
     "channel_access": {
@@ -286,7 +295,8 @@
     },
     "channel_management": {
       "archive_prompt": "Vas a mover el canal `{channel_name}` a la categoría de archivo configurada.\nSi viene de Oro se colocará por encima del separador y si viene de Plata se colocará por debajo.\nConfirma solo si quieres aplicar este archivado.",
-      "matchday_close_prompt": "Vas a cerrar la jornada en `{channel_name}`.\nSe eliminaran los permisos de los roles no protegidos y solo conservaran acceso: {protected_roles}.\nConfirma solo si quieres aplicar este cierre."
+      "matchday_close_prompt": "Vas a cerrar la jornada en `{channel_name}`.\nSe eliminaran los permisos de los roles no protegidos y solo conservaran acceso: {protected_roles}.\nConfirma solo si quieres aplicar este cierre.",
+      "bulk_delete_prompt": "Vas a eliminar todos los canales de la categoría `{category_name}`.\nCanales detectados: {channel_count}.\nEsta acción es irreversible. Confirma solo si quieres borrar esos canales."
     },
     "tickets": {
       "panel": {
@@ -450,6 +460,16 @@
         "cancel": "Cancelar"
       }
     },
+    "category_bulk_delete_confirmation": {
+      "only_actor": "Solo quien ejecutó el comando puede confirmar esta acción.",
+      "timeout": "La confirmación ha expirado. No se ha eliminado ningún canal.",
+      "processing": "Eliminando canales de `{category_name}`...",
+      "cancelled": "Borrado masivo cancelado.",
+      "buttons": {
+        "confirm": "Confirmar borrado",
+        "cancel": "Cancelar"
+      }
+    },
     "match_channel_creation": {
       "welcome": {
         "content": "# Jornada {jornada_emoji}　Partido {partido_emoji}\n## Bienvenid@s\n### {team_one} 🆚 {team_two}\n\nEste es el canal privado y autogenerado de vuestro partido. Para acordar fechas, pruebas y todo lo relacionado de esta jornada, deberá hablarse únicamente y exclusivamente por este canal de texto. Si se acuerda el partido por medios externos y surge algún problema a futuro, no se tendrá en cuenta. Los casos más graves lo evaluará el Staff.\n\n🤝¡Mucha suerte a ambos equipos!🤝\n　",
@@ -490,7 +510,10 @@
       "archive_source_category_unsupported": "Este archivado solo está soportado para canales que pertenezcan a las categorías configuradas de Oro o Plata.",
       "archive_category_missing": "No existe la categoría de archivo configurada: `{category_id}`.",
       "archive_separator_missing": "No existe el canal separador configurado: `{channel_id}`.",
-      "archive_separator_not_in_category": "El canal separador `{channel_id}` no pertenece a la categoría de archivo configurada: `{category_id}`."
+      "archive_separator_not_in_category": "El canal separador `{channel_id}` no pertenece a la categoría de archivo configurada: `{category_id}`.",
+      "bulk_delete_category_not_found": "No existe ninguna categoría con nombre o ID `{category_name}`.",
+      "bulk_delete_category_ambiguous": "Hay varias categorías llamadas `{category_name}`. Usa una opción del autocompletado para seleccionar la categoría exacta.",
+      "bulk_delete_category_empty": "La categoría `{category_name}` no tiene canales que eliminar."
     },
     "tickets": {
       "ceo_only": "Solo puede publicar el panel de tickets un miembro con el rol `CEO`.",
@@ -580,6 +603,7 @@
       "matchday_closed_summary": "Canal cerrado para roles no protegidos. Solo Staff, Administrador y Ceo conservan acceso.",
       "archive_above_separator_summary": "Canal archivado. Se ha movido a la categoría configurada por encima del separador.",
       "archive_below_separator_summary": "Canal archivado. Se ha movido a la categoría configurada por debajo del separador.",
+      "bulk_delete_summary": "Borrado masivo completado. Se han eliminado {deleted_count} canales de la categoría `{category_name}`.",
       "reopen_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal.",
       "reopen_with_roles_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal y se han añadido estos roles: {roles}.",
       "add_roles_summary": "Se han anadido al canal estos roles: {roles}."

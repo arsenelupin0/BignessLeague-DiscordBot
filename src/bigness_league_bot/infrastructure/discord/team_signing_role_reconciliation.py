@@ -6,7 +6,7 @@ from typing import Any
 import discord
 
 from bigness_league_bot.core.errors import CommandUserError
-from bigness_league_bot.infrastructure.discord.channel_management import get_channel_access_role_catalog
+from bigness_league_bot.infrastructure.discord.channel_access_management import get_channel_access_role_catalog
 from bigness_league_bot.infrastructure.discord.team_change_announcements import (
     TEAM_PLAYER_ROLE_REMOVAL_SPEC,
     TEAM_STAFF_ROLE_REMOVAL_SPEC,

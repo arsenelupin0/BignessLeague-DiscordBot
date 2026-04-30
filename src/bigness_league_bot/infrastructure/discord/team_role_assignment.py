@@ -10,7 +10,7 @@ import unicodedata
 from bigness_league_bot.application.services.team_profile import TeamProfile
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import TranslationKeyLike, localize
-from bigness_league_bot.infrastructure.discord.channel_management import (
+from bigness_league_bot.infrastructure.discord.channel_access_management import (
     ChannelAccessRoleCatalog,
     user_audit_label,
 )
