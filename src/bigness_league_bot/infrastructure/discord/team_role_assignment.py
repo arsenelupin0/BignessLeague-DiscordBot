@@ -16,6 +16,7 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
 )
 from bigness_league_bot.infrastructure.discord.team_change_announcements import (
     TEAM_PLAYER_ROLE_SIGNING_SPEC,
+    TEAM_ROLE_SIGNING_SPEC,
     TEAM_STAFF_ROLE_SIGNING_SPEC,
 )
 from bigness_league_bot.infrastructure.discord.team_role_change_delivery import (
@@ -404,6 +405,45 @@ def _suppress_player_signing_announcement(
         team_role_id=None,
         spec=TEAM_PLAYER_ROLE_SIGNING_SPEC,
     )
+
+
+def suppress_role_restore_signing_announcements(
+        *,
+        guild: discord.Guild,
+        member: discord.Member,
+        team_role: discord.Role,
+        roles_to_add: tuple[discord.Role, ...],
+        player_role: discord.Role | None = None,
+        staff_roles: tuple[discord.Role, ...] = (),
+) -> None:
+    added_role_ids = {role.id for role in roles_to_add}
+    if team_role.id in added_role_ids:
+        suppress_team_change_announcement(
+            guild_id=guild.id,
+            member_id=member.id,
+            team_role_id=team_role.id,
+            spec=TEAM_ROLE_SIGNING_SPEC,
+        )
+
+    if player_role is not None and player_role.id in added_role_ids:
+        suppress_team_change_announcement(
+            guild_id=guild.id,
+            member_id=member.id,
+            team_role_id=None,
+            spec=TEAM_PLAYER_ROLE_SIGNING_SPEC,
+        )
+
+    for staff_role in staff_roles:
+        if staff_role.id not in added_role_ids:
+            continue
+
+        suppress_team_change_announcement(
+            guild_id=guild.id,
+            member_id=member.id,
+            team_role_id=team_role.id,
+            spec=TEAM_STAFF_ROLE_SIGNING_SPEC,
+            staff_role_id=staff_role.id,
+        )
 
 
 async def remove_roles_from_member_by_name(

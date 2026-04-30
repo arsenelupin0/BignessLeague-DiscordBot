@@ -15,6 +15,7 @@ from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     resolve_participant_role,
     resolve_player_role,
     resolve_team_role_by_name,
+    suppress_role_restore_signing_announcements,
 )
 from bigness_league_bot.infrastructure.discord.team_staff_roles import (
     filter_team_staff_role_names_for_player_status,
@@ -86,14 +87,16 @@ class PlayerRoleAutoAssignment(commands.Cog):
                 member.guild,
                 self.bot.settings.participant_role_id,
             )
+            player_role = None
             common_roles = (participant_role,)
             if match.affiliation.is_player:
+                player_role = resolve_player_role(
+                    member.guild,
+                    self.bot.settings.player_role_id,
+                )
                 common_roles = (
                     participant_role,
-                    resolve_player_role(
-                        member.guild,
-                        self.bot.settings.player_role_id,
-                    ),
+                    player_role,
                 )
             staff_roles = resolve_optional_team_staff_roles(
                 member.guild,
@@ -129,11 +132,19 @@ class PlayerRoleAutoAssignment(commands.Cog):
         if not roles_to_add:
             return
 
+        suppress_role_restore_signing_announcements(
+            guild=member.guild,
+            member=member,
+            team_role=team_role,
+            roles_to_add=roles_to_add,
+            player_role=player_role,
+            staff_roles=staff_roles,
+        )
         try:
             await member.add_roles(
                 *roles_to_add,
                 reason=(
-                    f"Autoasignacion al entrar al servidor segun Google Sheets para "
+                    f"Auto-asignación al entrar al servidor según Google Sheets para "
                     f"{match.block.title} ({match.worksheet_title})"
                 ),
             )
