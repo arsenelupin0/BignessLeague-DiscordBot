@@ -41,6 +41,7 @@ from bigness_league_bot.infrastructure.google.team_sheets.errors import (
     TeamSheetTechnicalStaffPlayerDuplicateError,
     TeamSheetTechnicalStaffPlayerNotFoundError,
     TeamSheetTechnicalStaffRoleNotFoundError,
+    TeamSheetTeamAlreadyRegisteredError,
     TeamSheetWriteError,
 )
 from bigness_league_bot.infrastructure.google.team_sheets.models import (
@@ -76,10 +77,13 @@ class GoogleSheetsTeamRepository:
     async def register_team_signings(
             self,
             signing_batch: TeamSigningBatch,
+            *,
+            require_new_team_block: bool = False,
     ) -> TeamSigningWriteResult:
         return await asyncio.to_thread(
             self.mutations.register_team_signings_sync,
             signing_batch,
+            require_new_team_block=require_new_team_block,
         )
 
     async def register_team_technical_staff(
@@ -175,6 +179,7 @@ __all__ = (
     "TeamSheetRequestError",
     "TeamSheetDivisionNotFoundError",
     "TeamSheetNoFreeBlockError",
+    "TeamSheetTeamAlreadyRegisteredError",
     "TeamSheetWriteError",
     "TeamSheetRosterFullError",
     "TeamSheetNewTeamMinimumPlayersError",

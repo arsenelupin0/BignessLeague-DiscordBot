@@ -74,11 +74,14 @@ class TeamSheetMutationService:
     def register_team_signings_sync(
             self,
             signing_batch: TeamSigningBatch,
+            *,
+            require_new_team_block: bool = False,
     ) -> TeamSigningWriteResult:
         return _register_team_signings_sync(
             self.client,
             self.config,
             signing_batch,
+            require_new_team_block=require_new_team_block,
         )
 
     def remove_team_player_by_discord_sync(

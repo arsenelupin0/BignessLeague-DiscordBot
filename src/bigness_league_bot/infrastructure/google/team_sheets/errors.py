@@ -48,6 +48,10 @@ class TeamSheetNoFreeBlockError(TeamSheetError):
     """Raised when there is no free team block left in the selected sheet."""
 
 
+class TeamSheetTeamAlreadyRegisteredError(TeamSheetError):
+    """Raised when a team registration targets an existing team block."""
+
+
 class TeamSheetWriteError(TeamSheetError):
     """Raised when Google Sheets rejects a write operation."""
 

@@ -61,6 +61,10 @@ from bigness_league_bot.presentation.discord.ticket_command_mirroring import (
 )
 
 if TYPE_CHECKING:
+    from bigness_league_bot.application.services.team_signing import (
+        TeamSigningBatch,
+        TeamTechnicalStaffBatch,
+    )
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
 
@@ -90,25 +94,21 @@ class TeamSigningCog(commands.Cog):
                 )
 
     @app_commands.command(
-        name=localized_locale_str(I18N.commands.team_signing.make_signing.name),
+        name=localized_locale_str(I18N.commands.team_signing.make_registration.name),
         description=localized_locale_str(
-            I18N.commands.team_signing.make_signing.description
+            I18N.commands.team_signing.make_registration.description
         ),
     )
     @app_commands.guild_only()
     @app_commands.describe(
         enlace_jugadores=localized_locale_str(
-            I18N.commands.team_signing.make_signing.parameters.message_link.description
+            I18N.commands.team_signing.make_registration.parameters.message_link.description
         ),
-        enlace_staff_tecnico=localized_locale_str(
-            I18N.commands.team_signing.make_signing.parameters.technical_staff_message_link.description
-        )
     )
-    async def make_signing(
+    async def make_registration(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
-            enlace_jugadores: str | None = None,
-            enlace_staff_tecnico: str | None = None,
+            enlace_jugadores: str,
     ) -> None:
         guild = interaction.guild
         if guild is None or not isinstance(interaction.user, discord.Member):
@@ -117,27 +117,72 @@ class TeamSigningCog(commands.Cog):
             )
 
         ensure_allowed_member(interaction.user)
-        if enlace_jugadores is None and enlace_staff_tecnico is None:
-            raise CommandUserError(
-                localize(I18N.errors.team_signing.no_import_payload_provided)
-            )
-
         await interaction.response.defer(thinking=True)
-        settings = interaction.client.settings
-        role_catalog = get_channel_access_role_catalog(
-            guild,
-            settings.channel_access_range_start_role_id,
-            settings.channel_access_range_end_role_id,
-        )
         signing_batch = await parse_player_signing_batch(
             interaction.client,
             guild=guild,
             message_link=enlace_jugadores,
         )
+        await self._handle_team_signing_import(
+            interaction,
+            guild=guild,
+            signing_batch=signing_batch,
+            technical_staff_batch=None,
+            require_new_team_block=True,
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.team_signing.make_signing.name),
+        description=localized_locale_str(
+            I18N.commands.team_signing.make_signing.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        enlace_staff_tecnico=localized_locale_str(
+            I18N.commands.team_signing.make_signing.parameters.technical_staff_message_link.description
+        )
+    )
+    async def make_signing(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            enlace_staff_tecnico: str,
+    ) -> None:
+        guild = interaction.guild
+        if guild is None or not isinstance(interaction.user, discord.Member):
+            raise UnsupportedChannelError(
+                localize(I18N.errors.channel_management.server_only)
+            )
+
+        ensure_allowed_member(interaction.user)
+        await interaction.response.defer(thinking=True)
         technical_staff_batch = await parse_technical_staff_batch(
             interaction.client,
             guild=guild,
             message_link=enlace_staff_tecnico,
+        )
+        await self._handle_team_signing_import(
+            interaction,
+            guild=guild,
+            signing_batch=None,
+            technical_staff_batch=technical_staff_batch,
+            require_new_team_block=False,
+        )
+
+    async def _handle_team_signing_import(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            *,
+            guild: discord.Guild,
+            signing_batch: TeamSigningBatch | None,
+            technical_staff_batch: TeamTechnicalStaffBatch | None,
+            require_new_team_block: bool,
+    ) -> None:
+        settings = interaction.client.settings
+        role_catalog = get_channel_access_role_catalog(
+            guild,
+            settings.channel_access_range_start_role_id,
+            settings.channel_access_range_end_role_id,
         )
         division_name, team_name = resolve_team_signing_import_target(
             signing_batch=signing_batch,
@@ -156,7 +201,10 @@ class TeamSigningCog(commands.Cog):
 
         if signing_batch is not None:
             player_role = resolve_player_role(guild, settings.player_role_id)
-            player_result = await repository.register_team_signings(signing_batch)
+            player_result = await repository.register_team_signings(
+                signing_batch,
+                require_new_team_block=require_new_team_block,
+            )
             team_role_result = await resolve_or_create_team_role(
                 guild,
                 team_name=team_name,

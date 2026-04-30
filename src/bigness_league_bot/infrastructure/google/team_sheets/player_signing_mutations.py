@@ -26,6 +26,7 @@ from bigness_league_bot.infrastructure.google.team_sheets.blocks import (
 from bigness_league_bot.infrastructure.google.team_sheets.cells import (
     _build_hyperlink_cell_value,
     _is_free_block_title,
+    _normalize_lookup_text,
     _normalize_member_lookup_text,
 )
 from bigness_league_bot.infrastructure.google.team_sheets.client import GoogleSheetsClient
@@ -34,8 +35,10 @@ from bigness_league_bot.infrastructure.google.team_sheets.errors import (
     TeamSheetDuplicatePlayerError,
     TeamSheetLayoutError,
     TeamSheetNewTeamMinimumPlayersError,
+    TeamSheetNoFreeBlockError,
     TeamSheetRemainingSigningsExceededError,
     TeamSheetRosterFullError,
+    TeamSheetTeamAlreadyRegisteredError,
     TeamSheetWriteError,
 )
 from bigness_league_bot.infrastructure.google.team_sheets.finders import _find_player_matches
@@ -64,6 +67,8 @@ def register_team_signings_sync(
         client: GoogleSheetsClient,
         config: TeamSheetLookupConfig,
         signing_batch: TeamSigningBatch,
+        *,
+        require_new_team_block: bool = False,
 ) -> TeamSigningWriteResult:
     service = client.build_service(read_only=False)
     _, sheet_grids = client.fetch_sheet_grids(service)
@@ -80,12 +85,31 @@ def register_team_signings_sync(
             )
         )
 
+    if require_new_team_block:
+        _ensure_has_free_team_block_across_sheets(
+            signing_batch.team_name,
+            sheet_grids,
+        )
+        _ensure_team_is_not_already_registered(signing_batch, sheet_grids)
+        _ensure_new_team_players_are_not_already_registered(
+            signing_batch,
+            sheet_grids,
+        )
+
     target_block = _resolve_target_team_block(
         signing_batch.team_name,
         team_blocks,
         worksheet_title=worksheet_title,
     )
     is_new_team_block = _is_free_block_title(target_block.title)
+    if require_new_team_block and not is_new_team_block:
+        raise TeamSheetTeamAlreadyRegisteredError(
+            localize(
+                I18N.errors.team_signing.team_already_registered,
+                team_name=signing_batch.team_name,
+                sheet_name=worksheet_title,
+            )
+        )
     if is_new_team_block and len(signing_batch.players) < 3:
         raise TeamSheetNewTeamMinimumPlayersError(
             localize(
@@ -95,10 +119,11 @@ def register_team_signings_sync(
             )
         )
     if is_new_team_block:
-        _ensure_new_team_players_are_not_already_registered(
-            signing_batch,
-            sheet_grids,
-        )
+        if not require_new_team_block:
+            _ensure_new_team_players_are_not_already_registered(
+                signing_batch,
+                sheet_grids,
+            )
         existing_players = ()
     else:
         existing_players = tuple(
@@ -236,3 +261,46 @@ def _ensure_new_team_players_are_not_already_registered(
                 locations=locations,
             )
         )
+
+
+def _ensure_has_free_team_block_across_sheets(
+        team_name: str,
+        sheet_grids: tuple[tuple[str, dict[int, dict[int, Any]]], ...],
+) -> None:
+    for _, cell_grid in sheet_grids:
+        has_free_block = any(
+            _is_free_block_title(block.title)
+            for block in _collect_team_blocks(cell_grid)
+        )
+        if has_free_block:
+            return
+
+    sheet_names = ", ".join(worksheet_title for worksheet_title, _ in sheet_grids)
+    raise TeamSheetNoFreeBlockError(
+        localize(
+            I18N.errors.team_signing.no_free_registration_block,
+            team_name=team_name,
+            sheet_names=sheet_names,
+        )
+    )
+
+
+def _ensure_team_is_not_already_registered(
+        signing_batch: TeamSigningBatch,
+        sheet_grids: tuple[tuple[str, dict[int, dict[int, Any]]], ...],
+) -> None:
+    normalized_team_name = _normalize_lookup_text(signing_batch.team_name)
+    for worksheet_title, cell_grid in sheet_grids:
+        for block in _collect_team_blocks(cell_grid):
+            if _is_free_block_title(block.title):
+                continue
+            if _normalize_lookup_text(block.title) != normalized_team_name:
+                continue
+
+            raise TeamSheetTeamAlreadyRegisteredError(
+                localize(
+                    I18N.errors.team_signing.team_already_registered,
+                    team_name=signing_batch.team_name,
+                    sheet_name=worksheet_title,
+                )
+            )

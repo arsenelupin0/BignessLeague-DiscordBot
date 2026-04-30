@@ -140,13 +140,19 @@
       }
     },
     "team_signing": {
-      "make_signing": {
-        "name": "hacer_fichaje",
-        "description": "Importa fichajes desde un mensaje enlazado de Discord hacia Google Sheets.",
+      "make_registration": {
+        "name": "hacer_inscripción",
+        "description": "Inscripción completa de 3 a 6 jugadores desde un mensaje enlazado siguiendo la plantilla.",
         "parameters": {
           "message_link": {
-            "description": "Enlace al mensaje de Discord que contiene la plantilla de jugadores."
-          },
+            "description": "Enlace al mensaje de Discord que contiene la plantilla completa de jugadores."
+          }
+        }
+      },
+      "make_signing": {
+        "name": "hacer_fichaje",
+        "description": "Importa staff técnico desde un mensaje enlazado de Discord hacia Google Sheets.",
+        "parameters": {
           "technical_staff_message_link": {
             "description": "Enlace al mensaje de Discord que contiene la plantilla de staff técnico."
           }
@@ -263,7 +269,7 @@
     },
     "team_signing": {
       "guide": {
-        "content": "# 🔰 Como hacer una inscripción o fichaje 🔰\n_ _\nSi quieres tener un poco más de información de como funcionan los fichajes/inscripciones. Dale click a estos links de aquí abajo:\n - [Información para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)\n - [Información para añadir un rol de Staff Técnico a tu equipo](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\n## ✅ Plantilla de ejemplo que tendrías que enviar...\nSi no sabes que hay que poner en cada parte, por favor revisa la [documentación para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818). Recuerdo que tiene que estar todo correcto y con el formato correcto.\nEn caso de que tengas más jugadores lo vas agregando con un salto de línea, como está en esta plantilla con un máximo de 6 jugadores. \n\n### Plantilla a copiar tal cual esta de aquí abajo pero con tus datos...\n_ _\n```\nDivisión: \nEquipo: \n\nJugador: \nTracker: \nDiscord: \nEpic Name:  \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n```"
+        "content": "# 🔰 Como hacer una inscripción o fichaje 🔰\n_ _\nSi quieres tener un poco más de información de como funcionan los fichajes/inscripciones. Dale click a estos links de aquí abajo:\n - [Información para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)\n - [Información para añadir un rol de Staff Técnico a tu equipo](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\n## ✅ Plantilla de ejemplo que tendrías que enviar...\nSi no sabes que hay que poner en cada parte, por favor revisa la [documentación para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818). Recuerdo que tiene que estar todo correcto y con el formato correcto.\nEn caso de que tengas más jugadores lo vas agregando con un salto de línea, como está en esta plantilla con un máximo de 6 jugadores. \n\n### Plantilla a copiar tal cual esta de aquí abajo pero con tus datos...\n_ _\n```\nDivisión: \nEquipo: \nLogo: \n\nJugador: \nTracker: \nDiscord: \nEpic Name:  \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n```"
       }
     },
     "team_role_removal_announcement": {
@@ -563,6 +569,8 @@
       "division_not_found": "No existe ninguna hoja que coincida con la división `{division_name}`.",
       "team_sheet_layout_invalid": "La hoja `{sheet_name}` no sigue el formato esperado para registrar fichajes.",
       "no_free_team_block": "No hay ningún bloque de equipo libre en `{sheet_name}` para registrar a `{team_name}`.",
+      "no_free_registration_block": "No hay ningún bloque de equipo libre en las divisiones configuradas ({sheet_names}) para registrar a `{team_name}`.",
+      "team_already_registered": "No se puede completar la inscripción porque `{team_name}` ya existe en `{sheet_name}`.",
       "technical_staff_role_not_found": "No existe la fila de staff técnico `{role_name}` para `{team_name}` en `{sheet_name}`.",
       "technical_staff_player_not_found": "No se pudo completar el staff técnico `{role_name}` porque el Discord `{discord_name}` no existe en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.",
       "technical_staff_player_duplicate": "No se pudo completar el staff técnico `{role_name}` porque el Discord `{discord_name}` aparece duplicado en la plantilla de jugadores de `{team_name}` en `{sheet_name}`.",

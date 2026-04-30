@@ -111,13 +111,19 @@
       }
     },
     "team_signing": {
-      "make_signing": {
-        "name": "make_signing",
-        "description": "Imports signings from a linked Discord message into Google Sheets.",
+      "make_registration": {
+        "name": "make_registration",
+        "description": "Imports a full player registration from a linked Discord message into Google Sheets.",
         "parameters": {
           "message_link": {
-            "description": "Discord message link containing the player template."
-          },
+            "description": "Discord message link containing the full player template."
+          }
+        }
+      },
+      "make_signing": {
+        "name": "make_signing",
+        "description": "Imports technical staff from a linked Discord message into Google Sheets.",
+        "parameters": {
           "technical_staff_message_link": {
             "description": "Discord message link containing the technical staff template."
           }
@@ -407,6 +413,8 @@
       "division_not_found": "No sheet matches the division `{division_name}`.",
       "team_sheet_layout_invalid": "The sheet `{sheet_name}` does not follow the expected layout for signing imports.",
       "no_free_team_block": "There is no free team block left in `{sheet_name}` for `{team_name}`.",
+      "no_free_registration_block": "There is no free team block left in the configured divisions ({sheet_names}) for `{team_name}`.",
+      "team_already_registered": "The registration cannot be completed because `{team_name}` already exists in `{sheet_name}`.",
       "technical_staff_role_not_found": "The technical staff row `{role_name}` does not exist for `{team_name}` in `{sheet_name}`.",
       "technical_staff_player_not_found": "Technical staff `{role_name}` could not be completed because Discord `{discord_name}` does not exist in the player roster for `{team_name}` in `{sheet_name}`.",
       "technical_staff_player_duplicate": "Technical staff `{role_name}` could not be completed because Discord `{discord_name}` appears more than once in the player roster for `{team_name}` in `{sheet_name}`.",
