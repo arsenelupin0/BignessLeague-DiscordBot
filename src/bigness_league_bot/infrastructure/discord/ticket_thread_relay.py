@@ -194,8 +194,8 @@ class TicketThreadRelay:
                 thread_message.id,
             )
 
+    @staticmethod
     async def _resolve_thread_reply_target(
-            self,
             *,
             record: TicketRecord,
             thread: discord.Thread,
