@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from time import monotonic
 from typing import TYPE_CHECKING
 
 import discord
@@ -17,6 +16,9 @@ from bigness_league_bot.infrastructure.discord.channel_access_management import 
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
 )
+from bigness_league_bot.infrastructure.discord.team_removal_interactive import (
+    resolve_interactive_removal_context,
+)
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     assign_team_roles_by_names,
     collect_team_profile_player_names,
@@ -31,19 +33,16 @@ from bigness_league_bot.infrastructure.discord.team_signing_imports import (
 )
 from bigness_league_bot.infrastructure.discord.team_signing_messages import (
     build_team_role_sync_message,
-    build_team_signing_removal_completed_message,
-    build_team_signing_removal_visibility_message,
     split_discord_message_content,
 )
 from bigness_league_bot.infrastructure.discord.team_signing_role_reconciliation import (
     reconcile_team_role_assignment,
-    remove_discord_roles_after_signing_removal,
-)
-from bigness_league_bot.infrastructure.discord.team_signing_visibility import (
-    collect_team_signing_removal_visibility_links,
 )
 from bigness_league_bot.infrastructure.discord.team_signing_workflow import (
     handle_team_signing_import,
+)
+from bigness_league_bot.infrastructure.discord.team_staff_interactive import (
+    interactive_team_autocomplete,
 )
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     GoogleSheetsTeamRepository,
@@ -52,6 +51,9 @@ from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
 from bigness_league_bot.presentation.discord.ticket_command_mirroring import (
     mirror_ticket_text_command_message,
+)
+from bigness_league_bot.presentation.discord.views.team_removal_selection import (
+    TeamRemovalSelectionView,
 )
 
 if TYPE_CHECKING:
@@ -187,89 +189,15 @@ class TeamSigningCog(commands.Cog):
     )
     @app_commands.guild_only()
     @app_commands.describe(
-        discord_jugador=localized_locale_str(
-            I18N.commands.team_signing.remove_signing.parameters.discord_name.description
-        ),
         equipo=localized_locale_str(
             I18N.commands.team_signing.remove_signing.parameters.team_role.description
         )
     )
+    @app_commands.autocomplete(equipo=interactive_team_autocomplete)
     async def remove_signing(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
-            discord_jugador: str,
-            equipo: discord.Role,
-    ) -> None:
-        await self._remove_signing(
-            interaction,
-            discord_name=discord_jugador,
-            team_role=equipo,
-            removal_scope="all",
-        )
-
-    @app_commands.command(
-        name=localized_locale_str(I18N.commands.team_signing.remove_player_signing.name),
-        description=localized_locale_str(
-            I18N.commands.team_signing.remove_player_signing.description
-        ),
-    )
-    @app_commands.guild_only()
-    @app_commands.describe(
-        discord_jugador=localized_locale_str(
-            I18N.commands.team_signing.remove_player_signing.parameters.discord_name.description
-        ),
-        equipo=localized_locale_str(
-            I18N.commands.team_signing.remove_player_signing.parameters.team_role.description
-        )
-    )
-    async def remove_player_signing(
-            self,
-            interaction: discord.Interaction[BignessLeagueBot],
-            discord_jugador: str,
-            equipo: discord.Role,
-    ) -> None:
-        await self._remove_signing(
-            interaction,
-            discord_name=discord_jugador,
-            team_role=equipo,
-            removal_scope="player",
-        )
-
-    @app_commands.command(
-        name=localized_locale_str(I18N.commands.team_signing.remove_staff_signing.name),
-        description=localized_locale_str(
-            I18N.commands.team_signing.remove_staff_signing.description
-        ),
-    )
-    @app_commands.guild_only()
-    @app_commands.describe(
-        discord_staff=localized_locale_str(
-            I18N.commands.team_signing.remove_staff_signing.parameters.discord_name.description
-        ),
-        equipo=localized_locale_str(
-            I18N.commands.team_signing.remove_staff_signing.parameters.team_role.description
-        )
-    )
-    async def remove_staff_signing(
-            self,
-            interaction: discord.Interaction[BignessLeagueBot],
-            discord_staff: str,
-            equipo: discord.Role,
-    ) -> None:
-        await self._remove_signing(
-            interaction,
-            discord_name=discord_staff,
-            team_role=equipo,
-            removal_scope="staff",
-        )
-
-    @staticmethod
-    async def _remove_signing(
-            interaction: discord.Interaction[BignessLeagueBot],
-            *,
-            discord_name: str,
-            team_role: discord.Role,
-            removal_scope: str,
+            equipo: str,
     ) -> None:
         guild = interaction.guild
         if guild is None or not isinstance(interaction.user, discord.Member):
@@ -278,77 +206,29 @@ class TeamSigningCog(commands.Cog):
             )
 
         ensure_allowed_member(interaction.user)
-        await interaction.response.defer(thinking=True)
-        settings = interaction.client.settings
-        role_catalog = get_channel_access_role_catalog(
-            guild,
-            settings.channel_access_range_start_role_id,
-            settings.channel_access_range_end_role_id,
-        )
-        if team_role.id not in {role.id for role in role_catalog.roles}:
-            raise CommandUserError(
-                localize(
-                    I18N.errors.match_channel_creation.team_role_out_of_range,
-                    role_name=team_role.name,
-                    range_start=role_catalog.range_start.name,
-                    range_end=role_catalog.range_end.name,
-                )
-            )
-
-        repository = GoogleSheetsTeamRepository(settings)
-        if removal_scope == "player":
-            result = await repository.remove_team_player_by_discord(
-                discord_name,
-                team_name=team_role.name,
-            )
-        elif removal_scope == "staff":
-            result = await repository.remove_team_staff_by_discord(
-                discord_name,
-                team_name=team_role.name,
-            )
-        else:
-            result = await repository.remove_team_member_by_discord(
-                discord_name,
-                team_name=team_role.name,
-            )
-
-        player_role = resolve_player_role(guild, settings.player_role_id)
-        announcement_since = monotonic()
-        role_removal_report = await remove_discord_roles_after_signing_removal(
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        team_role, team_profile = await resolve_interactive_removal_context(
             interaction,
-            discord_name=discord_name,
-            result=result,
-        )
-        visibility_links = await collect_team_signing_removal_visibility_links(
-            settings=settings,
             guild=guild,
+            equipo=equipo,
+        )
+        view = TeamRemovalSelectionView(
+            guild=guild,
+            actor=interaction.user,
             team_role=team_role,
-            player_role=player_role,
-            result=result,
-            removal_summary=role_removal_report.summary,
-            since=announcement_since,
-        )
-        followup_message = build_team_signing_removal_completed_message(
+            team_profile=team_profile,
             localizer=interaction.client.localizer,
             locale=interaction.locale,
-            discord_name=discord_name,
-            result=result,
         )
-        if role_removal_report.message:
-            followup_message = f"{followup_message}\n{role_removal_report.message}"
-
-        visibility_message = build_team_signing_removal_visibility_message(
-            localizer=interaction.client.localizer,
-            locale=interaction.locale,
-            team_role_mention=team_role.mention,
-            team_links=visibility_links.team_links,
-            player_links=visibility_links.player_links,
-            staff_links=visibility_links.staff_links,
-        )
-
-        await interaction.followup.send(
-            f"{followup_message}{visibility_message}",
-            allowed_mentions=discord.AllowedMentions.none(),
+        view.message = await interaction.followup.send(
+            interaction.client.localizer.translate(
+                I18N.messages.team_signing.interactive_removal_selection.scope_prompt,
+                locale=interaction.locale,
+                team_name=team_profile.team_name,
+            ),
+            view=view,
+            ephemeral=True,
+            wait=True,
         )
 
     @app_commands.command(

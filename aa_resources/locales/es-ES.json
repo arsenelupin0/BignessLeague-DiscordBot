@@ -175,37 +175,10 @@
       },
       "remove_signing": {
         "name": "dar_de_baja",
-        "description": "Da de baja completamente a un miembro como jugador y staff técnico en Google Sheets.",
+        "description": "Da de baja jugadores o staff técnico seleccionando el bloque y miembro del equipo.",
         "parameters": {
-          "discord_name": {
-            "description": "Nombre de Discord del miembro que quieres eliminar completamente."
-          },
           "team_role": {
-            "description": "Equipo del que quieres dar de baja al miembro."
-          }
-        }
-      },
-      "remove_player_signing": {
-        "name": "dar_de_baja_jugador",
-        "description": "Da de baja solo a un jugador del roster en Google Sheets.",
-        "parameters": {
-          "discord_name": {
-            "description": "Nombre de Discord del jugador que quieres eliminar del roster."
-          },
-          "team_role": {
-            "description": "Equipo del que quieres dar de baja al jugador."
-          }
-        }
-      },
-      "remove_staff_signing": {
-        "name": "dar_de_baja_staff",
-        "description": "Da de baja solo los cargos de staff técnico en Google Sheets.",
-        "parameters": {
-          "discord_name": {
-            "description": "Nombre de Discord del miembro que quieres eliminar de STAFF TÉCNICO."
-          },
-          "team_role": {
-            "description": "Equipo del que quieres dar de baja al staff técnico."
+            "description": "Equipo donde quieres gestionar la baja."
           }
         }
       }
@@ -292,6 +265,19 @@
         "processing": "Aplicando cargos de staff técnico...",
         "timeout": "La selección de cargos ha expirado. No se ha aplicado ningún fichaje.",
         "only_actor": "Solo quien ejecutó el comando puede usar este selector."
+      },
+      "interactive_removal_selection": {
+        "scope_prompt": "Selecciona qué tipo de baja quieres aplicar en `{team_name}`.",
+        "scope_placeholder": "Selecciona el bloque de la baja",
+        "scope_all": "Jugador y staff técnico",
+        "scope_player": "Solo jugadores",
+        "scope_staff": "Solo staff técnico",
+        "member_prompt": "Selecciona el miembro al que quieres dar de baja.",
+        "member_placeholder": "Selecciona el miembro",
+        "processing": "Aplicando la baja...",
+        "timeout": "La selección de baja ha expirado. No se ha aplicado ningún cambio.",
+        "only_actor": "Solo quien ejecutó el comando puede usar este selector.",
+        "no_members": "No hay miembros disponibles para ese tipo de baja en el equipo seleccionado."
       }
     },
     "team_role_removal_announcement": {

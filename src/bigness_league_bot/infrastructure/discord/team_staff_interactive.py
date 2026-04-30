@@ -63,7 +63,7 @@ INTERACTIVE_STAFF_ROLE_LABELS: dict[str, str] = {
 }
 
 
-async def interactive_staff_team_autocomplete(
+async def interactive_team_autocomplete(
         interaction: discord.Interaction[BignessLeagueBot],
         current: str,
 ) -> list[app_commands.Choice[str]]:
@@ -109,6 +109,13 @@ async def interactive_staff_team_autocomplete(
     return choices
 
 
+async def interactive_staff_team_autocomplete(
+        interaction: discord.Interaction[BignessLeagueBot],
+        current: str,
+) -> list[app_commands.Choice[str]]:
+    return await interactive_team_autocomplete(interaction, current)
+
+
 async def interactive_staff_player_autocomplete(
         interaction: discord.Interaction[BignessLeagueBot],
         current: str,
@@ -121,7 +128,7 @@ async def interactive_staff_player_autocomplete(
     if not isinstance(selected_team, (str, int)):
         return []
 
-    team_role = _resolve_selected_team_role(guild, selected_team)
+    team_role = resolve_selected_team_role(guild, selected_team)
     if team_role is None:
         return []
 
@@ -156,7 +163,7 @@ async def build_interactive_staff_signing_batch(
         discord_jugador: str,
         cargos: Sequence[str],
 ) -> TeamTechnicalStaffBatch:
-    team_profile = await _find_selected_team_profile(
+    team_profile = await find_selected_team_profile(
         interaction,
         guild=guild,
         equipo=equipo,
@@ -233,7 +240,7 @@ async def collect_available_interactive_staff_roles(
         guild: discord.Guild,
         equipo: str,
 ) -> tuple[InteractiveStaffRoleOption, ...]:
-    team_profile = await _find_selected_team_profile(
+    team_profile = await find_selected_team_profile(
         interaction,
         guild=guild,
         equipo=equipo,
@@ -259,13 +266,13 @@ async def collect_available_interactive_staff_roles(
     )
 
 
-async def _find_selected_team_profile(
+async def find_selected_team_profile(
         interaction: discord.Interaction[BignessLeagueBot],
         *,
         guild: discord.Guild,
         equipo: str,
 ) -> TeamProfile:
-    team_role = _resolve_selected_team_role(guild, equipo)
+    team_role = resolve_selected_team_role(guild, equipo)
     if team_role is None:
         raise CommandUserError(
             localize(I18N.errors.team_signing.invalid_interactive_team)
@@ -291,6 +298,19 @@ async def _find_selected_team_profile(
     return await repository.find_team_profile_for_role(team_role)
 
 
+async def _find_selected_team_profile(
+        interaction: discord.Interaction[BignessLeagueBot],
+        *,
+        guild: discord.Guild,
+        equipo: str,
+) -> TeamProfile:
+    return await find_selected_team_profile(
+        interaction,
+        guild=guild,
+        equipo=equipo,
+    )
+
+
 def _choice_name(label: str, detail: str | None = None) -> str:
     if not detail:
         return label[:100]
@@ -298,7 +318,7 @@ def _choice_name(label: str, detail: str | None = None) -> str:
     return f"{label} ({detail})"[:100]
 
 
-def _resolve_selected_team_role(
+def resolve_selected_team_role(
         guild: discord.Guild,
         raw_role_id: str | int | None,
 ) -> discord.Role | None:
@@ -311,6 +331,13 @@ def _resolve_selected_team_role(
         return None
 
     return guild.get_role(role_id)
+
+
+def _resolve_selected_team_role(
+        guild: discord.Guild,
+        raw_role_id: str | int | None,
+) -> discord.Role | None:
+    return resolve_selected_team_role(guild, raw_role_id)
 
 
 def _matches_current(label: str, current: str) -> bool:

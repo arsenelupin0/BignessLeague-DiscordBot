@@ -146,28 +146,10 @@
       },
       "remove_signing": {
         "name": "remove_signing",
-        "description": "Fully removes a member as player and technical staff from Google Sheets.",
+        "description": "Removes players or technical staff by selecting the team block and member.",
         "parameters": {
-          "discord_name": {
-            "description": "Discord name of the member you want to remove completely."
-          }
-        }
-      },
-      "remove_player_signing": {
-        "name": "remove_player_signing",
-        "description": "Removes only a player from the Google Sheets roster.",
-        "parameters": {
-          "discord_name": {
-            "description": "Discord name of the player you want to remove from the roster."
-          }
-        }
-      },
-      "remove_staff_signing": {
-        "name": "remove_staff_signing",
-        "description": "Removes only technical staff roles from Google Sheets.",
-        "parameters": {
-          "discord_name": {
-            "description": "Discord name of the member you want to remove from technical staff."
+          "team_role": {
+            "description": "Team where you want to manage a removal."
           }
         }
       }
@@ -254,6 +236,19 @@
         "processing": "Applying technical staff roles...",
         "timeout": "The role selection expired. No signing was applied.",
         "only_actor": "Only the command author can use this selector."
+      },
+      "interactive_removal_selection": {
+        "scope_prompt": "Select which removal type you want to apply in `{team_name}`.",
+        "scope_placeholder": "Select the removal block",
+        "scope_all": "Player and technical staff",
+        "scope_player": "Players only",
+        "scope_staff": "Technical staff only",
+        "member_prompt": "Select the member you want to remove.",
+        "member_placeholder": "Select member",
+        "processing": "Applying removal...",
+        "timeout": "The removal selection expired. No changes were applied.",
+        "only_actor": "Only the command author can use this selector.",
+        "no_members": "There are no members available for that removal type in the selected team."
       }
     },
     "team_role_removal_announcement": {
