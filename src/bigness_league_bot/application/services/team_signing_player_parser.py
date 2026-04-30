@@ -40,7 +40,12 @@ LABELLED_PLAYER_FIELD_KEYS = {
 LABELLED_PLAYER_FIELD_ORDER = tuple(LABELLED_PLAYER_FIELD_KEYS.values())
 
 
-def parse_team_signing_message(content: str) -> TeamSigningBatch:
+def parse_team_signing_message(
+        content: str,
+        *,
+        require_team_logo: bool = True,
+        min_players: int = MIN_TEAM_SIGNING_PLAYERS,
+) -> TeamSigningBatch:
     content = _unwrap_discord_code_block(content)
     content_lines = content.splitlines()
     metadata, player_lines, player_start_line = _extract_message_metadata_and_body(
@@ -54,7 +59,7 @@ def parse_team_signing_message(content: str) -> TeamSigningBatch:
         raise TeamSigningParseError("Falta la cabecera `División:` en el mensaje enlazado.")
     if not team_name:
         raise TeamSigningParseError("Falta la cabecera `Equipo:` en el mensaje enlazado.")
-    if not team_logo_url:
+    if require_team_logo and not team_logo_url:
         raise TeamSigningParseError("Falta la cabecera `Logo:` en el mensaje enlazado.")
     if not _contains_non_empty_lines(player_lines):
         raise TeamSigningParseError("El mensaje enlazado no contiene ningún bloque de jugador.")
@@ -70,9 +75,9 @@ def parse_team_signing_message(content: str) -> TeamSigningBatch:
     )
     if not players:
         raise TeamSigningParseError("El mensaje enlazado no contiene ningún bloque de jugador.")
-    if len(players) < MIN_TEAM_SIGNING_PLAYERS or len(players) > MAX_TEAM_SIGNING_PLAYERS:
+    if len(players) < min_players or len(players) > MAX_TEAM_SIGNING_PLAYERS:
         raise TeamSigningParseError(
-            f"La plantilla de jugadores debe contener entre {MIN_TEAM_SIGNING_PLAYERS} y {MAX_TEAM_SIGNING_PLAYERS} jugadores."
+            f"La plantilla de jugadores debe contener entre {min_players} y {MAX_TEAM_SIGNING_PLAYERS} jugadores."
         )
     _ensure_unique_player_discord_names(players)
 

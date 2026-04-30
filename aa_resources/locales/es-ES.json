@@ -151,8 +151,11 @@
       },
       "make_signing": {
         "name": "hacer_fichaje",
-        "description": "Importa staff técnico desde un mensaje enlazado de Discord hacia Google Sheets.",
+        "description": "Importa jugadores o staff técnico desde mensajes enlazados de Discord.",
         "parameters": {
+          "message_link": {
+            "description": "Enlace al mensaje de Discord que contiene la plantilla de jugadores para el fichaje."
+          },
           "technical_staff_message_link": {
             "description": "Enlace al mensaje de Discord que contiene la plantilla de staff técnico."
           }

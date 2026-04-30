@@ -25,6 +25,8 @@ async def parse_player_signing_batch(
         *,
         guild: discord.Guild,
         message_link: str | None,
+        require_team_logo: bool = True,
+        min_players: int = 3,
 ) -> TeamSigningBatch | None:
     if message_link is None:
         return None
@@ -35,7 +37,11 @@ async def parse_player_signing_batch(
         message_link,
     )
     try:
-        return parse_team_signing_message(linked_message.content)
+        return parse_team_signing_message(
+            linked_message.content,
+            require_team_logo=require_team_logo,
+            min_players=min_players,
+        )
     except TeamSigningParseError as exc:
         raise CommandUserError(
             localize(

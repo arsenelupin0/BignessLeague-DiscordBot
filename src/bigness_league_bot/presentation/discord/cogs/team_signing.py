@@ -122,6 +122,8 @@ class TeamSigningCog(commands.Cog):
             interaction.client,
             guild=guild,
             message_link=enlace_jugadores,
+            require_team_logo=True,
+            min_players=3,
         )
         await self._handle_team_signing_import(
             interaction,
@@ -139,6 +141,9 @@ class TeamSigningCog(commands.Cog):
     )
     @app_commands.guild_only()
     @app_commands.describe(
+        enlace_jugadores=localized_locale_str(
+            I18N.commands.team_signing.make_signing.parameters.message_link.description
+        ),
         enlace_staff_tecnico=localized_locale_str(
             I18N.commands.team_signing.make_signing.parameters.technical_staff_message_link.description
         )
@@ -146,7 +151,8 @@ class TeamSigningCog(commands.Cog):
     async def make_signing(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
-            enlace_staff_tecnico: str,
+            enlace_jugadores: str | None = None,
+            enlace_staff_tecnico: str | None = None,
     ) -> None:
         guild = interaction.guild
         if guild is None or not isinstance(interaction.user, discord.Member):
@@ -155,7 +161,19 @@ class TeamSigningCog(commands.Cog):
             )
 
         ensure_allowed_member(interaction.user)
+        if enlace_jugadores is None and enlace_staff_tecnico is None:
+            raise CommandUserError(
+                localize(I18N.errors.team_signing.no_import_payload_provided)
+            )
+
         await interaction.response.defer(thinking=True)
+        signing_batch = await parse_player_signing_batch(
+            interaction.client,
+            guild=guild,
+            message_link=enlace_jugadores,
+            require_team_logo=False,
+            min_players=1,
+        )
         technical_staff_batch = await parse_technical_staff_batch(
             interaction.client,
             guild=guild,
@@ -164,7 +182,7 @@ class TeamSigningCog(commands.Cog):
         await self._handle_team_signing_import(
             interaction,
             guild=guild,
-            signing_batch=None,
+            signing_batch=signing_batch,
             technical_staff_batch=technical_staff_batch,
             require_new_team_block=False,
         )

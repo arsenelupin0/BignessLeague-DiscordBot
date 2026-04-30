@@ -122,8 +122,11 @@
       },
       "make_signing": {
         "name": "make_signing",
-        "description": "Imports technical staff from a linked Discord message into Google Sheets.",
+        "description": "Imports players or technical staff from linked Discord messages into Google Sheets.",
         "parameters": {
+          "message_link": {
+            "description": "Discord message link containing the player signing template."
+          },
           "technical_staff_message_link": {
             "description": "Discord message link containing the technical staff template."
           }
