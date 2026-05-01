@@ -10,6 +10,7 @@ from bigness_league_bot.infrastructure.discord.channel_access_management import 
 )
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     TeamStaffRoleEntry,
+    collect_team_profile_staff_role_entries,
     assign_team_roles_by_names,
     collect_team_profile_player_names,
     resolve_participant_role,
@@ -153,6 +154,9 @@ async def handle_team_signing_import(
             staff_entries=staff_entries,
             player_member_names=player_member_names,
             staff_member_names_to_prune=previous_affected_staff_names,
+            unchanged_staff_entries=collect_team_profile_staff_role_entries(
+                previous_team_profile
+            ),
             count_existing_staff_roles_as_assigned=True,
             suppress_staff_signing_announcements=True,
         )

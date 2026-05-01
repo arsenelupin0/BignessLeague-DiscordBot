@@ -25,9 +25,6 @@ from bigness_league_bot.infrastructure.discord.team_member_lookup import (
     build_member_lookup_keys,
     normalize_member_lookup_text,
 )
-from bigness_league_bot.infrastructure.discord.team_role_assignment import (
-    TeamStaffRoleEntry,
-)
 from bigness_league_bot.infrastructure.discord.team_role_change_delivery import (
     SentTeamChangeAnnouncement,
     TeamChangeAnnouncementDeduplicator,
@@ -273,13 +270,7 @@ async def _collect_staff_announcement_links(
     link_specs: list[tuple[discord.Role, discord.Member]] = []
     staff_entries = staff_sync_summary.assigned_staff_entries
     if not staff_entries:
-        staff_entries = tuple(
-            TeamStaffRoleEntry(
-                role_name=member.role_name,
-                member_name=member.discord_name,
-            )
-            for member in technical_staff_batch.members
-        )
+        return ()
 
     for staff_member in staff_entries:
         member = _resolve_synced_member(

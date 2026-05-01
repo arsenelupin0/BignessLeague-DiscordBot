@@ -143,10 +143,17 @@ async def sync_team_staff_roles_by_names(
         staff_entries: Iterable[TeamStaffRoleEntry],
         player_member_names: Iterable[str] = (),
         staff_member_names_to_prune: Iterable[str] = (),
+        unchanged_staff_entries: Iterable[TeamStaffRoleEntry] = (),
         count_existing_staff_roles_as_assigned: bool = False,
         suppress_staff_signing_announcements: bool = False,
 ) -> TeamStaffRoleSyncSummary:
     normalized_entries = collect_staff_role_entries_by_member(staff_entries)
+    unchanged_role_keys_by_lookup = {
+        lookup_key: entry.role_keys
+        for lookup_key, entry in collect_staff_role_entries_by_member(
+            unchanged_staff_entries
+        ).items()
+    }
     prune_entries = _collect_staff_prune_entries(
         staff_member_names_to_prune,
         excluded_lookup_keys=normalized_entries.keys(),
@@ -188,7 +195,14 @@ async def sync_team_staff_roles_by_names(
     assigned_staff_entries: list[TeamStaffRoleEntry] = []
     removed_staff_entries: list[TeamStaffRoleEntry] = []
 
-    for entry in (*normalized_entries.values(), *prune_entries):
+    entry_items = (
+        *normalized_entries.items(),
+        *(
+            (_normalize_member_lookup_text(entry.member_name), entry)
+            for entry in prune_entries
+        ),
+    )
+    for normalized_entry_name, entry in entry_items:
         matches = _resolve_members_for_name(
             entry.member_name,
             members_by_lookup,
@@ -242,10 +256,17 @@ async def sync_team_staff_roles_by_names(
             }.values()
         )
         if count_existing_staff_roles_as_assigned:
+            unchanged_role_keys = unchanged_role_keys_by_lookup.get(
+                normalized_entry_name,
+                frozenset(),
+            )
             assigned_role_keys = {
                 role_key
                 for role_key in filtered_role_names
-                if role_key in configured_staff_roles
+                if (
+                        role_key in configured_staff_roles
+                        and role_key not in unchanged_role_keys
+                )
             }
         else:
             staff_role_ids_to_add = {role.id for role in staff_roles_to_add}
@@ -275,7 +296,7 @@ async def sync_team_staff_roles_by_names(
             )
         if roles_to_add:
             assigned_members.append(member)
-        elif count_existing_staff_roles_as_assigned and desired_staff_roles:
+        elif count_existing_staff_roles_as_assigned and assigned_role_keys:
             assigned_members.append(member)
         assigned_staff_entries.extend(
             TeamStaffRoleEntry(role_name=role_key, member_name=entry.member_name)
