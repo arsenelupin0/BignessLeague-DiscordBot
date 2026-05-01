@@ -353,6 +353,46 @@ class _CommandsTeamSigningMakeInteractiveStaffSigning:
     parameters: _CommandsTeamSigningMakeInteractiveStaffSigningParameters = _CommandsTeamSigningMakeInteractiveStaffSigningParameters()
 
 
+class _CommandsTeamSigningModifyRosterParametersTeam:
+    description: TranslationKey = TranslationKey(
+        key="commands.team_signing.modify_roster.parameters.team.description",
+        default_text="Equipo cuyo roster quieres modificar.")
+
+
+class _CommandsTeamSigningModifyRosterParametersBlock:
+    description: TranslationKey = TranslationKey(
+        key="commands.team_signing.modify_roster.parameters.block.description",
+        default_text="Bloque del roster que quieres modificar.")
+
+
+class _CommandsTeamSigningModifyRosterParametersDiscordName:
+    description: TranslationKey = TranslationKey(
+        key="commands.team_signing.modify_roster.parameters.discord_name.description",
+        default_text="Miembro del bloque seleccionado que quieres modificar.")
+
+
+class _CommandsTeamSigningModifyRosterParameters:
+    team: _CommandsTeamSigningModifyRosterParametersTeam = _CommandsTeamSigningModifyRosterParametersTeam()
+    block: _CommandsTeamSigningModifyRosterParametersBlock = _CommandsTeamSigningModifyRosterParametersBlock()
+    discord_name: _CommandsTeamSigningModifyRosterParametersDiscordName = _CommandsTeamSigningModifyRosterParametersDiscordName()
+
+
+class _CommandsTeamSigningModifyRosterChoices:
+    players: TranslationKey = TranslationKey(key="commands.team_signing.modify_roster.choices.players",
+                                             default_text="Plantilla")
+    staff: TranslationKey = TranslationKey(key="commands.team_signing.modify_roster.choices.staff",
+                                           default_text="Staff t\u00e9cnico")
+
+
+class _CommandsTeamSigningModifyRoster:
+    name: TranslationKey = TranslationKey(key="commands.team_signing.modify_roster.name",
+                                          default_text="modificar_roster")
+    description: TranslationKey = TranslationKey(key="commands.team_signing.modify_roster.description",
+                                                 default_text="Modifica datos de plantilla o staff t\u00e9cnico desde el roster del equipo.")
+    parameters: _CommandsTeamSigningModifyRosterParameters = _CommandsTeamSigningModifyRosterParameters()
+    choices: _CommandsTeamSigningModifyRosterChoices = _CommandsTeamSigningModifyRosterChoices()
+
+
 class _CommandsTeamSigningRemoveSigningParametersTeamRole:
     description: TranslationKey = TranslationKey(
         key="commands.team_signing.remove_signing.parameters.team_role.description",
@@ -374,6 +414,7 @@ class _CommandsTeamSigning:
     make_registration: _CommandsTeamSigningMakeRegistration = _CommandsTeamSigningMakeRegistration()
     make_signing: _CommandsTeamSigningMakeSigning = _CommandsTeamSigningMakeSigning()
     make_interactive_staff_signing: _CommandsTeamSigningMakeInteractiveStaffSigning = _CommandsTeamSigningMakeInteractiveStaffSigning()
+    modify_roster: _CommandsTeamSigningModifyRoster = _CommandsTeamSigningModifyRoster()
     remove_signing: _CommandsTeamSigningRemoveSigning = _CommandsTeamSigningRemoveSigning()
 
 
@@ -565,10 +606,42 @@ class _MessagesTeamSigningInteractiveRemovalSelection:
                                                 default_text="No hay miembros disponibles para ese tipo de baja en el equipo seleccionado.")
 
 
+class _MessagesTeamSigningRosterModification:
+    prompt: TranslationKey = TranslationKey(key="messages.team_signing.roster_modification.prompt",
+                                            default_text="Pulsa el bot\u00f3n para modificar los datos de `{discord_name}` en `{team_name}`.")
+    open_modal: TranslationKey = TranslationKey(key="messages.team_signing.roster_modification.open_modal",
+                                                default_text="Modificar datos")
+    player_modal_title: TranslationKey = TranslationKey(
+        key="messages.team_signing.roster_modification.player_modal_title",
+        default_text="Modificar jugador")
+    staff_modal_title: TranslationKey = TranslationKey(
+        key="messages.team_signing.roster_modification.staff_modal_title",
+        default_text="Modificar staff t\u00e9cnico")
+    player_name_label: TranslationKey = TranslationKey(
+        key="messages.team_signing.roster_modification.player_name_label",
+        default_text="Jugador")
+    tracker_label: TranslationKey = TranslationKey(key="messages.team_signing.roster_modification.tracker_label",
+                                                   default_text="Tracker")
+    epic_name_label: TranslationKey = TranslationKey(
+        key="messages.team_signing.roster_modification.epic_name_label",
+        default_text="Epic Name")
+    rocket_name_label: TranslationKey = TranslationKey(
+        key="messages.team_signing.roster_modification.rocket_name_label",
+        default_text="Rocket In-Game Name")
+    mmr_label: TranslationKey = TranslationKey(key="messages.team_signing.roster_modification.mmr_label",
+                                               default_text="MMR")
+    staff_roles_placeholder: TranslationKey = TranslationKey(
+        key="messages.team_signing.roster_modification.staff_roles_placeholder",
+        default_text="Selecciona cargos de staff")
+    only_actor: TranslationKey = TranslationKey(key="messages.team_signing.roster_modification.only_actor",
+                                                default_text="Solo quien ejecut\u00f3 el comando puede usar este selector.")
+
+
 class _MessagesTeamSigning:
     guide: _MessagesTeamSigningGuide = _MessagesTeamSigningGuide()
     interactive_staff_role_selection: _MessagesTeamSigningInteractiveStaffRoleSelection = _MessagesTeamSigningInteractiveStaffRoleSelection()
     interactive_removal_selection: _MessagesTeamSigningInteractiveRemovalSelection = _MessagesTeamSigningInteractiveRemovalSelection()
+    roster_modification: _MessagesTeamSigningRosterModification = _MessagesTeamSigningRosterModification()
 
 
 class _MessagesTeamRoleRemovalAnnouncement:
@@ -1352,6 +1425,8 @@ class _ActionsTeamSigning:
                                                             default_text="Hay varias coincidencias en Discord para `{discord_name}`. No se retiraron roles autom\u00e1ticamente.")
     role_removal_failed: TranslationKey = TranslationKey(key="actions.team_signing.role_removal_failed",
                                                          default_text="La baja en Google Sheets se aplic\u00f3, pero no se pudieron retirar roles en Discord: {details}.")
+    roster_player_modified: TranslationKey = TranslationKey(key="actions.team_signing.roster_player_modified",
+                                                            default_text="Se ha actualizado a `{discord_name}` en la plantilla de `{team_name}` en `{division_name}`.")
     role_assignment_summary: TranslationKey = TranslationKey(key="actions.team_signing.role_assignment_summary",
                                                              default_text="Asignaci\u00f3n de roles: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
     role_assignment_unresolved: TranslationKey = TranslationKey(key="actions.team_signing.role_assignment_unresolved",

@@ -50,6 +50,8 @@ from bigness_league_bot.infrastructure.google.team_sheets.models import (
     TeamMemberSheetAffiliation,
     TeamMemberTeamMatch,
     TeamPlayerMatch,
+    TeamRosterPlayerUpdate,
+    TeamRosterPlayerUpdateResult,
     TeamTechnicalStaffMatch,
     TeamRoleSheetMetadata,
     TeamSigningRemovalResult,
@@ -93,6 +95,15 @@ class GoogleSheetsTeamRepository:
         return await asyncio.to_thread(
             self.mutations.register_team_technical_staff_sync,
             technical_staff_batch,
+        )
+
+    async def update_team_roster_player(
+            self,
+            update: TeamRosterPlayerUpdate,
+    ) -> TeamRosterPlayerUpdateResult:
+        return await asyncio.to_thread(
+            self.mutations.update_team_roster_player_sync,
+            update,
         )
 
     async def find_team_sheet_metadata_for_role(
@@ -199,6 +210,8 @@ __all__ = (
     "TeamBlockAnchor",
     "TeamSigningWriteResult",
     "TeamSigningRemovalResult",
+    "TeamRosterPlayerUpdate",
+    "TeamRosterPlayerUpdateResult",
     "TeamPlayerMatch",
     "TeamTechnicalStaffMatch",
     "TeamTechnicalStaffWriteResult",

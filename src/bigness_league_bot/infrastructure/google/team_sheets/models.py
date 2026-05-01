@@ -78,6 +78,25 @@ class TeamTechnicalStaffWriteResult:
 
 
 @dataclass(frozen=True, slots=True)
+class TeamRosterPlayerUpdate:
+    division_name: str
+    team_name: str
+    discord_name: str
+    player_name: str
+    tracker_url: str
+    epic_name: str
+    rocket_name: str
+    mmr: str
+
+
+@dataclass(frozen=True, slots=True)
+class TeamRosterPlayerUpdateResult:
+    worksheet_title: str
+    team_name: str
+    discord_name: str
+
+
+@dataclass(frozen=True, slots=True)
 class TeamRoleSheetMetadata:
     worksheet_title: str
     team_name: str

@@ -173,6 +173,25 @@
           }
         }
       },
+      "modify_roster": {
+        "name": "modificar_roster",
+        "description": "Modifica datos de plantilla o staff técnico desde el roster del equipo.",
+        "parameters": {
+          "team": {
+            "description": "Equipo cuyo roster quieres modificar."
+          },
+          "block": {
+            "description": "Bloque del roster que quieres modificar."
+          },
+          "discord_name": {
+            "description": "Miembro del bloque seleccionado que quieres modificar."
+          }
+        },
+        "choices": {
+          "players": "Plantilla",
+          "staff": "Staff técnico"
+        }
+      },
       "remove_signing": {
         "name": "dar_de_baja",
         "description": "Da de baja jugadores o staff técnico seleccionando el bloque y miembro del equipo.",
@@ -278,6 +297,19 @@
         "timeout": "La selección de baja ha expirado. No se ha aplicado ningún cambio.",
         "only_actor": "Solo quien ejecutó el comando puede usar este selector.",
         "no_members": "No hay miembros disponibles para ese tipo de baja en el equipo seleccionado."
+      },
+      "roster_modification": {
+        "prompt": "Pulsa el botón para modificar los datos de `{discord_name}` en `{team_name}`.",
+        "open_modal": "Modificar datos",
+        "player_modal_title": "Modificar jugador",
+        "staff_modal_title": "Modificar staff técnico",
+        "player_name_label": "Jugador",
+        "tracker_label": "Tracker",
+        "epic_name_label": "Epic Name",
+        "rocket_name_label": "Rocket In-Game Name",
+        "mmr_label": "MMR",
+        "staff_roles_placeholder": "Selecciona cargos de staff",
+        "only_actor": "Solo quien ejecutó el comando puede usar este selector."
       }
     },
     "team_role_removal_announcement": {
@@ -644,6 +676,7 @@
       "role_removal_unresolved": "No se encontró ningún miembro de Discord para retirar roles a `{discord_name}`.",
       "role_removal_ambiguous": "Hay varias coincidencias en Discord para `{discord_name}`. No se retiraron roles automáticamente.",
       "role_removal_failed": "La baja en Google Sheets se aplicó, pero no se pudieron retirar roles en Discord: {details}.",
+      "roster_player_modified": "Se ha actualizado a `{discord_name}` en la plantilla de `{team_name}` en `{division_name}`.",
       "role_assignment_summary": "Asignación de roles: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
       "role_assignment_unresolved": "Sin coincidencia en Discord: {names}.",
       "role_assignment_ambiguous": "Coincidencias ambiguas en Discord: {names}.",

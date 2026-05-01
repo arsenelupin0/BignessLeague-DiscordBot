@@ -13,6 +13,7 @@ from typing import Any
 
 from bigness_league_bot.application.services.team_signing import (
     TeamSigningBatch,
+    TeamSigningPlayer,
     TeamTechnicalStaffBatch,
     TeamTechnicalStaffMember,
     sort_team_signing_players,
@@ -47,6 +48,8 @@ from bigness_league_bot.infrastructure.google.team_sheets.http_errors import (
 )
 from bigness_league_bot.infrastructure.google.team_sheets.models import (
     TeamBlockAnchor,
+    TeamRosterPlayerUpdate,
+    TeamRosterPlayerUpdateResult,
     TeamSigningRemovalResult,
     TeamSigningWriteResult,
     TeamTechnicalStaffWriteResult,
@@ -85,6 +88,85 @@ class TeamSheetMutationService:
             self.config,
             signing_batch,
             require_new_team_block=require_new_team_block,
+        )
+
+    def update_team_roster_player_sync(
+            self,
+            update: TeamRosterPlayerUpdate,
+    ) -> TeamRosterPlayerUpdateResult:
+        service = self.client.build_service(read_only=False)
+        _, sheet_grids = self.client.fetch_sheet_grids(service)
+        worksheet_title, cell_grid = _find_division_sheet(
+            update.division_name,
+            sheet_grids,
+        )
+        target_block = _resolve_target_team_block(
+            update.team_name,
+            _collect_team_blocks(cell_grid),
+            worksheet_title=worksheet_title,
+        )
+        normalized_discord_name = _normalize_member_lookup_text(update.discord_name)
+        existing_players = _parse_players(cell_grid, target_block)
+        matching_players = tuple(
+            player
+            for player in existing_players
+            if _normalize_member_lookup_text(player.discord_name) == normalized_discord_name
+        )
+        if len(matching_players) != 1:
+            _raise_removal_not_found_error(
+                update.discord_name,
+                remove_player=True,
+                remove_staff=False,
+            )
+
+        updated_players = tuple(
+            TeamSigningPlayer(
+                player_name=update.player_name,
+                tracker_url=update.tracker_url,
+                discord_name=player.discord_name,
+                epic_name=update.epic_name,
+                rocket_name=update.rocket_name,
+                mmr=update.mmr,
+            )
+            if _normalize_member_lookup_text(player.discord_name) == normalized_discord_name
+            else _to_team_signing_player(player)
+            for player in existing_players
+        )
+        sorted_players = sort_team_signing_players(updated_players)
+        try:
+            service.spreadsheets().values().batchUpdate(
+                spreadsheetId=self.config.spreadsheet_id,
+                body={
+                    "valueInputOption": "USER_ENTERED",
+                    "data": [
+                        {
+                            "range": _build_a1_range(
+                                worksheet_title,
+                                target_block.title_row + TEAM_BLOCK_PLAYERS_ROW_OFFSET,
+                                target_block.start_column,
+                                TEAM_BLOCK_MAX_PLAYERS,
+                                TEAM_BLOCK_COLUMN_COUNT,
+                            ),
+                            "values": _build_player_values_grid(sorted_players),
+                        }
+                    ],
+                },
+            ).execute()
+        except Exception as exc:
+            http_error = _maybe_wrap_google_http_error(exc)
+            if http_error is not None:
+                raise TeamSheetWriteError(
+                    localize(
+                        I18N.errors.team_signing.google_write_failed,
+                        details=_extract_http_error_message(http_error),
+                    )
+                ) from exc
+            raise
+
+        return TeamRosterPlayerUpdateResult(
+            worksheet_title=worksheet_title,
+            team_name=target_block.title,
+            discord_name=update.discord_name,
         )
 
     def remove_team_player_by_discord_sync(
