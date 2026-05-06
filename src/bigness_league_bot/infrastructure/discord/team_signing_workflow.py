@@ -5,8 +5,16 @@ from typing import TYPE_CHECKING
 
 import discord
 
+from bigness_league_bot.application.services.tickets import current_utc_timestamp
 from bigness_league_bot.infrastructure.discord.channel_access_management import (
     get_channel_access_role_catalog,
+)
+from bigness_league_bot.infrastructure.discord.pending_team_signing_assignments import (
+    PendingTeamSigningAssignmentStore,
+    create_pending_team_signing_assignment,
+)
+from bigness_league_bot.infrastructure.discord.team_member_lookup import (
+    normalize_member_lookup_text,
 )
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     TeamStaffRoleEntry,
@@ -34,6 +42,7 @@ from bigness_league_bot.infrastructure.discord.team_signing_visibility import (
     collect_team_signing_visibility_links,
 )
 from bigness_league_bot.infrastructure.discord.team_staff_roles import (
+    collect_staff_role_entries_by_member,
     normalize_team_staff_role_name,
 )
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
@@ -46,7 +55,12 @@ if TYPE_CHECKING:
         TeamTechnicalStaffBatch,
     )
     from bigness_league_bot.application.services.team_profile import TeamProfile
+    from bigness_league_bot.core.settings import Settings
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
+    from bigness_league_bot.infrastructure.discord.team_role_assignment import (
+        TeamRoleAssignmentSummary,
+        TeamStaffRoleSyncSummary,
+    )
 
 
 async def handle_team_signing_import(
@@ -106,6 +120,7 @@ async def handle_team_signing_import(
 
     technical_staff_result = None
     staff_role_sync_summary = None
+    staff_entries: tuple[TeamStaffRoleEntry, ...] = ()
     resolved_team_role = (
         team_role
         if team_role is not None
@@ -201,6 +216,90 @@ async def handle_team_signing_import(
         f"{completed_message}{visibility_message}{removal_visibility_message}",
         allowed_mentions=discord.AllowedMentions.none(),
     )
+    _record_pending_assignments_for_unresolved_members(
+        settings=settings,
+        guild=guild,
+        team_role=resolved_team_role,
+        division_name=division_name,
+        team_image_url=signing_batch.team_logo_url if signing_batch is not None else None,
+        assignment_summary=assignment_summary,
+        staff_sync_summary=staff_role_sync_summary,
+        staff_entries=staff_entries,
+        source=(
+            "hacer_inscripcion"
+            if require_new_team_block
+            else "hacer_fichaje"
+        ),
+    )
+
+
+def _record_pending_assignments_for_unresolved_members(
+        *,
+        settings: Settings,
+        guild: discord.Guild,
+        team_role: discord.Role,
+        division_name: str,
+        team_image_url: str | None,
+        assignment_summary: TeamRoleAssignmentSummary | None,
+        staff_sync_summary: TeamStaffRoleSyncSummary | None,
+        staff_entries: tuple[TeamStaffRoleEntry, ...],
+        source: str,
+) -> None:
+    unresolved_player_names = (
+        assignment_summary.unresolved_names
+        if assignment_summary is not None
+        else ()
+    )
+    unresolved_staff_names = (
+        staff_sync_summary.unresolved_names
+        if staff_sync_summary is not None
+        else ()
+    )
+    if not unresolved_player_names and not unresolved_staff_names:
+        return
+
+    store = PendingTeamSigningAssignmentStore(
+        settings.pending_team_signing_assignments_file
+    )
+    now = current_utc_timestamp()
+    staff_entries_by_member = collect_staff_role_entries_by_member(staff_entries)
+    for member_name in unresolved_player_names:
+        assignment = create_pending_team_signing_assignment(
+            guild_id=guild.id,
+            member_name=member_name,
+            team_role_id=team_role.id,
+            team_role_name=team_role.name,
+            division_name=division_name,
+            team_image_url=team_image_url,
+            is_player=True,
+            source=source,
+            created_at=now,
+        )
+        if assignment is not None:
+            store.upsert(assignment)
+
+    for member_name in unresolved_staff_names:
+        normalized_name = normalize_member_lookup_text(member_name)
+        staff_role_keys = (
+            tuple(staff_entries_by_member[normalized_name].role_keys)
+            if normalized_name is not None
+               and normalized_name in staff_entries_by_member
+            else ()
+        )
+        assignment = create_pending_team_signing_assignment(
+            guild_id=guild.id,
+            member_name=member_name,
+            team_role_id=team_role.id,
+            team_role_name=team_role.name,
+            division_name=division_name,
+            team_image_url=team_image_url,
+            is_player=False,
+            staff_role_keys=staff_role_keys,
+            source=source,
+            created_at=now,
+        )
+        if assignment is not None:
+            store.upsert(assignment)
 
 
 def _collect_previous_staff_names_for_roles(

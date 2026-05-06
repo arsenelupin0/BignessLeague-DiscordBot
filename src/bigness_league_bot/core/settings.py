@@ -261,6 +261,9 @@ class Settings:
     team_profile_font_path: Path | None = None
     ticket_forum_channel_id: int | None = None
     ticket_state_file: Path = Path("aa_var/tickets/active_tickets.json")
+    pending_team_signing_assignments_file: Path = Path(
+        "aa_var/team_signing/pending_assignments.json"
+    )
     ticket_ai_enabled: bool = False
     ticket_ai_auto_reply_enabled: bool = False
     ticket_ai_provider: Literal["openai_compatible", "ollama_native"] = "openai_compatible"
@@ -428,6 +431,10 @@ class Settings:
             "BOT_TICKET_STATE_FILE",
             "aa_var/tickets/active_tickets.json",
         )
+        pending_team_signing_assignments_file = _resolve_storage_path(
+            "BOT_PENDING_TEAM_SIGNING_ASSIGNMENTS_FILE",
+            "aa_var/team_signing/pending_assignments.json",
+        )
         ticket_ai_enabled = _read_bool("BOT_TICKET_AI_ENABLED", False)
         ticket_ai_auto_reply_enabled = _read_bool(
             "BOT_TICKET_AI_AUTO_REPLY_ENABLED",
@@ -559,6 +566,7 @@ class Settings:
             team_profile_font_path=team_profile_font_path,
             ticket_forum_channel_id=ticket_forum_channel_id,
             ticket_state_file=ticket_state_file,
+            pending_team_signing_assignments_file=pending_team_signing_assignments_file,
             ticket_ai_enabled=ticket_ai_enabled,
             ticket_ai_auto_reply_enabled=ticket_ai_auto_reply_enabled,
             ticket_ai_provider=ticket_ai_provider,

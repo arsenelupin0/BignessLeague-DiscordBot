@@ -11,6 +11,9 @@ from bigness_league_bot.infrastructure.discord.channel_access_management import 
     ChannelAccessRoleRangeError,
     get_channel_access_role_catalog,
 )
+from bigness_league_bot.infrastructure.discord.pending_team_signing_resolver import (
+    PendingTeamSigningAssignmentResolver,
+)
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     resolve_participant_role,
     resolve_player_role,
@@ -35,10 +38,17 @@ LOGGER = logging.getLogger("bigness_league_bot.activity")
 class PlayerRoleAutoAssignment(commands.Cog):
     def __init__(self, bot: BignessLeagueBot) -> None:
         self.bot = bot
+        self.pending_assignment_resolver = PendingTeamSigningAssignmentResolver(bot)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
-        if member.bot or not self.bot.settings.auto_assign_player_roles_on_join:
+        if member.bot:
+            return
+
+        if await self.pending_assignment_resolver.resolve_member_join(member):
+            return
+
+        if not self.bot.settings.auto_assign_player_roles_on_join:
             return
 
         try:
@@ -160,14 +170,24 @@ class PlayerRoleAutoAssignment(commands.Cog):
             )
             return
 
+        announcement_message_ids = await self.pending_assignment_resolver.record_sheet_auto_assignment(
+            member=member,
+            member_name=match.affiliation.discord_name,
+            team_role=team_role,
+            division_name=match.worksheet_title,
+            is_player=match.affiliation.is_player,
+            staff_roles=staff_roles,
+            added_role_ids={role.id for role in roles_to_add},
+        )
         LOGGER.info(
-            "PLAYER_ROLE_AUTO_ASSIGN_COMPLETED user=%s(%s) guild=%s(%s) team=%s roles=%s",
+            "PLAYER_ROLE_AUTO_ASSIGN_COMPLETED user=%s(%s) guild=%s(%s) team=%s roles=%s announcements=%s",
             member,
             member.id,
             member.guild.name,
             member.guild.id,
             match.block.title,
             ", ".join(role.name for role in roles_to_add),
+            ",".join(str(message_id) for message_id in announcement_message_ids) or "(ninguno)",
         )
 
     @staticmethod
