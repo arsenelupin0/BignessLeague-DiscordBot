@@ -67,6 +67,7 @@ async def execute_ticket_close(
             if isinstance(interaction.channel, discord.DMChannel)
             else None
         ),
+        close_publication=False,
     )
     if closed_record is None:
         await send_interaction_message(
@@ -79,14 +80,20 @@ async def execute_ticket_close(
         )
         return
 
-    if not resolved_context.is_dm_interaction:
-        await send_interaction_message(
-            interaction,
-            interaction.client.localizer.translate(
-                I18N.messages.tickets.close.closed_ephemeral,
-                locale=interaction.locale,
-            ),
-            ephemeral=True,
+    try:
+        if not resolved_context.is_dm_interaction:
+            await send_interaction_message(
+                interaction,
+                interaction.client.localizer.translate(
+                    I18N.messages.tickets.close.closed_ephemeral,
+                    locale=interaction.locale,
+                ),
+                ephemeral=True,
+            )
+    finally:
+        await _close_ticket_publication(
+            thread=resolved_context.thread,
+            closed_by=interaction.user,
         )
 
 
@@ -101,6 +108,7 @@ async def close_ticket_thread(
         close_reason: str | None,
         is_dm_interaction: bool = False,
         origin_dm_channel: discord.DMChannel | None = None,
+        close_publication: bool = True,
 ) -> TicketRecord | None:
     closed_record = store.close_thread(record.thread_id)
     if closed_record is None or closed_record.closed_at is None:
@@ -159,14 +167,8 @@ async def close_ticket_thread(
             f"de ticket={thread.id}"
         ),
     )
-    await thread.edit(
-        archived=True,
-        locked=True,
-        reason=(
-            f"{_format_audit_actor(closed_by)} cerro publicacion "
-            f"ticket={thread.id}"
-        ),
-    )
+    if close_publication:
+        await _close_ticket_publication(thread=thread, closed_by=closed_by)
     return closed_record
 
 
@@ -407,6 +409,21 @@ def _build_closed_thread_tags(
     return build_thread_tags_with_status(
         thread,
         status_tag=closed_status_tag,
+    )
+
+
+async def _close_ticket_publication(
+        *,
+        thread: discord.Thread,
+        closed_by: discord.abc.User | discord.Member,
+) -> None:
+    await thread.edit(
+        archived=True,
+        locked=True,
+        reason=(
+            f"{_format_audit_actor(closed_by)} cerró publicación "
+            f"ticket={thread.id}"
+        ),
     )
 
 
