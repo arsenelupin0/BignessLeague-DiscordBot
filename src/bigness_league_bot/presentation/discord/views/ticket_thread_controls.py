@@ -140,7 +140,7 @@ class TicketCloseReasonModal(discord.ui.Modal):
             interaction: discord.Interaction[BignessLeagueBot],
     ) -> None:
         await interaction.response.defer()
-        await self.confirmation_view.delete_prompt()
+        await self.confirmation_view.finish_prompt()
         self.confirmation_view.stop()
         await execute_ticket_close(
             store=self.store,
@@ -158,6 +158,7 @@ class TicketCloseConfirmationView(discord.ui.View):
             localizer: LocalizationService,
             locale: str | discord.Locale | None,
             require_reason: bool,
+            restore_thread_controls: bool = False,
             timeout: float = 60.0,
     ) -> None:
         super().__init__(timeout=timeout)
@@ -166,7 +167,8 @@ class TicketCloseConfirmationView(discord.ui.View):
         self.localizer = localizer
         self.locale = locale
         self.require_reason = require_reason
-        self.message: discord.InteractionMessage | None = None
+        self.restore_thread_controls = restore_thread_controls
+        self.message: discord.Message | discord.InteractionMessage | None = None
         self.add_item(
             _ConfirmCloseButton(
                 label=self.localizer.translate(
@@ -206,6 +208,10 @@ class TicketCloseConfirmationView(discord.ui.View):
         return False
 
     async def on_timeout(self) -> None:
+        if self.restore_thread_controls:
+            await self.restore_controls()
+            return
+
         self._disable_children()
         if self.message is None:
             return
@@ -232,7 +238,7 @@ class TicketCloseConfirmationView(discord.ui.View):
             return
 
         await interaction.response.defer()
-        await self.delete_prompt(interaction)
+        await self.finish_prompt(interaction)
         self.stop()
         await execute_ticket_close(
             store=self.store,
@@ -246,8 +252,29 @@ class TicketCloseConfirmationView(discord.ui.View):
     ) -> None:
         self.locale = interaction.locale
         await interaction.response.defer()
-        await self.delete_prompt(interaction)
+        if self.restore_thread_controls:
+            await self.restore_controls()
+        else:
+            await self.delete_prompt(interaction)
         self.stop()
+
+    async def finish_prompt(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot] | None = None,
+    ) -> None:
+        if self.restore_thread_controls:
+            return
+
+        await self.delete_prompt(interaction)
+
+    async def restore_controls(self) -> None:
+        if self.message is None:
+            return
+
+        try:
+            await self.message.edit(view=TicketThreadControlsView(self.store))
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            return
 
     async def delete_prompt(
             self,
@@ -310,7 +337,16 @@ class TicketThreadControlsView(discord.ui.View):
             localizer=interaction.client.localizer,
             locale=interaction.locale,
             require_reason=require_reason,
+            restore_thread_controls=(
+                    not resolved_context.is_dm_interaction
+                    and interaction.message is not None
+            ),
         )
+        if not resolved_context.is_dm_interaction and interaction.message is not None:
+            await interaction.response.edit_message(view=confirmation_view)
+            confirmation_view.message = interaction.message
+            return
+
         await interaction.response.send_message(
             interaction.client.localizer.translate(
                 (

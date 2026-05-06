@@ -334,6 +334,11 @@ class TicketPanelView(discord.ui.View):
                 f"ticket categoria={category.key}"
             ),
         )
+        await self._pin_ticket_start_message(
+            result.message,
+            interaction=interaction,
+            category_key=category.key,
+        )
         await result.thread.send(
             build_ticket_opening_notice(
                 bot=interaction.client,
@@ -348,6 +353,37 @@ class TicketPanelView(discord.ui.View):
             ),
         )
         return result.thread, result.message.id
+
+    @staticmethod
+    async def _pin_ticket_start_message(
+            message: discord.Message,
+            *,
+            interaction: discord.Interaction[BignessLeagueBot],
+            category_key: str,
+    ) -> None:
+        try:
+            await message.pin(
+                reason=(
+                    f"{interaction.user} ({interaction.user.id}) fijo "
+                    f"inicio de ticket categoria={category_key}"
+                ),
+            )
+        except discord.Forbidden:
+            LOGGER.warning(
+                "TICKET_START_PIN_FORBIDDEN message=%s thread=%s user=%s(%s)",
+                message.id,
+                getattr(message.channel, "id", None),
+                interaction.user,
+                interaction.user.id,
+            )
+        except discord.HTTPException:
+            LOGGER.exception(
+                "TICKET_START_PIN_FAILED message=%s thread=%s user=%s(%s)",
+                message.id,
+                getattr(message.channel, "id", None),
+                interaction.user,
+                interaction.user.id,
+            )
 
     @staticmethod
     def _build_closed_thread_tags(
