@@ -125,13 +125,16 @@ Restricciones de `/cerrar_canal`:
 - oculta el canal para `@everyone`
 - permite elegir la categoria de destino entre `Gold Division` y `Silver Division`
 - recibe minutos de cortesia, fecha, hora y formato `BoX`
-- da acceso de lectura y escritura a `Staff`, `Administrador`, `Ceo`, `equipo_1` y `equipo_2`
+- da acceso de lectura y escritura a `Staff`, `Administrador`, `Ceo`, `equipo_1`, `equipo_2` y a los roles
+  configurados en `BOT_MATCH_CHANNEL_EXTRA_ROLE_IDS`
 - interpreta `fecha` como `DD/MM/YYYY` o `YYYY-MM-DD`, y `hora` como `HH:MM`
 - usa `BOT_TIMEZONE` para convertir fecha y hora al timestamp de Discord
 - valida que los dos roles de equipo sean distintos y esten dentro del rango de roles configurado
 - usa `BOT_GOLD_DIVISION_CATEGORY_ID` y `BOT_SILVER_DIVISION_CATEGORY_ID` para resolver las categorias reales
 - envia automaticamente un mensaje inicial con menciones a ambos equipos, tres embeds informativos y botones URL para
   ticket y normativa
+- `BOT_MATCH_CHANNEL_EXTRA_ROLE_IDS`: roles adicionales, separados por comas, que siempre reciben acceso al canal,
+  independientemente de los equipos
 
 `/ver_mi_equipo`:
 

@@ -78,6 +78,7 @@ def _set_text_permissions(
 def _build_match_channel_overwrites(
         guild: discord.Guild,
         team_roles: tuple[discord.Role, discord.Role],
+        extra_roles: tuple[discord.Role, ...] = (),
 ) -> dict[OverwriteTarget, discord.PermissionOverwrite]:
     protected_roles = get_protected_roles(guild)
     overwrites: dict[OverwriteTarget, discord.PermissionOverwrite] = {
@@ -88,7 +89,7 @@ def _build_match_channel_overwrites(
         )
     }
 
-    for role in (*protected_roles.as_tuple, *team_roles):
+    for role in (*protected_roles.as_tuple, *team_roles, *extra_roles):
         overwrites[role] = _set_text_permissions(
             discord.PermissionOverwrite(),
             view_channel=True,
@@ -96,6 +97,31 @@ def _build_match_channel_overwrites(
         )
 
     return overwrites
+
+
+def _resolve_extra_roles(
+        guild: discord.Guild,
+        role_ids: tuple[int, ...],
+) -> tuple[discord.Role, ...]:
+    extra_roles: dict[int, discord.Role] = {}
+    missing_role_ids: list[int] = []
+    for role_id in role_ids:
+        role = guild.get_role(role_id)
+        if role is None:
+            missing_role_ids.append(role_id)
+            continue
+
+        extra_roles[role.id] = role
+
+    if missing_role_ids:
+        raise ChannelManagementError(
+            localize(
+                I18N.errors.channel_management.invalid_role_not_in_guild,
+                role_name=", ".join(str(role_id) for role_id in missing_role_ids),
+            )
+        )
+
+    return tuple(extra_roles.values())
 
 
 def _ensure_match_channel_absent(
@@ -250,9 +276,16 @@ async def create_match_channel(
         specification: MatchChannelSpecification,
         team_one: discord.Role,
         team_two: discord.Role,
+        extra_role_ids: tuple[int, ...] = (),
 ) -> MatchChannelCreationResult:
     _ensure_match_channel_absent(category, specification)
-    overwrites = _build_match_channel_overwrites(guild, (team_one, team_two))
+    extra_roles = _resolve_extra_roles(guild, extra_role_ids)
+    extra_role_ids_label = ",".join(str(role_id) for role_id in extra_role_ids) or "ninguno"
+    overwrites = _build_match_channel_overwrites(
+        guild,
+        (team_one, team_two),
+        extra_roles,
+    )
     created_channel = await guild.create_text_channel(
         specification.channel_name,
         category=category,
@@ -261,6 +294,7 @@ async def create_match_channel(
             f"{actor} ({actor.id}) ejecutó /canal_de_jornada "
             f"jornada={specification.jornada} partido={specification.partido} "
             f"equipo_1={team_one.id} equipo_2={team_two.id} "
+            f"roles_extra={extra_role_ids_label} "
             f"categoría={category.id}"
         ),
     )

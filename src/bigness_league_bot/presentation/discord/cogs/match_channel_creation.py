@@ -131,20 +131,21 @@ class MatchChannelCreation(commands.Cog):
                 localize(I18N.errors.channel_management.server_only)
             )
 
+        settings = interaction.client.settings
         ensure_allowed_member(interaction.user)
         division = MatchChannelDivision(categoria.value)
         validate_match_team_roles(
             guild,
             team_one=equipo_1,
             team_two=equipo_2,
-            range_start_role_id=interaction.client.settings.channel_access_range_start_role_id,
-            range_end_role_id=interaction.client.settings.channel_access_range_end_role_id,
+            range_start_role_id=settings.channel_access_range_start_role_id,
+            range_end_role_id=settings.channel_access_range_end_role_id,
         )
         category = resolve_match_channel_category(
             guild,
             division=division,
-            gold_division_category_id=interaction.client.settings.gold_division_category_id,
-            silver_division_category_id=interaction.client.settings.silver_division_category_id,
+            gold_division_category_id=settings.gold_division_category_id,
+            silver_division_category_id=settings.silver_division_category_id,
         )
         specification = build_match_channel_specification(
             jornada=jornada,
@@ -153,7 +154,7 @@ class MatchChannelCreation(commands.Cog):
             date_value=fecha,
             time_value=hora,
             best_of=bo_x,
-            timezone_name=interaction.client.settings.timezone,
+            timezone_name=settings.timezone,
         )
 
         await interaction.response.defer(thinking=True)
@@ -164,6 +165,7 @@ class MatchChannelCreation(commands.Cog):
             specification=specification,
             team_one=equipo_1,
             team_two=equipo_2,
+            extra_role_ids=settings.match_channel_extra_role_ids,
         )
         await send_match_channel_welcome_message(
             channel=creation_result.channel,

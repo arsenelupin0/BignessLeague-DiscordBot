@@ -112,6 +112,34 @@ def _read_csv(
     return values or default
 
 
+def _read_int_csv(
+        name: str,
+        default: tuple[int, ...],
+        *,
+        allow_empty: bool = False,
+) -> tuple[int, ...]:
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        return default
+
+    raw_items = tuple(
+        item.strip()
+        for item in raw_value.split(",")
+        if item.strip()
+    )
+    if allow_empty and not raw_items:
+        return ()
+
+    try:
+        values = tuple(int(item) for item in raw_items)
+    except ValueError as exc:
+        raise ValueError(
+            f"{name} debe contener IDs enteros separados por comas."
+        ) from exc
+
+    return values or default
+
+
 def _normalize_ticket_ai_base_url(
         provider: Literal["openai_compatible", "ollama_native"],
         base_url: str,
@@ -225,6 +253,7 @@ class Settings:
     timezone: str = "local"
     match_channel_ticket_url: str = "https://canary.discord.com/channels/1016819103555657851/1016824990949179512"
     match_channel_rules_url: str = "https://canary.discord.com/channels/1016819103555657851/1363537934665515351"
+    match_channel_extra_role_ids: tuple[int, ...] = ()
     mmr_media_limit: int = 1_400
     google_service_account_file: Path | None = None
     google_sheets_spreadsheet_id: str = ""
@@ -374,6 +403,11 @@ class Settings:
             "BOT_MATCH_CHANNEL_RULES_URL",
             "https://canary.discord.com/channels/1016819103555657851/1363537934665515351",
         )
+        match_channel_extra_role_ids = _read_int_csv(
+            "BOT_MATCH_CHANNEL_EXTRA_ROLE_IDS",
+            (),
+            allow_empty=True,
+        )
         mmr_media_limit = _read_int("BOT_MMR_MEDIA_LIMIT", 1_400)
         google_service_account_file = _resolve_optional_storage_path(
             "BOT_GOOGLE_SERVICE_ACCOUNT_FILE"
@@ -517,6 +551,7 @@ class Settings:
             timezone=timezone,
             match_channel_ticket_url=match_channel_ticket_url,
             match_channel_rules_url=match_channel_rules_url,
+            match_channel_extra_role_ids=match_channel_extra_role_ids,
             mmr_media_limit=mmr_media_limit,
             google_service_account_file=google_service_account_file,
             google_sheets_spreadsheet_id=google_sheets_spreadsheet_id,
