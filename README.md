@@ -36,16 +36,21 @@ pip install -e .
     nativa de Ollama.
 12. Si quieres usar `/ver_mi_equipo`, configura `BOT_GOOGLE_SERVICE_ACCOUNT_FILE`
     y `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`. `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME` es opcional.
-13. Si quieres sincronizar roles automaticamente desde `/hacer_fichaje` o `/asignar_rol_equipo_automatico`,
+13. Si quieres usar `/subir_replays`, configura `BOT_BALLCHASING_API_TOKEN`. Opcionalmente ajusta
+    `BOT_GOOGLE_SHEETS_MATCH_REPLAYS_SHEET_NAME`, `BOT_GOOGLE_SHEETS_MATCH_STANDINGS_SHEET_NAME`,
+    `BOT_BALLCHASING_UPLOAD_VISIBILITY`, `BOT_BALLCHASING_GROUP_ID`, `BOT_BALLCHASING_AUTO_GROUPS_ENABLED`,
+    `BOT_BALLCHASING_REQUEST_TIMEOUT_SECONDS`,
+    `BOT_BALLCHASING_POLL_INTERVAL_SECONDS` y `BOT_BALLCHASING_MAX_POLL_ATTEMPTS`.
+14. Si quieres sincronizar roles automaticamente desde `/hacer_fichaje` o `/asignar_rol_equipo_automatico`,
     ajusta `BOT_PARTICIPANT_ROLE_ID` y `BOT_PLAYER_ROLE_ID` con los roles base que deben recibir todos los jugadores.
-14. Si quieres autoasignar esos roles de jugador al entrar al servidor cuando el miembro coincida con Google Sheets,
+15. Si quieres autoasignar esos roles de jugador al entrar al servidor cuando el miembro coincida con Google Sheets,
     deja `BOT_AUTO_ASSIGN_PLAYER_ROLES_ON_JOIN=true`.
-15. Si quieres publicar automaticamente el aviso de salida de un club cuando un miembro pierda un rol de equipo,
+16. Si quieres publicar automaticamente el aviso de salida de un club cuando un miembro pierda un rol de equipo,
     ajusta `BOT_TEAM_ROLE_REMOVAL_ANNOUNCEMENT_CHANNEL_ID`.
-16. Si quieres que las bajas retiren tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
+17. Si quieres que las bajas retiren tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
     `BOT_STAFF_ANALYST_ROLE_ID`, `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID`,
     `BOT_STAFF_SECOND_MANAGER_ROLE_ID` y `BOT_STAFF_CAPTAIN_ROLE_ID`.
-17. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
+18. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
     Lo recomendado es colocar la fuente dentro de `aa_resources/fonts/`.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
@@ -94,6 +99,8 @@ crea un canal de partido con permisos para ambos equipos.
 - `/dar_de_baja_staff discord_staff:<texto> equipo:<rol>`: elimina solo sus cargos de `STAFF TÉCNICO` en ese equipo.
 - `/asignar_rol_equipo_automatico equipo:<rol>`: revisa la hoja del equipo y sincroniza los roles en Discord.
 - `/integracion_de_tickets`: publica el panel de soporte para abrir tickets desde un menu desplegable.
+- `/subir_replays`: sube entre 3 y 5 ficheros `.replay` a Ballchasing, vuelca el resumen de la serie, games y
+  jugadores en Google Sheets, evita duplicados por `Replay ID`/SHA256 y actualiza la clasificación de la división.
 
 Opciones disponibles en `/cerrar_canal`:
 

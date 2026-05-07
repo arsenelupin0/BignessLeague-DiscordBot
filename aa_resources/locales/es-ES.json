@@ -111,6 +111,48 @@
         }
       }
     },
+    "match_replays": {
+      "upload_replays": {
+        "name": "subir_replays",
+        "description": "Sube las replays de un BO5 a Ballchasing y vuelca sus datos en Google Sheets.",
+        "parameters": {
+          "local": {
+            "description": "Rol del equipo local."
+          },
+          "visitante": {
+            "description": "Rol del equipo visitante."
+          },
+          "replay_1": {
+            "description": "Replay del Game 1."
+          },
+          "replay_2": {
+            "description": "Replay del Game 2."
+          },
+          "replay_3": {
+            "description": "Replay del Game 3."
+          },
+          "replay_4": {
+            "description": "Replay del Game 4, si se jugó."
+          },
+          "replay_5": {
+            "description": "Replay del Game 5, si se jugó."
+          }
+        }
+      },
+      "refresh_standings": {
+        "name": "clasificacion",
+        "description": "Recalcula la clasificación desde la tabla principal de jornadas.",
+        "parameters": {
+          "division": {
+            "description": "División cuya clasificación quieres recalcular."
+          }
+        }
+      },
+      "choices": {
+        "gold_division": "Gold Division",
+        "silver_division": "Silver Division"
+      }
+    },
     "mmr_media": {
       "calculate": {
         "name": "mmr_media",
@@ -273,6 +315,17 @@
     "mmr_media": {
       "eligible": "- MMR introducidos: \n  - Primer valor: `{mmr_1}`\n  - Segundo valor: `{mmr_2}`\n  - Tercer valor: `{mmr_3}`\n- Media MMR: `{average}`\n\nTu equipo es **apto** para la **Bigness League S3**. \n\n_Límite actual: `{limit}`._",
       "too_high": "- MMR introducidos: \n  - Primer valor: `{mmr_1}`\n  - Segundo valor: `{mmr_2}`\n  - Tercer valor: `{mmr_3}`\n- Media MMR: `{average}`\n\nTu equipo tiene demasiado **MMR**, **no** es **apto** para la **Bigness League S3**. \n\n_Límite actual: `{limit}`.\n\nEn caso que se supere por +30, consultar con staff._"
+    },
+    "match_replays": {
+      "uploaded": {
+        "summary": "Replays procesadas para `{division}` J{jornada} P{partido}: `{team_one}` {series_score} `{team_two}`.\nMarcadores por game: {game_scores}.\nSe han guardado {replay_count} replays nuevas en la hoja `{sheet_name}`.{standings_update}{unresolved_winners}{failed_replays}{skipped_duplicates}",
+        "unresolved_winners": "\n\nNo he podido vincular automáticamente estos ganadores con los roles indicados: {winners}. Revisa los nombres de equipo en Ballchasing.",
+        "failed_replays": "\n\nBallchasing no pudo procesar estas replays y se han omitido: {failed_replays}.",
+        "skipped_duplicates": "\n\nNo se han vuelto a volcar {skipped_count} replays porque ya existían en la hoja. Replay IDs: {replay_ids}.",
+        "standings_update": "\nClasificación actualizada en `{standings_sheet_name}`.",
+        "all_duplicates": "Las {replay_count} replays adjuntas ya existen en la hoja por SHA256. No las he vuelto a subir a Ballchasing ni he duplicado filas en Google Sheets."
+      },
+      "standings_refreshed": "Clasificación de `{division}` recalculada desde la tabla principal en `{standings_sheet_name}`."
     },
     "team_signing": {
       "guide": {
@@ -578,6 +631,21 @@
       "category_missing": "No existe la categoria configurada para crear este canal: `{category_id}`.",
       "invalid_date_format": "La fecha no es valida. Usa `DD/MM/YYYY` o `YYYY-MM-DD`.",
       "invalid_time_format": "La hora no es valida. Usa el formato `HH:MM` en 24 horas."
+    },
+    "match_replays": {
+      "invalid_replay_count": "Debes adjuntar entre {min_count} y {max_count} ficheros `.replay`.",
+      "invalid_replay_extension": "Solo se aceptan ficheros `.replay`. Ficheros no válidos: {filenames}.",
+      "ballchasing_token_missing": "Falta configurar `BOT_BALLCHASING_API_TOKEN` para subir replays a Ballchasing.",
+      "ballchasing_request_failed": "Ballchasing ha rechazado la operación: {details}.",
+      "ballchasing_invalid_response": "Ballchasing ha devuelto una respuesta no válida.",
+      "ballchasing_processing_failed": "Ballchasing no ha podido procesar la replay `{replay_id}`.",
+      "ballchasing_processing_timeout": "Ballchasing todavía no ha terminado de procesar la replay `{replay_id}`. Vuelve a intentarlo en unos minutos.",
+      "ballchasing_group_missing": "Falta configurar `BOT_BALLCHASING_GROUP_ID` como grupo raíz de la liga para organizar las replays por subgrupos.",
+      "channel_group_context_missing": "No he podido leer jornada y partido desde el canal `{channel_name}`. Usa el comando en un canal de partido válido.",
+      "channel_group_context_mismatch": "El canal `{channel_name}` corresponde a J{channel_jornada} P{channel_partido}, pero el comando se ha ejecutado con J{command_jornada} P{command_partido}.",
+      "channel_division_context_missing": "No he podido resolver la división desde la categoría del canal `{channel_name}`. Usa el comando dentro de una categoría de Gold o Silver configurada.",
+      "worksheet_not_found": "No existe la hoja de replays `{sheet_name}` en Google Sheets. Hojas disponibles: {available_sheets}.",
+      "google_write_failed": "Google Sheets ha rechazado la escritura de replays: {details}."
     },
     "team_profile": {
       "team_role_missing": "No tienes ningún rol de equipo dentro del rango configurado para este comando.",

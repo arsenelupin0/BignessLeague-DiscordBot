@@ -105,6 +105,12 @@ def _collect_team_blocks(
     return tuple(blocks)
 
 
+def collect_team_blocks(
+        cell_grid: dict[int, dict[int, SheetCell]],
+) -> tuple[TeamBlockAnchor, ...]:
+    return _collect_team_blocks(cell_grid)
+
+
 def _find_division_sheet(
         division_name: str,
         sheet_grids: tuple[tuple[str, dict[int, dict[int, SheetCell]]], ...],

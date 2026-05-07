@@ -176,3 +176,7 @@ def _is_placeholder_row(*values: str) -> bool:
 
 def _is_free_block_title(title: str) -> bool:
     return _is_placeholder_cell_value(title)
+
+
+def is_free_block_title(title: str) -> bool:
+    return _is_free_block_title(title)

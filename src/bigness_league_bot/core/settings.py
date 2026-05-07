@@ -23,6 +23,9 @@ from bigness_league_bot.core.timezones import resolve_timezone
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(PROJECT_ROOT / ".env", override=True)
+_ENVIRONMENT_FILE = PROJECT_ROOT / f".env.{os.getenv('BOT_ENV', 'development').strip().lower()}"
+if _ENVIRONMENT_FILE.exists():
+    load_dotenv(_ENVIRONMENT_FILE, override=False)
 DEFAULT_GOOGLE_SHEETS_TEAM_WORKSHEETS = (
     "GOLD DIVISIÓN S3",
     "SILVER DIVISIÓN S3",
@@ -258,6 +261,19 @@ class Settings:
     google_service_account_file: Path | None = None
     google_sheets_spreadsheet_id: str = ""
     google_sheets_team_sheet_name: str = DEFAULT_GOOGLE_SHEETS_TEAM_WORKSHEETS_RAW
+    google_sheets_match_replays_sheet_name: str = "REPLAY STATS"
+    google_sheets_match_standings_sheet_name: str = "MATCH STANDINGS"
+    ballchasing_api_base_url: str = "https://ballchasing.com/api"
+    ballchasing_api_token: str = ""
+    ballchasing_upload_visibility: Literal["public", "private", "unlisted"] = "private"
+    ballchasing_group_id: str | None = None
+    ballchasing_auto_groups_enabled: bool = False
+    ballchasing_request_timeout_seconds: int = 60
+    ballchasing_poll_interval_seconds: float = 3.0
+    ballchasing_max_poll_attempts: int = 20
+    ballchasing_min_request_interval_seconds: float = 0.75
+    ballchasing_rate_limit_retry_seconds: float = 10.0
+    ballchasing_rate_limit_max_retries: int = 3
     team_profile_font_path: Path | None = None
     ticket_forum_channel_id: int | None = None
     ticket_state_file: Path = Path("aa_var/tickets/active_tickets.json")
@@ -423,6 +439,56 @@ class Settings:
             "BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME",
             DEFAULT_GOOGLE_SHEETS_TEAM_WORKSHEETS_RAW,
         )
+        google_sheets_match_replays_sheet_name = _read_str(
+            "BOT_GOOGLE_SHEETS_MATCH_REPLAYS_SHEET_NAME",
+            "REPLAY STATS",
+        )
+        google_sheets_match_standings_sheet_name = _read_str(
+            "BOT_GOOGLE_SHEETS_MATCH_STANDINGS_SHEET_NAME",
+            "MATCH STANDINGS",
+        )
+        ballchasing_api_base_url = _read_str(
+            "BOT_BALLCHASING_API_BASE_URL",
+            "https://ballchasing.com/api",
+        )
+        ballchasing_api_token = _read_str("BOT_BALLCHASING_API_TOKEN", "")
+        ballchasing_upload_visibility = _read_str(
+            "BOT_BALLCHASING_UPLOAD_VISIBILITY",
+            "private",
+        ).lower()
+        if ballchasing_upload_visibility not in {"public", "private", "unlisted"}:
+            raise ValueError(
+                "BOT_BALLCHASING_UPLOAD_VISIBILITY debe ser `public`, `private` o `unlisted`."
+            )
+        ballchasing_group_id = _read_optional_str("BOT_BALLCHASING_GROUP_ID")
+        ballchasing_auto_groups_enabled = _read_bool(
+            "BOT_BALLCHASING_AUTO_GROUPS_ENABLED",
+            False,
+        )
+        ballchasing_request_timeout_seconds = _read_int(
+            "BOT_BALLCHASING_REQUEST_TIMEOUT_SECONDS",
+            60,
+        )
+        ballchasing_poll_interval_seconds = _read_float(
+            "BOT_BALLCHASING_POLL_INTERVAL_SECONDS",
+            3.0,
+        )
+        ballchasing_max_poll_attempts = _read_int(
+            "BOT_BALLCHASING_MAX_POLL_ATTEMPTS",
+            20,
+        )
+        ballchasing_min_request_interval_seconds = _read_float(
+            "BOT_BALLCHASING_MIN_REQUEST_INTERVAL_SECONDS",
+            0.75,
+        )
+        ballchasing_rate_limit_retry_seconds = _read_float(
+            "BOT_BALLCHASING_RATE_LIMIT_RETRY_SECONDS",
+            10.0,
+        )
+        ballchasing_rate_limit_max_retries = _read_int(
+            "BOT_BALLCHASING_RATE_LIMIT_MAX_RETRIES",
+            3,
+        )
         team_profile_font_path = _resolve_optional_storage_path(
             "BOT_TEAM_PROFILE_FONT_PATH"
         )
@@ -563,6 +629,19 @@ class Settings:
             google_service_account_file=google_service_account_file,
             google_sheets_spreadsheet_id=google_sheets_spreadsheet_id,
             google_sheets_team_sheet_name=google_sheets_team_sheet_name,
+            google_sheets_match_replays_sheet_name=google_sheets_match_replays_sheet_name,
+            google_sheets_match_standings_sheet_name=google_sheets_match_standings_sheet_name,
+            ballchasing_api_base_url=ballchasing_api_base_url,
+            ballchasing_api_token=ballchasing_api_token,
+            ballchasing_upload_visibility=ballchasing_upload_visibility,
+            ballchasing_group_id=ballchasing_group_id,
+            ballchasing_auto_groups_enabled=ballchasing_auto_groups_enabled,
+            ballchasing_request_timeout_seconds=ballchasing_request_timeout_seconds,
+            ballchasing_poll_interval_seconds=ballchasing_poll_interval_seconds,
+            ballchasing_max_poll_attempts=ballchasing_max_poll_attempts,
+            ballchasing_min_request_interval_seconds=ballchasing_min_request_interval_seconds,
+            ballchasing_rate_limit_retry_seconds=ballchasing_rate_limit_retry_seconds,
+            ballchasing_rate_limit_max_retries=ballchasing_rate_limit_max_retries,
             team_profile_font_path=team_profile_font_path,
             ticket_forum_channel_id=ticket_forum_channel_id,
             ticket_state_file=ticket_state_file,

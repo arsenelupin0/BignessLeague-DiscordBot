@@ -131,6 +131,13 @@ def _parse_players(
     return tuple(players)
 
 
+def parse_players(
+        cell_grid: dict[int, dict[int, SheetCell]],
+        block: TeamBlockAnchor,
+) -> tuple[TeamProfilePlayer, ...]:
+    return _parse_players(cell_grid, block)
+
+
 def _parse_summary(
         cell_grid: dict[int, dict[int, SheetCell]],
         block: TeamBlockAnchor,

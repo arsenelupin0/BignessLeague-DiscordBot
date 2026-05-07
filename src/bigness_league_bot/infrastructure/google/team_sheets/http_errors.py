@@ -28,3 +28,7 @@ def _extract_http_error_message(exc: Exception) -> str:
         return "sin detalles"
 
     return message
+
+
+def extract_http_error_message(exc: Exception) -> str:
+    return _extract_http_error_message(exc)
