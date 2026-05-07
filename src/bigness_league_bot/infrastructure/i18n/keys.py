@@ -236,6 +236,12 @@ class _CommandsMatchReplaysUploadReplaysParametersReplay5:
         default_text="Replay del Game 5, si se jug\u00f3.")
 
 
+class _CommandsMatchReplaysUploadReplaysParametersSummaryImage:
+    description: TranslationKey = TranslationKey(
+        key="commands.match_replays.upload_replays.parameters.summary_image.description",
+        default_text="Adjunta una imagen resumen con estad\u00edsticas de la serie.")
+
+
 class _CommandsMatchReplaysUploadReplaysParameters:
     local: _CommandsMatchReplaysUploadReplaysParametersLocal = _CommandsMatchReplaysUploadReplaysParametersLocal()
     visitante: _CommandsMatchReplaysUploadReplaysParametersVisitante = _CommandsMatchReplaysUploadReplaysParametersVisitante()
@@ -244,6 +250,7 @@ class _CommandsMatchReplaysUploadReplaysParameters:
     replay_3: _CommandsMatchReplaysUploadReplaysParametersReplay3 = _CommandsMatchReplaysUploadReplaysParametersReplay3()
     replay_4: _CommandsMatchReplaysUploadReplaysParametersReplay4 = _CommandsMatchReplaysUploadReplaysParametersReplay4()
     replay_5: _CommandsMatchReplaysUploadReplaysParametersReplay5 = _CommandsMatchReplaysUploadReplaysParametersReplay5()
+    summary_image: _CommandsMatchReplaysUploadReplaysParametersSummaryImage = _CommandsMatchReplaysUploadReplaysParametersSummaryImage()
 
 
 class _CommandsMatchReplaysUploadReplays:
@@ -260,8 +267,15 @@ class _CommandsMatchReplaysRefreshStandingsParametersDivision:
         default_text="Divisi\u00f3n cuya clasificaci\u00f3n quieres recalcular.")
 
 
+class _CommandsMatchReplaysRefreshStandingsParametersImage:
+    description: TranslationKey = TranslationKey(
+        key="commands.match_replays.refresh_standings.parameters.image.description",
+        default_text="Adjunta una imagen de la clasificaci\u00f3n actualizada.")
+
+
 class _CommandsMatchReplaysRefreshStandingsParameters:
     division: _CommandsMatchReplaysRefreshStandingsParametersDivision = _CommandsMatchReplaysRefreshStandingsParametersDivision()
+    image: _CommandsMatchReplaysRefreshStandingsParametersImage = _CommandsMatchReplaysRefreshStandingsParametersImage()
 
 
 class _CommandsMatchReplaysRefreshStandings:
@@ -560,7 +574,7 @@ class _MessagesMmrMedia:
 
 class _MessagesMatchReplaysUploaded:
     summary: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.summary",
-                                             default_text="Replays procesadas para `{division}` J{jornada} P{partido}: `{team_one}` {series_score} `{team_two}`.\nMarcadores por game: {game_scores}.\nSe han guardado {replay_count} replays nuevas en la hoja `{sheet_name}`.{standings_update}{unresolved_winners}{failed_replays}{skipped_duplicates}")
+                                             default_text="Replays procesadas para `{division}` J{jornada} P{partido}: `{team_one}` {series_score} `{team_two}`.\nMarcadores por game: {game_scores}.\n\n{roster_validation}\n\nSe han guardado {replay_count} replays nuevas en la hoja `{sheet_name}`.{standings_update}{unresolved_winners}{failed_replays}{skipped_duplicates}{image_warning}")
     unresolved_winners: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.unresolved_winners",
                                                         default_text="\n\nNo he podido vincular autom\u00e1ticamente estos ganadores con los roles indicados: {winners}. Revisa los nombres de equipo en Ballchasing.")
     failed_replays: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.failed_replays",
@@ -571,12 +585,23 @@ class _MessagesMatchReplaysUploaded:
                                                       default_text="\nClasificaci\u00f3n actualizada en `{standings_sheet_name}`.")
     all_duplicates: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.all_duplicates",
                                                     default_text="Las {replay_count} replays adjuntas ya existen en la hoja por SHA256. No las he vuelto a subir a Ballchasing ni he duplicado filas en Google Sheets.")
+    roster_validation_all_matched: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_validation_all_matched",
+        default_text="Jugadores verificados: {matched_unique}/{unique_players} \u00fanicos en roster ({matched_appearances}/{total_appearances} apariciones).\nM\u00e9todos de coincidencia: {match_methods}.\nTodos los jugadores detectados coinciden con el roster.")
+    roster_validation_with_unmatched: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_validation_with_unmatched",
+        default_text="Jugadores verificados: {matched_unique}/{unique_players} \u00fanicos en roster ({matched_appearances}/{total_appearances} apariciones).\nM\u00e9todos de coincidencia: {match_methods}.\nJugadores no encontrados: {unmatched_players}.")
+    roster_validation_more_unmatched: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_validation_more_unmatched",
+        default_text=" y {remaining} m\u00e1s")
 
 
 class _MessagesMatchReplays:
     uploaded: _MessagesMatchReplaysUploaded = _MessagesMatchReplaysUploaded()
     standings_refreshed: TranslationKey = TranslationKey(key="messages.match_replays.standings_refreshed",
-                                                         default_text="Clasificaci\u00f3n de `{division}` recalculada desde la tabla principal en `{standings_sheet_name}`.")
+                                                         default_text="Clasificaci\u00f3n de `{division}` recalculada desde la tabla principal en `{standings_sheet_name}`.{image_warning}")
+    image_render_failed: TranslationKey = TranslationKey(key="messages.match_replays.image_render_failed",
+                                                         default_text="\n\nNo he podido renderizar la imagen resumen. El proceso principal se ha completado correctamente.")
 
 class _MessagesTeamSigningGuide:
     content: TranslationKey = TranslationKey(key="messages.team_signing.guide.content",

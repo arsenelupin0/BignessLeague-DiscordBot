@@ -96,6 +96,9 @@
           },
           "replay_5": {
             "description": "Game 5 replay, if played."
+          },
+          "summary_image": {
+            "description": "Attach a summary image with series statistics."
           }
         }
       },
@@ -105,6 +108,9 @@
         "parameters": {
           "division": {
             "description": "Division whose standings you want to recalculate."
+          },
+          "image": {
+            "description": "Attach an image of the updated standings."
           }
         }
       },
@@ -289,14 +295,18 @@
     },
     "match_replays": {
       "uploaded": {
-        "summary": "Replays processed for `{division}` J{jornada} P{partido}: `{team_one}` {series_score} `{team_two}`.\nGame scores: {game_scores}.\nSaved {replay_count} new replays to `{sheet_name}`.{standings_update}{unresolved_winners}{failed_replays}{skipped_duplicates}",
+        "summary": "Replays processed for `{division}` J{jornada} P{partido}: `{team_one}` {series_score} `{team_two}`.\nGame scores: {game_scores}.\n\n{roster_validation}\n\nSaved {replay_count} new replays to `{sheet_name}`.{standings_update}{unresolved_winners}{failed_replays}{skipped_duplicates}{image_warning}",
         "unresolved_winners": "\n\nI could not automatically match these winners with the selected roles: {winners}. Review the team names in Ballchasing.",
         "failed_replays": "\n\nBallchasing could not process these replays, so they were skipped: {failed_replays}.",
         "skipped_duplicates": "\n\nSkipped writing {skipped_count} replays because they already exist in the sheet. Replay IDs: {replay_ids}.",
         "standings_update": "\nUpdated standings in `{standings_sheet_name}`.",
-        "all_duplicates": "The {replay_count} attached replays already exist in the sheet by SHA256. I did not upload them to Ballchasing again or duplicate rows in Google Sheets."
+        "all_duplicates": "The {replay_count} attached replays already exist in the sheet by SHA256. I did not upload them to Ballchasing again or duplicate rows in Google Sheets.",
+        "roster_validation_all_matched": "Verified players: {matched_unique}/{unique_players} unique players in roster ({matched_appearances}/{total_appearances} appearances).\nMatch methods: {match_methods}.\nEvery detected player matches the roster.",
+        "roster_validation_with_unmatched": "Verified players: {matched_unique}/{unique_players} unique players in roster ({matched_appearances}/{total_appearances} appearances).\nMatch methods: {match_methods}.\nUnmatched players: {unmatched_players}.",
+        "roster_validation_more_unmatched": " and {remaining} more"
       },
-      "standings_refreshed": "`{division}` standings recalculated from the main table in `{standings_sheet_name}`."
+      "standings_refreshed": "`{division}` standings recalculated from the main table in `{standings_sheet_name}`.{image_warning}",
+      "image_render_failed": "\n\nI could not render the summary image. The main process completed correctly."
     },
     "team_signing": {
       "guide": {

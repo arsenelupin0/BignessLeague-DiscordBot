@@ -20,6 +20,9 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from bigness_league_bot.application.services.match_replay_summaries import (
+    MatchReplayTeamLogo,
+)
 from bigness_league_bot.application.services.match_replays import (
     MatchReplayDivision,
     MatchReplayReport,
@@ -27,9 +30,11 @@ from bigness_league_bot.application.services.match_replays import (
     build_match_replay_sheet_rows,
     match_replay_sheet_headers,
 )
+from bigness_league_bot.application.services.match_standings import MatchStandingRow
 from bigness_league_bot.core.localization import localize
 from bigness_league_bot.core.settings import Settings
 from bigness_league_bot.infrastructure.google.match_replay_rosters import (
+    list_division_team_logos_from_grids,
     list_division_roster_players_from_grids,
     normalize_worksheet_title,
 )
@@ -69,6 +74,18 @@ class MatchReplayAppendResult:
     skipped_replay_sha256: tuple[str, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class MatchStandingsRefreshResult:
+    worksheet_name: str
+    rows: tuple[MatchStandingRow, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class MatchReplayDivisionRosterData:
+    roster_players: tuple[MatchReplayRosterPlayer, ...]
+    team_logos: tuple[MatchReplayTeamLogo, ...]
+
+
 class GoogleSheetsMatchReplayRepository:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
@@ -106,14 +123,44 @@ class GoogleSheetsMatchReplayRepository:
             division_name,
         )
 
+    async def list_division_roster_data(
+            self,
+            division_name: str,
+    ) -> MatchReplayDivisionRosterData:
+        return await asyncio.to_thread(
+            self.list_division_roster_data_sync,
+            division_name,
+        )
+
+    async def list_division_team_logos(
+            self,
+            division_name: str,
+    ) -> tuple[MatchReplayTeamLogo, ...]:
+        return await asyncio.to_thread(
+            self.list_division_team_logos_sync,
+            division_name,
+        )
+
     async def refresh_division_standings(
             self,
             division: MatchReplayDivision,
             *,
             team_names: tuple[str, ...],
     ) -> str:
+        result = await self.refresh_division_standings_report(
+            division,
+            team_names=team_names,
+        )
+        return result.worksheet_name
+
+    async def refresh_division_standings_report(
+            self,
+            division: MatchReplayDivision,
+            *,
+            team_names: tuple[str, ...],
+    ) -> MatchStandingsRefreshResult:
         return await asyncio.to_thread(
-            self.refresh_division_standings_sync,
+            self.refresh_division_standings_report_sync,
             division,
             team_names=team_names,
         )
@@ -137,6 +184,31 @@ class GoogleSheetsMatchReplayRepository:
         service = self.client.build_service(read_only=True)
         _, sheet_grids = self.client.fetch_sheet_grids(service)
         return list_division_roster_players_from_grids(division_name, sheet_grids)
+
+    def list_division_roster_data_sync(
+            self,
+            division_name: str,
+    ) -> MatchReplayDivisionRosterData:
+        service = self.client.build_service(read_only=True)
+        _, sheet_grids = self.client.fetch_sheet_grids(service)
+        return MatchReplayDivisionRosterData(
+            roster_players=list_division_roster_players_from_grids(
+                division_name,
+                sheet_grids,
+            ),
+            team_logos=list_division_team_logos_from_grids(
+                division_name,
+                sheet_grids,
+            ),
+        )
+
+    def list_division_team_logos_sync(
+            self,
+            division_name: str,
+    ) -> tuple[MatchReplayTeamLogo, ...]:
+        service = self.client.build_service(read_only=True)
+        _, sheet_grids = self.client.fetch_sheet_grids(service)
+        return list_division_team_logos_from_grids(division_name, sheet_grids)
 
     def list_existing_replay_entries_sync(
             self,
@@ -162,6 +234,17 @@ class GoogleSheetsMatchReplayRepository:
             *,
             team_names: tuple[str, ...],
     ) -> str:
+        return self.refresh_division_standings_report_sync(
+            division,
+            team_names=team_names,
+        ).worksheet_name
+
+    def refresh_division_standings_report_sync(
+            self,
+            division: MatchReplayDivision,
+            *,
+            team_names: tuple[str, ...],
+    ) -> MatchStandingsRefreshResult:
         service = self.client.build_service(read_only=False)
         standings_worksheet_name = _resolve_worksheet_name_for_division(
             self.standings_worksheet_names,
@@ -171,12 +254,15 @@ class GoogleSheetsMatchReplayRepository:
             service,
             worksheet_name=standings_worksheet_name,
         )
-        self.standings_gateway.refresh_standings_from_grid(
+        rows = self.standings_gateway.refresh_standings_from_grid(
             service,
             worksheet_name=standings_worksheet_name,
             team_names=team_names,
         )
-        return standings_worksheet_name
+        return MatchStandingsRefreshResult(
+            worksheet_name=standings_worksheet_name,
+            rows=rows,
+        )
 
     def sync_report_to_standings_sync(
             self,
@@ -452,8 +538,10 @@ class GoogleSheetsMatchReplayRepository:
 
 __all__ = (
     "ExistingMatchReplayEntry",
+    "MatchReplayDivisionRosterData",
     "GoogleSheetsMatchReplayRepository",
     "MatchReplayAppendResult",
+    "MatchStandingsRefreshResult",
 )
 
 

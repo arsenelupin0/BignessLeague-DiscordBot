@@ -111,6 +111,14 @@ def collect_team_blocks(
     return _collect_team_blocks(cell_grid)
 
 
+def extract_block_title_cell(
+        cell_grid: dict[int, dict[int, SheetCell]],
+        row_index: int,
+        start_column: int,
+) -> SheetCell:
+    return _extract_block_title_cell(cell_grid, row_index, start_column)
+
+
 def _find_division_sheet(
         division_name: str,
         sheet_grids: tuple[tuple[str, dict[int, dict[int, SheetCell]]], ...],

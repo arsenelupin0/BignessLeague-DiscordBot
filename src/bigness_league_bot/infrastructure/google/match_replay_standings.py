@@ -23,6 +23,7 @@ from bigness_league_bot.application.services.match_standings import (
     MATCH_STANDINGS_ROW_COUNT,
     MATCH_STANDINGS_TEAM_COUNT,
     MatchGridGameScore,
+    MatchStandingRow,
     MatchStandingGameResult,
     build_match_grid_row_values,
     build_match_grid_standing_games,
@@ -170,7 +171,7 @@ class MatchReplayStandingsGateway:
             *,
             worksheet_name: str,
             team_names: tuple[str, ...],
-    ) -> None:
+    ) -> tuple[MatchStandingRow, ...]:
         games = self.list_match_grid_standing_game_results(
             service,
             worksheet_name=worksheet_name,
@@ -181,6 +182,7 @@ class MatchReplayStandingsGateway:
             worksheet_name=worksheet_name,
             rows=match_standings_sheet_rows(standings),
         )
+        return tuple(standings[:MATCH_STANDINGS_TEAM_COUNT])
 
 
 def escape_worksheet_name(worksheet_name: str) -> str:

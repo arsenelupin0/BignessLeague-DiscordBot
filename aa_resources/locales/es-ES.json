@@ -136,6 +136,9 @@
           },
           "replay_5": {
             "description": "Replay del Game 5, si se jugó."
+          },
+          "summary_image": {
+            "description": "Adjunta una imagen resumen con estadísticas de la serie."
           }
         }
       },
@@ -145,6 +148,9 @@
         "parameters": {
           "division": {
             "description": "División cuya clasificación quieres recalcular."
+          },
+          "image": {
+            "description": "Adjunta una imagen de la clasificación actualizada."
           }
         }
       },
@@ -318,14 +324,18 @@
     },
     "match_replays": {
       "uploaded": {
-        "summary": "Replays procesadas para `{division}` J{jornada} P{partido}: `{team_one}` {series_score} `{team_two}`.\nMarcadores por game: {game_scores}.\nSe han guardado {replay_count} replays nuevas en la hoja `{sheet_name}`.{standings_update}{unresolved_winners}{failed_replays}{skipped_duplicates}",
+        "summary": "Replays procesadas para `{division}` J{jornada} P{partido}: `{team_one}` {series_score} `{team_two}`.\nMarcadores por game: {game_scores}.\n\n{roster_validation}\n\nSe han guardado {replay_count} replays nuevas en la hoja `{sheet_name}`.{standings_update}{unresolved_winners}{failed_replays}{skipped_duplicates}{image_warning}",
         "unresolved_winners": "\n\nNo he podido vincular automáticamente estos ganadores con los roles indicados: {winners}. Revisa los nombres de equipo en Ballchasing.",
         "failed_replays": "\n\nBallchasing no pudo procesar estas replays y se han omitido: {failed_replays}.",
         "skipped_duplicates": "\n\nNo se han vuelto a volcar {skipped_count} replays porque ya existían en la hoja. Replay IDs: {replay_ids}.",
         "standings_update": "\nClasificación actualizada en `{standings_sheet_name}`.",
-        "all_duplicates": "Las {replay_count} replays adjuntas ya existen en la hoja por SHA256. No las he vuelto a subir a Ballchasing ni he duplicado filas en Google Sheets."
+        "all_duplicates": "Las {replay_count} replays adjuntas ya existen en la hoja por SHA256. No las he vuelto a subir a Ballchasing ni he duplicado filas en Google Sheets.",
+        "roster_validation_all_matched": "Jugadores verificados: {matched_unique}/{unique_players} únicos en roster ({matched_appearances}/{total_appearances} apariciones).\nMétodos de coincidencia: {match_methods}.\nTodos los jugadores detectados coinciden con el roster.",
+        "roster_validation_with_unmatched": "Jugadores verificados: {matched_unique}/{unique_players} únicos en roster ({matched_appearances}/{total_appearances} apariciones).\nMétodos de coincidencia: {match_methods}.\nJugadores no encontrados: {unmatched_players}.",
+        "roster_validation_more_unmatched": " y {remaining} más"
       },
-      "standings_refreshed": "Clasificación de `{division}` recalculada desde la tabla principal en `{standings_sheet_name}`."
+      "standings_refreshed": "Clasificación de `{division}` recalculada desde la tabla principal en `{standings_sheet_name}`.{image_warning}",
+      "image_render_failed": "\n\nNo he podido renderizar la imagen resumen. El proceso principal se ha completado correctamente."
     },
     "team_signing": {
       "guide": {

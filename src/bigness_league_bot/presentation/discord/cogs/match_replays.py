@@ -8,18 +8,13 @@
 #  works and modifications, which include larger works using a licensed work, under the same license. Copyright and
 #  license notices must be preserved. Contributors provide an express grant of patent rights.
 
-#
-#  Licensed under the GNU General Public License v3.0
-#
-#  https://www.gnu.org/licenses/gpl-3.0.html
-#
 from __future__ import annotations
 
 import asyncio
 import hashlib
 import logging
 from pathlib import Path
-from typing import Iterable, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
@@ -30,13 +25,16 @@ from bigness_league_bot.application.services.match_replay_groups import (
     build_match_replay_title,
     parse_match_channel_reference,
 )
+from bigness_league_bot.application.services.match_replay_summaries import (
+    build_match_replay_roster_validation_summary,
+    collect_match_replay_standings_team_names,
+)
 from bigness_league_bot.application.services.match_replays import (
     InvalidReplayCountError,
     InvalidReplayExtensionError,
     MATCH_REPLAY_MAX_FILES,
     MATCH_REPLAY_MIN_FILES,
     MatchReplayDivision,
-    MatchReplayRosterPlayer,
     MatchReplayValidationError,
     build_match_replay_report,
     format_match_replay_game_scores,
@@ -59,6 +57,18 @@ from bigness_league_bot.infrastructure.discord.error_handling import (
 from bigness_league_bot.infrastructure.discord.match_channel_creation import (
     validate_match_team_roles,
 )
+from bigness_league_bot.infrastructure.discord.match_replay_assets import (
+    guild_icon_url,
+    team_logo_url_map,
+    write_replay_diagnostic_copy,
+)
+from bigness_league_bot.infrastructure.discord.match_replay_messages import (
+    format_match_replay_roster_validation,
+)
+from bigness_league_bot.infrastructure.discord.match_summary_images import (
+    build_match_replay_summary_image_file,
+    build_match_standings_image_file,
+)
 from bigness_league_bot.infrastructure.google.match_replay_repository import (
     GoogleSheetsMatchReplayRepository,
 )
@@ -70,14 +80,11 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
-
 def _string_choice(
         name: str | app_commands.locale_str,
         value: str,
 ) -> app_commands.Choice[str]:
     return app_commands.Choice[str](name=name, value=value)
-
-
 MATCH_REPLAY_DIVISION_CHOICES: list[app_commands.Choice[str]] = [
     _string_choice(
         localized_locale_str(I18N.commands.match_replays.choices.gold_division),
@@ -120,6 +127,9 @@ class MatchReplaysCog(commands.Cog):
         replay_5=localized_locale_str(
             I18N.commands.match_replays.upload_replays.parameters.replay_5.description
         ),
+        resumen_imagen=localized_locale_str(
+            I18N.commands.match_replays.upload_replays.parameters.summary_image.description
+        ),
     )
     async def upload_replays(
             self,
@@ -131,6 +141,7 @@ class MatchReplaysCog(commands.Cog):
             replay_3: discord.Attachment,
             replay_4: discord.Attachment | None = None,
             replay_5: discord.Attachment | None = None,
+            resumen_imagen: bool = False,
     ) -> None:
         guild = interaction.guild
         if guild is None or not isinstance(interaction.user, discord.Member):
@@ -240,16 +251,17 @@ class MatchReplaysCog(commands.Cog):
             )
         except MatchReplayValidationError as exc:
             raise _to_user_error(exc) from exc
-        roster_players = await repository.list_division_roster_players(
+        roster_data = await repository.list_division_roster_data(
             report.division.label
         )
+        roster_players = roster_data.roster_players
         report = resolve_match_replay_report_players(report, roster_players)
         append_result = await repository.append_report(report)
         standings_sheet_name = ""
         if append_result.appended_games > 0:
             standings_sheet_name = await repository.sync_report_to_standings(
                 report,
-                team_names=_collect_standings_team_names(
+                team_names=collect_match_replay_standings_team_names(
                     roster_players=roster_players,
                     fallback_team_names=(report.team_one_name, report.team_two_name),
                 ),
@@ -286,25 +298,51 @@ class MatchReplaysCog(commands.Cog):
                 replay_ids=", ".join(append_result.skipped_replay_ids) or "-",
             )
 
-        await interaction.followup.send(
-            interaction.client.localizer.translate(
-                I18N.messages.match_replays.uploaded.summary,
-                locale=interaction.locale,
-                division=report.division.label,
-                jornada=report.matchday,
-                partido=report.match_number,
-                team_one=report.team_one_name,
-                team_two=report.team_two_name,
-                series_score=report.series_score,
-                game_scores=format_match_replay_game_scores(report),
-                replay_count=append_result.appended_games,
-                sheet_name=append_result.worksheet_name,
-                standings_update=standings_update,
-                unresolved_winners=unresolved,
-                failed_replays=failed_replays,
-                skipped_duplicates=skipped_duplicates,
-            )
+        roster_validation = format_match_replay_roster_validation(
+            localizer=interaction.client.localizer,
+            locale=interaction.locale,
+            summary=build_match_replay_roster_validation_summary(report),
         )
+        image_file: discord.File | None = None
+        image_warning = ""
+        if resumen_imagen:
+            try:
+                image_file = build_match_replay_summary_image_file(
+                    report=report,
+                    font_path=interaction.client.settings.team_profile_font_path,
+                    team_logo_urls=team_logo_url_map(roster_data.team_logos),
+                    fallback_logo_url=guild_icon_url(interaction.guild),
+                )
+            except RuntimeError:
+                LOGGER.exception("No se pudo renderizar la imagen resumen de replays")
+                image_warning = interaction.client.localizer.translate(
+                    I18N.messages.match_replays.image_render_failed,
+                    locale=interaction.locale,
+                )
+
+        message = interaction.client.localizer.translate(
+            I18N.messages.match_replays.uploaded.summary,
+            locale=interaction.locale,
+            division=report.division.label,
+            jornada=report.matchday,
+            partido=report.match_number,
+            team_one=report.team_one_name,
+            team_two=report.team_two_name,
+            series_score=report.series_score,
+            game_scores=format_match_replay_game_scores(report),
+            roster_validation=roster_validation,
+            replay_count=append_result.appended_games,
+            sheet_name=append_result.worksheet_name,
+            standings_update=standings_update,
+            unresolved_winners=unresolved,
+            failed_replays=failed_replays,
+            skipped_duplicates=skipped_duplicates,
+            image_warning=image_warning,
+        )
+        if image_file is None:
+            await interaction.followup.send(content=message)
+        else:
+            await interaction.followup.send(content=message, file=image_file)
 
     @app_commands.command(
         name=localized_locale_str(I18N.commands.match_replays.refresh_standings.name),
@@ -317,12 +355,16 @@ class MatchReplaysCog(commands.Cog):
     @app_commands.describe(
         division=localized_locale_str(
             I18N.commands.match_replays.refresh_standings.parameters.division.description
-        )
+        ),
+        imagen=localized_locale_str(
+            I18N.commands.match_replays.refresh_standings.parameters.image.description
+        ),
     )
     async def refresh_standings(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
             division: app_commands.Choice[str],
+            imagen: bool = False,
     ) -> None:
         if interaction.guild is None or not isinstance(interaction.user, discord.Member):
             raise UnsupportedChannelError(localize(I18N.errors.channel_management.server_only))
@@ -331,22 +373,43 @@ class MatchReplaysCog(commands.Cog):
         await interaction.response.defer(thinking=True)
         division_value = MatchReplayDivision(division.value)
         repository = GoogleSheetsMatchReplayRepository(interaction.client.settings)
-        roster_players = await repository.list_division_roster_players(division_value.label)
-        standings_sheet_name = await repository.refresh_division_standings(
+        roster_data = await repository.list_division_roster_data(division_value.label)
+        standings_result = await repository.refresh_division_standings_report(
             division_value,
-            team_names=_collect_standings_team_names(
-                roster_players=roster_players,
+            team_names=collect_match_replay_standings_team_names(
+                roster_players=roster_data.roster_players,
                 fallback_team_names=(),
             ),
         )
-        await interaction.followup.send(
-            interaction.client.localizer.translate(
-                I18N.messages.match_replays.standings_refreshed,
-                locale=interaction.locale,
-                division=division_value.label,
-                standings_sheet_name=standings_sheet_name,
-            )
+        image_file: discord.File | None = None
+        image_warning = ""
+        if imagen:
+            try:
+                image_file = build_match_standings_image_file(
+                    division_name=division_value.label,
+                    rows=standings_result.rows,
+                    font_path=interaction.client.settings.team_profile_font_path,
+                    team_logo_urls=team_logo_url_map(roster_data.team_logos),
+                    fallback_logo_url=guild_icon_url(interaction.guild),
+                )
+            except RuntimeError:
+                LOGGER.exception("No se pudo renderizar la imagen de clasificacion")
+                image_warning = interaction.client.localizer.translate(
+                    I18N.messages.match_replays.image_render_failed,
+                    locale=interaction.locale,
+                )
+
+        message = interaction.client.localizer.translate(
+            I18N.messages.match_replays.standings_refreshed,
+            locale=interaction.locale,
+            division=division_value.label,
+            standings_sheet_name=standings_result.worksheet_name,
+            image_warning=image_warning,
         )
+        if image_file is None:
+            await interaction.followup.send(content=message)
+        else:
+            await interaction.followup.send(content=message, file=image_file)
 
     async def cog_app_command_error(
             self,
@@ -372,7 +435,7 @@ async def _read_replay_attachment(
 ) -> BallchasingReplayUpload:
     content = await attachment.read()
     digest = hashlib.sha256(content).hexdigest()
-    diagnostics_path = _write_replay_diagnostic_copy(
+    diagnostics_path = write_replay_diagnostic_copy(
         diagnostics_dir=diagnostics_dir,
         filename=attachment.filename,
         content=content,
@@ -401,45 +464,6 @@ async def _read_replay_attachment(
         sha256=digest,
         content_type=attachment.content_type,
     )
-
-
-def _write_replay_diagnostic_copy(
-        *,
-        diagnostics_dir: Path,
-        filename: str,
-        content: bytes,
-        digest: str,
-) -> Path:
-    diagnostics_dir.mkdir(parents=True, exist_ok=True)
-    safe_filename = _safe_filename(filename)
-    diagnostics_path = diagnostics_dir / f"{digest[:16]}-{safe_filename}"
-    if not diagnostics_path.exists():
-        diagnostics_path.write_bytes(content)
-    return diagnostics_path
-
-
-def _collect_standings_team_names(
-        *,
-        roster_players: Iterable[MatchReplayRosterPlayer],
-        fallback_team_names: tuple[str, ...],
-) -> tuple[str, ...]:
-    names: list[str] = []
-    seen: set[str] = set()
-    for player in roster_players:
-        team_name = player.team_name
-        normalized = " ".join(team_name.casefold().split())
-        if not normalized or normalized in seen:
-            continue
-        seen.add(normalized)
-        names.append(team_name)
-
-    for team_name in fallback_team_names:
-        normalized = " ".join(team_name.casefold().split())
-        if not normalized or normalized in seen:
-            continue
-        seen.add(normalized)
-        names.append(team_name)
-    return tuple(names)
 
 
 async def _resolve_ballchasing_group_id(
@@ -521,16 +545,6 @@ def _interaction_channel_category_id(
     if isinstance(category_id, int):
         return category_id
     return None
-
-
-def _safe_filename(filename: str) -> str:
-    safe_characters = []
-    for character in filename:
-        if character.isalnum() or character in {".", "-", "_"}:
-            safe_characters.append(character)
-        else:
-            safe_characters.append("_")
-    return "".join(safe_characters) or "replay.replay"
 
 
 def _build_ballchasing_client(

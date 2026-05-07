@@ -12,8 +12,12 @@ from __future__ import annotations
 
 import unicodedata
 
+from bigness_league_bot.application.services.match_replay_summaries import MatchReplayTeamLogo
 from bigness_league_bot.application.services.match_replays import MatchReplayRosterPlayer
-from bigness_league_bot.infrastructure.google.team_sheets.blocks import collect_team_blocks
+from bigness_league_bot.infrastructure.google.team_sheets.blocks import (
+    collect_team_blocks,
+    extract_block_title_cell,
+)
 from bigness_league_bot.infrastructure.google.team_sheets.cells import is_free_block_title
 from bigness_league_bot.infrastructure.google.team_sheets.models import SheetCell
 from bigness_league_bot.infrastructure.google.team_sheets.parser import parse_players
@@ -54,6 +58,41 @@ def list_division_roster_players_from_grids(
         break
 
     return tuple(roster_players)
+
+
+def list_division_team_logos_from_grids(
+        division_name: str,
+        sheet_grids: tuple[tuple[str, dict[int, dict[int, SheetCell]]], ...],
+) -> tuple[MatchReplayTeamLogo, ...]:
+    requested_division = normalize_worksheet_title(division_name)
+    requested_division_key = division_key(requested_division)
+    team_logos: list[MatchReplayTeamLogo] = []
+
+    for worksheet_title, cell_grid in sheet_grids:
+        normalized_worksheet = normalize_worksheet_title(worksheet_title)
+        if requested_division_key is not None:
+            if requested_division_key not in normalized_worksheet:
+                continue
+        elif requested_division not in normalized_worksheet:
+            continue
+
+        for team_block in collect_team_blocks(cell_grid):
+            if is_free_block_title(team_block.title):
+                continue
+            title_cell = extract_block_title_cell(
+                cell_grid,
+                team_block.title_row,
+                team_block.start_column,
+            )
+            team_logos.append(
+                MatchReplayTeamLogo(
+                    team_name=team_block.title,
+                    logo_url=title_cell.hyperlink,
+                )
+            )
+        break
+
+    return tuple(team_logos)
 
 
 def normalize_worksheet_title(value: str) -> str:
