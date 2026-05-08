@@ -11,8 +11,8 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, Coroutine
 
 import discord
 
@@ -28,6 +28,7 @@ from bigness_league_bot.infrastructure.discord.ticket_relay_messages import (
     build_ticket_dm_relay_embed,
     clone_message_attachments_as_files,
     looks_like_user_relay_message,
+    relay_author_name,
     relay_visual_username,
     should_relay_bot_thread_message,
     truncate_relay_text,
@@ -39,8 +40,8 @@ if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
 LOGGER = logging.getLogger(__name__)
-ResolveTicketUser = Callable[[int], Awaitable[discord.User | None]]
-SendDm = Callable[..., Awaitable[discord.Message]]
+ResolveTicketUser = Callable[[int], Coroutine[Any, Any, discord.User | None]]
+SendDm = Callable[..., Coroutine[Any, Any, discord.Message]]
 RelayMention = Callable[[discord.Message], str | None]
 
 
@@ -82,11 +83,14 @@ class TicketParticipantMessenger:
                     participant_id=participant_id,
                     message=message,
                 )
-                dm_message = await self.send_staff_relay_to_participant(
-                    ticket_user=ticket_user,
-                    message=message,
-                    reply_target_message_id=reply_target_message_id,
+                send_operation: Coroutine[Any, Any, discord.Message] = (
+                    self.send_staff_relay_to_participant(
+                        ticket_user=ticket_user,
+                        message=message,
+                        reply_target_message_id=reply_target_message_id,
+                    )
                 )
+                dm_message = await send_operation
                 record = record.with_participant_dm_relay_message(
                     source_message_id=message.id,
                     participant_id=participant_id,
@@ -310,10 +314,7 @@ class TicketParticipantMessenger:
                 message=message,
                 color=STAFF_DM_RELAY_COLOR,
                 is_staff=True,
-                mention_line=(
-                        self._relay_mention(message)
-                        or relay_visual_username(message)
-                ),
+                mention_line=self._relay_mention_line(message),
                 avatar_url=author_avatar_url(message.author),
             ),
             files=await clone_message_attachments_as_files(message),
@@ -338,10 +339,7 @@ class TicketParticipantMessenger:
                 message=message,
                 color=PARTICIPANT_DM_RELAY_COLOR,
                 is_staff=False,
-                mention_line=(
-                        self._relay_mention(message)
-                        or relay_visual_username(message)
-                ),
+                mention_line=self._relay_mention_line(message),
                 avatar_url=author_avatar_url(message.author),
             ),
             files=await clone_message_attachments_as_files(message),
@@ -375,10 +373,7 @@ class TicketParticipantMessenger:
                         message=message,
                         color=STAFF_DM_RELAY_COLOR if is_staff else PARTICIPANT_DM_RELAY_COLOR,
                         is_staff=is_staff,
-                        mention_line=(
-                                self._relay_mention(message)
-                                or relay_visual_username(message)
-                        ),
+                        mention_line=self._relay_mention_line(message),
                         avatar_url=author_avatar_url(message.author),
                     ),
                     **await self._build_attachment_edit_kwargs(
@@ -404,6 +399,14 @@ class TicketParticipantMessenger:
                 notification_channel or message.channel,
                 failed_user_ids,
             )
+
+    def _relay_mention_line(self, message: discord.Message) -> str:
+        mention = self._relay_mention(message)
+        if mention is None:
+            return relay_visual_username(message)
+
+        display_name = discord.utils.escape_markdown(relay_author_name(message))
+        return f"{mention} _({display_name})_"
 
     @staticmethod
     def _participant_reply_target_for_message(
