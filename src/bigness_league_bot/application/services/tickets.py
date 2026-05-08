@@ -249,17 +249,34 @@ class TicketRecord:
         )
 
     def includes_user(self, user_id: int) -> bool:
-        return any(participant.user_id == user_id for participant in self.participants)
+        return any(
+            participant.user_id == user_id and participant.is_active
+            for participant in self.participants
+        )
 
     def participant_for_user(self, user_id: int) -> TicketParticipant | None:
+        for participant in self.participants:
+            if participant.user_id == user_id and participant.is_active:
+                return participant
+        return None
+
+    def any_participant_for_user(self, user_id: int) -> TicketParticipant | None:
         for participant in self.participants:
             if participant.user_id == user_id:
                 return participant
         return None
 
     @property
+    def active_participants(self) -> tuple[TicketParticipant, ...]:
+        return tuple(
+            participant
+            for participant in self.participants
+            if participant.is_active
+        )
+
+    @property
     def participant_ids(self) -> tuple[int, ...]:
-        return tuple(participant.user_id for participant in self.participants)
+        return tuple(participant.user_id for participant in self.active_participants)
 
     def with_participant_dm(
             self,
@@ -307,9 +324,23 @@ class TicketRecord:
             user_ids: tuple[int, ...],
     ) -> "TicketRecord":
         existing_user_ids = set(self.participant_ids)
+        requested_user_ids = set(user_ids)
         updated_participants = list(self.participants)
+        updated_participants = [
+            participant.reopen()
+            if (
+                    participant.user_id in requested_user_ids
+                    and not participant.is_active
+            )
+            else participant
+            for participant in updated_participants
+        ]
         for user_id in user_ids:
             if user_id in existing_user_ids:
+                continue
+            existing_participant = self.any_participant_for_user(user_id)
+            if existing_participant is not None:
+                existing_user_ids.add(user_id)
                 continue
             updated_participants.append(TicketParticipant(user_id=user_id))
             existing_user_ids.add(user_id)
@@ -317,6 +348,27 @@ class TicketRecord:
         return replace(
             self,
             participants=tuple(updated_participants),
+        )
+
+    def with_closed_participant(
+            self,
+            *,
+            user_id: int,
+            close_reason: str,
+            closed_at: str | None = None,
+    ) -> "TicketRecord":
+        resolved_closed_at = closed_at or current_utc_timestamp()
+        return replace(
+            self,
+            participants=tuple(
+                participant.close(
+                    closed_at=resolved_closed_at,
+                    close_reason=close_reason,
+                )
+                if participant.user_id == user_id and participant.is_active
+                else participant
+                for participant in self.participants
+            ),
         )
 
     def relay_message_author_id(self, thread_message_id: int) -> int | None:

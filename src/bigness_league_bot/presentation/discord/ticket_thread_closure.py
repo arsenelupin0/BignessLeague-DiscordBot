@@ -110,6 +110,7 @@ async def close_ticket_thread(
         origin_dm_channel: discord.DMChannel | None = None,
         close_publication: bool = True,
 ) -> TicketRecord | None:
+    participants_to_notify = record.active_participants
     closed_record = store.close_thread(record.thread_id)
     if closed_record is None or closed_record.closed_at is None:
         return None
@@ -152,12 +153,14 @@ async def close_ticket_thread(
         is_dm_interaction=is_dm_interaction,
         origin_dm_channel=origin_dm_channel,
         close_reason=close_reason,
+        participants_to_notify=participants_to_notify,
     )
     await _disable_ticket_start_controls(
         store=store,
         bot=bot,
         record=closed_record,
         thread=thread,
+        participants_to_disable=participants_to_notify,
     )
 
     await thread.edit(
@@ -294,8 +297,10 @@ async def _send_close_dm(
         is_dm_interaction: bool,
         origin_dm_channel: discord.DMChannel | None,
         close_reason: str | None,
+        participants_to_notify: tuple[TicketParticipant, ...],
 ) -> None:
-    for participant in record.participants:
+    failed_user_ids: list[int] = []
+    for participant in participants_to_notify:
         try:
             dm_ticket_link = build_dm_message_link(
                 channel_id=participant.dm_channel_id,
@@ -324,7 +329,14 @@ async def _send_close_dm(
             ticket_user = await bot.fetch_user(participant.user_id)
             await ticket_user.send(embed=close_embed)
         except discord.HTTPException:
-            continue
+            failed_user_ids.append(participant.user_id)
+
+    if failed_user_ids:
+        await _notify_close_dm_failed(
+            thread_id=record.thread_id,
+            bot=bot,
+            failed_user_ids=failed_user_ids,
+        )
 
 
 async def _disable_ticket_start_controls(
@@ -333,13 +345,14 @@ async def _disable_ticket_start_controls(
         bot: BignessLeagueBot,
         record: TicketRecord,
         thread: discord.Thread,
+        participants_to_disable: tuple[TicketParticipant, ...],
 ) -> None:
     await _disable_message_controls(
         channel=thread,
         message_id=record.thread_start_message_id,
         store=store,
     )
-    for participant in record.participants:
+    for participant in participants_to_disable:
         dm_channel = await _resolve_dm_channel(
             bot=bot,
             participant=participant,
@@ -369,6 +382,25 @@ async def _resolve_dm_channel(
         return await ticket_user.create_dm()
     except discord.HTTPException:
         return None
+
+
+async def _notify_close_dm_failed(
+        *,
+        thread_id: int,
+        bot: BignessLeagueBot,
+        failed_user_ids: list[int],
+) -> None:
+    thread = bot.get_channel(thread_id)
+    if not isinstance(thread, discord.Thread):
+        return
+
+    await thread.send(
+        bot.localizer.translate(
+            I18N.messages.tickets.relay.dm_failed_for_staff,
+            user_id=", ".join(str(user_id) for user_id in failed_user_ids),
+        ),
+        allowed_mentions=discord.AllowedMentions.none(),
+    )
 
 
 async def _disable_message_controls(

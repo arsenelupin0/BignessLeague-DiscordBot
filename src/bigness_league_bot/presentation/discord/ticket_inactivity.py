@@ -110,7 +110,7 @@ class TicketInactivityMonitor:
             LOGGER.exception("TICKET_INACTIVITY_THREAD_NOTICE_FAILED thread=%s", thread.id)
             return False
 
-        for participant in record.participants:
+        for participant in record.active_participants:
             try:
                 ticket_user = await self.bot.fetch_user(participant.user_id)
                 await ticket_user.send(embed=inactivity_embed)

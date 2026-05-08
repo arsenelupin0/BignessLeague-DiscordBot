@@ -97,6 +97,29 @@ class _CommandsTicketsAddToTicket:
                                                  default_text="A\u00f1ade uno o varios usuarios al ticket actual.")
     parameters: _CommandsTicketsAddToTicketParameters = _CommandsTicketsAddToTicketParameters()
 
+
+class _CommandsTicketsCloseForUserParametersUser:
+    description: TranslationKey = TranslationKey(key="commands.tickets.close_for_user.parameters.user.description",
+                                                 default_text="Usuario al que quieres cerrar el acceso a este ticket.")
+
+
+class _CommandsTicketsCloseForUserParametersReason:
+    description: TranslationKey = TranslationKey(key="commands.tickets.close_for_user.parameters.reason.description",
+                                                 default_text="Raz\u00f3n que recibir\u00e1 el usuario y quedar\u00e1 registrada en el hilo.")
+
+
+class _CommandsTicketsCloseForUserParameters:
+    user: _CommandsTicketsCloseForUserParametersUser = _CommandsTicketsCloseForUserParametersUser()
+    reason: _CommandsTicketsCloseForUserParametersReason = _CommandsTicketsCloseForUserParametersReason()
+
+
+class _CommandsTicketsCloseForUser:
+    name: TranslationKey = TranslationKey(key="commands.tickets.close_for_user.name",
+                                          default_text="cerrar_ticket_para_usuario")
+    description: TranslationKey = TranslationKey(key="commands.tickets.close_for_user.description",
+                                                 default_text="Cierra el ticket solo para un usuario concreto.")
+    parameters: _CommandsTicketsCloseForUserParameters = _CommandsTicketsCloseForUserParameters()
+
 class _CommandsTicketsAddTeamToTicketParametersTeamRole:
     description: TranslationKey = TranslationKey(
         key="commands.tickets.add_team_to_ticket.parameters.team_role.description",
@@ -120,6 +143,7 @@ class _CommandsTicketsAiStatus:
 class _CommandsTickets:
     publish_panel: _CommandsTicketsPublishPanel = _CommandsTicketsPublishPanel()
     add_to_ticket: _CommandsTicketsAddToTicket = _CommandsTicketsAddToTicket()
+    close_for_user: _CommandsTicketsCloseForUser = _CommandsTicketsCloseForUser()
     add_team_to_ticket: _CommandsTicketsAddTeamToTicket = _CommandsTicketsAddTeamToTicket()
     ai_status: _CommandsTicketsAiStatus = _CommandsTicketsAiStatus()
 
@@ -788,6 +812,22 @@ class _MessagesTicketsParticipantsSummary:
     dm_failed: TranslationKey = TranslationKey(key="messages.tickets.participants.summary.dm_failed",
                                                default_text="No he podido abrir DM con: {users}")
 
+
+class _MessagesTicketsParticipantsCloseForUser:
+    not_in_ticket: TranslationKey = TranslationKey(key="messages.tickets.participants.close_for_user.not_in_ticket",
+                                                   default_text="{user} no tiene este ticket activo.")
+    last_participant: TranslationKey = TranslationKey(
+        key="messages.tickets.participants.close_for_user.last_participant",
+        default_text="No puedes cerrar el ticket solo para el \u00faltimo participante activo. Usa el cierre normal del ticket.")
+    reason_required: TranslationKey = TranslationKey(
+        key="messages.tickets.participants.close_for_user.reason_required",
+        default_text="La raz\u00f3n no puede estar vac\u00eda.")
+    thread_notice: TranslationKey = TranslationKey(key="messages.tickets.participants.close_for_user.thread_notice",
+                                                   default_text="Ticket cerrado \u00fanicamente para {user}. El hilo sigue activo para el resto de participantes.")
+    closed_ephemeral: TranslationKey = TranslationKey(
+        key="messages.tickets.participants.close_for_user.closed_ephemeral",
+        default_text="Ticket cerrado para {user}. Ya puede abrir otro ticket.")
+
 class _MessagesTicketsParticipants:
     only_ticket_thread: TranslationKey = TranslationKey(key="messages.tickets.participants.only_ticket_thread",
                                                         default_text="Este comando solo se puede usar dentro de un hilo de ticket activo.")
@@ -801,6 +841,7 @@ class _MessagesTicketsParticipants:
                                                      default_text="Ese rol de equipo no tiene ning\u00fan miembro v\u00e1lido para a\u00f1adir al ticket.")
     owner_unavailable: TranslationKey = TranslationKey(key="messages.tickets.participants.owner_unavailable",
                                                        default_text="No he podido resolver al usuario que abri\u00f3 originalmente este ticket.")
+    close_for_user: _MessagesTicketsParticipantsCloseForUser = _MessagesTicketsParticipantsCloseForUser()
     summary: _MessagesTicketsParticipantsSummary = _MessagesTicketsParticipantsSummary()
 
 class _MessagesTicketsRelay:

@@ -8,6 +8,9 @@ class TicketParticipant:
     user_id: int
     dm_channel_id: int | None = None
     dm_start_message_id: int | None = None
+    status: str = "active"
+    closed_at: str | None = None
+    close_reason: str | None = None
 
     @classmethod
     def from_dict(
@@ -18,6 +21,9 @@ class TicketParticipant:
             user_id=required_int(payload, "user_id"),
             dm_channel_id=optional_int(payload, "dm_channel_id"),
             dm_start_message_id=optional_int(payload, "dm_start_message_id"),
+            status=_normalize_participant_status(optional_text(payload, "status")),
+            closed_at=optional_text(payload, "closed_at"),
+            close_reason=optional_text(payload, "close_reason"),
         )
 
     def to_dict(self) -> dict[str, object]:
@@ -25,7 +31,14 @@ class TicketParticipant:
             "user_id": self.user_id,
             "dm_channel_id": self.dm_channel_id,
             "dm_start_message_id": self.dm_start_message_id,
+            "status": self.status,
+            "closed_at": self.closed_at,
+            "close_reason": self.close_reason,
         }
+
+    @property
+    def is_active(self) -> bool:
+        return self.status == "active"
 
     def with_dm(
             self,
@@ -37,6 +50,31 @@ class TicketParticipant:
             user_id=self.user_id,
             dm_channel_id=dm_channel_id,
             dm_start_message_id=dm_start_message_id,
+            status=self.status,
+            closed_at=self.closed_at,
+            close_reason=self.close_reason,
+        )
+
+    def reopen(self) -> "TicketParticipant":
+        return TicketParticipant(
+            user_id=self.user_id,
+            dm_channel_id=self.dm_channel_id,
+            dm_start_message_id=self.dm_start_message_id,
+        )
+
+    def close(
+            self,
+            *,
+            closed_at: str,
+            close_reason: str,
+    ) -> "TicketParticipant":
+        return TicketParticipant(
+            user_id=self.user_id,
+            dm_channel_id=self.dm_channel_id,
+            dm_start_message_id=self.dm_start_message_id,
+            status="closed",
+            closed_at=closed_at,
+            close_reason=close_reason,
         )
 
 
@@ -70,6 +108,13 @@ def normalize_ticket_participants(
     ordered_participants = [participants_by_user_id.pop(owner_user_id)]
     ordered_participants.extend(participants_by_user_id.values())
     return tuple(ordered_participants)
+
+
+def _normalize_participant_status(value: str | None) -> str:
+    if value == "closed":
+        return "closed"
+
+    return "active"
 
 
 def required_int(payload: dict[str, object], key: str) -> int:

@@ -55,6 +55,9 @@ from bigness_league_bot.presentation.discord.ticket_inactivity import (
 from bigness_league_bot.presentation.discord.ticket_participant_addition import (
     TicketParticipantAddition,
 )
+from bigness_league_bot.presentation.discord.ticket_participant_removal import (
+    TicketParticipantRemoval,
+)
 from bigness_league_bot.presentation.discord.views.ticket_panel import TicketPanelView
 from bigness_league_bot.presentation.discord.views.ticket_thread_controls import (
     TicketThreadControlsView,
@@ -96,6 +99,10 @@ class TicketsCog(commands.Cog):
             resolve_ticket_user=self._resolve_ticket_user,
             send_dm=self._send_dm_with_retry,
             thread_user_relay_message_ids=self.thread_relay.message_ids,
+        )
+        self.participant_removal = TicketParticipantRemoval(
+            bot=bot,
+            store=store,
         )
         self.inactivity_monitor = TicketInactivityMonitor(bot=bot, store=store)
 
@@ -211,6 +218,60 @@ class TicketsCog(commands.Cog):
             thread=thread,
             record=record,
             requested_members=requested_members,
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.tickets.close_for_user.name),
+        description=localized_locale_str(
+            I18N.commands.tickets.close_for_user.description
+        ),
+    )
+    @app_commands.describe(
+        usuario=localized_locale_str(
+            I18N.commands.tickets.close_for_user.parameters.user.description
+        ),
+        razon=localized_locale_str(
+            I18N.commands.tickets.close_for_user.parameters.reason.description
+        ),
+    )
+    @app_commands.guild_only()
+    async def close_ticket_for_user(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            usuario: discord.Member,
+            razon: str,
+    ) -> None:
+        if interaction.guild is None or not isinstance(interaction.user, discord.Member):
+            raise CommandUserError(localize(I18N.errors.channel_management.server_only))
+
+        try:
+            ensure_allowed_member(interaction.user)
+        except ChannelManagementError as error:
+            raise CommandUserError(error.message) from error
+
+        thread = interaction.channel
+        if not isinstance(thread, discord.Thread):
+            raise CommandUserError(localize(I18N.messages.tickets.participants.only_ticket_thread))
+
+        record = self.store.active_for_thread(thread.id)
+        if record is None:
+            raise CommandUserError(localize(I18N.messages.tickets.close.not_active))
+
+        cleaned_reason = razon.strip()
+        if not cleaned_reason:
+            raise CommandUserError(
+                localize(
+                    I18N.messages.tickets.participants.close_for_user.reason_required
+                )
+            )
+
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        await self.participant_removal.close_ticket_for_member(
+            interaction=interaction,
+            thread=thread,
+            record=record,
+            member=usuario,
+            reason=cleaned_reason,
         )
 
     @app_commands.command(

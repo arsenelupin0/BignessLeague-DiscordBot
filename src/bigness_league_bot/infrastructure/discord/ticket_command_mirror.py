@@ -187,7 +187,7 @@ class TicketCommandMirror:
 
         latest_dm_message: discord.Message | None = None
         failed_user_ids: list[int] = []
-        for participant in record.participants:
+        for participant in record.active_participants:
             try:
                 ticket_user = await self._resolve_ticket_user(participant.user_id)
                 if ticket_user is None:

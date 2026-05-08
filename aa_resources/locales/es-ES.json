@@ -58,6 +58,18 @@
           }
         }
       },
+      "close_for_user": {
+        "name": "cerrar_ticket_para_usuario",
+        "description": "Cierra el ticket solo para un usuario concreto.",
+        "parameters": {
+          "user": {
+            "description": "Usuario al que quieres cerrar el acceso a este ticket."
+          },
+          "reason": {
+            "description": "Razón que recibirá el usuario y quedará registrada en el hilo."
+          }
+        }
+      },
       "add_team_to_ticket": {
         "name": "anadir_equipo_al_ticket",
         "description": "Añade al ticket a todos los miembros de un rol de equipo.",
@@ -442,6 +454,13 @@
         "none_added": "No se ha añadido ningún usuario al ticket.",
         "team_role_empty": "Ese rol de equipo no tiene ningún miembro válido para añadir al ticket.",
         "owner_unavailable": "No he podido resolver al usuario que abrió originalmente este ticket.",
+        "close_for_user": {
+          "not_in_ticket": "{user} no tiene este ticket activo.",
+          "last_participant": "No puedes cerrar el ticket solo para el último participante activo. Usa el cierre normal del ticket.",
+          "reason_required": "La razón no puede estar vacía.",
+          "thread_notice": "Ticket cerrado únicamente para {user}. El hilo sigue activo para el resto de participantes.",
+          "closed_ephemeral": "Ticket cerrado para {user}. Ya puede abrir otro ticket."
+        },
         "summary": {
           "added": "Añadidos: {users}",
           "already_present": "Ya estaban en el ticket: {users}",

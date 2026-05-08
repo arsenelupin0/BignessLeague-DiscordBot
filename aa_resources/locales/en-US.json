@@ -148,6 +148,18 @@
       }
     },
     "tickets": {
+      "close_for_user": {
+        "name": "close_ticket_for_user",
+        "description": "Closes the ticket only for a specific user.",
+        "parameters": {
+          "user": {
+            "description": "User whose access to this ticket should be closed."
+          },
+          "reason": {
+            "description": "Reason the user will receive and staff will see in the thread."
+          }
+        }
+      },
       "add_team_to_ticket": {
         "name": "add_team_to_ticket",
         "description": "Adds all members of a team role to the current ticket.",
@@ -454,7 +466,14 @@
         "opening_notice": "\n\n_ _\nHi {user_mention}, your ticket has been opened. Briefly explain what you need. Someone from **Staff** will help you as soon as possible."
       },
       "participants": {
-        "team_role_empty": "That team role has no valid members to add to the ticket."
+        "team_role_empty": "That team role has no valid members to add to the ticket.",
+        "close_for_user": {
+          "not_in_ticket": "{user} does not have this ticket active.",
+          "last_participant": "You cannot close the ticket only for the last active participant. Use the normal ticket close action.",
+          "reason_required": "The reason cannot be empty.",
+          "thread_notice": "Ticket closed only for {user}. The thread remains active for the other participants.",
+          "closed_ephemeral": "Ticket closed for {user}. They can now open another ticket."
+        }
       },
       "relay": {
         "from_command_result": "**Command result {command_name}:**\n{body}"
