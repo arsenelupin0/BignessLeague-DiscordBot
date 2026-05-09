@@ -35,6 +35,14 @@ MATCH_SCHEDULE_GREEN_ARROW_EMOJI = DiscordEmojiRef(
     name="GreenArrow",
     id=1_502_500_890_697_793_646,
 )
+GOLD_DIVISION_EMOJI = DiscordEmojiRef(
+    name="GoldDivision",
+    id=1_502_647_246_007_828_511,
+)
+SILVER_DIVISION_EMOJI = DiscordEmojiRef(
+    name="SilverDivision",
+    id=1_502_647_204_152_869_074,
+)
 
 
 def render_custom_emoji(

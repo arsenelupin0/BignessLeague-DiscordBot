@@ -36,7 +36,10 @@ from bigness_league_bot.infrastructure.discord.channel_access_management import 
     ensure_allowed_member,
 )
 from bigness_league_bot.infrastructure.discord.emojis import (
+    GOLD_DIVISION_EMOJI,
     MATCH_SCHEDULE_GREEN_ARROW_EMOJI,
+    SILVER_DIVISION_EMOJI,
+    DiscordEmojiRef,
     render_custom_emoji,
 )
 from bigness_league_bot.infrastructure.discord.error_handling import (
@@ -56,9 +59,7 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 GOLD_DIVISION_NAME = "Gold Division"
-GOLD_DIVISION_EMOJI = ":GoldDivision:"
 SILVER_DIVISION_NAME = "Silver Division"
-SILVER_DIVISION_EMOJI = ":SilverDivision:"
 SPANISH_WEEKDAYS = (
     "Lunes",
     "Martes",
@@ -82,7 +83,7 @@ ENGLISH_WEEKDAYS = (
 @dataclass(frozen=True, slots=True)
 class _ScheduleDivision:
     name: str
-    emoji: str
+    emoji: DiscordEmojiRef
     category_id: int
 
 
@@ -226,7 +227,7 @@ def _render_summary(
         )
     ]
     for division in _schedule_divisions(settings):
-        lines.append(_render_division_header(interaction, division))
+        lines.append(_render_division_header(interaction, guild=guild, division=division))
         lines.extend(
             _render_division_entries(
                 interaction,
@@ -293,12 +294,19 @@ def _render_division_entries(
 
 def _render_division_header(
         interaction: discord.Interaction[BignessLeagueBot],
+        *,
+        guild: discord.Guild,
         division: _ScheduleDivision,
 ) -> str:
+    division_emoji = render_custom_emoji(
+        guild=guild,
+        bot=interaction.client,
+        emoji=division.emoji,
+    )
     return interaction.client.localizer.translate(
         I18N.messages.match_schedules.fixed_division_header,
         locale=interaction.locale,
-        division_emoji=division.emoji,
+        division_emoji=division_emoji,
         division_name=division.name,
     )
 
