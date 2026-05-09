@@ -167,6 +167,40 @@ class TicketParticipantMessenger:
             is_staff=True,
         )
 
+    async def delete_message_for_participants(
+            self,
+            *,
+            record: TicketRecord,
+            thread: discord.Thread,
+            source_message_id: int,
+    ) -> None:
+        failed_user_ids: list[int] = []
+        for participant_id, dm_message_id in record.participant_dm_relay_targets(
+                source_message_id
+        ):
+            try:
+                ticket_user = await self._resolve_ticket_user(participant_id)
+                if ticket_user is None:
+                    failed_user_ids.append(participant_id)
+                    continue
+                dm_channel = await ticket_user.create_dm()
+                dm_message = await dm_channel.fetch_message(dm_message_id)
+                await dm_message.delete()
+            except discord.NotFound:
+                continue
+            except discord.Forbidden:
+                failed_user_ids.append(participant_id)
+            except discord.HTTPException:
+                LOGGER.exception(
+                    "TICKET_PARTICIPANT_DM_RELAY_DELETE_FAILED source=%s user_id=%s dm_message=%s",
+                    source_message_id,
+                    participant_id,
+                    dm_message_id,
+                )
+
+        if failed_user_ids:
+            await self._notify_staff(thread, failed_user_ids)
+
     async def edit_user_message_for_other_participants(
             self,
             *,

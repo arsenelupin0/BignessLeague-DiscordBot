@@ -474,6 +474,7 @@
         "from_command_result": "**Resultado del comando {command_name}:**\n{body}",
         "attachments": "Adjuntos:\n{urls}",
         "empty_body": "(mensaje sin texto)",
+        "deleted_body": "**(Mensaje eliminado):** {body}",
         "dm_staff_author": "Nuevo mensaje del Staff...",
         "dm_user_author": "Nuevo mensaje...",
         "thread_missing_for_user": "No he encontrado el hilo interno de tu ticket. Se ha cerrado el registro activo; vuelve a abrirlo desde el panel si necesitas continuar.",

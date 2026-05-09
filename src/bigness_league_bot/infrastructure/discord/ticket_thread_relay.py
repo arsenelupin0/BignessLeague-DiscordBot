@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from typing import TYPE_CHECKING
 
 import discord
@@ -19,6 +20,7 @@ import discord
 from bigness_league_bot.application.services.tickets import TicketRecord
 from bigness_league_bot.infrastructure.discord.ticket_relay_messages import (
     author_avatar_url,
+    build_ticket_deleted_user_relay_message,
     build_ticket_user_relay_message,
     clone_message_attachments_as_files,
     thread_relay_display_name,
@@ -30,6 +32,8 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 THREAD_RELAY_WEBHOOK_NAME = "Bigness League Tickets Relay"
+WEBHOOK_LOOKUP_RETRY_SECONDS = 300.0
+WEBHOOK_CREATE_RETRY_SECONDS = 300.0
 
 
 class TicketThreadRelay:
@@ -45,6 +49,8 @@ class TicketThreadRelay:
         self._message_authors: dict[int, int] = {}
         self._forum_webhooks: dict[int, discord.Webhook] = {}
         self._forum_webhook_locks: dict[int, asyncio.Lock] = {}
+        self._forum_webhook_lookup_retry_after: dict[int, float] = {}
+        self._forum_webhook_create_retry_after: dict[int, float] = {}
 
     async def relay_user_message_to_thread(
             self,
@@ -83,7 +89,7 @@ class TicketThreadRelay:
                     message.author.id,
                 )
 
-        webhook = await self._get_thread_relay_webhook(thread)
+        webhook = await self._get_thread_relay_webhook(thread, allow_existing_lookup=False)
         if webhook is None:
             relay_message = await thread.send(
                 build_ticket_user_relay_message(
@@ -157,7 +163,7 @@ class TicketThreadRelay:
 
         content = message.content.strip()
         if thread_message.webhook_id is not None:
-            webhook = await self._get_thread_relay_webhook(thread)
+            webhook = await self._get_thread_relay_webhook(thread, allow_existing_lookup=True)
             if webhook is None:
                 return
             try:
@@ -188,6 +194,63 @@ class TicketThreadRelay:
         except (discord.NotFound, discord.Forbidden, discord.HTTPException):
             LOGGER.exception(
                 "TICKET_THREAD_RELAY_EDIT_FAILED thread=%s user=%s(%s) message=%s",
+                record.thread_id,
+                message.author,
+                message.author.id,
+                thread_message.id,
+            )
+
+    async def mark_user_relay_message_deleted(
+            self,
+            *,
+            record: TicketRecord,
+            thread: discord.Thread,
+            message: discord.Message,
+    ) -> None:
+        thread_message_id = record.thread_relay_message_id_for_dm(message.id)
+        if thread_message_id is None:
+            return
+
+        try:
+            thread_message = await thread.fetch_message(thread_message_id)
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            return
+
+        deleted_content = build_ticket_deleted_user_relay_message(
+            localizer=self.bot.localizer,
+            message=message,
+        )
+        if thread_message.webhook_id is not None:
+            webhook = await self._get_thread_relay_webhook(thread, allow_existing_lookup=True)
+            if webhook is None:
+                return
+            try:
+                await webhook.edit_message(
+                    thread_message.id,
+                    content=deleted_content,
+                    attachments=[],
+                    allowed_mentions=discord.AllowedMentions.none(),
+                    thread=thread,
+                )
+            except (discord.NotFound, discord.Forbidden, discord.HTTPException, ValueError):
+                LOGGER.exception(
+                    "TICKET_THREAD_WEBHOOK_RELAY_DELETE_MARK_FAILED thread=%s user=%s(%s) message=%s",
+                    record.thread_id,
+                    message.author,
+                    message.author.id,
+                    thread_message.id,
+                )
+            return
+
+        try:
+            await thread_message.edit(
+                content=deleted_content,
+                attachments=[],
+                allowed_mentions=discord.AllowedMentions.none(),
+            )
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            LOGGER.exception(
+                "TICKET_THREAD_RELAY_DELETE_MARK_FAILED thread=%s user=%s(%s) message=%s",
                 record.thread_id,
                 message.author,
                 message.author.id,
@@ -255,6 +318,8 @@ class TicketThreadRelay:
     async def _get_thread_relay_webhook(
             self,
             thread: discord.Thread,
+            *,
+            allow_existing_lookup: bool,
     ) -> discord.Webhook | None:
         parent = thread.parent
         if not isinstance(parent, discord.ForumChannel):
@@ -269,37 +334,68 @@ class TicketThreadRelay:
             if cached_webhook is not None and cached_webhook.token is not None:
                 return cached_webhook
 
-            try:
-                existing_webhooks = await parent.webhooks()
-            except discord.HTTPException:
-                LOGGER.exception(
-                    "TICKET_THREAD_WEBHOOK_LIST_FAILED forum=%s",
-                    parent.id,
-                )
-                return None
+            if allow_existing_lookup:
+                existing_webhook = await self._find_thread_relay_webhook(parent)
+                if existing_webhook is not None:
+                    self._forum_webhooks[parent.id] = existing_webhook
+                    return existing_webhook
 
-            for webhook in existing_webhooks:
-                if webhook.name != THREAD_RELAY_WEBHOOK_NAME:
-                    continue
-                try:
-                    await webhook.delete(reason="Refreshing ticket relay webhook token")
-                except (discord.Forbidden, discord.HTTPException, ValueError):
-                    continue
+            if self._is_webhook_create_on_cooldown(parent.id):
+                return None
 
             try:
                 webhook = await parent.create_webhook(
                     name=THREAD_RELAY_WEBHOOK_NAME,
                     reason="Ticket relay webhook",
                 )
-            except (discord.Forbidden, discord.HTTPException):
-                LOGGER.exception(
-                    "TICKET_THREAD_WEBHOOK_CREATE_FAILED forum=%s",
-                    parent.id,
-                )
+            except discord.Forbidden:
+                LOGGER.exception("TICKET_THREAD_WEBHOOK_CREATE_FORBIDDEN forum=%s", parent.id)
+                self._set_webhook_create_cooldown(parent.id)
+                return None
+            except discord.HTTPException as error:
+                self._set_webhook_create_cooldown(parent.id)
+                if _is_rate_limited(error):
+                    LOGGER.warning(
+                        "TICKET_THREAD_WEBHOOK_CREATE_RATE_LIMITED forum=%s retry_seconds=%.0f",
+                        parent.id,
+                        WEBHOOK_CREATE_RETRY_SECONDS,
+                    )
+                else:
+                    LOGGER.exception("TICKET_THREAD_WEBHOOK_CREATE_FAILED forum=%s", parent.id)
                 return None
 
             self._forum_webhooks[parent.id] = webhook
             return webhook
+
+    async def _find_thread_relay_webhook(
+            self,
+            parent: discord.ForumChannel,
+    ) -> discord.Webhook | None:
+        if self._is_webhook_lookup_on_cooldown(parent.id):
+            return None
+
+        try:
+            existing_webhooks = await parent.webhooks()
+        except discord.Forbidden:
+            LOGGER.exception("TICKET_THREAD_WEBHOOK_LIST_FORBIDDEN forum=%s", parent.id)
+            self._set_webhook_lookup_cooldown(parent.id)
+            return None
+        except discord.HTTPException as error:
+            self._set_webhook_lookup_cooldown(parent.id)
+            if _is_rate_limited(error):
+                LOGGER.warning(
+                    "TICKET_THREAD_WEBHOOK_LIST_RATE_LIMITED forum=%s retry_seconds=%.0f",
+                    parent.id,
+                    WEBHOOK_LOOKUP_RETRY_SECONDS,
+                )
+            else:
+                LOGGER.exception("TICKET_THREAD_WEBHOOK_LIST_FAILED forum=%s", parent.id)
+            return None
+
+        for webhook in existing_webhooks:
+            if webhook.name == THREAD_RELAY_WEBHOOK_NAME and webhook.token is not None:
+                return webhook
+        return None
 
     def _forum_webhook_lock(self, forum_channel_id: int) -> asyncio.Lock:
         lock = self._forum_webhook_locks.get(forum_channel_id)
@@ -307,6 +403,22 @@ class TicketThreadRelay:
             lock = asyncio.Lock()
             self._forum_webhook_locks[forum_channel_id] = lock
         return lock
+
+    def _is_webhook_lookup_on_cooldown(self, forum_channel_id: int) -> bool:
+        return self._forum_webhook_lookup_retry_after.get(forum_channel_id, 0.0) > time.monotonic()
+
+    def _is_webhook_create_on_cooldown(self, forum_channel_id: int) -> bool:
+        return self._forum_webhook_create_retry_after.get(forum_channel_id, 0.0) > time.monotonic()
+
+    def _set_webhook_lookup_cooldown(self, forum_channel_id: int) -> None:
+        self._forum_webhook_lookup_retry_after[forum_channel_id] = (
+                time.monotonic() + WEBHOOK_LOOKUP_RETRY_SECONDS
+        )
+
+    def _set_webhook_create_cooldown(self, forum_channel_id: int) -> None:
+        self._forum_webhook_create_retry_after[forum_channel_id] = (
+                time.monotonic() + WEBHOOK_CREATE_RETRY_SECONDS
+        )
 
 
 def _message_reference_id(message: discord.Message) -> int | None:
@@ -316,3 +428,7 @@ def _message_reference_id(message: discord.Message) -> int | None:
 
     message_id = reference.message_id
     return message_id if isinstance(message_id, int) else None
+
+
+def _is_rate_limited(error: discord.HTTPException) -> bool:
+    return getattr(error, "status", None) == 429

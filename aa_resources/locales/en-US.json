@@ -476,7 +476,8 @@
         }
       },
       "relay": {
-        "from_command_result": "**Command result {command_name}:**\n{body}"
+        "from_command_result": "**Command result {command_name}:**\n{body}",
+        "deleted_body": "**(Deleted message):** {body}"
       },
       "inactivity": {
         "close_reason": "Your ticket has been closed automatically because of inactivity. If you still need help, open another ticket.",

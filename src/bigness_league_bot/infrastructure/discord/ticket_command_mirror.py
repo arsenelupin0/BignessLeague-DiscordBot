@@ -114,6 +114,7 @@ class TicketCommandMirror:
         dm_message_ids = self._thread_to_dm_message_ids.setdefault(message.id, {})
         latest_dm_message: discord.Message | None = None
         failed_user_ids: list[int] = []
+        updated_record = record
         for participant_id in record.participant_ids:
             try:
                 ticket_user = await self._resolve_ticket_user(participant_id)
@@ -130,6 +131,11 @@ class TicketCommandMirror:
                 )
                 dm_message_ids[participant_id] = dm_message.id
                 latest_dm_message = dm_message
+                updated_record = updated_record.with_participant_dm_relay_message(
+                    source_message_id=message.id,
+                    participant_id=participant_id,
+                    dm_message_id=dm_message.id,
+                )
             except discord.Forbidden:
                 failed_user_ids.append(participant_id)
             except discord.HTTPException:
@@ -146,6 +152,7 @@ class TicketCommandMirror:
         if latest_dm_message is None:
             return None
 
+        self.store.update(updated_record)
         self._thread_to_dm_message_signatures[message.id] = relay_signature
         return latest_dm_message
 
@@ -208,6 +215,11 @@ class TicketCommandMirror:
                         allowed_mentions=discord.AllowedMentions.none(),
                     )
                     dm_message_ids[participant.user_id] = sent_dm_message.id
+                    record = record.with_participant_dm_relay_message(
+                        source_message_id=message.id,
+                        participant_id=participant.user_id,
+                        dm_message_id=sent_dm_message.id,
+                    )
                     latest_dm_message = sent_dm_message
                     continue
                 dm_message = await dm_channel.fetch_message(dm_message_id)
@@ -231,6 +243,11 @@ class TicketCommandMirror:
                 )
                 if replacement_dm_message is not None:
                     dm_message_ids[participant.user_id] = replacement_dm_message.id
+                    record = record.with_participant_dm_relay_message(
+                        source_message_id=message.id,
+                        participant_id=participant.user_id,
+                        dm_message_id=replacement_dm_message.id,
+                    )
                     latest_dm_message = replacement_dm_message
             except discord.Forbidden:
                 failed_user_ids.append(participant.user_id)
@@ -251,6 +268,7 @@ class TicketCommandMirror:
 
         self._thread_to_dm_message_signatures[message.id] = relay_signature
         self._thread_to_dm_message_ids[message.id] = dm_message_ids
+        self.store.update(record)
         return latest_dm_message
 
     async def send_result_to_participant(
@@ -266,7 +284,7 @@ class TicketCommandMirror:
             return None
 
         try:
-            return await self._send_dm(
+            dm_message = await self._send_dm(
                 ticket_user,
                 **await self._build_send_kwargs(
                     message,
@@ -274,6 +292,14 @@ class TicketCommandMirror:
                 ),
                 allowed_mentions=discord.AllowedMentions.none(),
             )
+            self.store.update(
+                record.with_participant_dm_relay_message(
+                    source_message_id=message.id,
+                    participant_id=participant_id,
+                    dm_message_id=dm_message.id,
+                )
+            )
+            return dm_message
         except discord.Forbidden:
             await self._notify_failed_recipients(message, [participant_id])
             return None
@@ -302,6 +328,55 @@ class TicketCommandMirror:
         self._thread_to_dm_message_signatures[thread_message_id] = (
             self.build_relay_signature(message, command_name=command_name)
         )
+
+    async def delete_thread_command_message_for_participants(
+            self,
+            message: discord.Message,
+    ) -> discord.Message | None:
+        async with self._message_lock(message.id):
+            dm_message_ids = self._thread_to_dm_message_ids.get(message.id)
+            if not dm_message_ids:
+                record = self.store.active_for_thread(message.channel.id)
+                if record is None:
+                    return None
+                dm_message_ids = {
+                    participant_id: dm_message_id
+                    for participant_id, dm_message_id in record.participant_dm_relay_targets(
+                        message.id
+                    )
+                }
+                if not dm_message_ids:
+                    return None
+
+            latest_dm_message: discord.Message | None = None
+            failed_user_ids: list[int] = []
+            for participant_id, dm_message_id in tuple(dm_message_ids.items()):
+                try:
+                    ticket_user = await self._resolve_ticket_user(participant_id)
+                    if ticket_user is None:
+                        failed_user_ids.append(participant_id)
+                        continue
+                    dm_channel = await ticket_user.create_dm()
+                    dm_message = await dm_channel.fetch_message(dm_message_id)
+                    await dm_message.delete()
+                    latest_dm_message = dm_message
+                except discord.NotFound:
+                    dm_message_ids.pop(participant_id, None)
+                except discord.Forbidden:
+                    failed_user_ids.append(participant_id)
+                except discord.HTTPException:
+                    LOGGER.exception(
+                        "TICKET_BOT_COMMAND_RELAY_DELETE_FAILED thread=%s user_id=%s message=%s dm_message=%s",
+                        message.channel.id,
+                        participant_id,
+                        message.id,
+                        dm_message_id,
+                    )
+
+            if failed_user_ids:
+                await self._notify_failed_recipients(message, failed_user_ids)
+
+            return latest_dm_message
 
     def _message_lock(self, message_id: int) -> asyncio.Lock:
         lock = self._thread_to_dm_message_locks.get(message_id)

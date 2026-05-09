@@ -45,11 +45,26 @@ def build_ticket_user_relay_message(
     )
 
 
+def build_ticket_deleted_user_relay_message(
+        *,
+        localizer: LocalizationService,
+        message: discord.Message,
+) -> str:
+    return truncate_relay_text(
+        localizer.translate(
+            I18N.messages.tickets.relay.from_user,
+            author=message.author.mention,
+            body=deleted_message_body(localizer=localizer, message=message),
+        )
+    )
+
+
 def build_ticket_command_relay_message(
         *,
         localizer: LocalizationService,
         message: discord.Message,
         command_name: str,
+        body_override: str | None = None,
 ) -> str:
     command_label = (
         command_name
@@ -60,10 +75,13 @@ def build_ticket_command_relay_message(
         localizer.translate(
             I18N.messages.tickets.relay.from_command_result,
             command_name=command_label,
-            body=message_body(
+            body=(
+                    body_override
+                    or message_body(
                 localizer=localizer,
                 message=message,
                 attachment_mode="names",
+            )
             ),
         )
     )
@@ -77,12 +95,12 @@ def build_ticket_dm_relay_embed(
         is_staff: bool,
         mention_line: str,
         avatar_url: str,
+        deleted: bool = False,
 ) -> discord.Embed:
-    body = message.content.strip()
     body_value = (
-        truncate_relay_text(body)
-        if body
-        else localizer.translate(I18N.messages.tickets.relay.empty_body)
+        deleted_message_body(localizer=localizer, message=message)
+        if deleted
+        else _message_content_body(localizer=localizer, message=message)
     )
     description = f"{mention_line}**:** {body_value}\n\n_ _"
     embed = discord.Embed(
@@ -102,6 +120,22 @@ def build_ticket_dm_relay_embed(
         text=localizer.translate(I18N.messages.tickets.open.embed.footer)
     )
     return embed
+
+
+def deleted_message_body(
+        *,
+        localizer: LocalizationService,
+        message: discord.Message,
+        attachment_mode: str = "urls",
+) -> str:
+    return localizer.translate(
+        I18N.messages.tickets.relay.deleted_body,
+        body=message_body(
+            localizer=localizer,
+            message=message,
+            attachment_mode=attachment_mode,
+        ),
+    )
 
 
 def message_body(
@@ -130,6 +164,19 @@ def message_body(
         content = f"{content}\n\n{attachments}" if content else attachments
 
     return content or localizer.translate(I18N.messages.tickets.relay.empty_body)
+
+
+def _message_content_body(
+        *,
+        localizer: LocalizationService,
+        message: discord.Message,
+) -> str:
+    body = message.content.strip()
+    return (
+        truncate_relay_text(body)
+        if body
+        else localizer.translate(I18N.messages.tickets.relay.empty_body)
+    )
 
 
 def relay_author_name(message: discord.Message) -> str:

@@ -855,6 +855,8 @@ class _MessagesTicketsRelay:
                                                  default_text="Adjuntos:\n{urls}")
     empty_body: TranslationKey = TranslationKey(key="messages.tickets.relay.empty_body",
                                                 default_text="(mensaje sin texto)")
+    deleted_body: TranslationKey = TranslationKey(key="messages.tickets.relay.deleted_body",
+                                                  default_text="**(Mensaje eliminado):** {body}")
     dm_staff_author: TranslationKey = TranslationKey(key="messages.tickets.relay.dm_staff_author",
                                                      default_text="Nuevo mensaje del Staff...")
     dm_user_author: TranslationKey = TranslationKey(key="messages.tickets.relay.dm_user_author",
