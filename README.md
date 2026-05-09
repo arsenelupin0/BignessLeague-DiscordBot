@@ -104,16 +104,19 @@ crea un canal de partido con permisos para ambos equipos.
 
 Opciones disponibles en `/cerrar_canal`:
 
+- `Horario fijado`: abre un modal para indicar fecha y hora, cambia el icono final del canal a `📆` y publica el
+  horario con timestamp largo de Discord.
+- `Partido en juego`: devuelve el icono final del canal a `⚽` y publica el aviso de que el horario sigue en disputa.
 - `Partido jugado`: deja el canal en modo solo lectura para el resto de roles y mantiene escritura para `Staff`,
   `Administrador` y `Ceo`. Tambien cambia el icono final del canal a `✅`.
 - `Jornada cerrada`: oculta el canal para los roles no protegidos, deja acceso solo a `Staff`, `Administrador` y `Ceo`
   y cambia el icono final del canal a `🔒`.
 - `Reabrir partido`: restaura la escritura para los roles que ya tenian acceso al canal y devuelve el icono final a `⚽`.
-- `Eliminacion de canal`: pide confirmacion con botones y elimina el canal por completo.
+- `Archivar canal`: pide confirmacion con botones y mueve el canal a la categoria de archivo configurada.
 
 Restricciones de `/cerrar_canal`:
 
-- solo funciona en canales cuyo nombre cumpla `j[1-9][0-9]?-partido-[1-9][0-9]?`
+- solo funciona en canales de partido legacy o con formato emoji, y acepta los estados finales `⚽`, `📆`, `✅` y `🔒`
 - solo pueden usarlo miembros con alguno de estos roles: `Staff`, `Administrador`, `Ceo`
 - las respuestas del comando son publicas
 

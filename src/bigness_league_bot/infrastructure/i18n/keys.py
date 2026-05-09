@@ -13,6 +13,10 @@ class _CommandsChannelManagementCloseChannelParameters:
     action: _CommandsChannelManagementCloseChannelParametersAction = _CommandsChannelManagementCloseChannelParametersAction()
 
 class _CommandsChannelManagementCloseChannelChoices:
+    match_scheduled: TranslationKey = TranslationKey(
+        key="commands.channel_management.close_channel.choices.match_scheduled", default_text="Horario fijado")
+    match_in_progress: TranslationKey = TranslationKey(
+        key="commands.channel_management.close_channel.choices.match_in_progress", default_text="Partido en juego")
     match_played: TranslationKey = TranslationKey(key="commands.channel_management.close_channel.choices.match_played",
                                                   default_text="Partido jugado")
     matchday_closed: TranslationKey = TranslationKey(
@@ -753,6 +757,23 @@ class _MessagesChannelManagement:
     bulk_delete_prompt: TranslationKey = TranslationKey(key="messages.channel_management.bulk_delete_prompt",
                                                         default_text="Vas a eliminar todos los canales de la categor\u00eda `{category_name}`.\nCanales detectados: {channel_count}.\nEsta acci\u00f3n es irreversible. Confirma solo si quieres borrar esos canales.")
 
+
+class _MessagesChannelScheduleModalFields:
+    date_label: TranslationKey = TranslationKey(key="messages.channel_schedule_modal.fields.date_label",
+                                                default_text="Fecha")
+    date_placeholder: TranslationKey = TranslationKey(key="messages.channel_schedule_modal.fields.date_placeholder",
+                                                      default_text="DD/MM/YYYY o YYYY-MM-DD")
+    time_label: TranslationKey = TranslationKey(key="messages.channel_schedule_modal.fields.time_label",
+                                                default_text="Hora")
+    time_placeholder: TranslationKey = TranslationKey(key="messages.channel_schedule_modal.fields.time_placeholder",
+                                                      default_text="HH:MM")
+
+
+class _MessagesChannelScheduleModal:
+    title: TranslationKey = TranslationKey(key="messages.channel_schedule_modal.title",
+                                           default_text="Horario del partido")
+    fields: _MessagesChannelScheduleModalFields = _MessagesChannelScheduleModalFields()
+
 class _MessagesTicketsPanel:
     content: TranslationKey = TranslationKey(key="messages.tickets.panel.content",
                                              default_text="# \ud83d\udd30 Soporte \ud83d\udd30\n_ _\n\u27a1\ufe0f Selecciona **una** de las siguientes **opciones** en el **men\u00fa desplegable** abajo de este mensaje. Si **no sabes** sobre qu\u00e9 **tema** quieres abrir el **ticket**, **lee** atentamente **aqu\u00ed abajo**.\n\n## 1\ufe0f\u20e3 Soporte general\n- En caso de que tu duda no est\u00e9 en ninguna de las otras categor\u00edas. Esta es tu categor\u00eda.\n## 2\ufe0f\u20e3 Competici\u00f3n Bigness League\n- Reglamento\n- C\u00f3digo de conducta\n- C\u00f3mo funciona la liga (divisiones, inscripci\u00f3n, m\u00e1x rango, etc)\n- Pricepool\n- \u00bfTengo que pagar para entrar?\n- \u00bfC\u00f3mo inscribo a mi equipo a la Bigness League?\n## 3\ufe0f\u20e3 Mercado de jugadores\n- Inscribir a un nuevo jugador\n- Quitar a un jugador de mi equipo\n- Modificaci\u00f3n de rol (ceo, manager, segundo manager, coach o analista)\n## 4\ufe0f\u20e3 \u00bfQuieres hacer stream de tu partido?\n- Quiero retrasmitir mi partido\n- Qu\u00e9 tengo que hacer para poder retrasmitir una jornada de la liga\n- \u00bfPuedo castear un partido?\n## 5\ufe0f\u20e3 Apelaciones, problemas con alg\u00fan equipo, jugador, etc\n- Sanciones sobre jugadores\n- Problemas con equipos externos\n- Problemas con X jugador ajeno a la liga\n- Apelaci\u00f3n sobre decisi\u00f3n de la liga inapropiada\n## 6\ufe0f\u20e3 Bot de la Bigness League\n- C\u00f3mo funciona el bot de la Bigness\n- Qu\u00e9 comandos puedo hacer\n- No funciona o hay alg\u00fan error\n- Quiero reportar un error\n## 7\ufe0f\u20e3 Social\n- Dudas del servidor de discord\n- Colaboraciones\n- Sugerencias")
@@ -1140,6 +1161,7 @@ class _Messages:
     team_staff_role_removal_announcement: _MessagesTeamStaffRoleRemovalAnnouncement = _MessagesTeamStaffRoleRemovalAnnouncement()
     team_staff_role_signing_announcement: _MessagesTeamStaffRoleSigningAnnouncement = _MessagesTeamStaffRoleSigningAnnouncement()
     channel_management: _MessagesChannelManagement = _MessagesChannelManagement()
+    channel_schedule_modal: _MessagesChannelScheduleModal = _MessagesChannelScheduleModal()
     tickets: _MessagesTickets = _MessagesTickets()
     channel_role_addition: _MessagesChannelRoleAddition = _MessagesChannelRoleAddition()
     channel_archive_confirmation: _MessagesChannelArchiveConfirmation = _MessagesChannelArchiveConfirmation()
@@ -1153,7 +1175,7 @@ class _ErrorsChannelManagement:
     text_only: TranslationKey = TranslationKey(key="errors.channel_management.text_only",
                                                default_text="Este comando solo se puede usar dentro de un canal de texto.")
     invalid_channel_name: TranslationKey = TranslationKey(key="errors.channel_management.invalid_channel_name",
-                                                          default_text="Este comando solo se puede usar en canales con nombre tipo `\u300e\ud835\udddd\u300f1\ufe0f\u20e3\u300e\ud835\udde3\u300f4\ufe0f\u20e3\u30fb\u26bd`, `\u300e\ud835\udddd\u300f1\ufe0f\u20e3\u300e\ud835\udde3\u300f4\ufe0f\u20e3\u30fb\u2705` o `\u300e\ud835\udddd\u300f1\ufe0f\u20e3\u300e\ud835\udde3\u300f4\ufe0f\u20e3\u30fb\ud83d\udd12`.")
+                                                          default_text="Este comando solo se puede usar en canales con nombre tipo `\u300e\ud835\udddd\u300f1\ufe0f\u20e3\u300e\ud835\udde3\u300f4\ufe0f\u20e3\u30fb\u26bd`, `\u300e\ud835\udddd\u300f1\ufe0f\u20e3\u300e\ud835\udde3\u300f4\ufe0f\u20e3\u30fb\ud83d\udcc6`, `\u300e\ud835\udddd\u300f1\ufe0f\u20e3\u300e\ud835\udde3\u300f4\ufe0f\u20e3\u30fb\u2705` o `\u300e\ud835\udddd\u300f1\ufe0f\u20e3\u300e\ud835\udde3\u300f4\ufe0f\u20e3\u30fb\ud83d\udd12`.")
     unauthorized_role: TranslationKey = TranslationKey(key="errors.channel_management.unauthorized_role",
                                                        default_text="Solo pueden usar este comando los roles: {protected_roles}.")
     protected_roles_missing: TranslationKey = TranslationKey(key="errors.channel_management.protected_roles_missing",
@@ -1192,6 +1214,12 @@ class _ErrorsChannelManagement:
     bulk_delete_category_empty: TranslationKey = TranslationKey(
         key="errors.channel_management.bulk_delete_category_empty",
         default_text="La categor\u00eda `{category_name}` no tiene canales que eliminar.")
+    match_channel_team_roles_unresolved: TranslationKey = TranslationKey(
+        key="errors.channel_management.match_channel_team_roles_unresolved",
+        default_text="No se han podido resolver exactamente dos roles de equipo en este canal. Roles de equipo detectados: {role_count}.")
+    match_channel_caster_roles_unresolved: TranslationKey = TranslationKey(
+        key="errors.channel_management.match_channel_caster_roles_unresolved",
+        default_text="No se ha podido resolver el rol de caster desde los roles extra configurados para canales de partido.")
 
 class _ErrorsTickets:
     ceo_only: TranslationKey = TranslationKey(key="errors.tickets.ceo_only",
@@ -1441,6 +1469,11 @@ class _ActionsChannelManagement:
         default_text="Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal y se han a\u00f1adido estos roles: {roles}.")
     add_roles_summary: TranslationKey = TranslationKey(key="actions.channel_management.add_roles_summary",
                                                        default_text="Se han anadido al canal estos roles: {roles}.")
+    match_scheduled_summary: TranslationKey = TranslationKey(key="actions.channel_management.match_scheduled_summary",
+                                                             default_text="# {green_arrow} Horario fijado\n_ _\n- Ambos equipos se han puesto de acuerdo y se ha cerrado un horario.\n  - \ufe0f **<t:{timestamp}:F>**\n  - \u231b **<t:{timestamp}:R>**\n- Si un equipo no puede al final, que avise con tiempo mencionando al equipo rival.\n- {team_mentions}\n- Informaci\u00f3n a {caster_mentions}")
+    match_in_progress_summary: TranslationKey = TranslationKey(
+        key="actions.channel_management.match_in_progress_summary",
+        default_text="# {green_arrow} Horario en disputa\n_ _\n- Se ha cancelado el horario fijado.\n- Si nadie se pone de acuerdo, el partido se dar\u00e1 como nulo.\n- Debido a que el horario est\u00e1 en disputa:\n  - No hay fecha fija de momento.\n  - Se cancela el casteo, {caster_mentions}")
 
 class _ActionsMatchChannelCreation:
     created_summary: TranslationKey = TranslationKey(key="actions.match_channel_creation.created_summary",

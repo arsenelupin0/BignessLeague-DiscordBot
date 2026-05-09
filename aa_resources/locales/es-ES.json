@@ -10,6 +10,8 @@
           }
         },
         "choices": {
+          "match_scheduled": "Horario fijado",
+          "match_in_progress": "Horario en disputa",
           "match_played": "Partido jugado",
           "matchday_closed": "Jornada cerrada",
           "reopen_match": "Reabrir partido",
@@ -419,6 +421,15 @@
       "matchday_close_prompt": "Vas a cerrar la jornada en `{channel_name}`.\nSe eliminaran los permisos de los roles no protegidos y solo conservaran acceso: {protected_roles}.\nConfirma solo si quieres aplicar este cierre.",
       "bulk_delete_prompt": "Vas a eliminar todos los canales de la categoría `{category_name}`.\nCanales detectados: {channel_count}.\nEsta acción es irreversible. Confirma solo si quieres borrar esos canales."
     },
+    "channel_schedule_modal": {
+      "title": "Horario del partido",
+      "fields": {
+        "date_label": "Fecha",
+        "date_placeholder": "DD/MM/YYYY o YYYY-MM-DD",
+        "time_label": "Hora",
+        "time_placeholder": "HH:MM"
+      }
+    },
     "tickets": {
       "panel": {
         "content": "# \uD83D\uDD30 Soporte \uD83D\uDD30\n_ _\n➡\uFE0F Selecciona **una** de las siguientes **opciones** en el **menú desplegable** abajo de este mensaje. Si **no sabes** sobre qué **tema** quieres abrir el **ticket**, **lee** atentamente **aquí abajo**.\n\n## 1\uFE0F⃣ Soporte general\n- En caso de que tu duda no esté en ninguna de las otras categorías. Esta es tu categoría.\n## 2\uFE0F⃣ Competición Bigness League\n- Reglamento\n- Código de conducta\n- Cómo funciona la liga (divisiones, inscripción, máx rango, etc)\n- Pricepool\n- ¿Tengo que pagar para entrar?\n- ¿Cómo inscribo a mi equipo a la Bigness League?\n## 3\uFE0F⃣ Mercado de jugadores\n- Inscribir a un nuevo jugador\n- Quitar a un jugador de mi equipo\n- Modificación de rol (ceo, manager, segundo manager, coach o analista)\n## 4\uFE0F⃣ ¿Quieres hacer stream de tu partido?\n- Quiero retrasmitir mi partido\n- Qué tengo que hacer para poder retrasmitir una jornada de la liga\n- ¿Puedo castear un partido?\n## 5\uFE0F⃣ Apelaciones, problemas con algún equipo, jugador, etc\n- Sanciones sobre jugadores\n- Problemas con equipos externos\n- Problemas con X jugador ajeno a la liga\n- Apelación sobre decisión de la liga inapropiada\n## 6\uFE0F⃣ Bot de la Bigness League\n- Cómo funciona el bot de la Bigness\n- Qué comandos puedo hacer\n- No funciona o hay algún error\n- Quiero reportar un error\n## 7\uFE0F⃣ Social\n- Dudas del servidor de discord\n- Colaboraciones\n- Sugerencias",
@@ -629,7 +640,7 @@
     "channel_management": {
       "server_only": "Este comando solo se puede usar dentro de un servidor.",
       "text_only": "Este comando solo se puede usar dentro de un canal de texto.",
-      "invalid_channel_name": "Este comando solo se puede usar en canales con nombre tipo `『𝗝』1️⃣『𝗣』4️⃣・⚽`, `『𝗝』1️⃣『𝗣』4️⃣・✅` o `『𝗝』1️⃣『𝗣』4️⃣・🔒`.",
+      "invalid_channel_name": "Este comando solo se puede usar en canales con nombre tipo `『𝗝』1️⃣『𝗣』4️⃣・⚽`, `『𝗝』1️⃣『𝗣』4️⃣・📆`, `『𝗝』1️⃣『𝗣』4️⃣・✅` o `『𝗝』1️⃣『𝗣』4️⃣・🔒`.",
       "unauthorized_role": "Solo pueden usar este comando los roles: {protected_roles}.",
       "protected_roles_missing": "Faltan roles protegidos en el servidor: {missing_roles}.",
       "invalid_role_not_in_guild": "El rol `{role_name}` no pertenece a este servidor.",
@@ -644,7 +655,9 @@
       "archive_separator_not_in_category": "El canal separador `{channel_id}` no pertenece a la categoría de archivo configurada: `{category_id}`.",
       "bulk_delete_category_not_found": "No existe ninguna categoría con nombre o ID `{category_name}`.",
       "bulk_delete_category_ambiguous": "Hay varias categorías llamadas `{category_name}`. Usa una opción del autocompletado para seleccionar la categoría exacta.",
-      "bulk_delete_category_empty": "La categoría `{category_name}` no tiene canales que eliminar."
+      "bulk_delete_category_empty": "La categoría `{category_name}` no tiene canales que eliminar.",
+      "match_channel_team_roles_unresolved": "No se han podido resolver exactamente dos roles de equipo en este canal. Roles de equipo detectados: {role_count}.",
+      "match_channel_caster_roles_unresolved": "No se ha podido resolver el rol de caster desde los roles extra configurados para canales de partido."
     },
     "tickets": {
       "ceo_only": "Solo puede publicar el panel de tickets un miembro con el rol `CEO`.",
@@ -759,7 +772,9 @@
       "bulk_delete_summary": "Borrado masivo completado. Se han eliminado {deleted_count} canales de la categoría `{category_name}`.",
       "reopen_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal.",
       "reopen_with_roles_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal y se han añadido estos roles: {roles}.",
-      "add_roles_summary": "Se han anadido al canal estos roles: {roles}."
+      "add_roles_summary": "Se han anadido al canal estos roles: {roles}.",
+      "match_scheduled_summary": "# {green_arrow} Horario fijado\n_ _\n- Ambos equipos se han puesto de acuerdo y se ha cerrado un horario.\n  - ️📆 **<t:{timestamp}:F>**\n  - ⌛ **<t:{timestamp}:R>**\n- Si un equipo no puede al final, que avise con tiempo mencionando al equipo rival.\n- {team_mentions}\n- Información extra para {caster_mentions}",
+      "match_in_progress_summary": "# {green_arrow} Horario en disputa\n_ _\n- Se ha cancelado el horario fijado.\n- Si nadie se pone de acuerdo, el partido se dará como nulo.\n- Debido a que el horario está en disputa:\n  - No hay fecha fija de momento.\n  - Se cancela el casteo, {caster_mentions}"
     },
     "match_channel_creation": {
       "created_summary": "Se ha creado {channel} en `{category}` para la jornada {jornada}, partido {partido}, entre {team_one} y {team_two}, y se ha enviado el mensaje inicial del canal."

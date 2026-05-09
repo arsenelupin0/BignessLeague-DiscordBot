@@ -19,10 +19,12 @@ from bigness_league_bot.core.localization import LocalizedText
 PROTECTED_ROLE_NAMES: tuple[str, ...] = ("Staff", "Administrador", "Ceo")
 MATCH_CHANNEL_STATUS_SEPARATOR = "\u30fb"
 MATCH_CHANNEL_STATUS_OPEN = "\u26bd"
+MATCH_CHANNEL_STATUS_SCHEDULED = "\U0001f4c6"
 MATCH_CHANNEL_STATUS_PLAYED = "\u2705"
 MATCH_CHANNEL_STATUS_CLOSED = "\U0001f512"
 MATCH_CHANNEL_STATUS_ICONS: tuple[str, ...] = (
     MATCH_CHANNEL_STATUS_OPEN,
+    MATCH_CHANNEL_STATUS_SCHEDULED,
     MATCH_CHANNEL_STATUS_PLAYED,
     MATCH_CHANNEL_STATUS_CLOSED,
 )
@@ -42,11 +44,23 @@ KEYCAP_DIGITS: dict[str, str] = {
     digit: f"{digit}{KEYCAP_SUFFIX}"
     for digit in "0123456789"
 }
+MATCH_CHANNEL_STATUS_PATTERN = f"[{''.join(re.escape(icon) for icon in MATCH_CHANNEL_STATUS_ICONS)}]"
+MATCH_CHANNEL_LEGACY_STATUS_PATTERN = re.compile(
+    rf"^j[1-9][0-9]?-partido-[1-9][0-9]?"
+    rf"(?:{re.escape(MATCH_CHANNEL_STATUS_SEPARATOR)}{MATCH_CHANNEL_STATUS_PATTERN})?$"
+)
+MATCH_CHANNEL_EMOJI_STATUS_PATTERN = re.compile(
+    rf"^{re.escape(MATCH_CHANNEL_J_PREFIX)}(?:[0-9]{KEYCAP_SUFFIX}){{1,2}}"
+    rf"{re.escape(MATCH_CHANNEL_P_PREFIX)}(?:[0-9]{KEYCAP_SUFFIX}){{1,2}}"
+    rf"{re.escape(MATCH_CHANNEL_STATUS_SEPARATOR)}{MATCH_CHANNEL_STATUS_PATTERN}$"
+)
 
 
 def is_match_channel_name(channel_name: str) -> bool:
     return (
-            MATCH_CHANNEL_LEGACY_NAME_PATTERN.fullmatch(channel_name) is not None
+            MATCH_CHANNEL_LEGACY_STATUS_PATTERN.fullmatch(channel_name) is not None
+            or MATCH_CHANNEL_EMOJI_STATUS_PATTERN.fullmatch(channel_name) is not None
+            or MATCH_CHANNEL_LEGACY_NAME_PATTERN.fullmatch(channel_name) is not None
             or MATCH_CHANNEL_EMOJI_NAME_PATTERN.fullmatch(channel_name) is not None
     )
 
@@ -88,6 +102,8 @@ def protected_role_names_label() -> str:
 
 
 class ChannelCloseMode(StrEnum):
+    MATCH_SCHEDULED = "horario_fijado"
+    MATCH_IN_PROGRESS = "partido_en_juego"
     MATCH_PLAYED = "partido_jugado"
     MATCHDAY_CLOSED = "jornada_cerrada"
     REOPEN_MATCH = "reabrir_partido"

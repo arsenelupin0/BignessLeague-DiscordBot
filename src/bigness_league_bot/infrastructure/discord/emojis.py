@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import discord
-from discord.ext import commands
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,12 +31,16 @@ TEAM_ROLE_REMOVAL_WARNING_EMOJI = DiscordEmojiRef(
     name="warning",
     id=1_495_252_797_862_707_250,
 )
+MATCH_SCHEDULE_GREEN_ARROW_EMOJI = DiscordEmojiRef(
+    name="GreenArrow",
+    id=1_502_500_890_697_793_646,
+)
 
 
 def render_custom_emoji(
         *,
         guild: discord.Guild,
-        bot: commands.Bot,
+        bot: discord.Client,
         emoji: DiscordEmojiRef,
 ) -> str:
     resolved_emoji = guild.get_emoji(emoji.id) or bot.get_emoji(emoji.id)

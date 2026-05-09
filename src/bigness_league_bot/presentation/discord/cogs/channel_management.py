@@ -38,6 +38,9 @@ from bigness_league_bot.infrastructure.discord.channel_management import (
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
 )
+from bigness_league_bot.infrastructure.discord.match_channel_schedule import (
+    apply_match_in_progress,
+)
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
 from bigness_league_bot.presentation.discord.views.category_bulk_delete_confirmation import (
@@ -48,6 +51,9 @@ from bigness_league_bot.presentation.discord.views.channel_archive_confirmation 
 )
 from bigness_league_bot.presentation.discord.views.channel_matchday_close_confirmation import (
     ChannelMatchdayCloseConfirmationView,
+)
+from bigness_league_bot.presentation.discord.views.channel_schedule_modal import (
+    ChannelScheduleModal,
 )
 
 if TYPE_CHECKING:
@@ -62,6 +68,18 @@ def _string_choice(
 
 
 CHANNEL_CLOSE_CHOICES: list[app_commands.Choice[str]] = [
+    _string_choice(
+        name=localized_locale_str(
+            I18N.commands.channel_management.close_channel.choices.match_scheduled
+        ),
+        value=ChannelCloseMode.MATCH_SCHEDULED.value,
+    ),
+    _string_choice(
+        name=localized_locale_str(
+            I18N.commands.channel_management.close_channel.choices.match_in_progress
+        ),
+        value=ChannelCloseMode.MATCH_IN_PROGRESS.value,
+    ),
     _string_choice(
         name=localized_locale_str(
             I18N.commands.channel_management.close_channel.choices.match_played
@@ -154,17 +172,28 @@ class ChannelManagement(commands.Cog):
             await self._prompt_matchday_close(interaction, channel)
             return
 
+        if selected_action is ChannelCloseMode.MATCH_SCHEDULED:
+            await self._prompt_match_schedule(interaction, channel)
+            return
+
         await interaction.response.defer(thinking=True)
         action_result = await self._execute_channel_action(
             channel=channel,
             actor=interaction.user,
             action=selected_action,
+            bot=interaction.client,
         )
         await interaction.followup.send(
             interaction.client.localizer.render(
                 action_result.summary,
                 locale=interaction.locale,
-            )
+            ),
+            allowed_mentions=discord.AllowedMentions(
+                everyone=False,
+                users=False,
+                roles=True,
+                replied_user=False,
+            ),
         )
 
     @app_commands.command(
@@ -278,14 +307,42 @@ class ChannelManagement(commands.Cog):
         view.message = await interaction.original_response()
 
     @staticmethod
+    async def _prompt_match_schedule(
+            interaction: discord.Interaction[BignessLeagueBot],
+            channel: discord.TextChannel,
+    ) -> None:
+        if not isinstance(interaction.user, discord.Member):
+            raise UnsupportedChannelError(
+                localize(I18N.errors.channel_management.server_only)
+            )
+
+        await interaction.response.send_modal(
+            ChannelScheduleModal(
+                channel=channel,
+                actor=interaction.user,
+                localizer=interaction.client.localizer,
+                locale=interaction.locale,
+            )
+        )
+
+    @staticmethod
     async def _execute_channel_action(
             *,
             channel: discord.TextChannel,
             actor: discord.Member,
             action: ChannelCloseMode,
+            bot: BignessLeagueBot,
     ) -> ChannelActionResult:
         if action is ChannelCloseMode.MATCH_PLAYED:
             return await apply_match_played_lockdown(channel, actor)
+
+        if action is ChannelCloseMode.MATCH_IN_PROGRESS:
+            return await apply_match_in_progress(
+                channel,
+                actor,
+                settings=bot.settings,
+                bot=bot,
+            )
 
         if action is ChannelCloseMode.MATCHDAY_CLOSED:
             return await apply_matchday_closed(channel, actor)
