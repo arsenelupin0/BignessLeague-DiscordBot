@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import discord
@@ -100,7 +101,7 @@ def build_ticket_dm_relay_embed(
     body_value = (
         deleted_message_body(localizer=localizer, message=message)
         if deleted
-        else _message_content_body(localizer=localizer, message=message)
+        else message_content_body(localizer=localizer, message=message)
     )
     description = f"{mention_line}**:** {body_value}\n\n_ _"
     embed = discord.Embed(
@@ -144,34 +145,27 @@ def message_body(
         message: discord.Message,
         attachment_mode: str = "urls",
 ) -> str:
-    content = message.content.strip()
-    attachment_lines: list[str] = []
-    if attachment_mode == "urls":
-        attachment_lines = [
-            f"- {attachment.url}"
-            for attachment in message.attachments
-        ]
-    elif attachment_mode == "names":
-        attachment_lines = [
-            f"- {attachment.filename}"
-            for attachment in message.attachments
-        ]
-    if attachment_lines:
-        attachments = localizer.translate(
-            I18N.messages.tickets.relay.attachments,
-            urls="\n".join(attachment_lines),
-        )
-        content = f"{content}\n\n{attachments}" if content else attachments
+    content = _visible_message_body(
+        localizer=localizer,
+        message=message,
+        attachment_mode=attachment_mode,
+        include_direct_attachments=True,
+    )
 
     return content or localizer.translate(I18N.messages.tickets.relay.empty_body)
 
 
-def _message_content_body(
+def message_content_body(
         *,
         localizer: LocalizationService,
         message: discord.Message,
 ) -> str:
-    body = message.content.strip()
+    body = _visible_message_body(
+        localizer=localizer,
+        message=message,
+        attachment_mode="urls",
+        include_direct_attachments=False,
+    )
     return (
         truncate_relay_text(body)
         if body
@@ -327,4 +321,272 @@ def message_has_visible_payload(message: discord.Message) -> bool:
         or message.embeds
         or message.attachments
         or message.components
+        or _stickers_from(message)
+        or _message_snapshots(message)
     )
+
+
+def _visible_message_body(
+        *,
+        localizer: LocalizationService,
+        message: discord.Message,
+        attachment_mode: str,
+        include_direct_attachments: bool,
+) -> str:
+    parts: list[str] = []
+    content = message.content.strip()
+    if content:
+        parts.append(content)
+
+    for snapshot in _message_snapshots(message):
+        snapshot_body = _snapshot_body(
+            localizer=localizer,
+            snapshot=snapshot,
+            attachment_mode=attachment_mode,
+        )
+        if not snapshot_body:
+            continue
+        parts.append(
+            localizer.translate(
+                I18N.messages.tickets.relay.forwarded_body,
+                body=snapshot_body,
+            )
+        )
+
+    if include_direct_attachments:
+        attachments = _attachments_body(
+            localizer=localizer,
+            attachments=message.attachments,
+            attachment_mode=attachment_mode,
+        )
+        if attachments:
+            parts.append(attachments)
+
+    stickers = _stickers_body(
+        localizer=localizer,
+        stickers=_stickers_from(message),
+        attachment_mode=attachment_mode,
+    )
+    if stickers:
+        parts.append(stickers)
+
+    return "\n\n".join(parts).strip()
+
+
+def _snapshot_body(
+        *,
+        localizer: LocalizationService,
+        snapshot: object,
+        attachment_mode: str,
+) -> str:
+    parts: list[str] = []
+    content = getattr(snapshot, "content", None)
+    if isinstance(content, str) and content.strip():
+        parts.append(content.strip())
+
+    embed_body = _snapshot_embed_body(snapshot)
+    if embed_body:
+        parts.append(embed_body)
+
+    attachments = _object_sequence(getattr(snapshot, "attachments", None))
+    if attachments:
+        attachments_body = _attachments_body(
+            localizer=localizer,
+            attachments=attachments,
+            attachment_mode=attachment_mode,
+        )
+        if attachments_body:
+            parts.append(attachments_body)
+
+    stickers_body = _stickers_body(
+        localizer=localizer,
+        stickers=_stickers_from(snapshot),
+        attachment_mode=attachment_mode,
+    )
+    if stickers_body:
+        parts.append(stickers_body)
+
+    return "\n\n".join(parts).strip()
+
+
+def _snapshot_embed_body(snapshot: object) -> str | None:
+    embeds = getattr(snapshot, "embeds", None)
+    if not isinstance(embeds, list):
+        return None
+
+    lines: list[str] = []
+    for embed in embeds:
+        title = getattr(embed, "title", None)
+        if isinstance(title, str) and title.strip():
+            lines.append(title.strip())
+        description = getattr(embed, "description", None)
+        if isinstance(description, str) and description.strip():
+            lines.append(description.strip())
+
+    return "\n".join(lines).strip() or None
+
+
+def _attachments_body(
+        *,
+        localizer: LocalizationService,
+        attachments: Sequence[object],
+        attachment_mode: str,
+) -> str | None:
+    attachment_lines = _attachment_lines(
+        attachments=attachments,
+        attachment_mode=attachment_mode,
+    )
+    if not attachment_lines:
+        return None
+
+    return localizer.translate(
+        I18N.messages.tickets.relay.attachments,
+        urls="\n".join(attachment_lines),
+    )
+
+
+def _stickers_body(
+        *,
+        localizer: LocalizationService,
+        stickers: tuple[object, ...],
+        attachment_mode: str,
+) -> str | None:
+    sticker_lines = _sticker_lines(stickers=stickers, attachment_mode=attachment_mode)
+    if not sticker_lines:
+        return None
+
+    return localizer.translate(
+        I18N.messages.tickets.relay.stickers,
+        stickers="\n".join(sticker_lines),
+    )
+
+
+def _sticker_lines(
+        *,
+        stickers: tuple[object, ...],
+        attachment_mode: str,
+) -> list[str]:
+    lines: list[str] = []
+    for sticker in stickers:
+        name = _sticker_name(sticker)
+        if attachment_mode == "names":
+            lines.append(f"- {name}")
+            continue
+        preview_url = _sticker_preview_url(sticker)
+        source_url = _sticker_source_url(sticker)
+        if preview_url is not None and preview_url != source_url:
+            lines.append(str(preview_url))
+        lines.append(f"- {name}: {source_url}" if source_url else f"- {name}")
+    return lines
+
+
+def _sticker_name(sticker: object) -> str:
+    name = getattr(sticker, "name", None)
+    if isinstance(name, str) and name.strip():
+        return name.strip()
+
+    sticker_id = getattr(sticker, "id", None)
+    if isinstance(sticker_id, int):
+        return f"sticker-{sticker_id}"
+
+    return "sticker"
+
+
+def _sticker_source_url(sticker: object) -> str | None:
+    url = getattr(sticker, "url", None)
+    if isinstance(url, str) and url.strip():
+        return url.strip()
+    if url is not None:
+        resolved_url = str(url).strip()
+        if resolved_url:
+            return resolved_url
+
+    sticker_id = _sticker_id(sticker)
+    if sticker_id is not None:
+        return _sticker_preview_url_from_id(sticker_id)
+
+    return None
+
+
+def _sticker_preview_url(sticker: object) -> str | None:
+    source_url = _sticker_source_url(sticker)
+    if source_url is not None:
+        return source_url if _is_renderable_sticker_url(source_url) else None
+
+    sticker_id = _sticker_id(sticker)
+    if sticker_id is None:
+        return None
+    return _sticker_preview_url_from_id(sticker_id)
+
+
+def _sticker_preview_url_from_id(sticker_id: int) -> str:
+    return f"https://media.discordapp.net/stickers/{sticker_id}.png"
+
+
+def _sticker_id(sticker: object) -> int | None:
+    sticker_id = getattr(sticker, "id", None)
+    if isinstance(sticker_id, int):
+        return sticker_id
+    if isinstance(sticker_id, str) and sticker_id.isdigit():
+        return int(sticker_id)
+    return None
+
+
+def _is_renderable_sticker_url(url: str) -> bool:
+    normalized_url = url.casefold().split("?", maxsplit=1)[0]
+    return normalized_url.endswith((".png", ".jpg", ".jpeg", ".webp", ".gif"))
+
+
+def _stickers_from(source: object) -> tuple[object, ...]:
+    return (
+            _object_sequence(getattr(source, "stickers", None))
+            or _object_sequence(getattr(source, "sticker_items", None))
+    )
+
+
+def _attachment_lines(
+        *,
+        attachments: Sequence[object],
+        attachment_mode: str,
+) -> list[str]:
+    if attachment_mode == "urls":
+        return [
+            f"- {_attachment_url(attachment)}"
+            for attachment in attachments
+            if _attachment_url(attachment)
+        ]
+    if attachment_mode == "names":
+        return [
+            f"- {_attachment_filename(attachment)}"
+            for attachment in attachments
+            if _attachment_filename(attachment)
+        ]
+    return []
+
+
+def _attachment_url(attachment: object) -> str | None:
+    url = getattr(attachment, "url", None)
+    if isinstance(url, str) and url.strip():
+        return url.strip()
+    if url is not None:
+        resolved_url = str(url).strip()
+        if resolved_url:
+            return resolved_url
+    return None
+
+
+def _attachment_filename(attachment: object) -> str | None:
+    filename = getattr(attachment, "filename", None)
+    if isinstance(filename, str) and filename.strip():
+        return filename.strip()
+    return None
+
+
+def _message_snapshots(message: discord.Message) -> tuple[object, ...]:
+    return _object_sequence(getattr(message, "message_snapshots", None))
+
+
+def _object_sequence(value: object) -> tuple[object, ...]:
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return tuple(value)
+    return ()

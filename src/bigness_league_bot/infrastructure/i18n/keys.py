@@ -853,8 +853,12 @@ class _MessagesTicketsRelay:
                                                          default_text="**Resultado del comando {command_name}:**\n{body}")
     attachments: TranslationKey = TranslationKey(key="messages.tickets.relay.attachments",
                                                  default_text="Adjuntos:\n{urls}")
+    stickers: TranslationKey = TranslationKey(key="messages.tickets.relay.stickers",
+                                              default_text="Stickers:\n{stickers}")
     empty_body: TranslationKey = TranslationKey(key="messages.tickets.relay.empty_body",
                                                 default_text="(mensaje sin texto)")
+    forwarded_body: TranslationKey = TranslationKey(key="messages.tickets.relay.forwarded_body",
+                                                    default_text="**Mensaje reenviado:**\n{body}")
     deleted_body: TranslationKey = TranslationKey(key="messages.tickets.relay.deleted_body",
                                                   default_text="**(Mensaje eliminado):** {body}")
     dm_staff_author: TranslationKey = TranslationKey(key="messages.tickets.relay.dm_staff_author",

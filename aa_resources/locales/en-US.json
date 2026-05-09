@@ -477,6 +477,8 @@
       },
       "relay": {
         "from_command_result": "**Command result {command_name}:**\n{body}",
+        "stickers": "Stickers:\n{stickers}",
+        "forwarded_body": "**Forwarded message:**\n{body}",
         "deleted_body": "**(Deleted message):** {body}"
       },
       "inactivity": {

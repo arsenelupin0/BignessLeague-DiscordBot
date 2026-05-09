@@ -25,6 +25,8 @@ from bigness_league_bot.infrastructure.discord.ticket_relay_messages import (
     looks_like_bot_command_relay_message,
     looks_like_staff_relay_message,
     looks_like_user_relay_message,
+    message_body,
+    message_has_visible_payload,
     relay_embed_description_for_ai,
     truncate_relay_text,
     yes_no,
@@ -90,21 +92,13 @@ def ticket_ai_message_body(
         localizer: LocalizationService,
         message: discord.Message,
 ) -> str | None:
-    content = message.content.strip()
-    if not content:
-        embed_description = relay_embed_description_for_ai(message)
-        if embed_description is not None:
-            content = embed_description
-    attachment_lines = [
-        f"- {attachment.url}"
-        for attachment in message.attachments
-    ]
-    if attachment_lines:
-        attachments = localizer.translate(
-            I18N.messages.tickets.relay.attachments,
-            urls="\n".join(attachment_lines),
-        )
-        content = f"{content}\n\n{attachments}" if content else attachments
+    if not message_has_visible_payload(message):
+        return None
+
+    embed_description = relay_embed_description_for_ai(message)
+    content = message_body(localizer=localizer, message=message)
+    if content == localizer.translate(I18N.messages.tickets.relay.empty_body):
+        return embed_description
 
     return content or None
 

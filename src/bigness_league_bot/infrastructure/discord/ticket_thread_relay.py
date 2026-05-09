@@ -23,6 +23,7 @@ from bigness_league_bot.infrastructure.discord.ticket_relay_messages import (
     build_ticket_deleted_user_relay_message,
     build_ticket_user_relay_message,
     clone_message_attachments_as_files,
+    message_content_body,
     thread_relay_display_name,
 )
 from bigness_league_bot.infrastructure.discord.tickets import TicketStateStore
@@ -106,7 +107,7 @@ class TicketThreadRelay:
             return
 
         files = await clone_message_attachments_as_files(message)
-        content = message.content.strip()
+        content = message_content_body(localizer=self.bot.localizer, message=message)
         try:
             webhook_message = await webhook.send(
                 content=(content if content else discord.utils.MISSING),
@@ -161,7 +162,7 @@ class TicketThreadRelay:
         except (discord.NotFound, discord.Forbidden, discord.HTTPException):
             return
 
-        content = message.content.strip()
+        content = message_content_body(localizer=self.bot.localizer, message=message)
         if thread_message.webhook_id is not None:
             webhook = await self._get_thread_relay_webhook(thread, allow_existing_lookup=True)
             if webhook is None:
