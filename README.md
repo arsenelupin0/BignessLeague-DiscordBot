@@ -28,29 +28,31 @@ pip install -e .
    Puedes usar `local`, un offset como `+02:00`, o una zona IANA valida si tu entorno dispone de datos de zona horaria.
 9. Si quieres cambiar los botones del mensaje inicial de los partidos, ajusta `BOT_MATCH_CHANNEL_TICKET_URL` y
    `BOT_MATCH_CHANNEL_RULES_URL`.
-10. Si quieres usar la integracion nativa de tickets, configura `BOT_TICKET_FORUM_CHANNEL_ID` con el ID del foro donde
+10. `BOT_MATCH_SCHEDULE_STATE_FILE` permite cambiar donde se guarda el estado de los horarios fijados. Por defecto usa
+    `aa_var/match_schedules/scheduled_matches.json`.
+11. Si quieres usar la integracion nativa de tickets, configura `BOT_TICKET_FORUM_CHANNEL_ID` con el ID del foro donde
     el bot debe crear los posts internos de ticket. `BOT_TICKET_STATE_FILE` es opcional y define donde se guarda el
     estado persistente de tickets activos.
-11. Si quieres activar la IA local para tickets, ajusta `BOT_TICKET_AI_*`. El bot soporta dos backends:
+12. Si quieres activar la IA local para tickets, ajusta `BOT_TICKET_AI_*`. El bot soporta dos backends:
     `openai_compatible` para LM Studio y tambien para Ollama en modo OpenAI-compatible, y `ollama_native` para la API
     nativa de Ollama.
-12. Si quieres usar `/ver_mi_equipo`, configura `BOT_GOOGLE_SERVICE_ACCOUNT_FILE`
+13. Si quieres usar `/ver_mi_equipo`, configura `BOT_GOOGLE_SERVICE_ACCOUNT_FILE`
     y `BOT_GOOGLE_SHEETS_SPREADSHEET_ID`. `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME` es opcional.
-13. Si quieres usar `/subir_replays`, configura `BOT_BALLCHASING_API_TOKEN`. Opcionalmente ajusta
+14. Si quieres usar `/subir_replays`, configura `BOT_BALLCHASING_API_TOKEN`. Opcionalmente ajusta
     `BOT_GOOGLE_SHEETS_MATCH_REPLAYS_SHEET_NAME`, `BOT_GOOGLE_SHEETS_MATCH_STANDINGS_SHEET_NAME`,
     `BOT_BALLCHASING_UPLOAD_VISIBILITY`, `BOT_BALLCHASING_GROUP_ID`, `BOT_BALLCHASING_AUTO_GROUPS_ENABLED`,
     `BOT_BALLCHASING_REQUEST_TIMEOUT_SECONDS`,
     `BOT_BALLCHASING_POLL_INTERVAL_SECONDS` y `BOT_BALLCHASING_MAX_POLL_ATTEMPTS`.
-14. Si quieres sincronizar roles automaticamente desde `/hacer_fichaje` o `/asignar_rol_equipo_automatico`,
+15. Si quieres sincronizar roles automaticamente desde `/hacer_fichaje` o `/asignar_rol_equipo_automatico`,
     ajusta `BOT_PARTICIPANT_ROLE_ID` y `BOT_PLAYER_ROLE_ID` con los roles base que deben recibir todos los jugadores.
-15. Si quieres autoasignar esos roles de jugador al entrar al servidor cuando el miembro coincida con Google Sheets,
+16. Si quieres autoasignar esos roles de jugador al entrar al servidor cuando el miembro coincida con Google Sheets,
     deja `BOT_AUTO_ASSIGN_PLAYER_ROLES_ON_JOIN=true`.
-16. Si quieres publicar automaticamente el aviso de salida de un club cuando un miembro pierda un rol de equipo,
+17. Si quieres publicar automaticamente el aviso de salida de un club cuando un miembro pierda un rol de equipo,
     ajusta `BOT_TEAM_ROLE_REMOVAL_ANNOUNCEMENT_CHANNEL_ID`.
-17. Si quieres que las bajas retiren tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
+18. Si quieres que las bajas retiren tambien roles de staff tecnico, ajusta `BOT_STAFF_CEO_ROLE_ID`,
     `BOT_STAFF_ANALYST_ROLE_ID`, `BOT_STAFF_COACH_ROLE_ID`, `BOT_STAFF_MANAGER_ROLE_ID`,
     `BOT_STAFF_SECOND_MANAGER_ROLE_ID` y `BOT_STAFF_CAPTAIN_ROLE_ID`.
-18. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
+19. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
     Lo recomendado es colocar la fuente dentro de `aa_resources/fonts/`.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
@@ -86,6 +88,7 @@ python -m bigness_league_bot.main
 
 - `/cerrar_canal accion:<opcion>`: aplica acciones de cierre sobre el canal actual.
 - `/anadir_al_canal`: abre un selector filtrado para anadir roles al canal actual.
+- `/horarios_fijados`: muestra un resumen de los canales de partido que tienen horario fijado.
 -
 `/canal_de_jornada jornada:<numero> partido:<numero> minutos_cortesia:<numero> fecha:<texto> hora:<texto> bo_x:<numero> categoria:<division> equipo_1:<rol> equipo_2:<rol>`:
 crea un canal de partido con permisos para ambos equipos.
@@ -119,6 +122,16 @@ Restricciones de `/cerrar_canal`:
 - solo funciona en canales de partido legacy o con formato emoji, y acepta los estados finales `⚽`, `📆`, `✅` y `🔒`
 - solo pueden usarlo miembros con alguno de estos roles: `Staff`, `Administrador`, `Ceo`
 - las respuestas del comando son publicas
+
+`/horarios_fijados`:
+
+- solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
+- lista los canales de partido cuyo estado actual es `📆`
+- agrupa primero por las categorias configuradas en `BOT_GOLD_DIVISION_CATEGORY_ID` y
+  `BOT_SILVER_DIVISION_CATEGORY_ID`, y despues ordena cada division por horario
+- guarda los horarios nuevos en `BOT_MATCH_SCHEDULE_STATE_FILE`
+- si encuentra canales antiguos en `📆` que todavia tengan el mensaje de horario fijado del bot, recupera el timestamp
+  desde ese mensaje y lo anade al estado automaticamente
 
 `/anadir_al_canal`:
 

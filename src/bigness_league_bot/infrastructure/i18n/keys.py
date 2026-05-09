@@ -226,6 +226,17 @@ class _CommandsMatchChannelCreation:
     create_match_channel: _CommandsMatchChannelCreationCreateMatchChannel = _CommandsMatchChannelCreationCreateMatchChannel()
 
 
+class _CommandsMatchSchedulesFixed:
+    name: TranslationKey = TranslationKey(key="commands.match_schedules.fixed.name",
+                                          default_text="horarios_fijados")
+    description: TranslationKey = TranslationKey(key="commands.match_schedules.fixed.description",
+                                                 default_text="Muestra un resumen de los partidos con horario fijado.")
+
+
+class _CommandsMatchSchedules:
+    fixed: _CommandsMatchSchedulesFixed = _CommandsMatchSchedulesFixed()
+
+
 class _CommandsMatchReplaysUploadReplaysParametersLocal:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays.parameters.local.description", default_text="Rol del equipo local.")
@@ -501,6 +512,7 @@ class _Commands:
     channel_access: _CommandsChannelAccess = _CommandsChannelAccess()
     tickets: _CommandsTickets = _CommandsTickets()
     match_channel_creation: _CommandsMatchChannelCreation = _CommandsMatchChannelCreation()
+    match_schedules: _CommandsMatchSchedules = _CommandsMatchSchedules()
     match_replays: _CommandsMatchReplays = _CommandsMatchReplays()
     mmr_media: _CommandsMmrMedia = _CommandsMmrMedia()
     team_profile: _CommandsTeamProfile = _CommandsTeamProfile()
@@ -1148,6 +1160,26 @@ class _MessagesMatchChannelCreationWelcome:
 class _MessagesMatchChannelCreation:
     welcome: _MessagesMatchChannelCreationWelcome = _MessagesMatchChannelCreationWelcome()
 
+
+class _MessagesMatchSchedules:
+    fixed_header: TranslationKey = TranslationKey(key="messages.match_schedules.fixed_header",
+                                                  default_text="# {green_arrow} Horarios fijados\n_ _")
+    fixed_division_header: TranslationKey = TranslationKey(
+        key="messages.match_schedules.fixed_division_header",
+        default_text="## {division_emoji} {division_name} {division_emoji}")
+    fixed_day_header: TranslationKey = TranslationKey(key="messages.match_schedules.fixed_day_header",
+                                                      default_text="### {weekday}")
+    fixed_entry: TranslationKey = TranslationKey(
+        key="messages.match_schedules.fixed_entry",
+        default_text="- {channel}\n  - {team_one_mention} 🆚 {team_two_mention}\n  - ️📆 **<t:{timestamp}:F>**\n  - ⌛ **<t:{timestamp}:R>**")
+    fixed_division_empty: TranslationKey = TranslationKey(
+        key="messages.match_schedules.fixed_division_empty",
+        default_text="### No hay ningún horario fijado en esta división aún.")
+    fixed_migrated: TranslationKey = TranslationKey(
+        key="messages.match_schedules.fixed_migrated",
+        default_text="-# Se han recuperado {migrated_count} horarios fijados desde los mensajes existentes.")
+
+
 class _Messages:
     admin: _MessagesAdmin = _MessagesAdmin()
     team_profile: _MessagesTeamProfile = _MessagesTeamProfile()
@@ -1168,6 +1200,7 @@ class _Messages:
     channel_matchday_close_confirmation: _MessagesChannelMatchdayCloseConfirmation = _MessagesChannelMatchdayCloseConfirmation()
     category_bulk_delete_confirmation: _MessagesCategoryBulkDeleteConfirmation = _MessagesCategoryBulkDeleteConfirmation()
     match_channel_creation: _MessagesMatchChannelCreation = _MessagesMatchChannelCreation()
+    match_schedules: _MessagesMatchSchedules = _MessagesMatchSchedules()
 
 class _ErrorsChannelManagement:
     server_only: TranslationKey = TranslationKey(key="errors.channel_management.server_only",

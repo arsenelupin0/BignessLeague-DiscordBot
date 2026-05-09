@@ -73,6 +73,12 @@
         }
       }
     },
+    "match_schedules": {
+      "fixed": {
+        "name": "fixed_schedules",
+        "description": "Shows a summary of matches with a fixed schedule."
+      }
+    },
     "match_replays": {
       "upload_replays": {
         "name": "upload_replays",
@@ -248,6 +254,14 @@
     }
   },
   "messages": {
+    "match_schedules": {
+      "fixed_header": "# {green_arrow} Fixed schedules\n_ _",
+      "fixed_division_header": "## {division_emoji} {division_name} {division_emoji}",
+      "fixed_day_header": "### {weekday}",
+      "fixed_entry": "- {channel}\n  - {team_one_mention} 🆚 {team_two_mention}\n  - ️📆 **<t:{timestamp}:F>**\n  - ⌛ **<t:{timestamp}:R>**",
+      "fixed_division_empty": "### There are no fixed schedules in this division yet.",
+      "fixed_migrated": "-# Recovered {migrated_count} fixed schedules from existing messages."
+    },
     "admin": {
       "sync": {
         "invalid_scope": "Use `!sync guild` or `!sync global`.",

@@ -125,6 +125,12 @@
         }
       }
     },
+    "match_schedules": {
+      "fixed": {
+        "name": "horarios_fijados",
+        "description": "Muestra un resumen de los partidos con horario fijado."
+      }
+    },
     "match_replays": {
       "upload_replays": {
         "name": "subir_replays",
@@ -277,6 +283,14 @@
     }
   },
   "messages": {
+    "match_schedules": {
+      "fixed_header": "# {green_arrow} Horarios fijados",
+      "fixed_division_header": "## {division_emoji} {division_name} {division_emoji}",
+      "fixed_day_header": "### {weekday}",
+      "fixed_entry": "- {channel}\n  - {team_one_mention} 🆚 {team_two_mention}\n  - ️📆 **<t:{timestamp}:F>**\n  - ⌛ **<t:{timestamp}:R>**",
+      "fixed_division_empty": "### No hay ningún horario fijado en esta división aún.",
+      "fixed_migrated": "-# Se han recuperado {migrated_count} horarios fijados desde los mensajes existentes."
+    },
     "admin": {
       "sync": {
         "invalid_scope": "Usa `!sync guild` o `!sync global`.",

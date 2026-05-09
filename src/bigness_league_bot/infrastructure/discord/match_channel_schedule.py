@@ -11,6 +11,9 @@
 from __future__ import annotations
 
 import logging
+import re
+from dataclasses import dataclass
+from datetime import UTC, datetime
 
 import discord
 
@@ -24,7 +27,8 @@ from bigness_league_bot.application.services.channel_closure import (
 from bigness_league_bot.application.services.match_channel_creation import (
     build_match_start_at,
 )
-from bigness_league_bot.core.localization import localize
+from bigness_league_bot.application.services.match_schedules import MatchScheduleEntry
+from bigness_league_bot.core.localization import LocalizedText, localize
 from bigness_league_bot.core.settings import Settings
 from bigness_league_bot.infrastructure.discord.channel_access_management import (
     ChannelManagementError,
@@ -43,6 +47,14 @@ MATCH_SCHEDULED_NOTICE_MARKERS: tuple[str, ...] = (
     "Scheduled time",
 )
 MATCH_SCHEDULE_NOTICE_HISTORY_LIMIT = 100
+DISCORD_TIMESTAMP_PATTERN = re.compile(r"<t:(?P<timestamp>[0-9]{1,12}):[FfRrDdTt]>")
+
+
+@dataclass(frozen=True, slots=True)
+class MatchScheduleActionResult:
+    action: ChannelCloseMode
+    summary: LocalizedText
+    entry: MatchScheduleEntry
 
 
 async def apply_match_scheduled(
@@ -53,7 +65,7 @@ async def apply_match_scheduled(
         time_value: str,
         settings: Settings,
         bot: discord.Client,
-) -> ChannelActionResult:
+) -> MatchScheduleActionResult:
     try:
         start_at = build_match_start_at(
             date_value=date_value,
@@ -81,6 +93,8 @@ async def apply_match_scheduled(
     )
     team_mentions = _match_team_mentions(channel, settings)
     caster_mentions = _match_caster_mentions(channel, settings)
+    team_role_ids = _match_team_role_ids(channel, settings)
+    caster_role_ids = _match_caster_role_ids(channel, settings)
     channel_name = with_match_channel_status(
         channel.name,
         MATCH_CHANNEL_STATUS_SCHEDULED,
@@ -112,7 +126,7 @@ async def apply_match_scheduled(
             channel.id,
             deleted_notice_count,
         )
-    return ChannelActionResult(
+    action_result = ChannelActionResult(
         action=ChannelCloseMode.MATCH_SCHEDULED,
         summary=localize(
             I18N.actions.channel_management.match_scheduled_summary,
@@ -120,6 +134,19 @@ async def apply_match_scheduled(
             timestamp=str(int(start_at.timestamp())),
             team_mentions=team_mentions,
             caster_mentions=caster_mentions,
+        ),
+    )
+    return MatchScheduleActionResult(
+        action=action_result.action,
+        summary=action_result.summary,
+        entry=MatchScheduleEntry(
+            guild_id=channel.guild.id,
+            channel_id=channel.id,
+            timestamp=int(start_at.timestamp()),
+            team_role_ids=team_role_ids,
+            caster_role_ids=caster_role_ids,
+            schedule_message_id=None,
+            updated_at=_utc_now_iso(),
         ),
     )
 
@@ -231,6 +258,17 @@ def _channel_role_overwrite_targets(channel: discord.TextChannel) -> tuple[disco
 
 
 def _match_team_mentions(channel: discord.TextChannel, settings: Settings) -> str:
+    return " ".join(
+        role.mention
+        for role in _match_team_roles(channel, settings)
+    )
+
+
+def _match_team_role_ids(channel: discord.TextChannel, settings: Settings) -> tuple[int, ...]:
+    return tuple(role.id for role in _match_team_roles(channel, settings))
+
+
+def _match_team_roles(channel: discord.TextChannel, settings: Settings) -> tuple[discord.Role, ...]:
     role_catalog = get_channel_access_role_catalog(
         channel.guild,
         settings.channel_access_range_start_role_id,
@@ -256,10 +294,21 @@ def _match_team_mentions(channel: discord.TextChannel, settings: Settings) -> st
             )
         )
 
-    return " ".join(role.mention for role in team_roles)
+    return team_roles
 
 
 def _match_caster_mentions(channel: discord.TextChannel, settings: Settings) -> str:
+    return " ".join(
+        role.mention
+        for role in _match_caster_roles(channel, settings)
+    )
+
+
+def _match_caster_role_ids(channel: discord.TextChannel, settings: Settings) -> tuple[int, ...]:
+    return tuple(role.id for role in _match_caster_roles(channel, settings))
+
+
+def _match_caster_roles(channel: discord.TextChannel, settings: Settings) -> tuple[discord.Role, ...]:
     if not settings.match_channel_extra_role_ids:
         raise ChannelManagementError(
             localize(I18N.errors.channel_management.match_channel_caster_roles_unresolved)
@@ -280,4 +329,63 @@ def _match_caster_mentions(channel: discord.TextChannel, settings: Settings) -> 
             localize(I18N.errors.channel_management.match_channel_caster_roles_unresolved)
         )
 
-    return " ".join(role.mention for role in caster_roles)
+    return tuple(caster_roles)
+
+
+async def migrate_match_schedule_from_channel(
+        channel: discord.TextChannel,
+        *,
+        settings: Settings,
+        bot: discord.Client,
+) -> MatchScheduleEntry | None:
+    if not channel.name.endswith(MATCH_CHANNEL_STATUS_SCHEDULED):
+        return None
+
+    message = await find_latest_match_scheduled_notice(channel, bot=bot)
+    if message is None:
+        return None
+
+    timestamp = extract_schedule_timestamp(message.content)
+    if timestamp is None:
+        return None
+
+    return MatchScheduleEntry(
+        guild_id=channel.guild.id,
+        channel_id=channel.id,
+        timestamp=timestamp,
+        team_role_ids=_match_team_role_ids(channel, settings),
+        caster_role_ids=_match_caster_role_ids(channel, settings),
+        schedule_message_id=message.id,
+        updated_at=_utc_now_iso(),
+    )
+
+
+async def find_latest_match_scheduled_notice(
+        channel: discord.TextChannel,
+        *,
+        bot: discord.Client,
+) -> discord.Message | None:
+    bot_user = bot.user
+    if bot_user is None:
+        return None
+
+    async for message in channel.history(limit=MATCH_SCHEDULE_NOTICE_HISTORY_LIMIT):
+        if message.author.id != bot_user.id:
+            continue
+
+        if _is_match_scheduled_notice(message.content):
+            return message
+
+    return None
+
+
+def extract_schedule_timestamp(content: str) -> int | None:
+    match = DISCORD_TIMESTAMP_PATTERN.search(content)
+    if match is None:
+        return None
+
+    return int(match.group("timestamp"))
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(UTC).isoformat()

@@ -18,12 +18,12 @@ from bigness_league_bot.application.services.match_replays import MatchReplayDiv
 MATCHUP_SEPARATOR = "\U0001F19A"
 
 MATCH_CHANNEL_LEGACY_REFERENCE_PATTERN = re.compile(
-    r"^j(?P<jornada>[1-9][0-9]?)-partido-(?P<partido>[1-9][0-9]?)(?:・[⚽✅🔒])?$"
+    r"^j(?P<jornada>[1-9][0-9]?)-partido-(?P<partido>[1-9][0-9]?)(?:・[⚽📆✅🔒])?$"
 )
 MATCH_CHANNEL_EMOJI_REFERENCE_PATTERN = re.compile(
     r"^『𝗝?』(?P<jornada>(?:[0-9]️?⃣){1,2})"
     r"『𝗣?』(?P<partido>(?:[0-9]️?⃣){1,2})"
-    r"・[⚽✅🔒]$"
+    r"・[⚽📆✅🔒]$"
 )
 
 

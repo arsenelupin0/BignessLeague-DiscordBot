@@ -41,6 +41,9 @@ from bigness_league_bot.infrastructure.discord.error_handling import (
 from bigness_league_bot.infrastructure.discord.match_channel_schedule import (
     apply_match_in_progress,
 )
+from bigness_league_bot.infrastructure.discord.match_schedule_store import (
+    MatchScheduleStore,
+)
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
 from bigness_league_bot.presentation.discord.views.category_bulk_delete_confirmation import (
@@ -195,6 +198,9 @@ class ChannelManagement(commands.Cog):
                 replied_user=False,
             ),
         )
+        if selected_action is ChannelCloseMode.MATCH_IN_PROGRESS:
+            store = MatchScheduleStore(interaction.client.settings.match_schedule_state_file)
+            store.remove(guild_id=channel.guild.id, channel_id=channel.id)
 
     @app_commands.command(
         name=localized_locale_str(I18N.commands.channel_management.bulk_delete.name),

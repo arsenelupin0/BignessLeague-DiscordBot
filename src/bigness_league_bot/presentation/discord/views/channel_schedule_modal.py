@@ -20,6 +20,9 @@ from bigness_league_bot.infrastructure.discord.channel_access_management import 
 from bigness_league_bot.infrastructure.discord.match_channel_schedule import (
     apply_match_scheduled,
 )
+from bigness_league_bot.infrastructure.discord.match_schedule_store import (
+    MatchScheduleStore,
+)
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import LocalizationService
 
@@ -109,3 +112,6 @@ class ChannelScheduleModal(discord.ui.Modal):
                 replied_user=False,
             ),
         )
+        message = await interaction.original_response()
+        store = MatchScheduleStore(interaction.client.settings.match_schedule_state_file)
+        store.upsert(action_result.entry.with_message_id(message.id))

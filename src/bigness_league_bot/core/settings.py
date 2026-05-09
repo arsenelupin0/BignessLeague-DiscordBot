@@ -257,6 +257,7 @@ class Settings:
     match_channel_ticket_url: str = "https://canary.discord.com/channels/1016819103555657851/1016824990949179512"
     match_channel_rules_url: str = "https://canary.discord.com/channels/1016819103555657851/1363537934665515351"
     match_channel_extra_role_ids: tuple[int, ...] = ()
+    match_schedule_state_file: Path = Path("aa_var/match_schedules/scheduled_matches.json")
     mmr_media_limit: int = 1_400
     google_service_account_file: Path | None = None
     google_sheets_spreadsheet_id: str = ""
@@ -426,6 +427,10 @@ class Settings:
             "BOT_MATCH_CHANNEL_EXTRA_ROLE_IDS",
             (),
             allow_empty=True,
+        )
+        match_schedule_state_file = _resolve_storage_path(
+            "BOT_MATCH_SCHEDULE_STATE_FILE",
+            "aa_var/match_schedules/scheduled_matches.json",
         )
         mmr_media_limit = _read_int("BOT_MMR_MEDIA_LIMIT", 1_400)
         google_service_account_file = _resolve_optional_storage_path(
@@ -625,6 +630,7 @@ class Settings:
             match_channel_ticket_url=match_channel_ticket_url,
             match_channel_rules_url=match_channel_rules_url,
             match_channel_extra_role_ids=match_channel_extra_role_ids,
+            match_schedule_state_file=match_schedule_state_file,
             mmr_media_limit=mmr_media_limit,
             google_service_account_file=google_service_account_file,
             google_sheets_spreadsheet_id=google_sheets_spreadsheet_id,
