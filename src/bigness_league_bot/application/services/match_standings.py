@@ -18,6 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
+NULL_MATCH_SCORE = "nulo"
 MATCH_STANDINGS_RANGE = "A3:I11"
 MATCH_STANDINGS_TEAM_COUNT = 8
 MATCH_STANDINGS_ROW_COUNT = MATCH_STANDINGS_TEAM_COUNT + 1
@@ -38,6 +39,7 @@ class MatchStandingGameResult:
     team_two_name: str
     team_one_goals: int
     team_two_goals: int
+    is_null: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,6 +106,7 @@ class _SeriesAccumulator:
     games: list[MatchStandingGameResult]
     team_one_games: int = 0
     team_two_games: int = 0
+    has_null_result: bool = False
 
 
 def match_standings_headers() -> list[str]:
@@ -152,6 +155,24 @@ def build_match_standings_rows(
             _MutableStanding(team_name=game.team_two_name.strip()),
         )
 
+        series_key = (
+            game.matchday,
+            game.match_number,
+            team_one_key,
+            team_two_key,
+        )
+        series = series_by_key.setdefault(
+            series_key,
+            _SeriesAccumulator(
+                team_one_name=game.team_one_name.strip(),
+                team_two_name=game.team_two_name.strip(),
+                games=[],
+            ),
+        )
+        if game.is_null:
+            series.has_null_result = True
+            continue
+
         if game.team_one_goals > game.team_two_goals:
             game_winner = "team_one"
         elif game.team_two_goals > game.team_one_goals:
@@ -159,19 +180,6 @@ def build_match_standings_rows(
         else:
             game_winner = ""
 
-        series = series_by_key.setdefault(
-            (
-                game.matchday,
-                game.match_number,
-                team_one_key,
-                team_two_key,
-            ),
-            _SeriesAccumulator(
-                team_one_name=game.team_one_name.strip(),
-                team_two_name=game.team_two_name.strip(),
-                games=[],
-            ),
-        )
         series.games.append(game)
         if game_winner == "team_one":
             series.team_one_games += 1
@@ -179,11 +187,16 @@ def build_match_standings_rows(
             series.team_two_games += 1
 
     for series in series_by_key.values():
+        team_one_key = _normalize_team_name(series.team_one_name)
+        team_two_key = _normalize_team_name(series.team_two_name)
+        if series.has_null_result:
+            standings[team_one_key].series_played += 1
+            standings[team_two_key].series_played += 1
+            continue
+
         if max(series.team_one_games, series.team_two_games) < 3:
             continue
 
-        team_one_key = _normalize_team_name(series.team_one_name)
-        team_two_key = _normalize_team_name(series.team_two_name)
         if series.team_one_games == series.team_two_games:
             continue
 
@@ -306,9 +319,12 @@ def build_match_grid_standing_games(
         for game_index in range(MATCH_GRID_MAX_GAMES):
             base_index = MATCH_GRID_FIRST_GAME_COLUMN_INDEX + (game_index * MATCH_GRID_GAME_WIDTH)
             team_one_name = _cell_at(row, base_index)
-            score = _parse_score(_cell_at(row, base_index + 1))
+            score_cell = _cell_at(row, base_index + 1)
+            score = _parse_score(score_cell)
             team_two_name = _cell_at(row, base_index + 2)
-            if not team_one_name or not team_two_name or score is None:
+            if not team_one_name or not team_two_name:
+                continue
+            if score is None and not _is_null_score(score_cell):
                 continue
 
             games.append(
@@ -317,8 +333,9 @@ def build_match_grid_standing_games(
                     match_number=match_number,
                     team_one_name=team_one_name,
                     team_two_name=team_two_name,
-                    team_one_goals=score[0],
-                    team_two_goals=score[1],
+                    team_one_goals=score[0] if score is not None else 0,
+                    team_two_goals=score[1] if score is not None else 0,
+                    is_null=score is None,
                 )
             )
     return tuple(games)
@@ -352,3 +369,7 @@ def _parse_score(value: str) -> tuple[int, int] | None:
         return int(parts[0].strip()), int(parts[1].strip())
     except ValueError:
         return None
+
+
+def _is_null_score(value: str) -> bool:
+    return " ".join(value.casefold().strip().split()) == NULL_MATCH_SCORE
