@@ -45,7 +45,6 @@ from bigness_league_bot.infrastructure.discord.match_summary_image_shared import
     ImageDrawLike,
     _draw_badge,
     _draw_card,
-    _draw_fitted_text,
     _draw_section_label,
     _draw_table,
     _load_font,
@@ -55,6 +54,7 @@ from bigness_league_bot.infrastructure.discord.match_summary_image_shared import
     _resolve_team_logo_url,
     _save_png,
     _team_identity,
+    _text_width,
 )
 
 
@@ -94,7 +94,10 @@ def _render_match_replay_summary_image(
     totals = build_match_replay_player_stat_totals(report)
     width = 1360
     game_stats_height = _game_stat_cards_total_height(report)
-    height = 1054 + game_stats_height
+    team_one_totals = _totals_for_team(report, totals, report.team_one_name)
+    team_two_totals = _totals_for_team(report, totals, report.team_two_name)
+    totals_height = _player_totals_table_height(max(len(team_one_totals), len(team_two_totals), 1))
+    height = 902 + game_stats_height + totals_height
     image = Image.new("RGB", (width, height), BACKGROUND)
     draw = ImageDraw.Draw(image)
     _draw_replay_background(draw, width=width, height=height)
@@ -197,7 +200,9 @@ def _render_match_replay_summary_image(
         y=y,
         width=width - PADDING_X * 2,
         report=report,
-        totals=totals,
+        team_one_rows=team_one_totals,
+        team_two_rows=team_two_totals,
+        table_height=totals_height,
         header_font=body_font,
         body_font=small_font,
         team_one_color=team_one_color,
@@ -243,15 +248,15 @@ def _draw_series_score_panel(
         font=team_name_font,
         logo_image=team_one_logo,
     )
-    _draw_fitted_text(
+    _draw_wrapped_team_name(
         draw,
-        x=x + 128,
+        x=x + 128 + 130,
         y=y + 63,
         width=260,
         text=report.team_one_name,
         font=team_name_font,
         fill=TEXT,
-        anchor="lm",
+        anchor="mm",
     )
     _draw_won_games_badge(
         draw,
@@ -270,15 +275,15 @@ def _draw_series_score_panel(
         color=team_two_color,
         score_font=score_font,
     )
-    _draw_fitted_text(
+    _draw_wrapped_team_name(
         draw,
-        x=x + width - 128,
+        x=x + width - 128 - 170,
         y=y + 63,
         width=340,
         text=report.team_two_name,
         font=team_name_font,
         fill=TEXT,
-        anchor="rm",
+        anchor="mm",
     )
     _draw_badge(
         image,
@@ -350,7 +355,9 @@ def _draw_team_totals(
         y: int,
         width: int,
         report: MatchReplayReport,
-        totals: tuple[MatchReplayPlayerStatTotal, ...],
+        team_one_rows: tuple[MatchReplayPlayerStatTotal, ...],
+        team_two_rows: tuple[MatchReplayPlayerStatTotal, ...],
+        table_height: int,
         header_font: FontLike,
         body_font: FontLike,
         team_one_color: Color,
@@ -364,7 +371,8 @@ def _draw_team_totals(
         y=y,
         width=table_width,
         team_name=report.team_one_name,
-        rows=_totals_for_team(report, totals, report.team_one_name),
+        rows=team_one_rows,
+        table_height=table_height,
         header_color=BLUE_DARK,
         accent=team_one_color,
         header_font=header_font,
@@ -376,7 +384,8 @@ def _draw_team_totals(
         y=y,
         width=table_width,
         team_name=report.team_two_name,
-        rows=_totals_for_team(report, totals, report.team_two_name),
+        rows=team_two_rows,
+        table_height=table_height,
         header_color=GREEN_DARK,
         accent=team_two_color,
         header_font=header_font,
@@ -392,6 +401,7 @@ def _draw_player_totals_table(
         width: int,
         team_name: str,
         rows: tuple[MatchReplayPlayerStatTotal, ...],
+        table_height: int,
         header_color: Color,
         accent: Color,
         header_font: FontLike,
@@ -409,7 +419,7 @@ def _draw_player_totals_table(
         )
         for row in rows
     )
-    _draw_card(draw, (x, y, x + width, y + 244), fill=(9, 20, 35), outline=accent)
+    _draw_card(draw, (x, y, x + width, y + table_height), fill=(9, 20, 35), outline=accent)
     draw.rounded_rectangle((x, y, x + width, y + 48), radius=12, fill=header_color, outline=accent, width=1)
     draw.text((x + 22, y + 25), team_name, font=header_font, fill=TEXT, anchor="lm")
     _draw_table(
@@ -425,6 +435,88 @@ def _draw_player_totals_table(
         outline=None,
         vertical_lines=False,
     )
+
+
+def _draw_wrapped_team_name(
+        draw: ImageDrawLike,
+        *,
+        x: int,
+        y: int,
+        width: int,
+        text: str,
+        font: FontLike,
+        fill: Color,
+        anchor: str,
+) -> None:
+    lines = _wrap_text_lines(text, font=font, width=width, max_lines=2)
+    if not lines:
+        return
+
+    line_height = _font_line_height(font)
+    first_y = y - ((len(lines) - 1) * line_height // 2)
+    line_anchor = "mm" if anchor == "mm" else anchor
+    for index, line in enumerate(lines):
+        draw.text((x, first_y + index * line_height), line, font=font, fill=fill, anchor=line_anchor)
+
+
+def _wrap_text_lines(
+        text: str,
+        *,
+        font: FontLike,
+        width: int,
+        max_lines: int,
+) -> tuple[str, ...]:
+    words = [word for word in text.strip().split() if word]
+    if not words:
+        return ()
+
+    lines: list[str] = []
+    current_line = ""
+    for word in words:
+        candidate = f"{current_line} {word}".strip()
+        if not current_line or _text_width(font, candidate) <= width:
+            current_line = candidate
+            continue
+        lines.append(current_line)
+        current_line = word
+    if current_line:
+        lines.append(current_line)
+
+    if len(lines) <= max_lines:
+        return tuple(lines)
+    return _balance_wrapped_lines(words, font=font, width=width, max_lines=max_lines)
+
+
+def _balance_wrapped_lines(
+        words: list[str],
+        *,
+        font: FontLike,
+        width: int,
+        max_lines: int,
+) -> tuple[str, ...]:
+    if max_lines != 2 or len(words) < 2:
+        return tuple(" ".join(words[index::max_lines]) for index in range(max_lines))
+
+    candidates: list[tuple[int, tuple[str, str]]] = []
+    for split_index in range(1, len(words)):
+        first_line = " ".join(words[:split_index])
+        second_line = " ".join(words[split_index:])
+        first_width = _text_width(font, first_line)
+        second_width = _text_width(font, second_line)
+        if first_width <= width and second_width <= width:
+            candidates.append((abs(first_width - second_width), (first_line, second_line)))
+    if candidates:
+        return min(candidates, key=lambda item: item[0])[1]
+    return " ".join(words[: len(words) // 2]), " ".join(words[len(words) // 2:])
+
+
+def _font_line_height(font: FontLike) -> int:
+    _, top, _, bottom = font.getbbox("Ag")
+    return int(bottom - top + 6)
+
+
+def _player_totals_table_height(row_count: int) -> int:
+    return 62 + 30 + max(row_count, 1) * 28 + 36
 
 
 def _series_goals(report: MatchReplayReport) -> tuple[int, int]:
