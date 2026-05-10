@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, replace
+from datetime import datetime
 from enum import StrEnum
 from typing import Iterable
 
@@ -92,6 +93,7 @@ class MatchReplayGame:
     blue: MatchReplayTeam
     orange: MatchReplayTeam
     replay_sha256: str = ""
+    replay_date: str = ""
 
     @property
     def winner_name(self) -> str:
@@ -166,8 +168,12 @@ def build_match_replay_report(
             blue=game.blue,
             orange=game.orange,
             replay_sha256=game.replay_sha256,
+            replay_date=game.replay_date,
         )
-        for index, game in enumerate(games, start=1)
+        for index, game in enumerate(
+            sort_match_replay_games_by_replay_date(games),
+            start=1,
+        )
     )
     if len(ordered_games) < MATCH_REPLAY_MIN_FILES or len(ordered_games) > MATCH_REPLAY_MAX_FILES:
         raise InvalidReplayCountError()
@@ -222,6 +228,7 @@ def resolve_match_replay_report_players(
                 blue=resolved_blue,
                 orange=resolved_orange,
                 replay_sha256=game.replay_sha256,
+                replay_date=game.replay_date,
             )
         )
 
@@ -355,6 +362,38 @@ def format_match_replay_game_scores(report: MatchReplayReport) -> str:
         f"G{game.number}: {match_replay_game_score(report, game)}"
         for game in report.games
     )
+
+
+def sort_match_replay_games_by_replay_date(
+        games: Iterable[MatchReplayGame],
+) -> tuple[MatchReplayGame, ...]:
+    indexed_games = tuple(enumerate(games))
+    return tuple(
+        game
+        for _, game in sorted(
+            indexed_games,
+            key=lambda item: (_replay_date_sort_key(item[1].replay_date), item[0]),
+        )
+    )
+
+
+def _replay_date_sort_key(value: str) -> tuple[int, float]:
+    timestamp = _parse_replay_date_timestamp(value)
+    if timestamp is None:
+        return 1, 0.0
+    return 0, timestamp
+
+
+def _parse_replay_date_timestamp(value: str) -> float | None:
+    normalized_value = value.strip()
+    if not normalized_value:
+        return None
+    if normalized_value.endswith("Z"):
+        normalized_value = f"{normalized_value[:-1]}+00:00"
+    try:
+        return datetime.fromisoformat(normalized_value).timestamp()
+    except ValueError:
+        return None
 
 
 def match_replay_game_score(

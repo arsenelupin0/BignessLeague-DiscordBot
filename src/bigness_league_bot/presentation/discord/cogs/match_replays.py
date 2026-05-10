@@ -39,6 +39,7 @@ from bigness_league_bot.application.services.match_replays import (
     build_match_replay_report,
     format_match_replay_game_scores,
     resolve_match_replay_report_players,
+    sort_match_replay_games_by_replay_date,
     validate_replay_filenames,
 )
 from bigness_league_bot.core.errors import CommandUserError
@@ -240,6 +241,20 @@ class MatchReplaysCog(commands.Cog):
                 continue
             games.append(game)
 
+        ordered_games = sort_match_replay_games_by_replay_date(games)
+        for index, game in enumerate(ordered_games, start=1):
+            await ballchasing_client.update_replay_metadata(
+                game.replay_id,
+                {
+                    "title": build_match_replay_title(
+                        matchday=jornada,
+                        game_number=index,
+                        team_one_name=local.name,
+                        team_two_name=visitante.name,
+                    )
+                },
+            )
+
         try:
             report = build_match_replay_report(
                 division=division_value,
@@ -247,7 +262,7 @@ class MatchReplaysCog(commands.Cog):
                 match_number=partido,
                 team_one_name=local.name,
                 team_two_name=visitante.name,
-                games=games,
+                games=ordered_games,
             )
         except MatchReplayValidationError as exc:
             raise _to_user_error(exc) from exc

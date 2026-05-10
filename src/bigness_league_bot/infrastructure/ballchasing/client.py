@@ -132,6 +132,15 @@ class BallchasingClient:
             replay_sha256=upload.sha256,
         )
 
+    async def update_replay_metadata(
+            self,
+            replay_id: str,
+            metadata: dict[str, str],
+    ) -> None:
+        if not metadata:
+            return
+        await asyncio.to_thread(self._patch_replay_metadata, replay_id, metadata)
+
     async def ensure_group_path(
             self,
             *,
@@ -496,6 +505,7 @@ def _parse_replay_payload(payload: dict[str, Any]) -> MatchReplayGame:
         replay_url=f"https://ballchasing.com/replay/{replay_id}",
         blue=blue,
         orange=orange,
+        replay_date=_payload_str(payload, "date"),
     )
 
 
