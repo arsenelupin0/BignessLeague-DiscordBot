@@ -614,26 +614,28 @@ class _MessagesMmrMedia:
 
 class _MessagesMatchReplaysUploaded:
     summary: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.summary",
-                                             default_text="Replays procesadas para `{division}` J{jornada} P{partido}: `{team_one}` {series_score} `{team_two}`.\nMarcadores por game: {game_scores}.\n\n{roster_validation}\n\nSe han guardado {replay_count} replays nuevas en la hoja `{sheet_name}`.{standings_update}{unresolved_winners}{failed_replays}{skipped_duplicates}{image_warning}")
+                                             default_text="# {green_arrow} Procesamiento de replays\nReplays procesadas para (Bo5):\n- **{division_emoji} {division} {division_emoji}**\n  - **Jornada {jornada} | Partido {partido}**\n  - **{team_one} {series_score} {team_two}**\n- Marcadores por _game_\n{game_scores}\n_ _\n{roster_validation}{unresolved_winners}{failed_replays}{skipped_duplicates}{image_warning}")
+    standings_image: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.standings_image",
+                                                     default_text="# {green_arrow} Clasificaci\u00f3n actual\n- Actualizada con este nuevo partido")
     unresolved_winners: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.unresolved_winners",
-                                                        default_text="\n\nNo he podido vincular autom\u00e1ticamente estos ganadores con los roles indicados: {winners}. Revisa los nombres de equipo en Ballchasing.")
+                                                        default_text="\n- No he podido vincular autom\u00e1ticamente estos ganadores con los roles indicados: {winners}. Revisa los nombres de equipo en Ballchasing.")
     failed_replays: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.failed_replays",
-                                                    default_text="\n\nBallchasing no pudo procesar estas replays y se han omitido: {failed_replays}.")
+                                                    default_text="\n- Ballchasing no pudo procesar estas replays y se han omitido: {failed_replays}.")
     skipped_duplicates: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.skipped_duplicates",
-                                                        default_text="\n\nNo se han vuelto a volcar {skipped_count} replays porque ya exist\u00edan en la hoja. Replay IDs: {replay_ids}.")
+                                                        default_text="\n- Se han omitido **{skipped_count}** replays duplicadas. Replay IDs: {replay_ids}.")
     standings_update: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.standings_update",
-                                                      default_text="\nClasificaci\u00f3n actualizada en `{standings_sheet_name}`.")
+                                                      default_text="\n- Clasificaci\u00f3n actualizada en `{standings_sheet_name}`.")
     all_duplicates: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.all_duplicates",
-                                                    default_text="Las {replay_count} replays adjuntas ya existen en la hoja por SHA256. No las he vuelto a subir a Ballchasing ni he duplicado filas en Google Sheets.")
+                                                    default_text="Las {replay_count} replays adjuntas ya estaban registradas. No las he vuelto a procesar.")
     roster_validation_all_matched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_all_matched",
-        default_text="Jugadores verificados: {matched_unique}/{unique_players} \u00fanicos en roster ({matched_appearances}/{total_appearances} apariciones).\nM\u00e9todos de coincidencia: {match_methods}.\nTodos los jugadores detectados coinciden con el roster.")
+        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- M\u00e9todos de coincidencia: {match_methods}\n{method_breakdown}\n- Todos los jugadores detectados coinciden con la identidad Epic registrada.")
     roster_validation_with_unmatched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_with_unmatched",
-        default_text="Jugadores verificados: {matched_unique}/{unique_players} \u00fanicos en roster ({matched_appearances}/{total_appearances} apariciones).\nM\u00e9todos de coincidencia: {match_methods}.\nJugadores no encontrados: {unmatched_players}.")
+        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- M\u00e9todos de coincidencia: {match_methods}\n{method_breakdown}\n- Jugadores no encontrados:\n{unmatched_players}\n_ _\n## Informaci\u00f3n incorrecta\n- En caso de jugar con alg\u00fan jugador que no coincida con los datos registrados, alg\u00fan miembro del **Staff** se pondr\u00e1 en contacto con vosotros para revisar este caso.\n- Si se juega con alineaci\u00f3n indebida, podr\u00e1 conllevar sanci\u00f3n grave, tanto al club como al jugador.\n- Se debe aportar toda la informaci\u00f3n posible si esto ocurre.")
     roster_validation_more_unmatched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_more_unmatched",
-        default_text=" y {remaining} m\u00e1s")
+        default_text="  - Y {remaining} m\u00e1s.")
 
 
 class _MessagesMatchReplays:

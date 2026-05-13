@@ -12,6 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
+import unicodedata
+
 from bigness_league_bot.application.services.match_replays import (
     MatchReplayPlayer,
     MatchReplayReport,
@@ -33,6 +35,7 @@ class MatchReplayUnmatchedPlayer:
     player_name: str
     platform: str
     platform_id: str
+    missing_methods: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,7 +103,7 @@ def build_match_replay_roster_validation_summary(
 ) -> MatchReplayRosterValidationSummary:
     total_appearances = 0
     matched_appearances = 0
-    method_counts: dict[str, int] = {}
+    method_players: dict[str, set[tuple[str, str]]] = {}
     unique_players: dict[tuple[str, str], bool] = {}
     unmatched_players: dict[tuple[str, str], MatchReplayUnmatchedPlayer] = {}
 
@@ -109,12 +112,17 @@ def build_match_replay_roster_validation_summary(
             for replay_player in team.players:
                 total_appearances += 1
                 player_key = _player_identity_key(replay_player)
-                matched = replay_player.resolution_status == "matched"
-                unique_players[player_key] = unique_players.get(player_key, False) or matched
-                if matched:
+                match_methods = replay_player.match_methods
+                if not match_methods and replay_player.match_method:
+                    match_methods = (replay_player.match_method,)
+                for method in match_methods:
+                    method_players.setdefault(method, set()).add(player_key)
+
+                epic_verified = "epic_name" in match_methods
+                unique_players[player_key] = unique_players.get(player_key, False) or epic_verified
+                if epic_verified:
                     matched_appearances += 1
-                    method = replay_player.match_method or "unknown"
-                    method_counts[method] = method_counts.get(method, 0) + 1
+                    unmatched_players.pop(player_key, None)
                     continue
 
                 unmatched_players.setdefault(
@@ -124,6 +132,7 @@ def build_match_replay_roster_validation_summary(
                         player_name=replay_player.name,
                         platform=replay_player.platform,
                         platform_id=replay_player.platform_id,
+                        missing_methods=_missing_match_methods(match_methods),
                     ),
                 )
 
@@ -139,7 +148,10 @@ def build_match_replay_roster_validation_summary(
         match_methods=tuple(
             MatchReplayMatchMethodCount(method=method, count=count)
             for method, count in sorted(
-                method_counts.items(),
+                (
+                    (method, len(player_keys))
+                    for method, player_keys in method_players.items()
+                ),
                 key=lambda item: (-item[1], item[0]),
             )
         ),
@@ -153,6 +165,15 @@ def build_match_replay_roster_validation_summary(
             )
         ),
     )
+
+
+def _missing_match_methods(match_methods: tuple[str, ...]) -> tuple[str, ...]:
+    missing: list[str] = []
+    if "epic_name" not in match_methods:
+        missing.append("epic_name")
+    if "rocket_name" not in match_methods:
+        missing.append("rocket_name")
+    return tuple(missing)
 
 
 def build_match_replay_player_stat_totals(
@@ -275,4 +296,5 @@ def _team_identity_tokens(value: str) -> tuple[str, ...]:
 
 
 def _normalize_player_lookup(value: str) -> str:
-    return "".join(TEAM_TOKEN_PATTERN.findall(value.casefold()))
+    normalized = unicodedata.normalize("NFKC", value.casefold())
+    return "".join(character for character in normalized if character.isalnum())

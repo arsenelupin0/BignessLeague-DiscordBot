@@ -323,15 +323,16 @@
     },
     "match_replays": {
       "uploaded": {
-        "summary": "Replays processed for `{division}` J{jornada} P{partido}: `{team_one}` {series_score} `{team_two}`.\nGame scores: {game_scores}.\n\n{roster_validation}\n\nSaved {replay_count} new replays to `{sheet_name}`.{standings_update}{unresolved_winners}{failed_replays}{skipped_duplicates}{image_warning}",
-        "unresolved_winners": "\n\nI could not automatically match these winners with the selected roles: {winners}. Review the team names in Ballchasing.",
-        "failed_replays": "\n\nBallchasing could not process these replays, so they were skipped: {failed_replays}.",
-        "skipped_duplicates": "\n\nSkipped writing {skipped_count} replays because they already exist in the sheet. Replay IDs: {replay_ids}.",
-        "standings_update": "\nUpdated standings in `{standings_sheet_name}`.",
-        "all_duplicates": "The {replay_count} attached replays already exist in the sheet by SHA256. I did not upload them to Ballchasing again or duplicate rows in Google Sheets.",
-        "roster_validation_all_matched": "Verified players: {matched_unique}/{unique_players} unique players in roster ({matched_appearances}/{total_appearances} appearances).\nMatch methods: {match_methods}.\nEvery detected player matches the roster.",
-        "roster_validation_with_unmatched": "Verified players: {matched_unique}/{unique_players} unique players in roster ({matched_appearances}/{total_appearances} appearances).\nMatch methods: {match_methods}.\nUnmatched players: {unmatched_players}.",
-        "roster_validation_more_unmatched": " and {remaining} more"
+        "summary": "# {green_arrow} Replay processing\nReplays processed for (Bo5):\n- **{division_emoji} {division} {division_emoji}:**\n  - **Matchday {jornada} | Match {partido}**\n  - **{team_one} {series_score} {team_two}**\n- Scores by _game_\n{game_scores}\n_ _\n{roster_validation}{unresolved_winners}{failed_replays}{skipped_duplicates}{image_warning}",
+        "standings_image": "# {green_arrow} Current standings\n- Updated with this new match",
+        "unresolved_winners": "\n- I could not automatically match these winners with the selected roles: {winners}. Review the team names in Ballchasing.",
+        "failed_replays": "\n- Ballchasing could not process these replays, so they were skipped: {failed_replays}.",
+        "skipped_duplicates": "\n- Skipped **{skipped_count}** duplicate replays. Replay IDs: {replay_ids}.",
+        "standings_update": "\n- Updated standings in `{standings_sheet_name}`.",
+        "all_duplicates": "The {replay_count} attached replays were already registered. I did not process them again.",
+        "roster_validation_all_matched": "## Player verification\n- Verified players: **{matched_unique}/{unique_players}** {status_icon}\n- Match methods: {match_methods}\n{method_breakdown}\n- Every detected player matches the registered Epic identity.",
+        "roster_validation_with_unmatched": "## Player verification\n- Verified players: **{matched_unique}/{unique_players}** {status_icon}\n- Match methods: {match_methods}\n{method_breakdown}\n- Unmatched players:\n{unmatched_players}\n_ _\n## Incorrect information\n- If a played player does not match the registered data, a **Staff** member will contact you to review the case.\n- Playing with an invalid lineup may lead to a serious sanction for both the club and the player.\n- Provide as much information as possible if this happens.",
+        "roster_validation_more_unmatched": "  - And {remaining} more."
       },
       "standings_refreshed": "`{division}` standings recalculated from the main table in `{standings_sheet_name}`.{image_warning}",
       "image_render_failed": "\n\nI could not render the summary image. The main process completed correctly."

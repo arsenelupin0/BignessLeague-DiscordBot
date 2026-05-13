@@ -21,6 +21,8 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Iterable
 
+import unicodedata
+
 MATCH_REPLAY_MIN_FILES = 3
 MATCH_REPLAY_MAX_FILES = 5
 MATCH_REPLAY_EXTENSION = ".replay"
@@ -63,6 +65,7 @@ class MatchReplayPlayer:
     official_team_name: str = ""
     roster_player_name: str = ""
     match_method: str = ""
+    match_methods: tuple[str, ...] = ()
     resolution_status: str = "unmatched"
 
 
@@ -486,13 +489,13 @@ def _team_identity_tokens(value: str) -> tuple[str, ...]:
 
 def _resolve_match_replay_team(
         team: MatchReplayTeam,
-        roster_index: dict[str, tuple[MatchReplayRosterPlayer, str]],
+        roster_index: dict[str, dict[str, MatchReplayRosterPlayer]],
 ) -> MatchReplayTeam:
     resolved_players: list[MatchReplayPlayer] = []
     team_match_counts: dict[str, int] = {}
 
     for player in team.players:
-        roster_player, method = _find_roster_player_match(player, roster_index)
+        roster_player, method, match_methods, resolution_status = _find_roster_player_match(player, roster_index)
         if roster_player is None:
             resolved_players.append(player)
             continue
@@ -506,7 +509,8 @@ def _resolve_match_replay_team(
                 official_team_name=roster_player.team_name,
                 roster_player_name=roster_player.player_name,
                 match_method=method,
-                resolution_status="matched",
+                match_methods=match_methods,
+                resolution_status=resolution_status,
             )
         )
 
@@ -529,39 +533,46 @@ def _resolve_match_replay_team(
 
 def _find_roster_player_match(
         replay_player: MatchReplayPlayer,
-        roster_index: dict[str, tuple[MatchReplayRosterPlayer, str]],
-) -> tuple[MatchReplayRosterPlayer | None, str]:
-    candidates = (
-        ("platform_id", replay_player.platform_id),
-        ("ballchasing_name", replay_player.name),
-    )
-    for method, value in candidates:
+        roster_index: dict[str, dict[str, MatchReplayRosterPlayer]],
+) -> tuple[MatchReplayRosterPlayer | None, str, tuple[str, ...], str]:
+    matched_players: dict[str, MatchReplayRosterPlayer] = {}
+    for method, value in (
+            ("epic_name", replay_player.name),
+            ("rocket_name", replay_player.name),
+    ):
         normalized_value = _normalize_player_lookup(value)
         if not normalized_value:
             continue
-        match = roster_index.get(normalized_value)
+        match = roster_index.get(method, {}).get(normalized_value)
         if match is not None:
-            return match[0], match[1] if method == "ballchasing_name" else method
-    return None, ""
+            matched_players[method] = match
+
+    if "epic_name" in matched_players:
+        return matched_players["epic_name"], "epic_name", tuple(matched_players), "matched"
+    if "rocket_name" in matched_players:
+        return matched_players["rocket_name"], "rocket_name", tuple(matched_players), "name_matched"
+    return None, "", (), "unmatched"
 
 
 def _build_roster_player_index(
         roster_players: Iterable[MatchReplayRosterPlayer],
-) -> dict[str, tuple[MatchReplayRosterPlayer, str]]:
-    index: dict[str, tuple[MatchReplayRosterPlayer, str]] = {}
+) -> dict[str, dict[str, MatchReplayRosterPlayer]]:
+    index: dict[str, dict[str, MatchReplayRosterPlayer]] = {
+        "epic_name": {},
+        "rocket_name": {},
+    }
     for roster_player in roster_players:
         for method, value in (
-                ("player_name", roster_player.player_name),
-                ("discord_name", roster_player.discord_name),
                 ("epic_name", roster_player.epic_name),
                 ("rocket_name", roster_player.rocket_name),
         ):
             normalized_value = _normalize_player_lookup(value)
             if not normalized_value:
                 continue
-            if normalized_value in index:
+            method_index = index[method]
+            if normalized_value in method_index:
                 continue
-            index[normalized_value] = (roster_player, method)
+            method_index[normalized_value] = roster_player
     return index
 
 
@@ -580,4 +591,5 @@ def _resolve_team_name_from_counts(team_match_counts: dict[str, int]) -> str | N
 
 
 def _normalize_player_lookup(value: str) -> str:
-    return "".join(TEAM_TOKEN_PATTERN.findall(value.casefold()))
+    normalized = unicodedata.normalize("NFKC", value.casefold())
+    return "".join(character for character in normalized if character.isalnum())

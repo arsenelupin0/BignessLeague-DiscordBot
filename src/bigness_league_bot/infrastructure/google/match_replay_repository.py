@@ -170,7 +170,7 @@ class GoogleSheetsMatchReplayRepository:
             report: MatchReplayReport,
             *,
             team_names: tuple[str, ...],
-    ) -> str:
+    ) -> MatchStandingsRefreshResult:
         return await asyncio.to_thread(
             self.sync_report_to_standings_sync,
             report,
@@ -269,7 +269,7 @@ class GoogleSheetsMatchReplayRepository:
             report: MatchReplayReport,
             *,
             team_names: tuple[str, ...],
-    ) -> str:
+    ) -> MatchStandingsRefreshResult:
         service = self.client.build_service(read_only=False)
         standings_worksheet_name = _resolve_worksheet_name_for_division(
             self.standings_worksheet_names,
@@ -284,12 +284,15 @@ class GoogleSheetsMatchReplayRepository:
             worksheet_name=standings_worksheet_name,
             report=report,
         )
-        self.standings_gateway.refresh_standings_from_grid(
+        rows = self.standings_gateway.refresh_standings_from_grid(
             service,
             worksheet_name=standings_worksheet_name,
             team_names=team_names,
         )
-        return standings_worksheet_name
+        return MatchStandingsRefreshResult(
+            worksheet_name=standings_worksheet_name,
+            rows=rows,
+        )
 
     def append_report_sync(
             self,

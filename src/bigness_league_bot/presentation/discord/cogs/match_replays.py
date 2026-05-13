@@ -37,7 +37,6 @@ from bigness_league_bot.application.services.match_replays import (
     MatchReplayDivision,
     MatchReplayValidationError,
     build_match_replay_report,
-    format_match_replay_game_scores,
     resolve_match_replay_report_players,
     sort_match_replay_games_by_replay_date,
     validate_replay_filenames,
@@ -52,6 +51,13 @@ from bigness_league_bot.infrastructure.discord.channel_access_management import 
     UnsupportedChannelError,
     ensure_allowed_member,
 )
+from bigness_league_bot.infrastructure.discord.emojis import (
+    DiscordEmojiRef,
+    GOLD_DIVISION_EMOJI,
+    MATCH_SCHEDULE_GREEN_ARROW_EMOJI,
+    SILVER_DIVISION_EMOJI,
+    render_custom_emoji,
+)
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
 )
@@ -64,6 +70,7 @@ from bigness_league_bot.infrastructure.discord.match_replay_assets import (
     write_replay_diagnostic_copy,
 )
 from bigness_league_bot.infrastructure.discord.match_replay_messages import (
+    format_match_replay_game_score_lines,
     format_match_replay_roster_validation,
 )
 from bigness_league_bot.infrastructure.discord.match_summary_images import (
@@ -72,6 +79,7 @@ from bigness_league_bot.infrastructure.discord.match_summary_images import (
 )
 from bigness_league_bot.infrastructure.google.match_replay_repository import (
     GoogleSheetsMatchReplayRepository,
+    MatchStandingsRefreshResult,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
@@ -128,9 +136,6 @@ class MatchReplaysCog(commands.Cog):
         replay_5=localized_locale_str(
             I18N.commands.match_replays.upload_replays.parameters.replay_5.description
         ),
-        resumen_imagen=localized_locale_str(
-            I18N.commands.match_replays.upload_replays.parameters.summary_image.description
-        ),
     )
     async def upload_replays(
             self,
@@ -142,7 +147,6 @@ class MatchReplaysCog(commands.Cog):
             replay_3: discord.Attachment,
             replay_4: discord.Attachment | None = None,
             replay_5: discord.Attachment | None = None,
-            resumen_imagen: bool = False,
     ) -> None:
         guild = interaction.guild
         if guild is None or not isinstance(interaction.user, discord.Member):
@@ -166,7 +170,7 @@ class MatchReplaysCog(commands.Cog):
         except MatchReplayValidationError as exc:
             raise _to_user_error(exc) from exc
 
-        await interaction.response.defer(thinking=True)
+        await interaction.response.defer(thinking=True, ephemeral=True)
         channel_name = _interaction_channel_name(interaction)
         channel_reference = parse_match_channel_reference(channel_name)
         if channel_reference is None:
@@ -272,21 +276,14 @@ class MatchReplaysCog(commands.Cog):
         roster_players = roster_data.roster_players
         report = resolve_match_replay_report_players(report, roster_players)
         append_result = await repository.append_report(report)
-        standings_sheet_name = ""
+        standings_result: MatchStandingsRefreshResult | None = None
         if append_result.appended_games > 0:
-            standings_sheet_name = await repository.sync_report_to_standings(
+            standings_result = await repository.sync_report_to_standings(
                 report,
                 team_names=collect_match_replay_standings_team_names(
                     roster_players=roster_players,
                     fallback_team_names=(report.team_one_name, report.team_two_name),
                 ),
-            )
-        standings_update = ""
-        if standings_sheet_name:
-            standings_update = interaction.client.localizer.translate(
-                I18N.messages.match_replays.uploaded.standings_update,
-                locale=interaction.locale,
-                standings_sheet_name=standings_sheet_name,
             )
 
         unresolved = ""
@@ -318,18 +315,34 @@ class MatchReplaysCog(commands.Cog):
             locale=interaction.locale,
             summary=build_match_replay_roster_validation_summary(report),
         )
-        image_file: discord.File | None = None
         image_warning = ""
-        if resumen_imagen:
+        replay_summary_image_file: discord.File | None = None
+        try:
+            replay_summary_image_file = build_match_replay_summary_image_file(
+                report=report,
+                font_path=interaction.client.settings.team_profile_font_path,
+                team_logo_urls=team_logo_url_map(roster_data.team_logos),
+                fallback_logo_url=guild_icon_url(interaction.guild),
+            )
+        except RuntimeError:
+            LOGGER.exception("No se pudo renderizar la imagen resumen de replays")
+            image_warning = interaction.client.localizer.translate(
+                I18N.messages.match_replays.image_render_failed,
+                locale=interaction.locale,
+            )
+
+        standings_image_file: discord.File | None = None
+        if standings_result is not None:
             try:
-                image_file = build_match_replay_summary_image_file(
-                    report=report,
+                standings_image_file = build_match_standings_image_file(
+                    division_name=report.division.label,
+                    rows=standings_result.rows,
                     font_path=interaction.client.settings.team_profile_font_path,
                     team_logo_urls=team_logo_url_map(roster_data.team_logos),
                     fallback_logo_url=guild_icon_url(interaction.guild),
                 )
             except RuntimeError:
-                LOGGER.exception("No se pudo renderizar la imagen resumen de replays")
+                LOGGER.exception("No se pudo renderizar la imagen de clasificacion")
                 image_warning = interaction.client.localizer.translate(
                     I18N.messages.match_replays.image_render_failed,
                     locale=interaction.locale,
@@ -338,26 +351,59 @@ class MatchReplaysCog(commands.Cog):
         message = interaction.client.localizer.translate(
             I18N.messages.match_replays.uploaded.summary,
             locale=interaction.locale,
+            green_arrow=render_custom_emoji(
+                guild=guild,
+                bot=interaction.client,
+                emoji=MATCH_SCHEDULE_GREEN_ARROW_EMOJI,
+            ),
+            division_emoji=render_custom_emoji(
+                guild=guild,
+                bot=interaction.client,
+                emoji=_division_emoji(report.division),
+            ),
             division=report.division.label,
             jornada=report.matchday,
             partido=report.match_number,
             team_one=report.team_one_name,
             team_two=report.team_two_name,
             series_score=report.series_score,
-            game_scores=format_match_replay_game_scores(report),
+            game_scores=format_match_replay_game_score_lines(
+                report,
+                winner_label=_game_winner_label(interaction.locale),
+            ),
             roster_validation=roster_validation,
-            replay_count=append_result.appended_games,
-            sheet_name=append_result.worksheet_name,
-            standings_update=standings_update,
             unresolved_winners=unresolved,
             failed_replays=failed_replays,
             skipped_duplicates=skipped_duplicates,
             image_warning=image_warning,
         )
-        if image_file is None:
-            await interaction.followup.send(content=message)
-        else:
-            await interaction.followup.send(content=message, file=image_file)
+        await _send_channel_message(
+            interaction,
+            content=message,
+            file=replay_summary_image_file,
+        )
+        if standings_result is not None:
+            standings_message = interaction.client.localizer.translate(
+                I18N.messages.match_replays.uploaded.standings_image,
+                locale=interaction.locale,
+                green_arrow=render_custom_emoji(
+                    guild=guild,
+                    bot=interaction.client,
+                    emoji=MATCH_SCHEDULE_GREEN_ARROW_EMOJI,
+                ),
+            )
+            if standings_image_file is None:
+                await _send_channel_message(
+                    interaction,
+                    content=standings_message + image_warning,
+                )
+            else:
+                await _send_channel_message(
+                    interaction,
+                    content=standings_message,
+                    file=standings_image_file,
+                )
+        await _delete_original_interaction_response(interaction)
 
     @app_commands.command(
         name=localized_locale_str(I18N.commands.match_replays.refresh_standings.name),
@@ -545,6 +591,47 @@ def _resolve_replay_division_from_channel(
             channel_name=_interaction_channel_name(interaction) or "-",
         )
     )
+
+
+def _division_emoji(division: MatchReplayDivision) -> DiscordEmojiRef:
+    if division is MatchReplayDivision.GOLD:
+        return GOLD_DIVISION_EMOJI
+    return SILVER_DIVISION_EMOJI
+
+
+def _game_winner_label(locale: str | discord.Locale | None) -> str:
+    if str(locale or "").lower().startswith("en"):
+        return "Winner"
+    return "Gana"
+
+
+async def _send_channel_message(
+        interaction: discord.Interaction[BignessLeagueBot],
+        *,
+        content: str,
+        file: discord.File | None = None,
+) -> None:
+    channel = interaction.channel
+    if isinstance(channel, discord.abc.Messageable):
+        if file is None:
+            await channel.send(content=content)
+            return
+        await channel.send(content=content, file=file)
+        return
+
+    if file is None:
+        await interaction.followup.send(content=content)
+        return
+    await interaction.followup.send(content=content, file=file)
+
+
+async def _delete_original_interaction_response(
+        interaction: discord.Interaction[BignessLeagueBot],
+) -> None:
+    try:
+        await interaction.delete_original_response()
+    except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+        return
 
 
 def _interaction_channel_category_id(

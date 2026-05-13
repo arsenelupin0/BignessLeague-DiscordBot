@@ -352,15 +352,16 @@
     },
     "match_replays": {
       "uploaded": {
-        "summary": "Replays procesadas para `{division}` J{jornada} P{partido}: `{team_one}` {series_score} `{team_two}`.\nMarcadores por game: {game_scores}.\n\n{roster_validation}\n\nSe han guardado {replay_count} replays nuevas en la hoja `{sheet_name}`.{standings_update}{unresolved_winners}{failed_replays}{skipped_duplicates}{image_warning}",
-        "unresolved_winners": "\n\nNo he podido vincular automáticamente estos ganadores con los roles indicados: {winners}. Revisa los nombres de equipo en Ballchasing.",
-        "failed_replays": "\n\nBallchasing no pudo procesar estas replays y se han omitido: {failed_replays}.",
-        "skipped_duplicates": "\n\nNo se han vuelto a volcar {skipped_count} replays porque ya existían en la hoja. Replay IDs: {replay_ids}.",
-        "standings_update": "\nClasificación actualizada en `{standings_sheet_name}`.",
-        "all_duplicates": "Las {replay_count} replays adjuntas ya existen en la hoja por SHA256. No las he vuelto a subir a Ballchasing ni he duplicado filas en Google Sheets.",
-        "roster_validation_all_matched": "Jugadores verificados: {matched_unique}/{unique_players} únicos en roster ({matched_appearances}/{total_appearances} apariciones).\nMétodos de coincidencia: {match_methods}.\nTodos los jugadores detectados coinciden con el roster.",
-        "roster_validation_with_unmatched": "Jugadores verificados: {matched_unique}/{unique_players} únicos en roster ({matched_appearances}/{total_appearances} apariciones).\nMétodos de coincidencia: {match_methods}.\nJugadores no encontrados: {unmatched_players}.",
-        "roster_validation_more_unmatched": " y {remaining} más"
+        "summary": "# {green_arrow} Procesamiento de replays\nReplays procesadas para (Bo5):\n- **{division_emoji} {division} {division_emoji}**\n  - **Jornada {jornada} | Partido {partido}**\n  - **{team_one} {series_score} {team_two}**\n- Marcadores por _game_\n{game_scores}\n_ _\n{roster_validation}{unresolved_winners}{failed_replays}{skipped_duplicates}{image_warning}",
+        "standings_image": "# {green_arrow} Clasificación actual\n- Actualizada con este nuevo partido",
+        "unresolved_winners": "\n- No he podido vincular automáticamente estos ganadores con los roles indicados: {winners}. Revisa los nombres de equipo en Ballchasing.",
+        "failed_replays": "\n- Ballchasing no pudo procesar estas replays y se han omitido: {failed_replays}.",
+        "skipped_duplicates": "\n- Se han omitido **{skipped_count}** replays duplicadas. Replay IDs: {replay_ids}.",
+        "standings_update": "\n- Clasificación actualizada en `{standings_sheet_name}`.",
+        "all_duplicates": "Las {replay_count} replays adjuntas ya estaban registradas. No las he vuelto a procesar.",
+        "roster_validation_all_matched": "## Verificación de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- Métodos de coincidencia: {match_methods}\n{method_breakdown}\n- Todos los jugadores detectados coinciden con la identidad Epic registrada.\n_ _\n## Resumen de estadísticas",
+        "roster_validation_with_unmatched": "## Verificación de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- Métodos de coincidencia: {match_methods}\n{method_breakdown}\n- Jugadores no encontrados:\n{unmatched_players}\n_ _\n## Información incorrecta\n- En caso de jugar con algún jugador que no coincida con los datos registrados, algún miembro del **Staff** se pondrá en contacto con vosotros para revisar este caso.\n- Si se juega con alineación indebida, podrá conllevar sanción grave, tanto al club como al jugador.\n- Se debe aportar toda la información posible si esto ocurre.\n_ _\n## Resumen de estadísticas",
+        "roster_validation_more_unmatched": "  - Y {remaining} más."
       },
       "standings_refreshed": "Clasificación de `{division}` recalculada desde la tabla principal en `{standings_sheet_name}`.{image_warning}",
       "image_render_failed": "\n\nNo he podido renderizar la imagen resumen. El proceso principal se ha completado correctamente."
