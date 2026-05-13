@@ -356,11 +356,7 @@ class MatchReplaysCog(commands.Cog):
                 bot=interaction.client,
                 emoji=MATCH_SCHEDULE_GREEN_ARROW_EMOJI,
             ),
-            division_emoji=render_custom_emoji(
-                guild=guild,
-                bot=interaction.client,
-                emoji=_division_emoji(report.division),
-            ),
+            division_emoji=_render_division_emoji(guild, interaction.client, report.division),
             division=report.division.label,
             jornada=report.matchday,
             partido=report.match_number,
@@ -417,17 +413,14 @@ class MatchReplaysCog(commands.Cog):
         division=localized_locale_str(
             I18N.commands.match_replays.refresh_standings.parameters.division.description
         ),
-        imagen=localized_locale_str(
-            I18N.commands.match_replays.refresh_standings.parameters.image.description
-        ),
     )
     async def refresh_standings(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
             division: app_commands.Choice[str],
-            imagen: bool = False,
     ) -> None:
-        if interaction.guild is None or not isinstance(interaction.user, discord.Member):
+        guild = interaction.guild
+        if guild is None or not isinstance(interaction.user, discord.Member):
             raise UnsupportedChannelError(localize(I18N.errors.channel_management.server_only))
 
         ensure_allowed_member(interaction.user)
@@ -444,31 +437,28 @@ class MatchReplaysCog(commands.Cog):
         )
         image_file: discord.File | None = None
         image_warning = ""
-        if imagen:
-            try:
-                image_file = build_match_standings_image_file(
-                    division_name=division_value.label,
-                    rows=standings_result.rows,
-                    font_path=interaction.client.settings.team_profile_font_path,
-                    team_logo_urls=team_logo_url_map(roster_data.team_logos),
-                    fallback_logo_url=guild_icon_url(interaction.guild),
-                )
-            except RuntimeError:
-                LOGGER.exception("No se pudo renderizar la imagen de clasificacion")
-                image_warning = interaction.client.localizer.translate(
-                    I18N.messages.match_replays.image_render_failed,
-                    locale=interaction.locale,
-                )
+        try:
+            image_file = build_match_standings_image_file(
+                division_name=division_value.label,
+                rows=standings_result.rows,
+                font_path=interaction.client.settings.team_profile_font_path,
+                team_logo_urls=team_logo_url_map(roster_data.team_logos),
+                fallback_logo_url=guild_icon_url(guild),
+            )
+        except RuntimeError:
+            LOGGER.exception("No se pudo renderizar la imagen de clasificación")
+            image_warning = interaction.client.localizer.translate(
+                I18N.messages.match_replays.image_render_failed,
+                locale=interaction.locale,
+            )
 
         message = interaction.client.localizer.translate(
             I18N.messages.match_replays.standings_refreshed,
             locale=interaction.locale,
-            division=division_value.label,
-            standings_sheet_name=standings_result.worksheet_name,
-            image_warning=image_warning,
+            division_emoji=_render_division_emoji(guild, interaction.client, division_value),
         )
         if image_file is None:
-            await interaction.followup.send(content=message)
+            await interaction.followup.send(content=message + image_warning)
         else:
             await interaction.followup.send(content=message, file=image_file)
 
@@ -597,6 +587,18 @@ def _division_emoji(division: MatchReplayDivision) -> DiscordEmojiRef:
     if division is MatchReplayDivision.GOLD:
         return GOLD_DIVISION_EMOJI
     return SILVER_DIVISION_EMOJI
+
+
+def _render_division_emoji(
+        guild: discord.Guild,
+        bot: BignessLeagueBot,
+        division: MatchReplayDivision,
+) -> str:
+    return render_custom_emoji(
+        guild=guild,
+        bot=bot,
+        emoji=_division_emoji(division),
+    )
 
 
 def _game_winner_label(locale: str | discord.Locale | None) -> str:

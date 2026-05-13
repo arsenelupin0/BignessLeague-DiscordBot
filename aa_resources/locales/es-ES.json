@@ -168,9 +168,6 @@
         "parameters": {
           "division": {
             "description": "División cuya clasificación quieres recalcular."
-          },
-          "image": {
-            "description": "Adjunta una imagen de la clasificación actualizada."
           }
         }
       },
@@ -363,7 +360,7 @@
         "roster_validation_with_unmatched": "## Verificación de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- Métodos de coincidencia: {match_methods}\n{method_breakdown}\n- Jugadores no encontrados:\n{unmatched_players}\n_ _\n## Información incorrecta\n- En caso de jugar con algún jugador que no coincida con los datos registrados, algún miembro del **Staff** se pondrá en contacto con vosotros para revisar este caso.\n- Si se juega con alineación indebida, podrá conllevar sanción grave, tanto al club como al jugador.\n- Se debe aportar toda la información posible si esto ocurre.\n_ _\n## Resumen de estadísticas",
         "roster_validation_more_unmatched": "  - Y {remaining} más."
       },
-      "standings_refreshed": "Clasificación de `{division}` recalculada desde la tabla principal en `{standings_sheet_name}`.{image_warning}",
+      "standings_refreshed": "# Clasificación actual de {division_emoji}\n- Se ha actualizado la tabla.\n- En caso de detectar un error, abrir un ticket de tipo competición.",
       "image_render_failed": "\n\nNo he podido renderizar la imagen resumen. El proceso principal se ha completado correctamente."
     },
     "team_signing": {

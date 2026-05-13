@@ -116,9 +116,6 @@
         "parameters": {
           "division": {
             "description": "Division whose standings you want to recalculate."
-          },
-          "image": {
-            "description": "Attach an image of the updated standings."
           }
         }
       },
@@ -334,7 +331,7 @@
         "roster_validation_with_unmatched": "## Player verification\n- Verified players: **{matched_unique}/{unique_players}** {status_icon}\n- Match methods: {match_methods}\n{method_breakdown}\n- Unmatched players:\n{unmatched_players}\n_ _\n## Incorrect information\n- If a played player does not match the registered data, a **Staff** member will contact you to review the case.\n- Playing with an invalid lineup may lead to a serious sanction for both the club and the player.\n- Provide as much information as possible if this happens.",
         "roster_validation_more_unmatched": "  - And {remaining} more."
       },
-      "standings_refreshed": "`{division}` standings recalculated from the main table in `{standings_sheet_name}`.{image_warning}",
+      "standings_refreshed": "# Current standings for {division_emoji}\n- The table has been updated.\n- If you detect an error, open a competition ticket.",
       "image_render_failed": "\n\nI could not render the summary image. The main process completed correctly."
     },
     "team_signing": {

@@ -306,15 +306,8 @@ class _CommandsMatchReplaysRefreshStandingsParametersDivision:
         default_text="Divisi\u00f3n cuya clasificaci\u00f3n quieres recalcular.")
 
 
-class _CommandsMatchReplaysRefreshStandingsParametersImage:
-    description: TranslationKey = TranslationKey(
-        key="commands.match_replays.refresh_standings.parameters.image.description",
-        default_text="Adjunta una imagen de la clasificaci\u00f3n actualizada.")
-
-
 class _CommandsMatchReplaysRefreshStandingsParameters:
     division: _CommandsMatchReplaysRefreshStandingsParametersDivision = _CommandsMatchReplaysRefreshStandingsParametersDivision()
-    image: _CommandsMatchReplaysRefreshStandingsParametersImage = _CommandsMatchReplaysRefreshStandingsParametersImage()
 
 
 class _CommandsMatchReplaysRefreshStandings:
@@ -641,7 +634,7 @@ class _MessagesMatchReplaysUploaded:
 class _MessagesMatchReplays:
     uploaded: _MessagesMatchReplaysUploaded = _MessagesMatchReplaysUploaded()
     standings_refreshed: TranslationKey = TranslationKey(key="messages.match_replays.standings_refreshed",
-                                                         default_text="Clasificaci\u00f3n de `{division}` recalculada desde la tabla principal en `{standings_sheet_name}`.{image_warning}")
+                                                         default_text="# Clasificaci\u00f3n actual de {division_emoji}\n- Se ha actualizado la tabla.\n- En caso de detectar un error, abrir un ticket de tipo competici\u00f3n.")
     image_render_failed: TranslationKey = TranslationKey(key="messages.match_replays.image_render_failed",
                                                          default_text="\n\nNo he podido renderizar la imagen resumen. El proceso principal se ha completado correctamente.")
 
