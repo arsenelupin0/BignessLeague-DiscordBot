@@ -57,6 +57,8 @@ from bigness_league_bot.infrastructure.discord.match_summary_image_shared import
     _text_width,
 )
 
+LEADER_TITLE_GOLD: Color = (226, 184, 88)
+
 
 def build_match_replay_summary_image_file(
         *,
@@ -122,8 +124,10 @@ def _render_match_replay_summary_image(
     small_font = _load_font(size=SMALL_FONT_SIZE, font_path=font_path)
 
     y = PADDING_Y
-    team_one_color = ACCENT
-    team_two_color = GREEN
+    team_one_won_series = report.team_one_games > report.team_two_games
+    team_two_won_series = report.team_two_games > report.team_one_games
+    team_one_header_color, team_one_color = _result_colors(won=team_one_won_series)
+    team_two_header_color, team_two_color = _result_colors(won=team_two_won_series)
     draw.text(
         (width // 2, y),
         f"{report.division.label}  |  Jornada {report.matchday}  |  Partido {report.match_number}",
@@ -144,6 +148,8 @@ def _render_match_replay_summary_image(
         team_name_font=team_name_font,
         team_one_color=team_one_color,
         team_two_color=team_two_color,
+        team_one_header_color=team_one_header_color,
+        team_two_header_color=team_two_header_color,
         team_one_logo=team_one_logo,
         team_two_logo=team_two_logo,
     )
@@ -207,6 +213,8 @@ def _render_match_replay_summary_image(
         body_font=small_font,
         team_one_color=team_one_color,
         team_two_color=team_two_color,
+        team_one_header_color=team_one_header_color,
+        team_two_header_color=team_two_header_color,
     )
     return _save_png(image)
 
@@ -231,6 +239,8 @@ def _draw_series_score_panel(
         team_name_font: FontLike,
         team_one_color: Color,
         team_two_color: Color,
+        team_one_header_color: Color,
+        team_two_header_color: Color,
         team_one_logo: Any | None,
         team_two_logo: Any | None,
 ) -> None:
@@ -244,7 +254,7 @@ def _draw_series_score_panel(
         y=y + 25,
         size=76,
         team_name=report.team_one_name,
-        fill=BLUE_DARK,
+        fill=team_one_header_color,
         font=team_name_font,
         logo_image=team_one_logo,
     )
@@ -292,7 +302,7 @@ def _draw_series_score_panel(
         y=y + 25,
         size=76,
         team_name=report.team_two_name,
-        fill=GREEN_DARK,
+        fill=team_two_header_color,
         font=team_name_font,
         logo_image=team_two_logo,
     )
@@ -339,7 +349,7 @@ def _draw_leader_cards(
     for index, (label, leader) in enumerate(leaders):
         card_x = x + index * (card_width + gap)
         _draw_card(draw, (card_x, y, card_x + card_width, y + 118), fill=(9, 22, 42), outline=(75, 85, 105))
-        draw.text((card_x + card_width // 2, y + 24), label, font=title_font, fill=MUTED, anchor="mm")
+        draw.text((card_x + card_width // 2, y + 24), label, font=title_font, fill=LEADER_TITLE_GOLD, anchor="mm")
         if leader is None:
             draw.text((card_x + card_width // 2, y + 70), "-", font=value_font, fill=TEXT, anchor="mm")
             continue
@@ -362,6 +372,8 @@ def _draw_team_totals(
         body_font: FontLike,
         team_one_color: Color,
         team_two_color: Color,
+        team_one_header_color: Color,
+        team_two_header_color: Color,
 ) -> None:
     gap = 24
     table_width = (width - gap) // 2
@@ -373,7 +385,7 @@ def _draw_team_totals(
         team_name=report.team_one_name,
         rows=team_one_rows,
         table_height=table_height,
-        header_color=BLUE_DARK,
+        header_color=team_one_header_color,
         accent=team_one_color,
         header_font=header_font,
         body_font=body_font,
@@ -386,7 +398,7 @@ def _draw_team_totals(
         team_name=report.team_two_name,
         rows=team_two_rows,
         table_height=table_height,
-        header_color=GREEN_DARK,
+        header_color=team_two_header_color,
         accent=team_two_color,
         header_font=header_font,
         body_font=body_font,
@@ -421,7 +433,7 @@ def _draw_player_totals_table(
     )
     _draw_card(draw, (x, y, x + width, y + table_height), fill=(9, 20, 35), outline=accent)
     draw.rounded_rectangle((x, y, x + width, y + 48), radius=12, fill=header_color, outline=accent, width=1)
-    draw.text((x + 22, y + 25), team_name, font=header_font, fill=TEXT, anchor="lm")
+    draw.text((x + width // 2, y + 25), team_name, font=header_font, fill=TEXT, anchor="mm")
     _draw_table(
         draw,
         x=x + 16,
@@ -435,6 +447,12 @@ def _draw_player_totals_table(
         outline=None,
         vertical_lines=False,
     )
+
+
+def _result_colors(*, won: bool) -> tuple[Color, Color]:
+    if won:
+        return GREEN_DARK, GREEN
+    return BLUE_DARK, ACCENT
 
 
 def _draw_wrapped_team_name(
@@ -516,7 +534,7 @@ def _font_line_height(font: FontLike) -> int:
 
 
 def _player_totals_table_height(row_count: int) -> int:
-    return 62 + 30 + max(row_count, 1) * 28 + 36
+    return 62 + 30 + max(row_count, 1) * 28 + 44
 
 
 def _series_goals(report: MatchReplayReport) -> tuple[int, int]:

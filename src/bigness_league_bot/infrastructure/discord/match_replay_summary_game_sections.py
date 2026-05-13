@@ -16,7 +16,9 @@ from bigness_league_bot.application.services.match_replays import (
     match_replay_game_score,
 )
 from bigness_league_bot.infrastructure.discord.match_summary_image_shared import (
+    ACCENT,
     BLUE_DARK,
+    GREEN,
     GREEN_DARK,
     MUTED,
     TEXT,
@@ -28,6 +30,7 @@ from bigness_league_bot.infrastructure.discord.match_summary_image_shared import
     _draw_table,
     _parse_score,
     _team_names_match_for_render,
+    _text_width,
 )
 
 
@@ -48,7 +51,7 @@ def _draw_game_cards(
     card_width = (width - gap * 4) // 5
     for index in range(5):
         card_x = x + index * (card_width + gap)
-        _draw_card(draw, (card_x, y, card_x + card_width, y + 128), fill=(9, 22, 42), outline=(80, 91, 113))
+        _draw_card(draw, (card_x, y, card_x + card_width, y + 152), fill=(9, 22, 42), outline=(80, 91, 113))
         draw.text((card_x + card_width // 2, y + 22), f"GAME {index + 1}", font=title_font, fill=TEXT, anchor="mm")
         if index >= len(report.games):
             draw.text((card_x + card_width // 2, y + 72), "-", font=score_font, fill=MUTED, anchor="mm")
@@ -57,16 +60,48 @@ def _draw_game_cards(
         game: MatchReplayGame = report.games[index]
         score = match_replay_game_score(report, game)
         winner = _game_winner_for_report(report, game)
-        score_color = team_one_color if winner == report.team_one_name else team_two_color
-        draw.text((card_x + card_width // 2, y + 66), score, font=score_font, fill=score_color, anchor="mm")
-        winner_fill = BLUE_DARK if winner == report.team_one_name else GREEN_DARK
+        team_one_score_color = _side_accent_for_game(
+            winner,
+            side_name=report.team_one_name,
+            side_series_color=team_one_color,
+        )
+        team_two_score_color = _side_accent_for_game(
+            winner,
+            side_name=report.team_two_name,
+            side_series_color=team_two_color,
+        )
+        winner_accent = team_one_score_color if winner == report.team_one_name else team_two_score_color
+        parsed_score = _parse_score(score)
+        if parsed_score is None:
+            score_color = winner_accent if winner in {report.team_one_name, report.team_two_name} else MUTED
+            draw.text((card_x + card_width // 2, y + 66), score, font=score_font, fill=score_color, anchor="mm")
+        else:
+            _draw_colored_game_score(
+                draw,
+                x=card_x + card_width // 2,
+                y=y + 66,
+                team_one_goals=parsed_score[0],
+                team_two_goals=parsed_score[1],
+                team_one_color=team_one_score_color,
+                team_two_color=team_two_score_color,
+                score_font=score_font,
+            )
+        winner_fill = _header_color_for_accent(winner_accent)
         draw.rounded_rectangle(
-            (card_x + 8, y + 96, card_x + card_width - 8, y + 122),
+            (card_x + 8, y + 94, card_x + card_width - 8, y + 146),
             radius=7,
             fill=winner_fill,
             outline=(65, 80, 105),
         )
-        draw.text((card_x + card_width // 2, y + 109), f"Gana: {winner}", font=small_font, fill=TEXT, anchor="mm")
+        _draw_winner_label(
+            draw,
+            x=card_x + 8,
+            y=y + 94,
+            width=card_width - 16,
+            height=52,
+            winner=winner,
+            font=small_font,
+        )
 
 
 def _draw_game_stat_cards(
@@ -116,6 +151,17 @@ def _draw_game_stat_card(
     parsed_score = _parse_score(score)
     team_one_goals = parsed_score[0] if parsed_score is not None else game.blue.goals
     team_two_goals = parsed_score[1] if parsed_score is not None else game.orange.goals
+    winner = _game_winner_for_report(report, game)
+    team_one_accent = _side_accent_for_game(
+        winner,
+        side_name=report.team_one_name,
+        side_series_color=team_one_color,
+    )
+    team_two_accent = _side_accent_for_game(
+        winner,
+        side_name=report.team_two_name,
+        side_series_color=team_two_color,
+    )
 
     gap = 24
     table_width = (width - 40 - gap) // 2
@@ -129,8 +175,8 @@ def _draw_game_stat_card(
         team_name=report.team_one_name,
         team=team_one,
         goals=team_one_goals,
-        header_color=BLUE_DARK,
-        accent=team_one_color,
+        header_color=_header_color_for_accent(team_one_accent),
+        accent=team_one_accent,
         header_font=body_font,
         body_font=body_font,
         mirrored=False,
@@ -143,8 +189,8 @@ def _draw_game_stat_card(
         team_name=report.team_two_name,
         team=team_two,
         goals=team_two_goals,
-        header_color=GREEN_DARK,
-        accent=team_two_color,
+        header_color=_header_color_for_accent(team_two_accent),
+        accent=team_two_accent,
         header_font=body_font,
         body_font=body_font,
         mirrored=True,
@@ -213,6 +259,128 @@ def _game_stat_card_height(game: MatchReplayGame | None) -> int:
     else:
         row_count = max(len(game.blue.players), len(game.orange.players), 1)
     return 28 + 44 + 30 + row_count * 28 + 20
+
+
+def _draw_colored_game_score(
+        draw: ImageDrawLike,
+        *,
+        x: int,
+        y: int,
+        team_one_goals: int,
+        team_two_goals: int,
+        team_one_color: Color,
+        team_two_color: Color,
+        score_font: FontLike,
+) -> None:
+    separator_color = TEXT
+    left_text = str(team_one_goals)
+    separator_text = " - "
+    right_text = str(team_two_goals)
+    left_width = _text_width(score_font, left_text)
+    separator_width = _text_width(score_font, separator_text)
+    right_width = _text_width(score_font, right_text)
+    total_width = left_width + separator_width + right_width
+    current_x = x - total_width // 2
+    draw.text((current_x, y), left_text, font=score_font, fill=team_one_color, anchor="lm")
+    current_x += left_width
+    draw.text((current_x, y), separator_text, font=score_font, fill=separator_color, anchor="lm")
+    current_x += separator_width
+    draw.text((current_x, y), right_text, font=score_font, fill=team_two_color, anchor="lm")
+
+
+def _header_color_for_accent(accent: Color) -> Color:
+    if accent == GREEN:
+        return GREEN_DARK
+    return BLUE_DARK
+
+
+def _side_accent_for_game(
+        winner: str,
+        *,
+        side_name: str,
+        side_series_color: Color,
+) -> Color:
+    if winner == side_name:
+        return side_series_color
+    return ACCENT
+
+
+def _draw_winner_label(
+        draw: ImageDrawLike,
+        *,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        winner: str,
+        font: FontLike,
+) -> None:
+    draw.text((x + width // 2, y + 12), "GANA", font=font, fill=TEXT, anchor="mm")
+    lines = _wrap_text_lines(winner, font=font, width=width - 14, max_lines=2)
+    if not lines:
+        return
+
+    line_height = _font_line_height(font)
+    name_block_height = len(lines) * line_height
+    name_y = y + 30 + ((height - 30 - name_block_height) // 2) + line_height // 2
+    for index, line in enumerate(lines):
+        draw.text((x + width // 2, name_y + index * line_height), line, font=font, fill=TEXT, anchor="mm")
+
+
+def _wrap_text_lines(
+        text: str,
+        *,
+        font: FontLike,
+        width: int,
+        max_lines: int,
+) -> tuple[str, ...]:
+    words = [word for word in text.strip().split() if word]
+    if not words:
+        return ()
+
+    lines: list[str] = []
+    current_line = ""
+    for word in words:
+        candidate = f"{current_line} {word}".strip()
+        if not current_line or _text_width(font, candidate) <= width:
+            current_line = candidate
+            continue
+        lines.append(current_line)
+        current_line = word
+    if current_line:
+        lines.append(current_line)
+
+    if len(lines) <= max_lines:
+        return tuple(lines)
+    return _balance_wrapped_lines(words, font=font, width=width, max_lines=max_lines)
+
+
+def _balance_wrapped_lines(
+        words: list[str],
+        *,
+        font: FontLike,
+        width: int,
+        max_lines: int,
+) -> tuple[str, ...]:
+    if max_lines != 2 or len(words) < 2:
+        return tuple(" ".join(words[index::max_lines]) for index in range(max_lines))
+
+    candidates: list[tuple[int, tuple[str, str]]] = []
+    for split_index in range(1, len(words)):
+        first_line = " ".join(words[:split_index])
+        second_line = " ".join(words[split_index:])
+        first_width = _text_width(font, first_line)
+        second_width = _text_width(font, second_line)
+        if first_width <= width and second_width <= width:
+            candidates.append((abs(first_width - second_width), (first_line, second_line)))
+    if candidates:
+        return min(candidates, key=lambda item: item[0])[1]
+    return " ".join(words[: len(words) // 2]), " ".join(words[len(words) // 2:])
+
+
+def _font_line_height(font: FontLike) -> int:
+    _, top, _, bottom = font.getbbox("Ag")
+    return int(bottom - top + 4)
 
 
 def _game_winner_for_report(report: MatchReplayReport, game: MatchReplayGame) -> str:
