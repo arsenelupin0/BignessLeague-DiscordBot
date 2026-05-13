@@ -533,7 +533,9 @@
       "bulk_delete_category_ambiguous": "Multiple categories are named `{category_name}`. Use an autocomplete option to select the exact category.",
       "bulk_delete_category_empty": "The category `{category_name}` has no channels to delete.",
       "match_channel_team_roles_unresolved": "Could not resolve exactly two team roles in this channel. Detected team roles: {role_count}.",
-      "match_channel_caster_roles_unresolved": "Could not resolve the caster role from the configured extra match-channel roles."
+      "match_channel_caster_roles_unresolved": "Could not resolve the caster role from the configured extra match-channel roles.",
+      "dm_guild_unavailable": "I could not resolve the Bigness League server to validate your roles from DMs.",
+      "dm_member_not_found": "I could not find you as a member of the Bigness League server. Join the server or check that you are using the same account."
     },
     "match_channel_creation": {
       "same_team_roles": "You cannot create a match using the same role twice: `{role_name}`.",

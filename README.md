@@ -125,7 +125,10 @@ Restricciones de `/cerrar_canal`:
 
 `/horarios_fijados`:
 
-- solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
+- puede usarse en servidor y por MD
+- solo puede usarlo un miembro con `Staff`, `Administrador`, `Ceo` o `CASTER`
+- en MD valida esos roles contra el servidor configurado con `DISCORD_GUILD_ID`; si no existe, usa el unico servidor
+  donde este conectado el bot
 - lista los canales de partido cuyo estado actual es `📆`
 - agrupa primero por las categorias configuradas en `BOT_GOLD_DIVISION_CATEGORY_ID` y
   `BOT_SILVER_DIVISION_CATEGORY_ID`, y despues ordena cada division por horario

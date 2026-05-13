@@ -33,7 +33,6 @@ from bigness_league_bot.core.timezones import resolve_timezone
 from bigness_league_bot.infrastructure.discord.channel_access_management import (
     ChannelManagementError,
     UnsupportedChannelError,
-    ensure_allowed_member,
 )
 from bigness_league_bot.infrastructure.discord.emojis import (
     GOLD_DIVISION_EMOJI,
@@ -69,6 +68,7 @@ SPANISH_WEEKDAYS = (
     "Sábado",
     "Domingo",
 )
+MATCH_SCHEDULE_ALLOWED_ROLE_NAMES = ("Staff", "Ceo", "Administrador", "CASTER")
 ENGLISH_WEEKDAYS = (
     "Monday",
     "Tuesday",
@@ -92,18 +92,13 @@ class MatchSchedulesCog(commands.Cog):
         name=localized_locale_str(I18N.commands.match_schedules.fixed.name),
         description=localized_locale_str(I18N.commands.match_schedules.fixed.description),
     )
-    @app_commands.guild_only()
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=False)
     async def fixed_schedules(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
     ) -> None:
-        guild = interaction.guild
-        if guild is None or not isinstance(interaction.user, discord.Member):
-            raise UnsupportedChannelError(
-                localize(I18N.errors.channel_management.server_only)
-            )
-
-        ensure_allowed_member(interaction.user)
+        guild, member = await _resolve_guild_and_member(interaction)
+        _ensure_match_schedule_member(member)
         await interaction.response.defer(thinking=True)
 
         store = MatchScheduleStore(interaction.client.settings.match_schedule_state_file)
@@ -370,6 +365,58 @@ def _entry_belongs_to_division(
 ) -> bool:
     channel = guild.get_channel(entry.channel_id)
     return isinstance(channel, discord.TextChannel) and channel.category_id == division.category_id
+
+
+async def _resolve_guild_and_member(
+        interaction: discord.Interaction[BignessLeagueBot],
+) -> tuple[discord.Guild, discord.Member]:
+    guild = interaction.guild
+    if guild is not None and isinstance(interaction.user, discord.Member):
+        return guild, interaction.user
+
+    guild = _resolve_dm_source_guild(interaction.client)
+    member = guild.get_member(interaction.user.id)
+    if member is None:
+        try:
+            member = await guild.fetch_member(interaction.user.id)
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
+            member = None
+
+    if member is None:
+        raise ChannelManagementError(
+            localize(I18N.errors.channel_management.dm_member_not_found)
+        )
+
+    return guild, member
+
+
+def _resolve_dm_source_guild(bot: BignessLeagueBot) -> discord.Guild:
+    guild_id = bot.settings.guild_id
+    if guild_id is not None:
+        guild = bot.get_guild(guild_id)
+        if guild is not None:
+            return guild
+
+    if len(bot.guilds) == 1:
+        return bot.guilds[0]
+
+    raise UnsupportedChannelError(
+        localize(I18N.errors.channel_management.dm_guild_unavailable)
+    )
+
+
+def _ensure_match_schedule_member(member: discord.Member) -> None:
+    member_role_names = {role.name.casefold() for role in member.roles}
+    allowed_role_names = {role_name.casefold() for role_name in MATCH_SCHEDULE_ALLOWED_ROLE_NAMES}
+    if member_role_names & allowed_role_names:
+        return
+
+    raise ChannelManagementError(
+        localize(
+            I18N.errors.channel_management.unauthorized_role,
+            protected_roles=", ".join(MATCH_SCHEDULE_ALLOWED_ROLE_NAMES),
+        )
+    )
 
 
 def _weekday_name(

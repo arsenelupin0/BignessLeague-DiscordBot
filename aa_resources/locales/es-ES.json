@@ -671,7 +671,9 @@
       "bulk_delete_category_ambiguous": "Hay varias categorías llamadas `{category_name}`. Usa una opción del autocompletado para seleccionar la categoría exacta.",
       "bulk_delete_category_empty": "La categoría `{category_name}` no tiene canales que eliminar.",
       "match_channel_team_roles_unresolved": "No se han podido resolver exactamente dos roles de equipo en este canal. Roles de equipo detectados: {role_count}.",
-      "match_channel_caster_roles_unresolved": "No se ha podido resolver el rol de caster desde los roles extra configurados para canales de partido."
+      "match_channel_caster_roles_unresolved": "No se ha podido resolver el rol de caster desde los roles extra configurados para canales de partido.",
+      "dm_guild_unavailable": "No he podido resolver el servidor de Bigness League para validar tus roles desde MD.",
+      "dm_member_not_found": "No he podido encontrarte como miembro del servidor de Bigness League. Entra al servidor o revisa que estás usando la misma cuenta."
     },
     "tickets": {
       "ceo_only": "Solo puede publicar el panel de tickets un miembro con el rol `CEO`.",

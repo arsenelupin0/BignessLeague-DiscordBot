@@ -1253,6 +1253,12 @@ class _ErrorsChannelManagement:
     match_channel_caster_roles_unresolved: TranslationKey = TranslationKey(
         key="errors.channel_management.match_channel_caster_roles_unresolved",
         default_text="No se ha podido resolver el rol de caster desde los roles extra configurados para canales de partido.")
+    dm_guild_unavailable: TranslationKey = TranslationKey(
+        key="errors.channel_management.dm_guild_unavailable",
+        default_text="No he podido resolver el servidor de Bigness League para validar tus roles desde MD.")
+    dm_member_not_found: TranslationKey = TranslationKey(
+        key="errors.channel_management.dm_member_not_found",
+        default_text="No he podido encontrarte como miembro del servidor de Bigness League. Entra al servidor o revisa que estás usando la misma cuenta.")
 
 class _ErrorsTickets:
     ceo_only: TranslationKey = TranslationKey(key="errors.tickets.ceo_only",
