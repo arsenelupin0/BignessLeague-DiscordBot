@@ -57,10 +57,11 @@ from bigness_league_bot.infrastructure.google.team_sheets.models import (
 from bigness_league_bot.infrastructure.google.team_sheets.parser import (
     _collect_players_by_discord,
     _collect_technical_staff_rows,
+    _build_player_values_grid,
     _parse_players,
+    _resolve_technical_staff_column_offsets,
     _resolve_technical_staff_values,
     _to_team_signing_player,
-    _build_player_values_grid,
 )
 from bigness_league_bot.infrastructure.google.team_sheets.player_signing_mutations import (
     register_team_signings_sync as _register_team_signings_sync,
@@ -105,7 +106,7 @@ class TeamSheetMutationService:
             _collect_team_blocks(cell_grid),
             worksheet_title=worksheet_title,
         )
-        normalized_discord_name = _normalize_member_lookup_text(update.discord_name)
+        normalized_discord_name = _normalize_member_lookup_text(update.original_discord_id)
         existing_players = _parse_players(cell_grid, target_block)
         matching_players = tuple(
             player
@@ -114,7 +115,7 @@ class TeamSheetMutationService:
         )
         if len(matching_players) != 1:
             _raise_removal_not_found_error(
-                update.discord_name,
+                update.original_discord_id,
                 remove_player=True,
                 remove_staff=False,
             )
@@ -122,10 +123,11 @@ class TeamSheetMutationService:
         updated_players = tuple(
             TeamSigningPlayer(
                 player_name=update.player_name,
-                tracker_url=update.tracker_url,
-                discord_name=player.discord_name,
+                discord_id=update.discord_id,
+                platform=update.platform,
+                platform_id=update.platform_id,
                 epic_name=update.epic_name,
-                rocket_name=update.rocket_name,
+                tracker_url=update.tracker_url,
                 mmr=update.mmr,
             )
             if _normalize_member_lookup_text(player.discord_name) == normalized_discord_name
@@ -166,7 +168,7 @@ class TeamSheetMutationService:
         return TeamRosterPlayerUpdateResult(
             worksheet_title=worksheet_title,
             team_name=target_block.title,
-            discord_name=update.discord_name,
+            discord_name=update.discord_id,
         )
 
     def remove_team_player_by_discord_sync(
@@ -251,6 +253,7 @@ class TeamSheetMutationService:
 
         service = self.client.build_service(read_only=False)
         sheet_scope, sheet_grids = self.client.fetch_sheet_grids(service)
+        sheet_grid_by_title = dict(sheet_grids)
         player_matches = _find_player_matches(normalized_discord_name, sheet_grids)
         staff_matches = _find_technical_staff_matches(
             normalized_discord_name,
@@ -376,21 +379,29 @@ class TeamSheetMutationService:
             removed_staff_role_names = tuple(match.member.role_name for match in target_staff_matches)
             remaining_staff_role_names = ()
             for staff_match in target_staff_matches:
-                update_data.append(
-                    {
-                        "range": _build_a1_range(
-                            staff_match.worksheet_title,
-                            staff_match.row_index,
-                            staff_match.block.start_column + 1,
-                            1,
-                            3,
+                staff_sheet_grid = sheet_grid_by_title.get(staff_match.worksheet_title)
+                if staff_sheet_grid is None:
+                    raise TeamSheetLayoutError(
+                        localize(
+                            I18N.errors.team_signing.team_sheet_layout_invalid,
+                            sheet_name=sheet_scope,
+                        )
+                    )
+                _, player_offset, discord_offset, epic_offset = _resolve_technical_staff_column_offsets(
+                    staff_sheet_grid,
+                    staff_match.block,
+                )
+                update_data.extend(
+                    _build_technical_staff_value_updates(
+                        staff_match.worksheet_title,
+                        staff_match.row_index,
+                        staff_match.block.start_column,
+                        (
+                            (player_offset, PLACEHOLDER_CELL_VALUE),
+                            (discord_offset, PLACEHOLDER_CELL_VALUE),
+                            (epic_offset, PLACEHOLDER_CELL_VALUE),
                         ),
-                        "values": [[
-                            PLACEHOLDER_CELL_VALUE,
-                            PLACEHOLDER_CELL_VALUE,
-                            PLACEHOLDER_CELL_VALUE,
-                        ]],
-                    }
+                    )
                 )
 
         after_player_matches = tuple(
@@ -521,6 +532,10 @@ class TeamSheetMutationService:
             cell_grid,
             target_block,
         )
+        _, player_offset, discord_offset, epic_offset = _resolve_technical_staff_column_offsets(
+            cell_grid,
+            target_block,
+        )
         for member in technical_staff_batch.members:
             target_row = technical_staff_rows.get(
                 _normalize_technical_staff_role_name(member.role_name)
@@ -536,31 +551,27 @@ class TeamSheetMutationService:
                 )
 
             if _is_technical_staff_clear_request(member):
-                discord_name = PLACEHOLDER_CELL_VALUE
+                player_name = PLACEHOLDER_CELL_VALUE
+                discord_id = PLACEHOLDER_CELL_VALUE
                 epic_name = PLACEHOLDER_CELL_VALUE
-                rocket_name = PLACEHOLDER_CELL_VALUE
             else:
-                discord_name, epic_name, rocket_name = _resolve_technical_staff_values(
+                player_name, discord_id, epic_name = _resolve_technical_staff_values(
                     member,
                     players_by_discord,
                     team_name=technical_staff_batch.team_name,
                     worksheet_name=worksheet_title,
                 )
-            update_data.append(
-                {
-                    "range": _build_a1_range(
-                        worksheet_title,
-                        target_row,
-                        target_block.start_column + 1,
-                        1,
-                        3,
+            update_data.extend(
+                _build_technical_staff_value_updates(
+                    worksheet_title,
+                    target_row,
+                    target_block.start_column,
+                    (
+                        (player_offset, player_name),
+                        (discord_offset, discord_id),
+                        (epic_offset, epic_name),
                     ),
-                    "values": [[
-                        discord_name,
-                        epic_name,
-                        rocket_name,
-                    ]],
-                }
+                )
             )
 
         try:
@@ -591,7 +602,28 @@ class TeamSheetMutationService:
 
 def _is_technical_staff_clear_request(member: TeamTechnicalStaffMember) -> bool:
     return (
-            not member.discord_name.strip()
+            not member.player_name.strip()
+            and not member.discord_id.strip()
             and not member.epic_name.strip()
-            and not member.rocket_name.strip()
     )
+
+
+def _build_technical_staff_value_updates(
+        worksheet_title: str,
+        row_index: int,
+        start_column: int,
+        values_by_offset: tuple[tuple[int, str], ...],
+) -> list[dict[str, Any]]:
+    return [
+        {
+            "range": _build_a1_range(
+                worksheet_title,
+                row_index,
+                start_column + offset,
+                1,
+                1,
+            ),
+            "values": [[value]],
+        }
+        for offset, value in values_by_offset
+    ]

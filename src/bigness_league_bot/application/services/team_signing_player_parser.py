@@ -23,21 +23,34 @@ from bigness_league_bot.application.services.team_signing_template import (
 REQUIRED_PLAYER_FIELDS = (
     "position",
     "player_name",
-    "tracker_url",
-    "discord_name",
+    "discord_id",
+    "platform",
+    "platform_id",
     "epic_name",
-    "rocket_name",
+    "tracker_url",
     "mmr",
 )
+ALLOWED_PLAYER_PLATFORMS = frozenset({"steam", "epic", "xbl", "psn", "switch"})
 LABELLED_PLAYER_FIELD_KEYS = {
     "jugador": "player_name",
-    "tracker": "tracker_url",
-    "discord": "discord_name",
+    "player": "player_name",
+    "discord id": "discord_id",
+    "discord": "discord_id",
+    "platform": "platform",
+    "platform id": "platform_id",
     "epic name": "epic_name",
-    "rocket in-game name": "rocket_name",
+    "tracker": "tracker_url",
     "mmr": "mmr",
 }
-LABELLED_PLAYER_FIELD_ORDER = tuple(LABELLED_PLAYER_FIELD_KEYS.values())
+LABELLED_PLAYER_FIELD_ORDER = (
+    "player_name",
+    "discord_id",
+    "platform",
+    "platform_id",
+    "epic_name",
+    "tracker_url",
+    "mmr",
+)
 
 
 def parse_team_signing_message(
@@ -66,7 +79,7 @@ def parse_team_signing_message(
 
     if not _looks_like_labelled_format(player_lines, "jugador"):
         raise TeamSigningParseError(
-            "La plantilla de jugadores debe usar bloques `Jugador:`, `Tracker:`, `Discord:`, `Epic Name:`, `Rocket In-Game Name:`, `MMR:`."
+            "La plantilla de jugadores debe usar bloques `Jugador:`, `Discord ID:`, `Platform:`, `Platform ID:`, `Epic Name:`, `Tracker:`, `MMR:`."
         )
 
     players = _parse_labelled_player_blocks(
@@ -147,12 +160,20 @@ def _build_team_signing_player(
             f"El valor de `MMR` no es válido en el bloque cerca de la línea {line_number}: `{mmr_value}`."
         )
 
+    platform = payload["platform"].casefold().strip()
+    if platform not in ALLOWED_PLAYER_PLATFORMS:
+        allowed_platforms = ", ".join(sorted(ALLOWED_PLAYER_PLATFORMS))
+        raise TeamSigningParseError(
+            f"El valor de `Platform` no es valido en el bloque cerca de la linea {line_number}: `{payload['platform']}`. Valores permitidos: {allowed_platforms}."
+        )
+
     return TeamSigningPlayer(
         player_name=payload["player_name"],
-        tracker_url=payload["tracker_url"],
-        discord_name=payload["discord_name"],
+        discord_id=payload["discord_id"],
+        platform=platform,
+        platform_id=payload["platform_id"],
         epic_name=payload["epic_name"],
-        rocket_name=payload["rocket_name"],
+        tracker_url=payload["tracker_url"],
         mmr=mmr_value,
     )
 
@@ -161,18 +182,18 @@ def _ensure_unique_player_discord_names(players: list[TeamSigningPlayer]) -> Non
     seen_names: set[str] = set()
     duplicated_names: set[str] = set()
     for player in players:
-        normalized_discord_name = _normalize_player_discord_name(player.discord_name)
+        normalized_discord_name = _normalize_player_discord_name(player.discord_id)
         if not normalized_discord_name:
             continue
         if normalized_discord_name in seen_names:
-            duplicated_names.add(player.discord_name)
+            duplicated_names.add(player.discord_id)
             continue
         seen_names.add(normalized_discord_name)
 
     if duplicated_names:
         duplicated_names_label = ", ".join(sorted(duplicated_names))
         raise TeamSigningParseError(
-            f"La plantilla contiene jugadores repetidos en la columna `Discord`: {duplicated_names_label}."
+            f"La plantilla contiene jugadores repetidos en la columna `Discord ID`: {duplicated_names_label}."
         )
 
 

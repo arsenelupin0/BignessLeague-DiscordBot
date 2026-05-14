@@ -81,11 +81,13 @@ class TeamTechnicalStaffWriteResult:
 class TeamRosterPlayerUpdate:
     division_name: str
     team_name: str
-    discord_name: str
+    original_discord_id: str
     player_name: str
-    tracker_url: str
+    discord_id: str
+    platform: str
+    platform_id: str
     epic_name: str
-    rocket_name: str
+    tracker_url: str
     mmr: str
 
 

@@ -178,21 +178,25 @@ def find_staff_members_for_roster_modification(
 def build_player_roster_update(
         team_profile: TeamProfile,
         *,
-        discord_name: str,
+        original_discord_id: str,
         player_name: str,
-        tracker_url: str,
+        discord_id: str,
+        platform: str,
+        platform_id: str,
         epic_name: str,
-        rocket_name: str,
+        tracker_url: str,
         mmr: str,
 ) -> TeamRosterPlayerUpdate:
     return TeamRosterPlayerUpdate(
         division_name=team_profile.division_name,
         team_name=team_profile.team_name,
-        discord_name=discord_name,
+        original_discord_id=original_discord_id,
         player_name=player_name.strip(),
-        tracker_url=tracker_url.strip(),
+        discord_id=discord_id.strip(),
+        platform=platform.casefold().strip(),
+        platform_id=platform_id.strip(),
         epic_name=epic_name.strip(),
-        rocket_name=rocket_name.strip(),
+        tracker_url=tracker_url.strip(),
         mmr=mmr.strip(),
     )
 
@@ -216,8 +220,9 @@ def build_staff_roster_modification_batch(
         *,
         discord_name: str,
         selected_role_keys: tuple[str, ...],
+        player_name: str,
+        discord_id: str,
         epic_name: str,
-        rocket_name: str,
 ) -> TeamTechnicalStaffBatch:
     normalized_selected_role_keys: list[str] = []
     for selected_role_key in selected_role_keys:
@@ -237,9 +242,9 @@ def build_staff_roster_modification_batch(
     members: list[TeamTechnicalStaffMember] = [
         TeamTechnicalStaffMember(
             role_name=INTERACTIVE_STAFF_ROLE_LABELS[role_key],
-            discord_name=discord_name,
+            player_name=player_name.strip(),
+            discord_id=discord_id.strip(),
             epic_name=epic_name.strip(),
-            rocket_name=rocket_name.strip(),
         )
         for role_key in normalized_selected_role_keys
     ]
@@ -255,9 +260,9 @@ def build_staff_roster_modification_batch(
         members.append(
             TeamTechnicalStaffMember(
                 role_name=INTERACTIVE_STAFF_ROLE_LABELS[role_key],
-                discord_name="",
+                player_name="",
+                discord_id="",
                 epic_name="",
-                rocket_name="",
             )
         )
 

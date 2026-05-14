@@ -14,6 +14,7 @@ from bigness_league_bot.application.services.team_signing import TeamSigningPlay
 from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.google.team_sheets.blocks import _get_cell, _get_cell_value
 from bigness_league_bot.infrastructure.google.team_sheets.cells import (
+    _build_hyperlink_cell_value,
     _build_player_cell_value,
     _is_placeholder_row,
     _normalize_lookup_text,
@@ -35,10 +36,70 @@ from bigness_league_bot.infrastructure.google.team_sheets.schema import (
     TEAM_BLOCK_PLAYERS_ROW_OFFSET,
     TEAM_BLOCK_SUMMARY_ROW_OFFSET,
     TEAM_BLOCK_TECHNICAL_STAFF_ROW_OFFSET,
+    TECHNICAL_STAFF_HEADER_VARIANTS_NORMALIZED,
     TECHNICAL_STAFF_HEADERS_NORMALIZED,
     TECHNICAL_STAFF_TITLE_NORMALIZED,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
+
+TECHNICAL_STAFF_ROLE_HEADER = "rol"
+TECHNICAL_STAFF_PLAYER_HEADERS = {"player", "jugador"}
+TECHNICAL_STAFF_DISCORD_HEADER = "discord id"
+TECHNICAL_STAFF_EPIC_HEADER = "epic name"
+
+
+def _resolve_technical_staff_column_offsets(
+        cell_grid: dict[int, dict[int, SheetCell]],
+        block: TeamBlockAnchor,
+        *,
+        start_row: int | None = None,
+) -> tuple[int, int, int, int]:
+    if start_row is None:
+        start_row = _find_technical_staff_start_row(cell_grid, block)
+    if start_row is None:
+        return 0, 1, 2, 3
+
+    header_row = start_row - 1
+    header_by_offset = {
+        offset: _normalize_lookup_text(
+            _get_cell_value(cell_grid, header_row, block.start_column + offset)
+        )
+        for offset in range(TEAM_BLOCK_COLUMN_COUNT)
+    }
+    role_offset = _find_header_offset(
+        header_by_offset,
+        {TECHNICAL_STAFF_ROLE_HEADER},
+        fallback=0,
+    )
+    player_offset = _find_header_offset(
+        header_by_offset,
+        TECHNICAL_STAFF_PLAYER_HEADERS,
+        fallback=1,
+    )
+    discord_offset = _find_header_offset(
+        header_by_offset,
+        {TECHNICAL_STAFF_DISCORD_HEADER},
+        fallback=2,
+    )
+    epic_offset = _find_header_offset(
+        header_by_offset,
+        {TECHNICAL_STAFF_EPIC_HEADER},
+        fallback=3,
+    )
+    return role_offset, player_offset, discord_offset, epic_offset
+
+
+def _find_header_offset(
+        header_by_offset: dict[int, str],
+        accepted_headers: set[str],
+        *,
+        fallback: int,
+) -> int:
+    for offset, header in header_by_offset.items():
+        if header in accepted_headers:
+            return offset
+
+    return fallback
 
 
 def _build_player_values_grid(
@@ -48,10 +109,11 @@ def _build_player_values_grid(
     for player in players:
         rows.append(
             [
-                _build_player_cell_value(player.player_name, player.tracker_url),
-                player.discord_name,
-                player.epic_name,
-                player.rocket_name,
+                _build_player_cell_value(player.player_name),
+                player.discord_id,
+                player.platform,
+                player.platform_id,
+                _build_hyperlink_cell_value(player.epic_name, player.tracker_url),
                 player.mmr,
             ]
         )
@@ -66,9 +128,10 @@ def _to_team_signing_player(player: TeamProfilePlayer) -> TeamSigningPlayer:
     return TeamSigningPlayer(
         player_name=player.player_name,
         tracker_url=player.tracker_url or "",
-        discord_name=player.discord_name,
+        discord_id=player.discord_id,
+        platform=player.platform,
+        platform_id=player.platform_id,
         epic_name=player.epic_name,
-        rocket_name=player.rocket_name,
         mmr=player.mmr,
     )
 
@@ -90,27 +153,33 @@ def _parse_players(
             row_index,
             block.start_column + 1,
         )
-        epic_cell = _get_cell(
+        platform_cell = _get_cell(
             cell_grid,
             row_index,
             block.start_column + 2,
         )
-        rocket_cell = _get_cell(
+        platform_id_cell = _get_cell(
             cell_grid,
             row_index,
             block.start_column + 3,
         )
-        mmr_cell = _get_cell(
+        epic_cell = _get_cell(
             cell_grid,
             row_index,
             block.start_column + 4,
+        )
+        mmr_cell = _get_cell(
+            cell_grid,
+            row_index,
+            block.start_column + 5,
         )
 
         row_values = (
             player_cell.value,
             discord_cell.value,
+            platform_cell.value,
+            platform_id_cell.value,
             epic_cell.value,
-            rocket_cell.value,
             mmr_cell.value,
         )
         if _is_placeholder_row(*row_values):
@@ -120,11 +189,12 @@ def _parse_players(
             TeamProfilePlayer(
                 position=len(players) + 1,
                 player_name=player_cell.value,
-                discord_name=discord_cell.value,
+                discord_id=discord_cell.value,
+                platform=platform_cell.value,
+                platform_id=platform_id_cell.value,
                 epic_name=epic_cell.value,
-                rocket_name=rocket_cell.value,
                 mmr=mmr_cell.value,
-                tracker_url=player_cell.hyperlink,
+                tracker_url=epic_cell.hyperlink,
             )
         )
 
@@ -153,7 +223,7 @@ def _parse_summary(
     top_three_average = _get_cell_value(
         cell_grid,
         summary_row,
-        block.start_column + 4,
+        block.start_column + 5,
     )
     if not remaining_signings and not top_three_average:
         raise TeamSheetLayoutError(
@@ -200,35 +270,40 @@ def _parse_technical_staff(
     if start_row is None:
         return ()
 
+    role_offset, player_offset, discord_offset, epic_offset = _resolve_technical_staff_column_offsets(
+        cell_grid,
+        block,
+        start_row=start_row,
+    )
     members: list[TeamProfileStaffMember] = []
     for offset in range(TEAM_BLOCK_MAX_TECHNICAL_STAFF):
         row_index = start_row + offset
         role_cell = _get_cell(
             cell_grid,
             row_index,
-            block.start_column,
+            block.start_column + role_offset,
+        )
+        player_cell = _get_cell(
+            cell_grid,
+            row_index,
+            block.start_column + player_offset,
         )
         discord_cell = _get_cell(
             cell_grid,
             row_index,
-            block.start_column + 1,
+            block.start_column + discord_offset,
         )
         epic_cell = _get_cell(
             cell_grid,
             row_index,
-            block.start_column + 2,
-        )
-        rocket_cell = _get_cell(
-            cell_grid,
-            row_index,
-            block.start_column + 3,
+            block.start_column + epic_offset,
         )
 
         row_values = (
             role_cell.value,
+            player_cell.value,
             discord_cell.value,
             epic_cell.value,
-            rocket_cell.value,
         )
         if _is_placeholder_row(*row_values):
             continue
@@ -236,9 +311,9 @@ def _parse_technical_staff(
         members.append(
             TeamProfileStaffMember(
                 role_name=role_cell.value,
-                discord_name=discord_cell.value,
+                player_name=player_cell.value,
+                discord_id=discord_cell.value,
                 epic_name=epic_cell.value,
-                rocket_name=rocket_cell.value,
             )
         )
 
@@ -273,12 +348,33 @@ def _find_technical_staff_start_row(
             )
             for offset in range(len(TECHNICAL_STAFF_HEADERS_NORMALIZED))
         )
-        if header_values == TECHNICAL_STAFF_HEADERS_NORMALIZED:
+        if header_values in TECHNICAL_STAFF_HEADER_VARIANTS_NORMALIZED:
+            return headers_row + 1
+        if _is_technical_staff_header_row(cell_grid, block, headers_row):
             return headers_row + 1
 
         return row_index + 1
 
     return None
+
+
+def _is_technical_staff_header_row(
+        cell_grid: dict[int, dict[int, SheetCell]],
+        block: TeamBlockAnchor,
+        row_index: int,
+) -> bool:
+    header_values = {
+        _normalize_lookup_text(
+            _get_cell_value(cell_grid, row_index, block.start_column + offset)
+        )
+        for offset in range(TEAM_BLOCK_COLUMN_COUNT)
+    }
+    return (
+            TECHNICAL_STAFF_ROLE_HEADER in header_values
+            and bool(TECHNICAL_STAFF_PLAYER_HEADERS & header_values)
+            and TECHNICAL_STAFF_DISCORD_HEADER in header_values
+            and TECHNICAL_STAFF_EPIC_HEADER in header_values
+    )
 
 
 def _find_technical_staff_role_names_by_discord(
@@ -293,7 +389,7 @@ def _find_technical_staff_role_names_by_discord(
     return tuple(
         member.role_name
         for member in technical_staff
-        if _normalize_member_lookup_text(member.discord_name) == normalized_discord_name
+        if _normalize_member_lookup_text(member.discord_id) == normalized_discord_name
     )
 
 
@@ -303,7 +399,7 @@ def _collect_players_by_discord(
 ) -> dict[str, tuple[TeamProfilePlayer, ...]]:
     players_by_discord: dict[str, list[TeamProfilePlayer]] = {}
     for player in _parse_players(cell_grid, block):
-        normalized_discord_name = _normalize_member_lookup_text(player.discord_name)
+        normalized_discord_name = _normalize_member_lookup_text(player.discord_id)
         if not normalized_discord_name:
             continue
 
@@ -322,16 +418,16 @@ def _resolve_technical_staff_values(
         team_name: str,
         worksheet_name: str,
 ) -> tuple[str, str, str]:
-    if member.epic_name and member.rocket_name:
-        return member.discord_name, member.epic_name, member.rocket_name
+    if member.player_name and member.epic_name:
+        return member.player_name, member.discord_id, member.epic_name
 
-    normalized_discord_name = _normalize_member_lookup_text(member.discord_name)
+    normalized_discord_name = _normalize_member_lookup_text(member.discord_id)
     matching_players = players_by_discord.get(normalized_discord_name, ())
     if not matching_players:
         raise TeamSheetTechnicalStaffPlayerNotFoundError(
             localize(
                 I18N.errors.team_signing.technical_staff_player_not_found,
-                discord_name=member.discord_name,
+                discord_name=member.discord_id,
                 role_name=member.role_name,
                 team_name=team_name,
                 sheet_name=worksheet_name,
@@ -341,7 +437,7 @@ def _resolve_technical_staff_values(
         raise TeamSheetTechnicalStaffPlayerDuplicateError(
             localize(
                 I18N.errors.team_signing.technical_staff_player_duplicate,
-                discord_name=member.discord_name,
+                discord_name=member.discord_id,
                 role_name=member.role_name,
                 team_name=team_name,
                 sheet_name=worksheet_name,
@@ -350,9 +446,9 @@ def _resolve_technical_staff_values(
 
     player = matching_players[0]
     return (
-        member.discord_name,
+        member.player_name or player.player_name,
+        member.discord_id,
         member.epic_name or player.epic_name,
-        member.rocket_name or player.rocket_name,
     )
 
 

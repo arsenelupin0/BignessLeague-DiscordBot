@@ -31,6 +31,7 @@ from bigness_league_bot.infrastructure.google.team_sheets.parser import (
     _find_technical_staff_start_row,
     _parse_players,
     _parse_technical_staff,
+    _resolve_technical_staff_column_offsets,
 )
 from bigness_league_bot.infrastructure.google.team_sheets.schema import (
     PLACEHOLDER_CELL_VALUE,
@@ -66,34 +67,39 @@ def _find_technical_staff_matches(
             if start_row is None:
                 continue
 
+            role_offset, player_offset, discord_offset, epic_offset = _resolve_technical_staff_column_offsets(
+                cell_grid,
+                block,
+                start_row=start_row,
+            )
             for offset in range(TEAM_BLOCK_MAX_TECHNICAL_STAFF):
                 row_index = start_row + offset
                 role_cell = _get_cell(
                     cell_grid,
                     row_index,
-                    block.start_column,
+                    block.start_column + role_offset,
+                )
+                player_cell = _get_cell(
+                    cell_grid,
+                    row_index,
+                    block.start_column + player_offset,
                 )
                 discord_cell = _get_cell(
                     cell_grid,
                     row_index,
-                    block.start_column + 1,
+                    block.start_column + discord_offset,
                 )
                 epic_cell = _get_cell(
                     cell_grid,
                     row_index,
-                    block.start_column + 2,
-                )
-                rocket_cell = _get_cell(
-                    cell_grid,
-                    row_index,
-                    block.start_column + 3,
+                    block.start_column + epic_offset,
                 )
 
                 row_values = (
                     role_cell.value,
+                    player_cell.value,
                     discord_cell.value,
                     epic_cell.value,
-                    rocket_cell.value,
                 )
                 if _is_placeholder_row(*row_values):
                     continue
@@ -108,9 +114,9 @@ def _find_technical_staff_matches(
                         row_index=row_index,
                         member=TeamProfileStaffMember(
                             role_name=role_cell.value,
-                            discord_name=discord_cell.value,
+                            player_name=player_cell.value,
+                            discord_id=discord_cell.value,
                             epic_name=epic_cell.value,
-                            rocket_name=rocket_cell.value,
                         ),
                     )
                 )

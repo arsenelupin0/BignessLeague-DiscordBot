@@ -39,15 +39,20 @@ def _parse_mmr_sort_value(value: str) -> int:
 @dataclass(frozen=True, slots=True)
 class TeamSigningPlayer:
     player_name: str
-    tracker_url: str
-    discord_name: str
+    discord_id: str
+    platform: str
+    platform_id: str
     epic_name: str
-    rocket_name: str
+    tracker_url: str
     mmr: str
 
     @property
     def mmr_sort_value(self) -> int:
         return _parse_mmr_sort_value(self.mmr)
+
+    @property
+    def discord_name(self) -> str:
+        return self.discord_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,9 +66,13 @@ class TeamSigningBatch:
 @dataclass(frozen=True, slots=True)
 class TeamTechnicalStaffMember:
     role_name: str
-    discord_name: str
+    player_name: str
+    discord_id: str
     epic_name: str
-    rocket_name: str
+
+    @property
+    def discord_name(self) -> str:
+        return self.discord_id
 
 
 @dataclass(frozen=True, slots=True)

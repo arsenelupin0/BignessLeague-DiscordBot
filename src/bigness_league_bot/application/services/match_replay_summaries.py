@@ -14,12 +14,14 @@ from typing import Iterable
 
 import unicodedata
 
-from bigness_league_bot.application.services.match_replays import (
+from bigness_league_bot.application.services.match_replay_models import (
     MatchReplayPlayer,
     MatchReplayReport,
     MatchReplayRosterPlayer,
-    TEAM_NAME_IGNORED_TOKENS,
-    TEAM_TOKEN_PATTERN,
+)
+from bigness_league_bot.application.services.match_replay_team_names import (
+    match_replay_team_names_match,
+    normalize_match_replay_team_name,
 )
 
 
@@ -48,6 +50,7 @@ class MatchReplayRosterValidationSummary:
     unmatched_unique_players: int
     match_methods: tuple[MatchReplayMatchMethodCount, ...]
     unmatched_players: tuple[MatchReplayUnmatchedPlayer, ...]
+    epic_name_unmatched_players: tuple[MatchReplayUnmatchedPlayer, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,14 +116,18 @@ def build_match_replay_roster_validation_summary(
                 total_appearances += 1
                 player_key = _player_identity_key(replay_player)
                 match_methods = replay_player.match_methods
-                if not match_methods and replay_player.match_method:
+                if (
+                        not match_methods
+                        and replay_player.match_method
+                        and replay_player.resolution_status == "matched"
+                ):
                     match_methods = (replay_player.match_method,)
                 for method in match_methods:
                     method_players.setdefault(method, set()).add(player_key)
 
-                epic_verified = "epic_name" in match_methods
-                unique_players[player_key] = unique_players.get(player_key, False) or epic_verified
-                if epic_verified:
+                identity_verified = {"platform", "platform_id"} <= set(match_methods)
+                unique_players[player_key] = unique_players.get(player_key, False) or identity_verified
+                if identity_verified:
                     matched_appearances += 1
                     unmatched_players.pop(player_key, None)
                     continue
@@ -164,15 +171,49 @@ def build_match_replay_roster_validation_summary(
                 ),
             )
         ),
+        epic_name_unmatched_players=tuple(
+            player
+            for player in sorted(
+                unmatched_players.values(),
+                key=lambda player: (
+                    player.team_name.casefold(),
+                    player.player_name.casefold(),
+                ),
+            )
+            if "epic_name" not in _match_methods_for_unmatched_player(report, player)
+        ),
     )
+
+
+def _match_methods_for_unmatched_player(
+        report: MatchReplayReport,
+        unmatched_player: MatchReplayUnmatchedPlayer,
+) -> tuple[str, ...]:
+    target_key = _unmatched_player_key(unmatched_player)
+    for game in report.games:
+        for team in (game.blue, game.orange):
+            for replay_player in team.players:
+                if _player_identity_key(replay_player) != target_key:
+                    continue
+                return replay_player.match_methods or (
+                    (replay_player.match_method,) if replay_player.match_method else ()
+                )
+
+    return ()
+
+
+def _unmatched_player_key(player: MatchReplayUnmatchedPlayer) -> tuple[str, str]:
+    if player.platform_id:
+        return player.platform.casefold(), player.platform_id.casefold()
+    return "name", _normalize_player_lookup(player.player_name)
 
 
 def _missing_match_methods(match_methods: tuple[str, ...]) -> tuple[str, ...]:
     missing: list[str] = []
-    if "epic_name" not in match_methods:
-        missing.append("epic_name")
-    if "rocket_name" not in match_methods:
-        missing.append("rocket_name")
+    if "platform" not in match_methods:
+        missing.append("platform")
+    if "platform_id" not in match_methods:
+        missing.append("platform_id")
     return tuple(missing)
 
 
@@ -187,7 +228,7 @@ def build_match_replay_player_stat_totals(
                 player_name = replay_player.roster_player_name or replay_player.name
                 platform, player_identity = _player_identity_key(replay_player)
                 key: tuple[str, str, str] = (
-                    _normalize_team_name(team_name),
+                    normalize_match_replay_team_name(team_name),
                     platform,
                     player_identity,
                 )
@@ -260,39 +301,18 @@ def _player_identity_key(player: MatchReplayPlayer) -> tuple[str, str]:
 
 
 def _team_sort_index(report: MatchReplayReport, team_name: str) -> int:
-    normalized_team = _normalize_team_name(team_name)
-    if _team_names_match(normalized_team, _normalize_team_name(report.team_one_name)):
+    normalized_team = normalize_match_replay_team_name(team_name)
+    if match_replay_team_names_match(
+            normalized_team,
+            normalize_match_replay_team_name(report.team_one_name),
+    ):
         return 0
-    if _team_names_match(normalized_team, _normalize_team_name(report.team_two_name)):
+    if match_replay_team_names_match(
+            normalized_team,
+            normalize_match_replay_team_name(report.team_two_name),
+    ):
         return 1
     return 2
-
-
-def _normalize_team_name(value: str) -> str:
-    return " ".join(value.casefold().strip().split())
-
-
-def _team_names_match(candidate: str, expected: str) -> bool:
-    if candidate == expected:
-        return True
-
-    if candidate and expected and (candidate in expected or expected in candidate):
-        return True
-
-    candidate_tokens = set(_team_identity_tokens(candidate))
-    expected_tokens = set(_team_identity_tokens(expected))
-    if not candidate_tokens or not expected_tokens:
-        return False
-
-    return candidate_tokens <= expected_tokens or expected_tokens <= candidate_tokens
-
-
-def _team_identity_tokens(value: str) -> tuple[str, ...]:
-    return tuple(
-        token
-        for token in TEAM_TOKEN_PATTERN.findall(_normalize_team_name(value))
-        if token not in TEAM_NAME_IGNORED_TOKENS
-    )
 
 
 def _normalize_player_lookup(value: str) -> str:

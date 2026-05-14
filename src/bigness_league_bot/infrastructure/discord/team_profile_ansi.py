@@ -41,9 +41,9 @@ from bigness_league_bot.infrastructure.discord.team_profile_layout import (
     MMR_WIDTH,
     PLAYER_WIDTH,
     POSITION_WIDTH,
-    ROCKET_WIDTH,
+    PLATFORM_ID_WIDTH,
+    PLATFORM_WIDTH,
     ROLE_WIDTH,
-    TECHNICAL_STAFF_TABLE_WIDTH,
     TEXT_COLUMN_LEFT_PADDING,
     TITLE_BLOCK_WIDTH,
     build_team_profile_file_name,
@@ -245,6 +245,11 @@ def _build_roster_lines(
         locale,
         I18N.messages.team_profile.ansi.headers.player,
     )
+    header_position = translate_header(
+        localizer,
+        locale,
+        I18N.messages.team_profile.ansi.headers.position,
+    )
     header_discord = translate_header(
         localizer,
         locale,
@@ -255,10 +260,15 @@ def _build_roster_lines(
         locale,
         I18N.messages.team_profile.ansi.headers.epic_name,
     )
-    header_rocket = translate_header(
+    header_platform = translate_header(
         localizer,
         locale,
-        I18N.messages.team_profile.ansi.headers.rocket_name,
+        I18N.messages.team_profile.ansi.headers.platform,
+    )
+    header_platform_id = translate_header(
+        localizer,
+        locale,
+        I18N.messages.team_profile.ansi.headers.platform_id,
     )
     header_mmr = translate_header(
         localizer,
@@ -271,21 +281,24 @@ def _build_roster_lines(
             f"{ANSI_BLUE}{BOX_LEFT_T}{BOX_HORIZONTAL * POSITION_WIDTH}{BOX_TOP_T}"
             f"{BOX_HORIZONTAL * PLAYER_WIDTH}{BOX_TOP_T}"
             f"{BOX_HORIZONTAL * DISCORD_WIDTH}{BOX_CROSS}"
+            f"{BOX_HORIZONTAL * PLATFORM_WIDTH}{BOX_TOP_T}"
+            f"{BOX_HORIZONTAL * PLATFORM_ID_WIDTH}{BOX_TOP_T}"
             f"{BOX_HORIZONTAL * EPIC_WIDTH}{BOX_TOP_T}"
-            f"{BOX_HORIZONTAL * ROCKET_WIDTH}{BOX_TOP_T}"
             f"{BOX_HORIZONTAL * MMR_WIDTH}{BOX_TOP_RIGHT}"
         ),
         (
             f"{ANSI_BLUE}{BOX_VERTICAL}"
-            f"{_ansi_cell(translate_header(localizer, locale, I18N.messages.team_profile.ansi.headers.position), POSITION_WIDTH, color=ANSI_WHITE, align='center')}"
+            f"{_ansi_cell(header_position, POSITION_WIDTH, color=ANSI_WHITE, align='center')}"
             f"{ANSI_BLUE}{BOX_VERTICAL}"
             f"{_ansi_cell(header_player, PLAYER_WIDTH, color=ANSI_WHITE, align='center')}"
             f"{ANSI_BLUE}{BOX_VERTICAL}"
             f"{_ansi_cell(header_discord, DISCORD_WIDTH, color=ANSI_WHITE, align='center')}"
             f"{ANSI_BLUE}{BOX_VERTICAL}"
-            f"{_ansi_cell(header_epic, EPIC_WIDTH, color=ANSI_WHITE, align='center')}"
+            f"{_ansi_cell(header_platform, PLATFORM_WIDTH, color=ANSI_WHITE, align='center')}"
             f"{ANSI_BLUE}{BOX_VERTICAL}"
-            f"{_ansi_cell(header_rocket, ROCKET_WIDTH, color=ANSI_WHITE, align='center')}"
+            f"{_ansi_cell(header_platform_id, PLATFORM_ID_WIDTH, color=ANSI_WHITE, align='center')}"
+            f"{ANSI_BLUE}{BOX_VERTICAL}"
+            f"{_ansi_cell(header_epic, EPIC_WIDTH, color=ANSI_WHITE, align='center')}"
             f"{ANSI_BLUE}{BOX_VERTICAL}"
             f"{_ansi_cell(header_mmr, MMR_WIDTH, color=ANSI_WHITE, align='center')}"
             f"{ANSI_BLUE}{BOX_VERTICAL}"
@@ -294,8 +307,9 @@ def _build_roster_lines(
             f"{ANSI_BLUE}{BOX_LEFT_T}{BOX_HORIZONTAL * POSITION_WIDTH}{BOX_CROSS}"
             f"{BOX_HORIZONTAL * PLAYER_WIDTH}{BOX_CROSS}"
             f"{BOX_HORIZONTAL * DISCORD_WIDTH}{BOX_CROSS}"
+            f"{BOX_HORIZONTAL * PLATFORM_WIDTH}{BOX_CROSS}"
+            f"{BOX_HORIZONTAL * PLATFORM_ID_WIDTH}{BOX_CROSS}"
             f"{BOX_HORIZONTAL * EPIC_WIDTH}{BOX_CROSS}"
-            f"{BOX_HORIZONTAL * ROCKET_WIDTH}{BOX_CROSS}"
             f"{BOX_HORIZONTAL * MMR_WIDTH}{BOX_RIGHT_T}"
         ),
     ]
@@ -310,9 +324,11 @@ def _build_roster_lines(
                 f"{ANSI_BLUE}{BOX_VERTICAL}"
                 f"{_ansi_dash_aware_cell(player.discord_name, DISCORD_WIDTH, color=ANSI_GREEN, left_padding=TEXT_COLUMN_LEFT_PADDING)}"
                 f"{ANSI_BLUE}{BOX_VERTICAL}"
-                f"{_ansi_dash_aware_cell(player.epic_name, EPIC_WIDTH, color=ANSI_GREEN, left_padding=TEXT_COLUMN_LEFT_PADDING)}"
+                f"{_ansi_dash_aware_cell(player.platform, PLATFORM_WIDTH, color=ANSI_GREEN, left_padding=TEXT_COLUMN_LEFT_PADDING)}"
                 f"{ANSI_BLUE}{BOX_VERTICAL}"
-                f"{_ansi_dash_aware_cell(player.rocket_name, ROCKET_WIDTH, color=ANSI_GREEN, left_padding=TEXT_COLUMN_LEFT_PADDING)}"
+                f"{_ansi_dash_aware_cell(player.platform_id, PLATFORM_ID_WIDTH, color=ANSI_GREEN, left_padding=TEXT_COLUMN_LEFT_PADDING)}"
+                f"{ANSI_BLUE}{BOX_VERTICAL}"
+                f"{_ansi_dash_aware_cell(player.epic_name, EPIC_WIDTH, color=ANSI_GREEN, left_padding=TEXT_COLUMN_LEFT_PADDING)}"
                 f"{ANSI_BLUE}{BOX_VERTICAL}"
                 f"{_ansi_padded_cell(player.mmr, MMR_WIDTH, color=ANSI_MAGENTA, left_padding=MMR_LEFT_PADDING, right_padding=MMR_RIGHT_PADDING)}"
                 f"{ANSI_BLUE}{BOX_VERTICAL}"
@@ -320,15 +336,16 @@ def _build_roster_lines(
         )
 
     left_span_width = PLAYER_WIDTH + DISCORD_WIDTH + 1
-    right_span_width = EPIC_WIDTH + ROCKET_WIDTH + 1
+    right_span_width = PLATFORM_WIDTH + PLATFORM_ID_WIDTH + EPIC_WIDTH + 2
     lines.extend(
         [
             (
-                f"{ANSI_BLUE}{BOX_LEFT_T}{BOX_HORIZONTAL * POSITION_WIDTH}{BOX_CROSS}"
+                f"{ANSI_BLUE}{BOX_LEFT_T}{BOX_HORIZONTAL * POSITION_WIDTH}{BOX_BOTTOM_T}"
                 f"{BOX_HORIZONTAL * PLAYER_WIDTH}{BOX_BOTTOM_T}"
                 f"{BOX_HORIZONTAL * DISCORD_WIDTH}{BOX_CROSS}"
+                f"{BOX_HORIZONTAL * PLATFORM_WIDTH}{BOX_BOTTOM_T}"
+                f"{BOX_HORIZONTAL * PLATFORM_ID_WIDTH}{BOX_BOTTOM_T}"
                 f"{BOX_HORIZONTAL * EPIC_WIDTH}{BOX_BOTTOM_T}"
-                f"{BOX_HORIZONTAL * ROCKET_WIDTH}{BOX_CROSS}"
                 f"{BOX_HORIZONTAL * MMR_WIDTH}{BOX_RIGHT_T}"
             ),
             (
@@ -371,6 +388,11 @@ def _build_technical_staff_lines(
         locale,
         I18N.messages.team_profile.ansi.headers.role,
     )
+    header_player = translate_header(
+        localizer,
+        locale,
+        I18N.messages.team_profile.ansi.headers.player,
+    )
     header_discord = translate_header(
         localizer,
         locale,
@@ -381,41 +403,53 @@ def _build_technical_staff_lines(
         locale,
         I18N.messages.team_profile.ansi.headers.epic_name,
     )
-    header_rocket = translate_header(
-        localizer,
-        locale,
-        I18N.messages.team_profile.ansi.headers.rocket_name,
+    main_table_width = (
+            POSITION_WIDTH
+            + PLAYER_WIDTH
+            + DISCORD_WIDTH
+            + PLATFORM_WIDTH
+            + PLATFORM_ID_WIDTH
+            + EPIC_WIDTH
+            + MMR_WIDTH
+            + 6
+    )
+    technical_staff_data_width = main_table_width - ROLE_WIDTH - 3
+    staff_player_width = technical_staff_data_width // 3
+    staff_discord_width = technical_staff_data_width // 3
+    staff_epic_width = technical_staff_data_width - staff_player_width - staff_discord_width
+    technical_staff_table_width = (
+            ROLE_WIDTH + staff_player_width + staff_discord_width + staff_epic_width + 3
     )
 
     lines = [
-        f"{ANSI_BLUE}{BOX_TOP_LEFT}{BOX_HORIZONTAL * TECHNICAL_STAFF_TABLE_WIDTH}{BOX_TOP_RIGHT}",
+        f"{ANSI_BLUE}{BOX_TOP_LEFT}{BOX_HORIZONTAL * technical_staff_table_width}{BOX_TOP_RIGHT}",
         (
             f"{ANSI_BLUE}{BOX_VERTICAL}{ANSI_YELLOW}"
-            f"{fit_text(title, TECHNICAL_STAFF_TABLE_WIDTH, align='center')}"
+            f"{fit_text(title, technical_staff_table_width, align='center')}"
             f"{ANSI_BLUE}{BOX_VERTICAL}"
         ),
         (
             f"{ANSI_BLUE}{BOX_LEFT_T}{BOX_HORIZONTAL * ROLE_WIDTH}{BOX_TOP_T}"
-            f"{BOX_HORIZONTAL * DISCORD_WIDTH}{BOX_TOP_T}"
-            f"{BOX_HORIZONTAL * EPIC_WIDTH}{BOX_TOP_T}"
-            f"{BOX_HORIZONTAL * ROCKET_WIDTH}{BOX_RIGHT_T}"
+            f"{BOX_HORIZONTAL * staff_player_width}{BOX_TOP_T}"
+            f"{BOX_HORIZONTAL * staff_discord_width}{BOX_TOP_T}"
+            f"{BOX_HORIZONTAL * staff_epic_width}{BOX_RIGHT_T}"
         ),
         (
             f"{ANSI_BLUE}{BOX_VERTICAL}"
             f"{_ansi_cell(header_role, ROLE_WIDTH, color=ANSI_WHITE, align='center')}"
             f"{ANSI_BLUE}{BOX_VERTICAL}"
-            f"{_ansi_cell(header_discord, DISCORD_WIDTH, color=ANSI_WHITE, align='center')}"
+            f"{_ansi_cell(header_player, staff_player_width, color=ANSI_WHITE, align='center')}"
             f"{ANSI_BLUE}{BOX_VERTICAL}"
-            f"{_ansi_cell(header_epic, EPIC_WIDTH, color=ANSI_WHITE, align='center')}"
+            f"{_ansi_cell(header_discord, staff_discord_width, color=ANSI_WHITE, align='center')}"
             f"{ANSI_BLUE}{BOX_VERTICAL}"
-            f"{_ansi_cell(header_rocket, ROCKET_WIDTH, color=ANSI_WHITE, align='center')}"
+            f"{_ansi_cell(header_epic, staff_epic_width, color=ANSI_WHITE, align='center')}"
             f"{ANSI_BLUE}{BOX_VERTICAL}"
         ),
         (
             f"{ANSI_BLUE}{BOX_LEFT_T}{BOX_HORIZONTAL * ROLE_WIDTH}{BOX_CROSS}"
-            f"{BOX_HORIZONTAL * DISCORD_WIDTH}{BOX_CROSS}"
-            f"{BOX_HORIZONTAL * EPIC_WIDTH}{BOX_CROSS}"
-            f"{BOX_HORIZONTAL * ROCKET_WIDTH}{BOX_RIGHT_T}"
+            f"{BOX_HORIZONTAL * staff_player_width}{BOX_CROSS}"
+            f"{BOX_HORIZONTAL * staff_discord_width}{BOX_CROSS}"
+            f"{BOX_HORIZONTAL * staff_epic_width}{BOX_RIGHT_T}"
         ),
     ]
 
@@ -425,19 +459,19 @@ def _build_technical_staff_lines(
                 f"{ANSI_BLUE}{BOX_VERTICAL}"
                 f"{_ansi_padded_cell(member.role_name, ROLE_WIDTH, color=ANSI_RED, left_padding=TEXT_COLUMN_LEFT_PADDING)}"
                 f"{ANSI_BLUE}{BOX_VERTICAL}"
-                f"{_ansi_dash_aware_cell(member.discord_name, DISCORD_WIDTH, color=ANSI_GREEN, left_padding=TEXT_COLUMN_LEFT_PADDING)}"
+                f"{_ansi_dash_aware_cell(member.player_name, staff_player_width, color=ANSI_GREEN, left_padding=TEXT_COLUMN_LEFT_PADDING)}"
                 f"{ANSI_BLUE}{BOX_VERTICAL}"
-                f"{_ansi_dash_aware_cell(member.epic_name, EPIC_WIDTH, color=ANSI_GREEN, left_padding=TEXT_COLUMN_LEFT_PADDING)}"
+                f"{_ansi_dash_aware_cell(member.discord_name, staff_discord_width, color=ANSI_GREEN, left_padding=TEXT_COLUMN_LEFT_PADDING)}"
                 f"{ANSI_BLUE}{BOX_VERTICAL}"
-                f"{_ansi_dash_aware_cell(member.rocket_name, ROCKET_WIDTH, color=ANSI_GREEN, left_padding=TEXT_COLUMN_LEFT_PADDING)}"
+                f"{_ansi_dash_aware_cell(member.epic_name, staff_epic_width, color=ANSI_GREEN, left_padding=TEXT_COLUMN_LEFT_PADDING)}"
                 f"{ANSI_BLUE}{BOX_VERTICAL}"
             )
         )
 
     lines.append(
         f"{ANSI_BLUE}{BOX_BOTTOM_LEFT}{BOX_HORIZONTAL * ROLE_WIDTH}{BOX_BOTTOM_T}"
-        f"{BOX_HORIZONTAL * DISCORD_WIDTH}{BOX_BOTTOM_T}"
-        f"{BOX_HORIZONTAL * EPIC_WIDTH}{BOX_BOTTOM_T}"
-        f"{BOX_HORIZONTAL * ROCKET_WIDTH}{BOX_BOTTOM_RIGHT}"
+        f"{BOX_HORIZONTAL * staff_player_width}{BOX_BOTTOM_T}"
+        f"{BOX_HORIZONTAL * staff_discord_width}{BOX_BOTTOM_T}"
+        f"{BOX_HORIZONTAL * staff_epic_width}{BOX_BOTTOM_RIGHT}"
     )
     return lines

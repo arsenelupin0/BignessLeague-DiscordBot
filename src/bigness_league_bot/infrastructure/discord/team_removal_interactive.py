@@ -67,14 +67,21 @@ def collect_interactive_removal_member_options(
 def _collect_player_options(
         team_profile: TeamProfile,
 ) -> tuple[InteractiveRemovalMemberOption, ...]:
-    return tuple(
-        InteractiveRemovalMemberOption(
-            label=_choice_name(player.discord_name, player.player_name),
-            value=player.discord_name,
+    options_by_lookup: dict[str, InteractiveRemovalMemberOption] = {}
+    for player in team_profile.players:
+        if not _is_real_member_name(player.discord_name):
+            continue
+
+        lookup_key = normalize_member_lookup_text(player.discord_name)
+        options_by_lookup.setdefault(
+            lookup_key,
+            InteractiveRemovalMemberOption(
+                label=_choice_name(player.discord_name, player.player_name),
+                value=player.discord_name,
+            ),
         )
-        for player in team_profile.players
-        if _is_real_member_name(player.discord_name)
-    )
+
+    return tuple(options_by_lookup.values())
 
 
 def _collect_staff_options(

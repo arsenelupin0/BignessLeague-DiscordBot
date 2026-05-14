@@ -49,9 +49,10 @@ def list_division_roster_players_from_grids(
                         division_name=worksheet_title,
                         team_name=team_block.title,
                         player_name=player.player_name,
-                        discord_name=player.discord_name,
+                        discord_id=player.discord_id,
+                        platform=player.platform,
+                        platform_id=player.platform_id,
                         epic_name=player.epic_name,
-                        rocket_name=player.rocket_name,
                         tracker_url=player.tracker_url,
                     )
                 )

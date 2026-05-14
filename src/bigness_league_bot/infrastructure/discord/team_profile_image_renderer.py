@@ -39,7 +39,8 @@ from bigness_league_bot.infrastructure.discord.team_profile_layout import (
     MMR_WIDTH,
     PLAYER_WIDTH,
     POSITION_WIDTH,
-    ROCKET_WIDTH,
+    PLATFORM_ID_WIDTH,
+    PLATFORM_WIDTH,
     ROLE_WIDTH,
     TEAM_PROFILE_IMAGE_BACKGROUND,
     TEAM_PROFILE_IMAGE_PADDING_X,
@@ -71,8 +72,9 @@ def _render_team_profile_image(
     position_width = POSITION_WIDTH * unit_width
     player_width = PLAYER_WIDTH * unit_width
     discord_width = DISCORD_WIDTH * unit_width
+    platform_width = PLATFORM_WIDTH * unit_width
+    platform_id_width = PLATFORM_ID_WIDTH * unit_width
     epic_width = EPIC_WIDTH * unit_width
-    rocket_width = ROCKET_WIDTH * unit_width
     role_width = ROLE_WIDTH * unit_width
     mmr_left_padding_px = MMR_LEFT_PADDING * unit_width
     mmr_right_padding_px = MMR_RIGHT_PADDING * unit_width
@@ -91,21 +93,25 @@ def _render_team_profile_image(
         position_width,
         player_width,
         discord_width,
+        platform_width,
+        platform_id_width,
         epic_width,
-        rocket_width,
         mmr_width,
     )
     main_table_width = sum(main_column_widths)
-    technical_staff_extra_width = main_table_width - (
-            role_width + discord_width + epic_width + rocket_width
+    technical_staff_data_width = main_table_width - role_width
+    technical_staff_player_width = technical_staff_data_width // 3
+    technical_staff_discord_width = technical_staff_data_width // 3
+    technical_staff_epic_width = (
+            technical_staff_data_width
+            - technical_staff_player_width
+            - technical_staff_discord_width
     )
-    technical_staff_discord_extra_width = technical_staff_extra_width // 2
-    technical_staff_epic_extra_width = technical_staff_extra_width - technical_staff_discord_extra_width
     technical_staff_column_widths = (
         role_width,
-        discord_width + technical_staff_discord_extra_width,
-        epic_width + technical_staff_epic_extra_width,
-        rocket_width,
+        technical_staff_player_width,
+        technical_staff_discord_width,
+        technical_staff_epic_width,
     )
 
     technical_staff_table_width = sum(technical_staff_column_widths)
@@ -161,10 +167,15 @@ def _render_team_profile_image(
         locale,
         I18N.messages.team_profile.ansi.headers.epic_name,
     )
-    rockettranslate_header = translate_header(
+    platformtranslate_header = translate_header(
         localizer,
         locale,
-        I18N.messages.team_profile.ansi.headers.rocket_name,
+        I18N.messages.team_profile.ansi.headers.platform,
+    )
+    platform_idtranslate_header = translate_header(
+        localizer,
+        locale,
+        I18N.messages.team_profile.ansi.headers.platform_id,
     )
     mmrtranslate_header = translate_header(
         localizer,
@@ -256,7 +267,7 @@ def _render_team_profile_image(
     summary_boundaries = (
         x_origin + position_width,
         x_origin + position_width + player_width + discord_width,
-        x_origin + position_width + player_width + discord_width + epic_width + rocket_width,
+        x_origin + main_table_width - mmr_width,
     )
     for boundary in summary_boundaries:
         _draw_vertical_line(
@@ -278,8 +289,9 @@ def _render_team_profile_image(
                     positiontranslate_header,
                     playertranslate_header,
                     discordtranslate_header,
+                    platformtranslate_header,
+                    platform_idtranslate_header,
                     epictranslate_header,
-                    rockettranslate_header,
                     mmrtranslate_header,
             ),
     ):
@@ -329,7 +341,7 @@ def _render_team_profile_image(
             draw,
             font,
             row_rects[3],
-            player.epic_name,
+            player.platform,
             fill=ANSI_COLOR_TO_RGB[ANSI_GREEN],
             left_padding=left_padding_px,
             dash_center=True,
@@ -338,7 +350,7 @@ def _render_team_profile_image(
             draw,
             font,
             row_rects[4],
-            player.rocket_name,
+            player.platform_id,
             fill=ANSI_COLOR_TO_RGB[ANSI_GREEN],
             left_padding=left_padding_px,
             dash_center=True,
@@ -347,6 +359,15 @@ def _render_team_profile_image(
             draw,
             font,
             row_rects[5],
+            player.epic_name,
+            fill=ANSI_COLOR_TO_RGB[ANSI_GREEN],
+            left_padding=left_padding_px,
+            dash_center=True,
+        )
+        _draw_cell_text(
+            draw,
+            font,
+            row_rects[6],
             player.mmr,
             fill=ANSI_COLOR_TO_RGB[ANSI_MAGENTA],
             left_padding=mmr_left_padding_px,
@@ -364,7 +385,7 @@ def _render_team_profile_image(
         (
             x_origin + position_width + player_width + discord_width,
             summary_start_y,
-            x_origin + position_width + player_width + discord_width + epic_width + rocket_width,
+            x_origin + main_table_width - mmr_width,
             summary_start_y + row_height,
         ),
         (
@@ -470,7 +491,7 @@ def _render_team_profile_image(
         )
         for rect, text in zip(
                 stafftranslate_header_rects,
-                (roletranslate_header, discordtranslate_header, epictranslate_header, rockettranslate_header),
+                (roletranslate_header, playertranslate_header, discordtranslate_header, epictranslate_header),
         ):
             _draw_cell_text(
                 draw,
@@ -500,7 +521,7 @@ def _render_team_profile_image(
                 draw,
                 font,
                 member_rects[1],
-                member.discord_name,
+                member.player_name,
                 fill=ANSI_COLOR_TO_RGB[ANSI_GREEN],
                 left_padding=left_padding_px,
                 dash_center=True,
@@ -509,7 +530,7 @@ def _render_team_profile_image(
                 draw,
                 font,
                 member_rects[2],
-                member.epic_name,
+                member.discord_name,
                 fill=ANSI_COLOR_TO_RGB[ANSI_GREEN],
                 left_padding=left_padding_px,
                 dash_center=True,
@@ -518,7 +539,7 @@ def _render_team_profile_image(
                 draw,
                 font,
                 member_rects[3],
-                member.rocket_name,
+                member.epic_name,
                 fill=ANSI_COLOR_TO_RGB[ANSI_GREEN],
                 left_padding=left_padding_px,
                 dash_center=True,

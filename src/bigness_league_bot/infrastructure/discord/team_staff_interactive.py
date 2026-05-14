@@ -213,9 +213,9 @@ async def build_interactive_staff_signing_batch(
         members.append(
             TeamTechnicalStaffMember(
                 role_name=INTERACTIVE_STAFF_ROLE_LABELS[staff_role_key],
-                discord_name=player.discord_name,
+                player_name=player.player_name,
+                discord_id=player.discord_id,
                 epic_name="",
-                rocket_name="",
             )
         )
 
@@ -376,9 +376,9 @@ def _collect_staff_clear_members_for_unselected_roles(
         clear_members.append(
             TeamTechnicalStaffMember(
                 role_name=INTERACTIVE_STAFF_ROLE_LABELS[staff_role_key],
-                discord_name="",
+                player_name="",
+                discord_id="",
                 epic_name="",
-                rocket_name="",
             )
         )
 

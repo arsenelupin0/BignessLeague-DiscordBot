@@ -17,16 +17,23 @@ from bigness_league_bot.application.services.team_signing_template import (
 
 REQUIRED_TECHNICAL_STAFF_FIELDS = (
     "role_name",
-    "discord_name",
+    "player_name",
+    "discord_id",
+    "epic_name",
 )
 LABELLED_TECHNICAL_STAFF_FIELD_KEYS = {
     "rol": "role_name",
-    "discord": "discord_name",
+    "player": "player_name",
+    "jugador": "player_name",
+    "discord id": "discord_id",
+    "discord": "discord_id",
     "epic name": "epic_name",
-    "rocket in-game name": "rocket_name",
 }
-LABELLED_TECHNICAL_STAFF_FULL_FIELD_ORDER = tuple(
-    LABELLED_TECHNICAL_STAFF_FIELD_KEYS.values()
+LABELLED_TECHNICAL_STAFF_FULL_FIELD_ORDER = (
+    "role_name",
+    "player_name",
+    "discord_id",
+    "epic_name",
 )
 
 
@@ -40,7 +47,7 @@ def parse_team_technical_staff_message(content: str) -> TeamTechnicalStaffBatch:
     division_name = metadata.get("division_name", "")
     team_name = metadata.get("team_name", "")
     if not division_name:
-        raise TeamSigningParseError("Falta la cabecera `División:` en el mensaje enlazado.")
+        raise TeamSigningParseError("Falta la cabecera `Division:` en el mensaje enlazado.")
     if not team_name:
         raise TeamSigningParseError("Falta la cabecera `Equipo:` en el mensaje enlazado.")
     if not _contains_non_empty_lines(staff_lines):
@@ -49,7 +56,7 @@ def parse_team_technical_staff_message(content: str) -> TeamTechnicalStaffBatch:
         )
     if not _looks_like_labelled_format(staff_lines, "rol"):
         raise TeamSigningParseError(
-            "La plantilla de staff técnico debe usar bloques `Rol:`, `Discord:`, `Epic Name:`, `Rocket In-Game Name:`."
+            "La plantilla de staff técnico debe usar bloques `Rol:`, `Player:`, `Discord ID:`, `Epic Name:`."
         )
 
     members = _parse_labelled_technical_staff_blocks(
@@ -78,7 +85,7 @@ def _parse_labelled_technical_staff_blocks(
         start_line_number=start_line_number,
         field_keys=LABELLED_TECHNICAL_STAFF_FIELD_KEYS,
         first_field_name="role_name",
-        block_label="staff técnico",
+        block_label="staff tecnico",
     )
     if len(staff_blocks) > MAX_TEAM_TECHNICAL_STAFF_MEMBERS:
         raise TeamSigningParseError(
@@ -93,7 +100,7 @@ def _parse_labelled_technical_staff_blocks(
         present_fields = frozenset(block.values_by_field)
         if present_fields != frozenset(LABELLED_TECHNICAL_STAFF_FULL_FIELD_ORDER):
             raise TeamSigningParseError(
-                "Cada bloque de staff técnico debe contener `Rol`, `Discord`, `Epic Name` y `Rocket In-Game Name`."
+                "Cada bloque de staff técnico debe contener `Rol`, `Player`, `Discord ID` y `Epic Name`."
             )
 
         payload: dict[str, str] = {}
@@ -105,7 +112,7 @@ def _parse_labelled_technical_staff_blocks(
                     LABELLED_TECHNICAL_STAFF_FIELD_KEYS,
                 )
                 raise TeamSigningParseError(
-                    f"Falta un valor para `{label}` en el bloque de staff técnico cerca de la línea {block.start_line_number}."
+                    f"Falta un valor para `{label}` en el bloque de staff técnico cerca de la linea {block.start_line_number}."
                 )
             payload[field_name] = field_value
 
@@ -136,7 +143,7 @@ def _build_team_technical_staff_member(
 
     return TeamTechnicalStaffMember(
         role_name=payload["role_name"],
-        discord_name=payload["discord_name"],
-        epic_name=payload.get("epic_name", ""),
-        rocket_name=payload.get("rocket_name", ""),
+        player_name=payload["player_name"],
+        discord_id=payload["discord_id"],
+        epic_name=payload["epic_name"],
     )

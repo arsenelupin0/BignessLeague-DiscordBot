@@ -114,8 +114,8 @@ def _unescape_formula_string(value: str) -> str:
     return value.replace('""', '"')
 
 
-def _build_player_cell_value(player_name: str, tracker_url: str) -> str:
-    return _build_hyperlink_cell_value(player_name, tracker_url)
+def _build_player_cell_value(player_name: str) -> str:
+    return player_name
 
 
 def _build_hyperlink_cell_value(label: str, url: str | None) -> str:

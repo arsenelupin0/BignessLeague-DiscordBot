@@ -538,11 +538,14 @@ class _MessagesTeamProfileAnsiHeaders:
     position: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.position", default_text="POS")
     player: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.player", default_text="Jugador")
     role: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.role", default_text="ROL")
-    discord: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.discord", default_text="Discord")
+    discord: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.discord",
+                                             default_text="Discord ID")
+    platform: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.platform",
+                                              default_text="Platform")
+    platform_id: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.platform_id",
+                                                 default_text="Platform ID")
     epic_name: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.epic_name",
                                                default_text="Epic Name")
-    rocket_name: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.rocket_name",
-                                                 default_text="Rocket In-Game Name")
     mmr: TranslationKey = TranslationKey(key="messages.team_profile.ansi.headers.mmr", default_text="MMR")
 
 class _MessagesTeamProfileAnsiSummary:
@@ -622,10 +625,10 @@ class _MessagesMatchReplaysUploaded:
                                                     default_text="Las {replay_count} replays adjuntas ya estaban registradas. No las he vuelto a procesar.")
     roster_validation_all_matched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_all_matched",
-        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- M\u00e9todos de coincidencia: {match_methods}\n{method_breakdown}\n- Todos los jugadores detectados coinciden con la identidad Epic registrada.")
+        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- M\u00e9todos de coincidencia: {match_methods}\n{method_breakdown}\n- Todos los jugadores detectados coinciden con Platform + Platform ID registrados.")
     roster_validation_with_unmatched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_with_unmatched",
-        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- M\u00e9todos de coincidencia: {match_methods}\n{method_breakdown}\n- Jugadores no encontrados:\n{unmatched_players}\n_ _\n## Informaci\u00f3n incorrecta\n- En caso de jugar con alg\u00fan jugador que no coincida con los datos registrados, alg\u00fan miembro del **Staff** se pondr\u00e1 en contacto con vosotros para revisar este caso.\n- Si se juega con alineaci\u00f3n indebida, podr\u00e1 conllevar sanci\u00f3n grave, tanto al club como al jugador.\n- Se debe aportar toda la informaci\u00f3n posible si esto ocurre.")
+        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- M\u00e9todos de coincidencia: {match_methods}\n{method_breakdown}\n- Jugadores no encontrados:\n{unmatched_players}\n- Epic Names no encontrados:\n{epic_name_unmatched_players}\n_ _\n## Informaci\u00f3n incorrecta\n- En caso de jugar con alg\u00fan jugador que no coincida con los datos registrados, alg\u00fan miembro del **Staff** se pondr\u00e1 en contacto con vosotros para revisar este caso.\n- Si se juega con alineaci\u00f3n indebida, podr\u00e1 conllevar sanci\u00f3n grave, tanto al club como al jugador.\n- Se debe aportar toda la informaci\u00f3n posible si esto ocurre.")
     roster_validation_more_unmatched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_more_unmatched",
         default_text="  - Y {remaining} m\u00e1s.")
@@ -640,7 +643,7 @@ class _MessagesMatchReplays:
 
 class _MessagesTeamSigningGuide:
     content: TranslationKey = TranslationKey(key="messages.team_signing.guide.content",
-                                             default_text="# \ud83d\udd30 Como hacer una inscripci\u00f3n o fichaje \ud83d\udd30\n_ _\nSi quieres tener un poco m\u00e1s de informaci\u00f3n de como funcionan los fichajes/inscripciones. Dale click a estos links de aqu\u00ed abajo:\n - [Informaci\u00f3n para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)\n - [Informaci\u00f3n para a\u00f1adir un rol de Staff T\u00e9cnico a tu equipo](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\n## \u2705 Plantilla de ejemplo que tendr\u00edas que enviar...\nSi no sabes que hay que poner en cada parte, por favor revisa la [documentaci\u00f3n para hacer un fichaje](https://canary.discord.com/channels/1016819103555657851/1495738084376055818). Recuerdo que tiene que estar todo correcto y con el formato correcto.\nEn caso de que tengas m\u00e1s jugadores lo vas agregando con un salto de l\u00ednea, como est\u00e1 en esta plantilla con un m\u00e1ximo de 6 jugadores. \n\n### Plantilla a copiar tal cual esta de aqu\u00ed abajo pero con tus datos...\n_ _\n```\nDivisi\u00f3n: \nEquipo: \nLogo: \n\nJugador: \nTracker: \nDiscord: \nEpic Name:  \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n\nJugador: \nTracker: \nDiscord: \nEpic Name: \nRocket In-Game Name: \nMMR: \n```")
+                                             default_text='# Como hacer una inscripcion o fichaje\n_ _\n## Plantilla de jugadores\n```\nDivision: \nEquipo: \nLogo: \n\nJugador: \nDiscord ID: \nPlatform: \nPlatform ID: \nEpic Name: \nTracker: \nMMR: \n```\n- `Logo:` solo es obligatorio para `/hacer_inscripcion`.\n- `Platform:` solo admite `steam`, `epic`, `xbl`, `psn` o `switch`.\n_ _\n## Plantilla de staff tecnico\n```\nDivision: \nEquipo: \n\nRol: \nPlayer: \nDiscord ID: \nEpic Name: \n```')
 
 class _MessagesTeamSigningInteractiveStaffRoleSelection:
     prompt: TranslationKey = TranslationKey(key="messages.team_signing.interactive_staff_role_selection.prompt",
@@ -688,18 +691,31 @@ class _MessagesTeamSigningRosterModification:
                                             default_text="Pulsa el bot\u00f3n para modificar los datos de `{discord_name}` en `{team_name}`.")
     open_modal: TranslationKey = TranslationKey(key="messages.team_signing.roster_modification.open_modal",
                                                 default_text="Modificar datos")
+    player_details_prompt: TranslationKey = TranslationKey(
+        key="messages.team_signing.roster_modification.player_details_prompt",
+        default_text="Pulsa el botón para completar Tracker y MMR.")
+    open_details_modal: TranslationKey = TranslationKey(
+        key="messages.team_signing.roster_modification.open_details_modal",
+        default_text="Completar Tracker y MMR")
     player_modal_title: TranslationKey = TranslationKey(
         key="messages.team_signing.roster_modification.player_modal_title", default_text="Modificar jugador")
+    player_details_modal_title: TranslationKey = TranslationKey(
+        key="messages.team_signing.roster_modification.player_details_modal_title",
+        default_text="Modificar tracker y MMR")
     staff_modal_title: TranslationKey = TranslationKey(
         key="messages.team_signing.roster_modification.staff_modal_title", default_text="Modificar staff t\u00e9cnico")
     player_name_label: TranslationKey = TranslationKey(
         key="messages.team_signing.roster_modification.player_name_label", default_text="Jugador")
+    discord_id_label: TranslationKey = TranslationKey(
+        key="messages.team_signing.roster_modification.discord_id_label", default_text="Discord ID")
+    platform_label: TranslationKey = TranslationKey(
+        key="messages.team_signing.roster_modification.platform_label", default_text="Platform")
+    platform_id_label: TranslationKey = TranslationKey(
+        key="messages.team_signing.roster_modification.platform_id_label", default_text="Platform ID")
     tracker_label: TranslationKey = TranslationKey(key="messages.team_signing.roster_modification.tracker_label",
                                                    default_text="Tracker")
     epic_name_label: TranslationKey = TranslationKey(key="messages.team_signing.roster_modification.epic_name_label",
                                                      default_text="Epic Name")
-    rocket_name_label: TranslationKey = TranslationKey(
-        key="messages.team_signing.roster_modification.rocket_name_label", default_text="Rocket In-Game Name")
     mmr_label: TranslationKey = TranslationKey(key="messages.team_signing.roster_modification.mmr_label",
                                                default_text="MMR")
     staff_roles_placeholder: TranslationKey = TranslationKey(

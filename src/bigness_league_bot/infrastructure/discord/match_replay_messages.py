@@ -22,7 +22,7 @@ from bigness_league_bot.application.services.match_replays import (
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import LocalizationService
 
-ROSTER_VALIDATION_METHODS = ("epic_name", "rocket_name")
+ROSTER_VALIDATION_METHODS = ("platform", "platform_id")
 
 
 def format_match_replay_game_score_lines(
@@ -44,7 +44,6 @@ def format_match_replay_roster_validation(
         localizer: LocalizationService,
         locale: str | discord.Locale | None,
         summary: MatchReplayRosterValidationSummary,
-        max_unmatched_players: int = 6,
 ) -> str:
     method_counts = {item.method: item.count for item in summary.match_methods}
     method_text = _format_method_list(ROSTER_VALIDATION_METHODS)
@@ -70,17 +69,15 @@ def format_match_replay_roster_validation(
             status_icon=status_icon,
         )
 
-    visible_unmatched = summary.unmatched_players[:max_unmatched_players]
     unmatched_text = "\n".join(
-        _format_unmatched_player_line(player) for player in visible_unmatched
+        _format_unmatched_player_line(player) for player in summary.unmatched_players
     )
-    remaining = len(summary.unmatched_players) - len(visible_unmatched)
-    if remaining > 0:
-        unmatched_text += "\n" + localizer.translate(
-            I18N.messages.match_replays.uploaded.roster_validation_more_unmatched,
-            locale=locale,
-            remaining=remaining,
-        )
+    epic_name_unmatched_text = "\n".join(
+        _format_unmatched_player_line(player, include_missing_methods=False)
+        for player in summary.epic_name_unmatched_players
+    )
+    if not epic_name_unmatched_text:
+        epic_name_unmatched_text = "  - Ninguno."
     return localizer.translate(
         I18N.messages.match_replays.uploaded.roster_validation_with_unmatched,
         locale=locale,
@@ -92,10 +89,13 @@ def format_match_replay_roster_validation(
         method_breakdown=method_breakdown,
         status_icon=status_icon,
         unmatched_players=unmatched_text,
+        epic_name_unmatched_players=epic_name_unmatched_text,
     )
 
 
 def _format_method_list(methods: tuple[str, ...]) -> str:
+    if methods == ("platform", "platform_id"):
+        return "**Platform + Platform ID**"
     formatted_methods = tuple(f"**{method}**" for method in methods)
     if len(formatted_methods) == 1:
         return formatted_methods[0]
@@ -113,14 +113,24 @@ def _format_method_count_line(
 
 
 def _format_method_label(method: str) -> str:
+    if method == "platform":
+        return "Platform"
+    if method == "platform_id":
+        return "Platform ID"
+    if method == "epic_name":
+        return "Epic Name"
     return "_".join(part.title() for part in method.split("_"))
 
 
-def _format_unmatched_player_line(player: MatchReplayUnmatchedPlayer) -> str:
+def _format_unmatched_player_line(
+        player: MatchReplayUnmatchedPlayer,
+        *,
+        include_missing_methods: bool = True,
+) -> str:
     team_name = _escape_discord_markdown(player.team_name)
     player_name = _format_inline_code(player.player_name)
     missing_methods = player.missing_methods
-    if missing_methods:
+    if include_missing_methods and missing_methods:
         method_text = _format_method_list(tuple(missing_methods))
         return f"  - {team_name} -> {player_name} ({method_text})"
     return f"  - {team_name} -> {player_name}"

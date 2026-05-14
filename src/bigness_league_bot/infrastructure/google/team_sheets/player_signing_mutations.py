@@ -91,10 +91,7 @@ def register_team_signings_sync(
             sheet_grids,
         )
         _ensure_team_is_not_already_registered(signing_batch, sheet_grids)
-        _ensure_new_team_players_are_not_already_registered(
-            signing_batch,
-            sheet_grids,
-        )
+    _ensure_signing_players_are_not_already_registered(signing_batch, sheet_grids)
 
     target_block = _resolve_target_team_block(
         signing_batch.team_name,
@@ -119,11 +116,6 @@ def register_team_signings_sync(
             )
         )
     if is_new_team_block:
-        if not require_new_team_block:
-            _ensure_new_team_players_are_not_already_registered(
-                signing_batch,
-                sheet_grids,
-            )
         existing_players = ()
     else:
         existing_players = tuple(
@@ -236,7 +228,7 @@ def register_team_signings_sync(
     )
 
 
-def _ensure_new_team_players_are_not_already_registered(
+def _ensure_signing_players_are_not_already_registered(
         signing_batch: TeamSigningBatch,
         sheet_grids: tuple[tuple[str, dict[int, dict[int, Any]]], ...],
 ) -> None:

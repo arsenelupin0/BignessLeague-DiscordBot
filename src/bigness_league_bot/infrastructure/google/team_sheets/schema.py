@@ -10,10 +10,11 @@
 from __future__ import annotations
 
 TEAM_BLOCK_HEADERS = (
-    "Jugador",
-    "Discord",
+    "Player",
+    "Discord ID",
+    "Platform",
+    "Platform ID",
     "Epic Name",
-    "Rocket In-Game Name",
     "MMR",
 )
 TEAM_BLOCK_HEADERS_NORMALIZED = tuple(header.casefold() for header in TEAM_BLOCK_HEADERS)
@@ -27,9 +28,18 @@ TEAM_BLOCK_COLUMN_COUNT = len(TEAM_BLOCK_HEADERS)
 TECHNICAL_STAFF_TITLE_NORMALIZED = "staff tecnico"
 TECHNICAL_STAFF_HEADERS_NORMALIZED = (
     "rol",
-    "discord",
+    "player",
+    "discord id",
     "epic name",
-    "rocket in-game name",
+)
+TECHNICAL_STAFF_HEADER_VARIANTS_NORMALIZED = (
+    TECHNICAL_STAFF_HEADERS_NORMALIZED,
+    (
+        "rol",
+        "jugador",
+        "discord id",
+        "epic name",
+    ),
 )
 PLACEHOLDER_CELL_VALUE = "-"
 PLACEHOLDER_MEMBER_NAMES = {"", PLACEHOLDER_CELL_VALUE}

@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, Mapping, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from bigness_league_bot.application.services.match_replays import (
+from bigness_league_bot.application.services.match_replay_team_names import (
     TEAM_NAME_IGNORED_TOKENS,
     TEAM_TOKEN_PATTERN,
 )

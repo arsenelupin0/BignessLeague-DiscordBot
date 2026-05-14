@@ -42,20 +42,26 @@ def _parse_mmr_sort_value(value: str) -> int:
 class TeamProfilePlayer:
     position: int
     player_name: str
-    discord_name: str
+    discord_id: str
+    platform: str
+    platform_id: str
     epic_name: str
-    rocket_name: str
     mmr: str
     tracker_url: str | None = None
+
+    @property
+    def discord_name(self) -> str:
+        return self.discord_id
 
     @property
     def has_content(self) -> bool:
         return any(
             (
                 self.player_name,
-                self.discord_name,
+                self.discord_id,
+                self.platform,
+                self.platform_id,
                 self.epic_name,
-                self.rocket_name,
                 self.mmr,
                 self.tracker_url,
             )
@@ -65,18 +71,22 @@ class TeamProfilePlayer:
 @dataclass(frozen=True, slots=True)
 class TeamProfileStaffMember:
     role_name: str
-    discord_name: str
+    player_name: str
+    discord_id: str
     epic_name: str
-    rocket_name: str
+
+    @property
+    def discord_name(self) -> str:
+        return self.discord_id
 
     @property
     def has_content(self) -> bool:
         return any(
             (
                 self.role_name,
-                self.discord_name,
+                self.player_name,
+                self.discord_id,
                 self.epic_name,
-                self.rocket_name,
             )
         )
 
@@ -105,9 +115,10 @@ def build_team_profile(
         normalized_player = TeamProfilePlayer(
             position=player.position,
             player_name=_normalize_value(player.player_name),
-            discord_name=_normalize_value(player.discord_name),
+            discord_id=_normalize_value(player.discord_id),
+            platform=_normalize_value(player.platform),
+            platform_id=_normalize_value(player.platform_id),
             epic_name=_normalize_value(player.epic_name),
-            rocket_name=_normalize_value(player.rocket_name),
             mmr=_normalize_value(player.mmr),
             tracker_url=_normalize_optional_value(player.tracker_url),
         )
@@ -128,9 +139,10 @@ def build_team_profile(
         TeamProfilePlayer(
             position=index,
             player_name=sorted_player.player_name,
-            discord_name=sorted_player.discord_name,
+            discord_id=sorted_player.discord_id,
+            platform=sorted_player.platform,
+            platform_id=sorted_player.platform_id,
             epic_name=sorted_player.epic_name,
-            rocket_name=sorted_player.rocket_name,
             mmr=sorted_player.mmr,
             tracker_url=sorted_player.tracker_url,
         )
@@ -143,9 +155,9 @@ def build_team_profile(
     for member in technical_staff:
         normalized_member = TeamProfileStaffMember(
             role_name=_normalize_value(member.role_name),
-            discord_name=_normalize_value(member.discord_name),
+            player_name=_normalize_value(member.player_name),
+            discord_id=_normalize_value(member.discord_id),
             epic_name=_normalize_value(member.epic_name),
-            rocket_name=_normalize_value(member.rocket_name),
         )
         if not normalized_member.has_content:
             continue
