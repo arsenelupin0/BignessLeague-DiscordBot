@@ -415,10 +415,21 @@ Los comandos de desarrollo usan el prefijo definido en `BOT_PREFIX` y estan limi
 
 ## Comandos de texto
 
-- `!fichaje`: muestra la guia y plantilla para hacer una inscripcion o fichaje.
-- `!inscripcion`: alias de `!fichaje`.
+- `!inscripcion` o `!inscripcion1` a `!inscripcion6`: muestra la guia de inscripcion y plantilla con 1 a 6 jugadores.
+- `!inscripción1` a `!inscripción6`: alias equivalentes con tilde.
+- `!rawinscripcion` o `!rawinscripcion1` a `!rawinscripcion6`: muestra solo la plantilla de inscripcion con 1 a 6
+  jugadores.
+- `!rawinscripción1` a `!rawinscripción6`: alias equivalentes con tilde.
+- `!fichaje` o `!fichaje1` a `!fichaje6`: muestra la guia de fichaje y plantilla sin `Logo:` con 1 a 6 jugadores.
+- `!rawfichaje` o `!rawfichaje1` a `!rawfichaje6`: muestra solo la plantilla de fichaje sin `Logo:` con 1 a 6 jugadores.
+- `!fichajestaff` o `!fichajestaff1` a `!fichajestaff6`: muestra la guia de fichaje de Staff Tecnico.
+- `!rawfichajestaff` o `!rawfichajestaff1` a `!rawfichajestaff6`: muestra solo las plantillas de fichaje de Staff
+  Tecnico.
+- `!help t`: muestra una lista breve de comandos de texto disponibles.
+- `!help s`: muestra una lista breve de comandos slash públicos.
+- `!help all`: muestra la ayuda de comandos de texto y comandos slash.
 
-Este comando funciona tanto en canales del servidor como en hilos de ticket y en mensajes directos al bot.
+Estos comandos funcionan tanto en canales del servidor como en hilos de ticket y en mensajes directos al bot.
 
 ## Estructura recomendada
 

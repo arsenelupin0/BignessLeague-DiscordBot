@@ -42,6 +42,7 @@ class BignessLeagueBot(commands.Bot):
 
         super().__init__(
             command_prefix=commands.when_mentioned_or(settings.command_prefix),
+            help_command=None,
             intents=intents,
         )
         self.settings = settings

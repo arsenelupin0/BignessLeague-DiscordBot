@@ -6,6 +6,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from bigness_league_bot.application.services.team_signing_guide import (
+    build_team_signing_guide_content,
+    build_team_signing_raw_template_content,
+)
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.discord.channel_access_management import (
@@ -59,31 +63,126 @@ from bigness_league_bot.presentation.discord.views.team_removal_selection import
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
+REGISTRATION_GUIDE_ALIASES = tuple(
+    alias
+    for index in range(1, 7)
+    for alias in (f"inscripción{index}", f"inscripcion{index}")
+)
+RAW_REGISTRATION_TEMPLATE_ALIASES = tuple(
+    alias
+    for index in range(1, 7)
+    for alias in (f"rawinscripción{index}", f"rawinscripcion{index}")
+)
+SIGNING_GUIDE_ALIASES = tuple(f"fichaje{index}" for index in range(1, 7))
+RAW_SIGNING_TEMPLATE_ALIASES = tuple(
+    f"rawfichaje{index}" for index in range(1, 7)
+)
+STAFF_SIGNING_GUIDE_ALIASES = tuple(
+    f"fichajestaff{index}" for index in range(1, 7)
+)
+RAW_STAFF_SIGNING_TEMPLATE_ALIASES = tuple(
+    alias
+    for index in range(1, 7)
+    for alias in (f"rawfichajestaff{index}", f"rawfihcajestaff{index}")
+)
+
 
 class TeamSigningCog(commands.Cog):
     def __init__(self, bot: BignessLeagueBot) -> None:
         self.bot = bot
 
     @commands.command(
-        name="fichaje",
-        aliases=("inscripcion",),
+        name="inscripcion",
+        aliases=REGISTRATION_GUIDE_ALIASES + ("inscripción",),
     )
-    async def signing_guide(self, ctx: commands.Context[BignessLeagueBot]) -> None:
+    async def registration_guide(self, ctx: commands.Context[BignessLeagueBot]) -> None:
+        player_count = _resolve_registration_guide_player_count(ctx.invoked_with)
         content = self.bot.localizer.translate(
             I18N.messages.team_signing.guide.content,
         )
-        for chunk in split_discord_message_content(content):
-            sent_message = await ctx.send(
-                chunk,
-                allowed_mentions=discord.AllowedMentions.none(),
-                suppress_embeds=True,
-            )
-            if ctx.command is not None:
-                await mirror_ticket_text_command_message(
-                    self.bot,
-                    sent_message,
-                    command_name=f"!{ctx.command.qualified_name}",
-                )
+        await _send_text_command_content(
+            self.bot,
+            ctx,
+            build_team_signing_guide_content(content, player_count=player_count),
+        )
+
+    @commands.command(
+        name="fichaje",
+        aliases=SIGNING_GUIDE_ALIASES,
+    )
+    async def signing_guide(self, ctx: commands.Context[BignessLeagueBot]) -> None:
+        player_count = _resolve_numbered_text_command_count(ctx.invoked_with)
+        content = self.bot.localizer.translate(
+            I18N.messages.team_signing.signing_guide.content,
+        )
+        await _send_text_command_content(
+            self.bot,
+            ctx,
+            build_team_signing_guide_content(content, player_count=player_count),
+        )
+
+    @commands.command(
+        name="rawinscripcion",
+        aliases=RAW_REGISTRATION_TEMPLATE_ALIASES + ("rawinscripción",),
+    )
+    async def raw_registration_template(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        player_count = _resolve_numbered_text_command_count(ctx.invoked_with)
+        content = self.bot.localizer.translate(
+            I18N.messages.team_signing.guide.content,
+        )
+        content = build_team_signing_raw_template_content(content, player_count=player_count)
+        await _send_text_command_content(self.bot, ctx, content)
+
+    @commands.command(
+        name="rawfichaje",
+        aliases=RAW_SIGNING_TEMPLATE_ALIASES,
+    )
+    async def raw_signing_template(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        player_count = _resolve_numbered_text_command_count(ctx.invoked_with)
+        content = self.bot.localizer.translate(
+            I18N.messages.team_signing.signing_guide.content,
+        )
+        content = build_team_signing_raw_template_content(content, player_count=player_count)
+        await _send_text_command_content(self.bot, ctx, content)
+
+    @commands.command(
+        name="fichajestaff",
+        aliases=STAFF_SIGNING_GUIDE_ALIASES,
+    )
+    async def staff_signing_guide(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        player_count = _resolve_numbered_text_command_count(ctx.invoked_with)
+        content = self.bot.localizer.translate(
+            I18N.messages.team_signing.staff_signing_guide.content,
+        )
+        await _send_text_command_content(
+            self.bot,
+            ctx,
+            build_team_signing_guide_content(content, player_count=player_count),
+        )
+
+    @commands.command(
+        name="rawfichajestaff",
+        aliases=RAW_STAFF_SIGNING_TEMPLATE_ALIASES + ("rawfihcajestaff",),
+    )
+    async def raw_staff_signing_template(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        player_count = _resolve_numbered_text_command_count(ctx.invoked_with)
+        content = self.bot.localizer.translate(
+            I18N.messages.team_signing.staff_signing_guide.content,
+        )
+        content = build_team_signing_raw_template_content(content, player_count=player_count)
+        await _send_text_command_content(self.bot, ctx, content)
 
     @app_commands.command(
         name=localized_locale_str(I18N.commands.team_signing.make_registration.name),
@@ -180,7 +279,6 @@ class TeamSigningCog(commands.Cog):
             technical_staff_batch=technical_staff_batch,
             require_new_team_block=False,
         )
-
     @app_commands.command(
         name=localized_locale_str(I18N.commands.team_signing.remove_signing.name),
         description=localized_locale_str(
@@ -342,3 +440,49 @@ class TeamSigningCog(commands.Cog):
 
 async def setup(bot: BignessLeagueBot) -> None:
     await bot.add_cog(TeamSigningCog(bot))
+
+
+async def _send_text_command_content(
+        bot: BignessLeagueBot,
+        ctx: commands.Context[BignessLeagueBot],
+        content: str,
+) -> None:
+    for chunk in split_discord_message_content(content):
+        sent_message = await ctx.send(
+            chunk,
+            allowed_mentions=discord.AllowedMentions.none(),
+            suppress_embeds=True,
+        )
+        if ctx.command is not None:
+            invoked_command_name = ctx.invoked_with or ctx.command.qualified_name
+            await mirror_ticket_text_command_message(
+                bot,
+                sent_message,
+                command_name=f"!{invoked_command_name}",
+            )
+
+
+def _resolve_registration_guide_player_count(invoked_with: str | None) -> int:
+    if invoked_with is None:
+        return 1
+
+    normalized_invoked_with = invoked_with.casefold()
+    if not normalized_invoked_with.startswith(("inscripción", "inscripcion")):
+        return 1
+
+    return _resolve_numbered_text_command_count(normalized_invoked_with)
+
+
+def _resolve_numbered_text_command_count(invoked_with: str | None) -> int:
+    if invoked_with is None:
+        return 1
+
+    suffix_digits = ""
+    for character in reversed(invoked_with):
+        if not character.isdecimal():
+            break
+        suffix_digits = character + suffix_digits
+
+    if suffix_digits:
+        return int(suffix_digits)
+    return 1

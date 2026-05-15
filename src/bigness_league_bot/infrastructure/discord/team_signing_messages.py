@@ -75,12 +75,86 @@ def split_discord_message_content(content: str) -> tuple[str, ...]:
     remaining = content.strip()
     preferred_separators = ("\n## ", "\n\n", "\n")
 
+    if remaining.count(TEAM_SIGNING_GUIDE_TEMPLATE_BLOCK_MARKER) >= 4:
+        return _split_discord_message_content_by_code_blocks(remaining)
+
     split_marker_index = remaining.find(TEAM_SIGNING_GUIDE_TEMPLATE_BLOCK_MARKER)
     if 0 < split_marker_index <= DISCORD_MESSAGE_CONTENT_LIMIT:
         first_chunk = remaining[:split_marker_index].strip()
         template_chunk = remaining[split_marker_index:].strip()
         if len(template_chunk) <= DISCORD_MESSAGE_CONTENT_LIMIT:
             return first_chunk, template_chunk
+
+    while len(remaining) > DISCORD_MESSAGE_CONTENT_LIMIT:
+        split_at = -1
+        for separator in preferred_separators:
+            candidate = remaining.rfind(
+                separator,
+                0,
+                DISCORD_MESSAGE_CONTENT_LIMIT + 1,
+            )
+            if candidate > 0:
+                split_at = candidate
+                break
+
+        if split_at <= 0:
+            split_at = DISCORD_MESSAGE_CONTENT_LIMIT
+
+        chunk = remaining[:split_at].strip()
+        if chunk:
+            chunks.append(chunk)
+        remaining = remaining[split_at:].strip()
+
+    if remaining:
+        chunks.append(remaining)
+
+    return tuple(chunks)
+
+
+def _split_discord_message_content_by_code_blocks(content: str) -> tuple[str, ...]:
+    chunks: list[str] = []
+    search_start_index = 0
+
+    while True:
+        opening_marker_index = content.find(
+            TEAM_SIGNING_GUIDE_TEMPLATE_BLOCK_MARKER,
+            search_start_index,
+        )
+        if opening_marker_index < 0:
+            chunks.extend(_split_discord_message_content_without_code_blocks(
+                content[search_start_index:],
+            ))
+            break
+
+        chunks.extend(_split_discord_message_content_without_code_blocks(
+            content[search_start_index:opening_marker_index],
+        ))
+        body_start_index = opening_marker_index + len(TEAM_SIGNING_GUIDE_TEMPLATE_BLOCK_MARKER)
+        closing_marker_index = content.find(
+            TEAM_SIGNING_GUIDE_TEMPLATE_BLOCK_MARKER,
+            body_start_index,
+        )
+        if closing_marker_index < 0:
+            chunks.extend(_split_discord_message_content_without_code_blocks(
+                content[opening_marker_index:],
+            ))
+            break
+
+        code_chunk_end_index = closing_marker_index + len(
+            TEAM_SIGNING_GUIDE_TEMPLATE_BLOCK_MARKER
+        )
+        code_chunk = content[opening_marker_index:code_chunk_end_index].strip()
+        if code_chunk:
+            chunks.append(code_chunk)
+        search_start_index = code_chunk_end_index
+
+    return tuple(chunk for chunk in chunks if chunk)
+
+
+def _split_discord_message_content_without_code_blocks(content: str) -> tuple[str, ...]:
+    chunks: list[str] = []
+    remaining = content.strip()
+    preferred_separators = ("\n## ", "\n\n", "\n")
 
     while len(remaining) > DISCORD_MESSAGE_CONTENT_LIMIT:
         split_at = -1

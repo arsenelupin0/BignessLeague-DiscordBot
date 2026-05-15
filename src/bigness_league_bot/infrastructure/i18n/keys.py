@@ -641,9 +641,36 @@ class _MessagesMatchReplays:
     image_render_failed: TranslationKey = TranslationKey(key="messages.match_replays.image_render_failed",
                                                          default_text="\n\nNo he podido renderizar la imagen resumen. El proceso principal se ha completado correctamente.")
 
+
+class _MessagesTextCommandsHelp:
+    content: TranslationKey = TranslationKey(key="messages.text_commands.help.content",
+                                             default_text="# Comandos disponibles\n_ _\n- `!help t`: muestra esta lista de comandos de texto.\n- `!help s`: muestra la ayuda de comandos slash públicos.\n- `!help all`: muestra toda la ayuda disponible.\n- `!inscripcion` o `!inscripcion1` a `!inscripcion6`: muestra la guia completa de inscripcion con plantilla para 1 a 6 jugadores. Tambien acepta `!inscripción` o `!inscripción1` a `!inscripción6`.\n- `!rawinscripcion` o `!rawinscripcion1` a `!rawinscripcion6`: muestra solo la plantilla de inscripcion para 1 a 6 jugadores. Tambien acepta `!rawinscripción` o `!rawinscripción1` a `!rawinscripción6`.\n- `!fichaje` o `!fichaje1` a `!fichaje6`: muestra la guia completa de fichaje con plantilla para 1 a 6 jugadores.\n- `!rawfichaje` o `!rawfichaje1` a `!rawfichaje6`: muestra solo la plantilla de fichaje para 1 a 6 jugadores.\n- `!fichajestaff` o `!fichajestaff1` a `!fichajestaff6`: muestra la guia completa de fichaje de Staff Tecnico.\n- `!rawfichajestaff` o `!rawfichajestaff1` a `!rawfichajestaff6`: muestra solo las plantillas de fichaje de Staff Tecnico.")
+    usage: TranslationKey = TranslationKey(key="messages.text_commands.help.usage",
+                                           default_text="Usa `!help t` para comandos de texto, `!help s` para comandos slash o `!help all` para ver todo.")
+    slash_section_title: TranslationKey = TranslationKey(key="messages.text_commands.help.slash_section_title",
+                                                         default_text="\n_ _\n## Comandos slash")
+    slash_command_line: TranslationKey = TranslationKey(key="messages.text_commands.help.slash_command_line",
+                                                        default_text="- `/{name}`: {description}")
+    slash_empty: TranslationKey = TranslationKey(key="messages.text_commands.help.slash_empty",
+                                                 default_text="- No hay comandos slash públicos cargados para esta ayuda.")
+
+
+class _MessagesTextCommands:
+    help: _MessagesTextCommandsHelp = _MessagesTextCommandsHelp()
+
 class _MessagesTeamSigningGuide:
     content: TranslationKey = TranslationKey(key="messages.team_signing.guide.content",
                                              default_text='# Como hacer una inscripcion o fichaje\n_ _\n## Plantilla de jugadores\n```\nDivision: \nEquipo: \nLogo: \n\nJugador: \nDiscord ID: \nPlatform: \nPlatform ID: \nEpic Name: \nTracker: \nMMR: \n```\n- `Logo:` solo es obligatorio para `/hacer_inscripcion`.\n- `Platform:` solo admite `steam`, `epic`, `xbl`, `psn` o `switch`.\n_ _\n## Plantilla de staff tecnico\n```\nDivision: \nEquipo: \n\nRol: \nPlayer: \nDiscord ID: \nEpic Name: \n```')
+
+
+class _MessagesTeamSigningSigningGuide:
+    content: TranslationKey = TranslationKey(key="messages.team_signing.signing_guide.content",
+                                             default_text="# Como hacer uno o varios fichajes\n_ _\nSi quieres tener un poco mas de informacion de como funcionan los fichajes. Dale click a estos links de aqui abajo:\n_ _\n - [Informacion para hacer un **fichaje**](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)\n - [Informacion para anadir un rol de **Staff Tecnico** a tu equipo](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\n## Plantilla de ejemplo que tendrias que enviar...\nSi no sabes que hay que poner en cada parte, por favor revisa la [documentacion para hacer un **fichaje**](https://canary.discord.com/channels/1016819103555657851/1495738084376055818). Recuerdo que tiene que estar **todo correcto** y con el **formato correcto**.\nEn caso de que tengas **mas jugadores** lo vas agregando con un **salto de linea**, como esta en **esta plantilla** con un **maximo** de **6 jugadores**. Tienes que tener en cuenta los jugadores que ya tienes en tu equipo [Como veo los jugadores que tengo en mi equipo?](https://canary.discord.com/channels/1016819103555657851/1495720294717849702)\n\n### Plantilla a copiar tal cual esta de aqui abajo pero con tus datos...\n_ _\n```\nDivision: \nEquipo: \n\nJugador: \nDiscord ID: \nPlatform: \nPlatform ID: \nEpic Name: \nTracker: \nMMR: \n```")
+
+
+class _MessagesTeamSigningStaffSigningGuide:
+    content: TranslationKey = TranslationKey(key="messages.team_signing.staff_signing_guide.content",
+                                             default_text="# Como hacer uno o varios fichajes para tu Staff Tecnico\n_ _\nSi quieres tener un poco mas de informacion de como funcionan los fichajes de **Staff Tecnico**. Dale click a este link de aqui abajo:\n_ _\n - [Informacion para anadir un rol de **Staff Tecnico** a tu equipo](https://canary.discord.com/channels/1016819103555657851/1495737942063185931)\n_ _\n## Plantilla de ejemplo que tendrias que enviar...\nSi no sabes que hay que poner en cada parte, por favor revisa la [documentacion para hacer un fichaje de **Staff Tecnico**](https://canary.discord.com/channels/1016819103555657851/1495738084376055818). Recuerdo que tiene que estar **todo correcto** y con el **formato correcto**.\nEn caso de que quieras agregar un **jugador** con un **mismo rol**, puedes **separarlo** por **comas**, si quieres agregar diferentes roles a diferentes jugadores, tendras agregar un **salto de linea**, como esta en **esta plantilla** con un **maximo** de **6 roles tecnicos disponibles**. Tienes que tener en cuenta a los **Staff Tecnicos** que ya tienes en tu equipo [Como veo el **Staff Tecnico** que tengo en mi equipo?](https://canary.discord.com/channels/1016819103555657851/1495720294717849702)\n\n### Plantilla a copiar tal cual esta de aqui abajo pero con tus datos...\n-# En caso de que el jugador no exista en la plantilla, se necesitaran datos adicionales.\n_ _\n```\nDivision: \nEquipo: \n\nRol: \nJugador: \nDiscord ID: \nEpic Name: \n```\n_ _\n### Plantilla a copiar tal cual esta de aqui abajo pero con tus datos...\n-# Si el jugador ya existe en la plantilla, no se necesitaran datos adicionales.\n_ _\n```\nDivision: \nEquipo: \n\nRol: \nDiscord ID: \n```")
 
 class _MessagesTeamSigningInteractiveStaffRoleSelection:
     prompt: TranslationKey = TranslationKey(key="messages.team_signing.interactive_staff_role_selection.prompt",
@@ -726,6 +753,8 @@ class _MessagesTeamSigningRosterModification:
 
 class _MessagesTeamSigning:
     guide: _MessagesTeamSigningGuide = _MessagesTeamSigningGuide()
+    signing_guide: _MessagesTeamSigningSigningGuide = _MessagesTeamSigningSigningGuide()
+    staff_signing_guide: _MessagesTeamSigningStaffSigningGuide = _MessagesTeamSigningStaffSigningGuide()
     interactive_staff_role_selection: _MessagesTeamSigningInteractiveStaffRoleSelection = _MessagesTeamSigningInteractiveStaffRoleSelection()
     interactive_removal_selection: _MessagesTeamSigningInteractiveRemovalSelection = _MessagesTeamSigningInteractiveRemovalSelection()
     roster_modification: _MessagesTeamSigningRosterModification = _MessagesTeamSigningRosterModification()
@@ -1196,6 +1225,7 @@ class _Messages:
     team_profile: _MessagesTeamProfile = _MessagesTeamProfile()
     mmr_media: _MessagesMmrMedia = _MessagesMmrMedia()
     match_replays: _MessagesMatchReplays = _MessagesMatchReplays()
+    text_commands: _MessagesTextCommands = _MessagesTextCommands()
     team_signing: _MessagesTeamSigning = _MessagesTeamSigning()
     team_role_removal_announcement: _MessagesTeamRoleRemovalAnnouncement = _MessagesTeamRoleRemovalAnnouncement()
     team_player_role_removal_announcement: _MessagesTeamPlayerRoleRemovalAnnouncement = _MessagesTeamPlayerRoleRemovalAnnouncement()
