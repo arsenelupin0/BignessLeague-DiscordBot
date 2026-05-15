@@ -366,7 +366,7 @@
     },
     "team_signing": {
       "guide": {
-        "content": "# Como hacer una inscripcion o fichaje\n_ _\n## Plantilla de jugadores\n```\nDivision: \nEquipo: \nLogo: \n\nJugador: \nDiscord ID: \nPlatform: \nPlatform ID: \nEpic Name: \nTracker: \nMMR: \n```\n- `Logo:` solo es obligatorio para `/hacer_inscripcion`.\n- `Platform:` solo admite `steam`, `epic`, `xbl`, `psn` o `switch`.\n_ _\n## Plantilla de staff tecnico\n```\nDivision: \nEquipo: \n\nRol: \nPlayer: \nDiscord ID: \nEpic Name: \n```"
+        "content": "# Como hacer una inscripcion o fichaje\n_ _\n## Plantilla de jugadores\n```\nDivision: \nEquipo: \nLogo: \n\nJugador: \nDiscord ID: \nPlatform: \nPlatform ID: \nEpic Name: \nTracker: \nMMR: \n```\n- `Logo:` solo es obligatorio para `/hacer_inscripcion`.\n- `Platform:` solo admite `steam`, `epic`, `xbl`, `psn` o `switch`.\n_ _\n## Plantilla de staff tecnico\n```\nDivision: \nEquipo: \n\nRol: CEO, Mánager\nDiscord ID: \n\nRol: Coach, Analista\nPlayer: \nDiscord ID: \nEpic Name: \n```\n- `Rol:` admite varios cargos separados por coma.\n- `Player:` y `Epic Name:` pueden omitirse si el `Discord ID` ya existe como jugador en ese equipo."
       },
       "interactive_staff_role_selection": {
         "prompt": "Selecciona uno o varios cargos disponibles para `{discord_name}`.",

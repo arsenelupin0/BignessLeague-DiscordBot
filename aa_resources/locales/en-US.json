@@ -337,7 +337,7 @@
     },
     "team_signing": {
       "guide": {
-        "content": "# How to submit a registration or signing\n_ _\n## Player template\n```\nDivision: \nEquipo: \nLogo: \n\nJugador: \nDiscord ID: \nPlatform: \nPlatform ID: \nEpic Name: \nTracker: \nMMR: \n```\n- `Logo:` is only required for `/hacer_inscripcion`.\n- `Platform:` only accepts `steam`, `epic`, `xbl`, `psn`, or `switch`.\n_ _\n## Technical staff template\n```\nDivision: \nEquipo: \n\nRol: \nPlayer: \nDiscord ID: \nEpic Name: \n```"
+        "content": "# How to submit a registration or signing\n_ _\n## Player template\n```\nDivision: \nEquipo: \nLogo: \n\nJugador: \nDiscord ID: \nPlatform: \nPlatform ID: \nEpic Name: \nTracker: \nMMR: \n```\n- `Logo:` is only required for `/hacer_inscripcion`.\n- `Platform:` only accepts `steam`, `epic`, `xbl`, `psn`, or `switch`.\n_ _\n## Technical staff template\n```\nDivision: \nEquipo: \n\nRol: CEO, Mánager\nDiscord ID: \n\nRol: Coach, Analista\nPlayer: \nDiscord ID: \nEpic Name: \n```\n- `Rol:` accepts multiple roles separated by commas.\n- `Player:` and `Epic Name:` can be omitted if the `Discord ID` already exists as a player in that team."
       },
       "interactive_staff_role_selection": {
         "prompt": "Select one or more available roles for `{discord_name}`.",
