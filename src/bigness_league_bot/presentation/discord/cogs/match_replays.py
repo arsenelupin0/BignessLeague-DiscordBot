@@ -32,6 +32,7 @@ from bigness_league_bot.application.services.match_replay_summaries import (
 from bigness_league_bot.application.services.match_replays import (
     InvalidReplayCountError,
     InvalidReplayExtensionError,
+    MATCH_REPLAY_EXTENSION,
     MATCH_REPLAY_MAX_FILES,
     MATCH_REPLAY_MIN_FILES,
     MatchReplayDivision,
@@ -77,6 +78,7 @@ from bigness_league_bot.infrastructure.discord.match_summary_images import (
     build_match_replay_summary_image_file,
     build_match_standings_image_file,
 )
+from bigness_league_bot.infrastructure.discord.message_links import fetch_linked_message
 from bigness_league_bot.infrastructure.google.match_replay_repository import (
     GoogleSheetsMatchReplayRepository,
     MatchStandingsRefreshResult,
@@ -171,6 +173,82 @@ class MatchReplaysCog(commands.Cog):
             raise _to_user_error(exc) from exc
 
         await interaction.response.defer(thinking=True, ephemeral=True)
+        await self._process_replay_attachments(
+            interaction,
+            local=local,
+            visitante=visitante,
+            attachments=attachments,
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.match_replays.link_replays.name),
+        description=localized_locale_str(
+            I18N.commands.match_replays.link_replays.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        local=localized_locale_str(
+            I18N.commands.match_replays.link_replays.parameters.local.description
+        ),
+        visitante=localized_locale_str(
+            I18N.commands.match_replays.link_replays.parameters.visitante.description
+        ),
+        mensaje=localized_locale_str(
+            I18N.commands.match_replays.link_replays.parameters.mensaje.description
+        ),
+    )
+    async def link_replays(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            local: discord.Role,
+            visitante: discord.Role,
+            mensaje: str,
+    ) -> None:
+        guild = interaction.guild
+        if guild is None or not isinstance(interaction.user, discord.Member):
+            raise UnsupportedChannelError(localize(I18N.errors.channel_management.server_only))
+
+        ensure_allowed_member(interaction.user)
+        validate_match_team_roles(
+            guild,
+            team_one=local,
+            team_two=visitante,
+            range_start_role_id=interaction.client.settings.channel_access_range_start_role_id,
+            range_end_role_id=interaction.client.settings.channel_access_range_end_role_id,
+        )
+
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        linked_message = await fetch_linked_message(interaction.client, guild, mensaje)
+        attachments = tuple(
+            attachment
+            for attachment in linked_message.attachments
+            if attachment.filename.lower().endswith(MATCH_REPLAY_EXTENSION)
+        )
+        await self._process_replay_attachments(
+            interaction,
+            local=local,
+            visitante=visitante,
+            attachments=attachments,
+        )
+
+    async def _process_replay_attachments(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            *,
+            local: discord.Role,
+            visitante: discord.Role,
+            attachments: tuple[discord.Attachment, ...],
+    ) -> None:
+        guild = interaction.guild
+        if guild is None:
+            raise UnsupportedChannelError(localize(I18N.errors.channel_management.server_only))
+
+        try:
+            validate_replay_filenames(attachment.filename for attachment in attachments)
+        except MatchReplayValidationError as exc:
+            raise _to_user_error(exc) from exc
+
         channel_name = _interaction_channel_name(interaction)
         channel_reference = parse_match_channel_reference(channel_name)
         if channel_reference is None:

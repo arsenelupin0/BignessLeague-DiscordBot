@@ -356,4 +356,25 @@ def _goals_for_report_team(
         return game.blue.goals
     if orange_matches and not blue_matches:
         return game.orange.goals
+    blue_matches = _team_has_official_players(game.blue, expected_team_name)
+    orange_matches = _team_has_official_players(game.orange, expected_team_name)
+    if blue_matches and not orange_matches:
+        return game.blue.goals
+    if orange_matches and not blue_matches:
+        return game.orange.goals
     return None
+
+
+def _team_has_official_players(
+        team: MatchReplayTeam,
+        expected_team_name: str,
+) -> bool:
+    normalized_expected = normalize_match_replay_team_name(expected_team_name)
+    return any(
+        player.official_team_name
+        and match_replay_team_names_match(
+            normalize_match_replay_team_name(player.official_team_name),
+            normalized_expected,
+        )
+        for player in team.players
+    )

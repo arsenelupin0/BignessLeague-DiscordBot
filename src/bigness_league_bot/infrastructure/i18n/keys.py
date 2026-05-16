@@ -300,6 +300,37 @@ class _CommandsMatchReplaysUploadReplays:
     parameters: _CommandsMatchReplaysUploadReplaysParameters = _CommandsMatchReplaysUploadReplaysParameters()
 
 
+class _CommandsMatchReplaysLinkReplaysParametersLocal:
+    description: TranslationKey = TranslationKey(
+        key="commands.match_replays.link_replays.parameters.local.description", default_text="Rol del equipo local.")
+
+
+class _CommandsMatchReplaysLinkReplaysParametersVisitante:
+    description: TranslationKey = TranslationKey(
+        key="commands.match_replays.link_replays.parameters.visitante.description",
+        default_text="Rol del equipo visitante.")
+
+
+class _CommandsMatchReplaysLinkReplaysParametersMensaje:
+    description: TranslationKey = TranslationKey(
+        key="commands.match_replays.link_replays.parameters.mensaje.description",
+        default_text="Enlace al mensaje de Discord que contiene las replays.")
+
+
+class _CommandsMatchReplaysLinkReplaysParameters:
+    local: _CommandsMatchReplaysLinkReplaysParametersLocal = _CommandsMatchReplaysLinkReplaysParametersLocal()
+    visitante: _CommandsMatchReplaysLinkReplaysParametersVisitante = _CommandsMatchReplaysLinkReplaysParametersVisitante()
+    mensaje: _CommandsMatchReplaysLinkReplaysParametersMensaje = _CommandsMatchReplaysLinkReplaysParametersMensaje()
+
+
+class _CommandsMatchReplaysLinkReplays:
+    name: TranslationKey = TranslationKey(key="commands.match_replays.link_replays.name",
+                                          default_text="enlazar_replays")
+    description: TranslationKey = TranslationKey(key="commands.match_replays.link_replays.description",
+                                                 default_text="Procesa las replays de un BO5 adjuntas en un mensaje enlazado.")
+    parameters: _CommandsMatchReplaysLinkReplaysParameters = _CommandsMatchReplaysLinkReplaysParameters()
+
+
 class _CommandsMatchReplaysRefreshStandingsParametersDivision:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.refresh_standings.parameters.division.description",
@@ -327,6 +358,7 @@ class _CommandsMatchReplaysChoices:
 
 class _CommandsMatchReplays:
     upload_replays: _CommandsMatchReplaysUploadReplays = _CommandsMatchReplaysUploadReplays()
+    link_replays: _CommandsMatchReplaysLinkReplays = _CommandsMatchReplaysLinkReplays()
     refresh_standings: _CommandsMatchReplaysRefreshStandings = _CommandsMatchReplaysRefreshStandings()
     choices: _CommandsMatchReplaysChoices = _CommandsMatchReplaysChoices()
 
@@ -625,10 +657,10 @@ class _MessagesMatchReplaysUploaded:
                                                     default_text="Las {replay_count} replays adjuntas ya estaban registradas. No las he vuelto a procesar.")
     roster_validation_all_matched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_all_matched",
-        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- M\u00e9todos de coincidencia: {match_methods}\n{method_breakdown}\n- Todos los jugadores detectados coinciden con Platform + Platform ID registrados.")
+        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- M\u00e9todos de coincidencia: {match_methods}\n{method_breakdown}\n- Todos los jugadores detectados coinciden con Platform + Platform ID registrados.\n- Todos los Epic Names detectados son v\u00e1lidos: **{epic_name_unmatched_count}/{unique_players}** {epic_name_status_icon}")
     roster_validation_with_unmatched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_with_unmatched",
-        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- M\u00e9todos de coincidencia: {match_methods}\n{method_breakdown}\n- Jugadores no encontrados:\n{unmatched_players}\n- Epic Names no encontrados:\n{epic_name_unmatched_players}\n_ _\n## Informaci\u00f3n incorrecta\n- En caso de jugar con alg\u00fan jugador que no coincida con los datos registrados, alg\u00fan miembro del **Staff** se pondr\u00e1 en contacto con vosotros para revisar este caso.\n- Si se juega con alineaci\u00f3n indebida, podr\u00e1 conllevar sanci\u00f3n grave, tanto al club como al jugador.\n- Se debe aportar toda la informaci\u00f3n posible si esto ocurre.")
+        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- M\u00e9todos de coincidencia: {match_methods}\n{method_breakdown}\n- Jugadores no encontrados:\n{unmatched_players}\n- Epic Names no encontrados: **{epic_name_unmatched_count}/{unique_players}** {epic_name_status_icon}\n{epic_name_unmatched_players}\n_ _\n## Informaci\u00f3n incorrecta\n- En caso de jugar con alg\u00fan jugador que no coincida con los datos registrados, alg\u00fan miembro del **Staff** se pondr\u00e1 en contacto con vosotros para revisar este caso.\n- Si se juega con alineaci\u00f3n indebida, podr\u00e1 conllevar sanci\u00f3n grave, tanto al club como al jugador.\n- Se debe aportar toda la informaci\u00f3n posible si esto ocurre.")
     roster_validation_more_unmatched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_more_unmatched",
         default_text="  - Y {remaining} m\u00e1s.")

@@ -22,7 +22,7 @@ from bigness_league_bot.infrastructure.google.team_sheets.models import SheetCel
 from bigness_league_bot.infrastructure.google.team_sheets.schema import (
     TEAM_BLOCK_COLUMN_COUNT,
     TEAM_BLOCK_HEADER_ROW_OFFSET,
-    TEAM_BLOCK_HEADERS_NORMALIZED,
+    TEAM_BLOCK_HEADER_VARIANTS_NORMALIZED,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 
@@ -48,7 +48,7 @@ def _find_team_block(
                 .casefold()
                 for offset in range(TEAM_BLOCK_COLUMN_COUNT)
             )
-            if header_values != TEAM_BLOCK_HEADERS_NORMALIZED:
+            if header_values not in TEAM_BLOCK_HEADER_VARIANTS_NORMALIZED:
                 continue
 
             title = _extract_block_title(
@@ -87,7 +87,7 @@ def _collect_team_blocks(
                 .casefold()
                 for offset in range(TEAM_BLOCK_COLUMN_COUNT)
             )
-            if header_values != TEAM_BLOCK_HEADERS_NORMALIZED:
+            if header_values not in TEAM_BLOCK_HEADER_VARIANTS_NORMALIZED:
                 continue
 
             blocks.append(

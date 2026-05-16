@@ -18,6 +18,17 @@ TEAM_BLOCK_HEADERS = (
     "MMR",
 )
 TEAM_BLOCK_HEADERS_NORMALIZED = tuple(header.casefold() for header in TEAM_BLOCK_HEADERS)
+TEAM_BLOCK_HEADER_VARIANTS_NORMALIZED = (
+    TEAM_BLOCK_HEADERS_NORMALIZED,
+    (
+        "jugador",
+        "discord id",
+        "platform",
+        "platform id",
+        "epic name",
+        "mmr",
+    ),
+)
 TEAM_BLOCK_HEADER_ROW_OFFSET = 1
 TEAM_BLOCK_PLAYERS_ROW_OFFSET = 2
 TEAM_BLOCK_MAX_PLAYERS = 6

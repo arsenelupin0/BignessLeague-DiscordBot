@@ -190,6 +190,10 @@ def _collect_partial_match_methods(
     methods: list[str] = []
     if epic_match is not None:
         methods.append("epic_name")
+        if platform_key and platform_key == _normalize_platform_lookup(epic_match.platform):
+            methods.append("platform")
+        if platform_id_key and platform_id_key == _normalize_player_lookup(epic_match.platform_id):
+            methods.append("platform_id")
         return tuple(methods)
 
     platform_id_match = _find_unique_roster_index_match(

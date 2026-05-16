@@ -56,6 +56,11 @@ def format_match_replay_roster_validation(
         for method in ROSTER_VALIDATION_METHODS
     )
     status_icon = "✅" if not summary.unmatched_players else "❌"
+    epic_name_unmatched_count = len(summary.epic_name_unmatched_players)
+    epic_name_matched_count = summary.unique_players - epic_name_unmatched_count
+    epic_name_status_icon = (
+        "✅" if epic_name_unmatched_count == 0 and summary.unique_players > 0 else "❌"
+    )
     if not summary.unmatched_players:
         return localizer.translate(
             I18N.messages.match_replays.uploaded.roster_validation_all_matched,
@@ -67,6 +72,8 @@ def format_match_replay_roster_validation(
             match_methods=method_text,
             method_breakdown=method_breakdown,
             status_icon=status_icon,
+            epic_name_unmatched_count=epic_name_matched_count,
+            epic_name_status_icon=epic_name_status_icon,
         )
 
     unmatched_text = "\n".join(
@@ -76,8 +83,6 @@ def format_match_replay_roster_validation(
         _format_unmatched_player_line(player, include_missing_methods=False)
         for player in summary.epic_name_unmatched_players
     )
-    if not epic_name_unmatched_text:
-        epic_name_unmatched_text = "  - Ninguno."
     return localizer.translate(
         I18N.messages.match_replays.uploaded.roster_validation_with_unmatched,
         locale=locale,
@@ -89,6 +94,8 @@ def format_match_replay_roster_validation(
         method_breakdown=method_breakdown,
         status_icon=status_icon,
         unmatched_players=unmatched_text,
+        epic_name_unmatched_count=epic_name_matched_count,
+        epic_name_status_icon=epic_name_status_icon,
         epic_name_unmatched_players=epic_name_unmatched_text,
     )
 

@@ -400,7 +400,21 @@ def _game_team_for_report_name(game: MatchReplayGame, team_name: str) -> MatchRe
         return game.blue
     if _team_names_match_for_render(game.orange.name, team_name):
         return game.orange
+    blue_matches = _team_has_official_players(game.blue, team_name)
+    orange_matches = _team_has_official_players(game.orange, team_name)
+    if blue_matches and not orange_matches:
+        return game.blue
+    if orange_matches and not blue_matches:
+        return game.orange
     return None
+
+
+def _team_has_official_players(team: MatchReplayTeam, team_name: str) -> bool:
+    return any(
+        player.official_team_name
+        and _team_names_match_for_render(player.official_team_name, team_name)
+        for player in team.players
+    )
 
 
 def _game_player_rows(team: MatchReplayTeam | None) -> tuple[TableRow, ...]:
@@ -408,7 +422,7 @@ def _game_player_rows(team: MatchReplayTeam | None) -> tuple[TableRow, ...]:
         return ()
     return tuple(
         (
-            player.roster_player_name or player.name,
+            player.name,
             str(player.score or 0),
             str(player.goals or 0),
             str(player.assists or 0),
@@ -420,7 +434,7 @@ def _game_player_rows(team: MatchReplayTeam | None) -> tuple[TableRow, ...]:
             key=lambda candidate: (
                 -(candidate.score or 0),
                 -(candidate.goals or 0),
-                (candidate.roster_player_name or candidate.name).casefold(),
+                candidate.name.casefold(),
             ),
         )[:4]
     )

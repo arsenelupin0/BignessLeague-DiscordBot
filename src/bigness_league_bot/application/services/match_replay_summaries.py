@@ -225,7 +225,7 @@ def build_match_replay_player_stat_totals(
         for team in (game.blue, game.orange):
             for replay_player in team.players:
                 team_name = replay_player.official_team_name or team.name
-                player_name = replay_player.roster_player_name or replay_player.name
+                player_name = replay_player.name
                 platform, player_identity = _player_identity_key(replay_player)
                 key: tuple[str, str, str] = (
                     normalize_match_replay_team_name(team_name),
