@@ -85,6 +85,7 @@ async def handle_team_signing_removal(
     visibility_links = await collect_team_signing_removal_visibility_links(
         settings=settings,
         guild=guild,
+        bot=interaction.client,
         team_role=team_role,
         player_role=player_role,
         result=result,

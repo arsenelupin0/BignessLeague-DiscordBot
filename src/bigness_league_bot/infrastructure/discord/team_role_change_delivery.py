@@ -139,6 +139,31 @@ class TeamChangeAnnouncementDeduplicator:
             staff_role.id if staff_role is not None else None,
         )
         previous_timestamp = self._recent_announcement_keys.get(announcement_key)
+        previous_announcement = _find_sent_announcement(
+            guild_id=guild.id,
+            member_id=member.id,
+            team_role_id=team_role.id,
+            spec_key=announcement_key[3],
+            staff_role_id=staff_role.id if staff_role is not None else None,
+            since=current_timestamp - ANNOUNCEMENT_SUPPRESSION_WINDOW_SECONDS,
+        )
+        if previous_announcement is not None:
+            LOGGER.info(
+                "TEAM_CHANGE_ANNOUNCEMENT_DUPLICATE_SKIPPED guild=%s(%s) user=%s(%s) team_role=%s(%s) spec=%s staff_role=%s",
+                guild.name,
+                guild.id,
+                member,
+                member.id,
+                team_role.name,
+                team_role.id,
+                announcement_key[3],
+                (
+                    f"{staff_role.name}({staff_role.id})"
+                    if staff_role is not None
+                    else "-"
+                ),
+            )
+            return None
         if (
                 not ignore_suppression
                 and _is_announcement_suppressed(announcement_key, current_timestamp)
