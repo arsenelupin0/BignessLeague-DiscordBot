@@ -110,6 +110,7 @@ Opciones disponibles en `/cerrar_canal`:
 - `Horario fijado`: abre un modal para indicar fecha y hora, cambia el icono final del canal a `📆` y publica el
   horario con timestamp largo de Discord.
 - `Partido en juego`: devuelve el icono final del canal a `⚽` y publica el aviso de que el horario sigue en disputa.
+- `Faltan replays`: cambia el icono final del canal a `⚠️` para marcar que faltan replays.
 - `Partido jugado`: deja el canal en modo solo lectura para el resto de roles y mantiene escritura para `Staff`,
   `Administrador` y `Ceo`. También cambia el icono final del canal a `✅`.
 - `Jornada cerrada`: oculta el canal para los roles no protegidos, deja acceso solo a `Staff`, `Administrador` y `Ceo`
@@ -119,7 +120,8 @@ Opciones disponibles en `/cerrar_canal`:
 
 Restricciones de `/cerrar_canal`:
 
-- solo funciona en canales de partido legacy o con formato emoji, y acepta los estados finales `⚽`, `📆`, `✅` y `🔒`
+- solo funciona en canales de partido legacy o con formato emoji, y acepta los estados finales `⚽`, `📆`, `⚠️`, `✅` y
+  `🔒`
 - solo pueden usarlo miembros con alguno de estos roles: `Staff`, `Administrador`, `Ceo`
 - las respuestas del comando son públicas
 

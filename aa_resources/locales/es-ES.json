@@ -12,6 +12,7 @@
         "choices": {
           "match_scheduled": "Horario fijado",
           "match_in_progress": "Horario en disputa",
+          "missing_replays": "Faltan replays",
           "match_played": "Partido jugado",
           "matchday_closed": "Jornada cerrada",
           "reopen_match": "Reabrir partido",
@@ -721,7 +722,7 @@
     "channel_management": {
       "server_only": "Este comando solo se puede usar dentro de un servidor.",
       "text_only": "Este comando solo se puede usar dentro de un canal de texto.",
-      "invalid_channel_name": "Este comando solo se puede usar en canales con nombre tipo `『𝗝』1️⃣『𝗣』4️⃣・⚽`, `『𝗝』1️⃣『𝗣』4️⃣・📆`, `『𝗝』1️⃣『𝗣』4️⃣・✅` o `『𝗝』1️⃣『𝗣』4️⃣・🔒`.",
+      "invalid_channel_name": "Este comando solo se puede usar en canales con nombre tipo `『𝗝』1️⃣『𝗣』4️⃣・⚽`, `『𝗝』1️⃣『𝗣』4️⃣・📆`, `『𝗝』1️⃣『𝗣』4️⃣・⚠️`, `『𝗝』1️⃣『𝗣』4️⃣・✅` o `『𝗝』1️⃣『𝗣』4️⃣・🔒`.",
       "unauthorized_role": "Solo pueden usar este comando los roles: {protected_roles}.",
       "protected_roles_missing": "Faltan roles protegidos en el servidor: {missing_roles}.",
       "invalid_role_not_in_guild": "El rol `{role_name}` no pertenece a este servidor.",
@@ -856,6 +857,7 @@
       "reopen_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal.",
       "reopen_with_roles_summary": "Canal reabierto. Se ha restaurado la escritura para los roles con acceso al canal y se han añadido estos roles: {roles}.",
       "add_roles_summary": "Se han anadido al canal estos roles: {roles}.",
+      "missing_replays_summary": "# ⚠️ IMPORTANTE ⚠️\n_ _\nCanal marcado como **pendiente** de **replays**. En caso de que no se suban las replays, el **partido** se podría dar como **nulo** para **ambos equipos** y ninguno **sumaría puntos**.",
       "match_scheduled_summary": "# {green_arrow} Horario fijado\n_ _\n- Ambos equipos se han puesto de acuerdo y se ha cerrado un horario.\n  - ️📆 **<t:{timestamp}:F>**\n  - ⌛ **<t:{timestamp}:R>**\n- Si un equipo no puede al final, que avise con tiempo mencionando al equipo rival.\n- {team_mentions}\n- Información extra para {caster_mentions}",
       "match_in_progress_summary": "# {green_arrow} Horario en disputa\n_ _\n- Se ha cancelado el horario fijado.\n- Si nadie se pone de acuerdo, el partido se dará como nulo.\n- Debido a que el horario está en disputa:\n  - No hay fecha fija de momento.\n  - Se cancela el casteo, {caster_mentions}"
     },

@@ -12,6 +12,7 @@
         "choices": {
           "match_scheduled": "Scheduled time",
           "match_in_progress": "Match in progress",
+          "missing_replays": "Missing replays",
           "match_played": "Match played",
           "matchday_closed": "Matchday closed",
           "reopen_match": "Reopen match",
@@ -587,7 +588,7 @@
     "channel_management": {
       "server_only": "This command can only be used inside a server.",
       "text_only": "This command can only be used inside a text channel.",
-      "invalid_channel_name": "This command can only be used in channels named like `『𝗝』1️⃣『𝗣』4️⃣・⚽`, `『𝗝』1️⃣『𝗣』4️⃣・📆`, `『𝗝』1️⃣『𝗣』4️⃣・✅`, or `『𝗝』1️⃣『𝗣』4️⃣・🔒`.",
+      "invalid_channel_name": "This command can only be used in channels named like `『𝗝』1️⃣『𝗣』4️⃣・⚽`, `『𝗝』1️⃣『𝗣』4️⃣・📆`, `『𝗝』1️⃣『𝗣』4️⃣・⚠️`, `『𝗝』1️⃣『𝗣』4️⃣・✅`, or `『𝗝』1️⃣『𝗣』4️⃣・🔒`.",
       "unauthorized_role": "Only these roles can use this command: {protected_roles}.",
       "protected_roles_missing": "Protected roles are missing from the server: {missing_roles}.",
       "invalid_role_not_in_guild": "The role `{role_name}` does not belong to this server.",
@@ -707,6 +708,7 @@
       "reopen_summary": "The channel has been reopened. Write access was restored for the roles that already had access.",
       "reopen_with_roles_summary": "The channel has been reopened. Write access was restored for the roles that already had access and these roles were added: {roles}.",
       "add_roles_summary": "These roles were added to the channel: {roles}.",
+      "missing_replays_summary": "The channel has been marked as missing replays. The final icon was updated to ⚠️.",
       "archive_above_separator_summary": "Channel archived. It was moved to the configured category above the separator.",
       "archive_below_separator_summary": "Channel archived. It was moved to the configured category below the separator.",
       "match_scheduled_summary": "# {green_arrow} Scheduled time\n_ _\n- Both teams have reached an agreement and the schedule has been fixed.\n  - ️ **<t:{timestamp}:F>**\n  - ⌛ **<t:{timestamp}:R>**\n- If a team cannot play in the end, they must warn in time while mentioning the opposing team.\n- {team_mentions}\n- Information to {caster_mentions}",
