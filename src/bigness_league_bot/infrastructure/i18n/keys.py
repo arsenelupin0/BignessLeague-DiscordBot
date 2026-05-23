@@ -687,8 +687,96 @@ class _MessagesTextCommandsHelp:
                                                  default_text="- No hay comandos slash públicos cargados para esta ayuda.")
 
 
+class _MessagesTextCommandsDiscordIdHelp:
+    content: TranslationKey = TranslationKey(
+        key="messages.text_commands.discord_id_help.content",
+        default_text="# Que debo de poner en \"Discord ID\"?\n_ _\nEs importante saber la diferencia entre el **Discord Name** y el **Discord ID**, son cosas muy diferentes y el **Discord ID** es **obligatorio** para poder realizar el fichaje **correctamente** y que **pueda jugar**.\n_ _\n - [Informacion extra para diferenciar entre un **Discord Name** y **Discord ID**](https://canary.discord.com/channels/1016819103555657851/1504631503210942544)\n",
+    )
+
+
+class _MessagesTextCommandsEpicNameHelp:
+    content: TranslationKey = TranslationKey(
+        key="messages.text_commands.epic_name_help.content",
+        default_text="# Diferencia hay entre \"Epic Name\" y \"Rocket In-Game Name\"?\n_ _\nEs importante saber esta diferencia ya que a la hora de hacer la **inscripcion/fichaje**, se debera de poner el **Epic Name**. En caso de solo tener una linea de texto, en vez de dos como aparece en la guia principal, esa linea sera vuestro **Epic Name**.\n_ _\n - [Informacion extra para diferenciar entre **Epic Name** y **Rocket In-Game Name**](https://canary.discord.com/channels/1016819103555657851/1496951199373590629)\n",
+    )
+
+
+class _MessagesTextCommandsTrackerHelp:
+    content: TranslationKey = TranslationKey(
+        key="messages.text_commands.tracker_help.content",
+        default_text="# Como veo mi \"tracker\" o mi rango (MMR)?\n_ _\nTanto la **URL** como el **MMR**, sera indispensable para vuestra **inscripcion/fichaje**. Si esta parte esta mal, o se miente con el rango ya sea con una **smurf**, **cuenta secundaria**, o no sea la cuenta principal podria conllevar una **sancion permanente** en toda la competicion de la **Bigness League**.\n_ _\n - [Informacion extra sobre **tracker**, **rango** y **MMR**](https://canary.discord.com/channels/1016819103555657851/1495718780691808256)\n",
+    )
+
+
+class _MessagesTextCommandsPeakHelp:
+    content: TranslationKey = TranslationKey(
+        key="messages.text_commands.peak_help.content",
+        default_text="# Que es el \"PEAK\" y como se cual es?\n_ _\nEl **PEAK** sera el numero que tendremos que poner en la parte de **MMR**, cuando se haga una **inscripcion** como cuando se haga un **fichaje**. Recuerdo, que si esta parte esta mal, o se miente con el rango ya sea con una **smurf**, **cuenta secundaria**, o no sea la cuenta principal podria conllevar una **sancion permanente** en toda la competicion de la **Bigness League**.\n_ _\n - [Informacion extra sobre Cual es mi **PEAK**?](https://canary.discord.com/channels/1016819103555657851/1497647061141815396)",
+    )
+
+
+class _MessagesTextCommandsPlatformIdHelp:
+    content: TranslationKey = TranslationKey(
+        key="messages.text_commands.platform_id_help.content",
+        default_text="# Como puedo obtener el \"ID de mi Plataforma\"?\n_ _\nEste dato, es **muy importante**, ya que va a ser el dato **identificativo** para que los **analisis** y **automatizacion** de **ballchasing** funcionen correctamente, sin haber ningun tipo de problema con nombres raros, cambio de nombres, etc. Es importante saber que esto depende de vuestra plataforma con la que jugueis.\n- Las plataformas son las siguientes:\n  - steam\n  - epic\n  - psn\n  - xbl\n  - switch\n_ _\n - [Informacion extra sobre mi **ID de plataforma**](https://canary.discord.com/channels/1016819103555657851/1497647061141815396)\n  - [Jugadores que jueguen en **steam**](https://canary.discord.com/channels/1016819103555657851/1504642379758436443/1504674921123414149)\n  - [Jugadores que jueguen en **epic**](https://canary.discord.com/channels/1016819103555657851/1504642379758436443/1504675033283297432)\n  - [Jugadores que jueguen en **play**](https://canary.discord.com/channels/1016819103555657851/1504642379758436443/1504675442853019810)\n  - [Jugadores que jueguen en **xbox**](https://canary.discord.com/channels/1016819103555657851/1504642379758436443/1504675442853019810)\n  - [Jugadores que jueguen en **switch**](https://canary.discord.com/channels/1016819103555657851/1504642379758436443/1504675442853019810)",
+    )
+
+
+class _MessagesTextCommandsTeamInfoHelp:
+    content: TranslationKey = TranslationKey(
+        key="messages.text_commands.team_info_help.content",
+        default_text="# Como ver a mi equipo o cuantos fichajes me quedan?\n_ _\nEste dato **informativo** es esencial, para asi poder **gestionar** a tu **equipo** y ver que **roles faltan**, que **plantilla** tienes actualmente, cuantos **fichajes** te quedan, comprobar el **MMR** que tienen tus jugadores, etc. Un **comando** muy **informativo**. Lo puedes usar **hablandole directamente** al **bot** de la liga de la **Bigness League**.\n_ _\n - [Informacion extra sobre el comando **ver mi equipo**](https://canary.discord.com/channels/1016819103555657851/1497647061141815396)",
+    )
+
+
+class _MessagesTextCommandsSigningDataHelp:
+    content: TranslationKey = TranslationKey(
+        key="messages.text_commands.signing_data_help.content",
+        default_text="# Como debo de hacer un fichaje?\n_ _\nPara realizar un fichaje o varios fichajes a la vez, deberas seguir una plantilla para el correcto funcionamiento y automatizacion de los fichajes de la liga. Tienes un poco de informacion de que significa cada valor por aqui abajo:\n- **Jugador**\n  - Nombre que usara el caster para llamarte cuando castee.\n- **Discord ID**\n  - ID de Discord que usara el jugador, no confundir con el Discord Name (si esta mal se podria dar como jugador invalido o alineacion indebida).\n- **Platform**\n  - Plataforma en la que juegas actualmente son: steam, epic, psn, xbl o switch.\n- **Platform ID**\n  - ID de la plataforma en la que juegas, si no sabes lo que es revisa la documentacion completa abajo.\n- **Epic Name**\n  - No confundir con el IGN. Este sera el Epic Name, si no sabes lo que es revisa la documentacion abajo.\n- **Tracker**\n  - URL del tracker del jugador, si no sabes como obtenerla revisa la documentacion abajo.\n- **MMR**\n  - Tu peak MMR, si no sabes hasta que temporada es o como funciona revisa la documentacion abajo.\n_ _\n - [Informacion extra **fichajes/inscripciones**](https://canary.discord.com/channels/1016819103555657851/1495738084376055818)",
+    )
+
+
+class _MessagesTextCommandsReplaysHelp:
+    content: TranslationKey = TranslationKey(
+        key="messages.text_commands.replays_help.content",
+        default_text="# Como puedo subir una replay a este canal?\n_ _\nPara subir las replays y que quede registrado vuestro partido automaticamente y correctamente, tendreis que seguir los [siguientes pasos, en caso de que no sepais donde estan los archivos que hay que subir](https://ballchasing.com/doc/faq#upload), tambien podeis echar un [ojo a este otro link](https://rocketleague.fandom.com/wiki/Saved_Replays#cite_note-1:~:text=English-,Saved%20Replays,-7).\n- **Importancia de la replay**\n  - Si nadie proporciona las replays, el partido se podria dar como nulo, y ningun equipo puntuara.\n  - Si un equipo reitera este comportamiento podria conllevar a los \"-1 punto\" en la clasificacion general. ",
+    )
+
+
+class _MessagesTextCommandsLeagueInfoHelp:
+    content: TranslationKey = TranslationKey(
+        key="messages.text_commands.league_info_help.content",
+        default_text="# Informacion sobre Bigness League\n_ _\nCompeticion de formato liga en 3vs3. Actualmente las inscripciones estan cerradas (se esta jugando actualmente). Si necesitas obtener un poco mas de informacion tanto de la liga, como su funcionamiento, revisa los links de abajo:\n- Normativa de la liga [actual de la S3](https://discord.com/channels/1016819103555657851/1363537934665515351).\n- Para todas las preguntas [frecuentes importante revisar](https://discord.com/channels/1016819103555657851/1412160784275869789).\n- Si necesitas ayuda, que no se te olvide revisar el [canal de tickets (abre por categoria)](https://discord.com/channels/1016819103555657851/1494159836932210769).\n- Comunicados de la [liga oficiales](https://discord.com/channels/1016819103555657851/1363537483643748392).\n- Calendario de la jornada actual [semana en juego](https://discord.com/channels/1016819103555657851/1016821071049150554).\n- Clasificacion de la [liga actualmente](https://discord.com/channels/1016819103555657851/1016821399119200256).\n- Resultados subidos a [ballchasing](https://discord.com/channels/1016819103555657851/1016821296534929469).\n- Participantes de la [liga actualmente](https://discord.com/channels/1016819103555657851/1364329189393698836).\n- Recuerda revisar nuestros [directos o de la comunidad](https://discord.com/channels/1016819103555657851/1383154599522996257)\n- Recuerda tambien revisar y darle like a [nuestras publicaciones](https://discord.com/channels/1016819103555657851/1384574383795732630)",
+    )
+
+
+class _MessagesTextCommandsDiscordInfoHelp:
+    content: TranslationKey = TranslationKey(
+        key="messages.text_commands.discord_info_help.content",
+        default_text="# Informacion sobre la funcionalidad del Discord de la Bigness League\n_ _\nPara el correcto funcionamiento del discord y de la competicion, se usa un bot especializado para esta liga. Si quieres saber y entender el funcionamiento de discord, revisa los links de aqui abajo:\n- Directiva [actual](https://discord.com/channels/1016819103555657851/1498743338159968476).\n- Si quieres jugar ahora mismo al [juego con alguien y no tienes como](https://discord.com/channels/1016819103555657851/1412164963996405811).\n- Si quieres chatear [este es tu canal](https://discord.com/channels/1016819103555657851/1016823991324905472).\n- Estas buscando un equipo o un jugador [publicalo aqui](https://discord.com/channels/1016819103555657851/1016824139295752272).\n- Estas buscando una scrim para mejorar/entrenar [publica o busca aqui](https://discord.com/channels/1016819103555657851/1016824445266047028).\n- Quieres pasar tus mejores clips [envialos por aqui](https://discord.com/channels/1016819103555657851/1125524936660893846).\n- Siguenos en todas nuestras [redes de la **Bigness League**](https://discord.com/channels/1016819103555657851/1016823596645101658).\n- Quiere promocionar tu contenido [hazlo con seguridad por aqui](https://discord.com/channels/1016819103555657851/1119271327384211526).",
+    )
+
+
+class _MessagesTextCommandsFaqHelp:
+    content: TranslationKey = TranslationKey(
+        key="messages.text_commands.faq_help.content",
+        default_text="# Si no tienes ni idea de por donde empezar\n_ _\nTe dejo una serie de **ayuda**, por si necesitas saber como hacer un **fichaje/inscripcion** o ver la **funcionalidad** de este **discord**, como de este **bot**, ya que tambien puedes hablarle y escribirle comandos por MD:\n_ _\n- Revisa las FAQs [preguntas frecuentes ya resuletas](https://canary.discord.com/channels/1016819103555657851/1412160784275869789).\n- Para obtener una ayuda de los comandos que usa el bot y una pequena descripcion, puedes usar lo siguiente en el [MD de tu discord](https://discord.com/channels/@me/1494167464580219060):\n  - ``!help t`` -> Comandos de texto.\n  - ``!help s`` -> Comandos de slash.\n  - ``!help all`` -> Toda la ayuda disponible. ",
+    )
+
+
 class _MessagesTextCommands:
     help: _MessagesTextCommandsHelp = _MessagesTextCommandsHelp()
+    discord_id_help: _MessagesTextCommandsDiscordIdHelp = _MessagesTextCommandsDiscordIdHelp()
+    epic_name_help: _MessagesTextCommandsEpicNameHelp = _MessagesTextCommandsEpicNameHelp()
+    tracker_help: _MessagesTextCommandsTrackerHelp = _MessagesTextCommandsTrackerHelp()
+    peak_help: _MessagesTextCommandsPeakHelp = _MessagesTextCommandsPeakHelp()
+    platform_id_help: _MessagesTextCommandsPlatformIdHelp = _MessagesTextCommandsPlatformIdHelp()
+    team_info_help: _MessagesTextCommandsTeamInfoHelp = _MessagesTextCommandsTeamInfoHelp()
+    signing_data_help: _MessagesTextCommandsSigningDataHelp = _MessagesTextCommandsSigningDataHelp()
+    replays_help: _MessagesTextCommandsReplaysHelp = _MessagesTextCommandsReplaysHelp()
+    league_info_help: _MessagesTextCommandsLeagueInfoHelp = _MessagesTextCommandsLeagueInfoHelp()
+    discord_info_help: _MessagesTextCommandsDiscordInfoHelp = _MessagesTextCommandsDiscordInfoHelp()
+    faq_help: _MessagesTextCommandsFaqHelp = _MessagesTextCommandsFaqHelp()
 
 class _MessagesTeamSigningGuide:
     content: TranslationKey = TranslationKey(key="messages.team_signing.guide.content",

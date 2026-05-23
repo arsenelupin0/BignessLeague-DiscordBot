@@ -427,6 +427,17 @@ Los comandos de desarrollo usan el prefijo definido en `BOT_PREFIX` y están lim
 - `!fichajestaff` o `!fichajestaff1` a `!fichajestaff6`: muestra la guía de fichaje de Staff Técnico.
 - `!rawfichajestaff` o `!rawfichajestaff1` a `!rawfichajestaff6`: muestra solo las plantillas de fichaje de Staff
   Técnico.
+- `!discordid`: muestra una ayuda breve para diferenciar entre Discord Name y Discord ID.
+- `!epicname`: muestra una ayuda breve para diferenciar entre Epic Name y Rocket In-Game Name.
+- `!tracker`: muestra una ayuda breve para localizar el tracker y el MMR.
+- `!peak`: muestra una ayuda breve sobre qué PEAK usar como MMR.
+- `!idplataforma`: muestra una ayuda breve para obtener el ID de plataforma.
+- `!equipo`: muestra una ayuda breve para consultar equipo y fichajes disponibles.
+- `!datos`: muestra una ayuda breve sobre los campos necesarios para fichajes o inscripciones.
+- `!replays`: muestra una ayuda breve para subir replays.
+- `!info`: muestra una ayuda breve con información general de Bigness League.
+- `!infodis`: muestra una ayuda breve sobre el Discord de Bigness League.
+- `!faq`: muestra una ayuda breve para empezar si no sabes qué revisar.
 - `!help t`: muestra una lista breve de comandos de texto disponibles.
 - `!help s`: muestra una lista breve de comandos slash públicos.
 - `!help all`: muestra la ayuda de comandos de texto y comandos slash.

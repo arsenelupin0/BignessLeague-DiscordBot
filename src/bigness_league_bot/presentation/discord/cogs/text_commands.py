@@ -34,20 +34,117 @@ class TextCommandsCog(commands.Cog):
             section: str | None = None,
     ) -> None:
         content = _build_help_content(self.bot, section)
+        await _send_text_command_content(self.bot, ctx, content)
 
-        for chunk in split_discord_message_content(content):
-            sent_message = await ctx.send(
-                chunk,
-                allowed_mentions=discord.AllowedMentions.none(),
-                suppress_embeds=True,
-            )
-            if ctx.command is not None:
-                invoked_command_name = ctx.invoked_with or ctx.command.qualified_name
-                await mirror_ticket_text_command_message(
-                    self.bot,
-                    sent_message,
-                    command_name=f"!{invoked_command_name}",
-                )
+    @commands.command(name="discordid")
+    async def discord_id_help(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        content = self.bot.localizer.translate(
+            I18N.messages.text_commands.discord_id_help.content,
+        )
+        await _send_text_command_content(self.bot, ctx, content)
+
+    @commands.command(name="epicname")
+    async def epic_name_help(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        content = self.bot.localizer.translate(
+            I18N.messages.text_commands.epic_name_help.content,
+        )
+        await _send_text_command_content(self.bot, ctx, content)
+
+    @commands.command(name="tracker")
+    async def tracker_help(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        content = self.bot.localizer.translate(
+            I18N.messages.text_commands.tracker_help.content,
+        )
+        await _send_text_command_content(self.bot, ctx, content)
+
+    @commands.command(name="peak")
+    async def peak_help(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        content = self.bot.localizer.translate(
+            I18N.messages.text_commands.peak_help.content,
+        )
+        await _send_text_command_content(self.bot, ctx, content)
+
+    @commands.command(name="idplataforma")
+    async def platform_id_help(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        content = self.bot.localizer.translate(
+            I18N.messages.text_commands.platform_id_help.content,
+        )
+        await _send_text_command_content(self.bot, ctx, content)
+
+    @commands.command(name="equipo")
+    async def team_info_help(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        content = self.bot.localizer.translate(
+            I18N.messages.text_commands.team_info_help.content,
+        )
+        await _send_text_command_content(self.bot, ctx, content)
+
+    @commands.command(name="datos")
+    async def signing_data_help(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        content = self.bot.localizer.translate(
+            I18N.messages.text_commands.signing_data_help.content,
+        )
+        await _send_text_command_content(self.bot, ctx, content)
+
+    @commands.command(name="replays")
+    async def replays_help(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        content = self.bot.localizer.translate(
+            I18N.messages.text_commands.replays_help.content,
+        )
+        await _send_text_command_content(self.bot, ctx, content)
+
+    @commands.command(name="info")
+    async def league_info_help(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        content = self.bot.localizer.translate(
+            I18N.messages.text_commands.league_info_help.content,
+        )
+        await _send_text_command_content(self.bot, ctx, content)
+
+    @commands.command(name="infodis")
+    async def discord_info_help(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        content = self.bot.localizer.translate(
+            I18N.messages.text_commands.discord_info_help.content,
+        )
+        await _send_text_command_content(self.bot, ctx, content)
+
+    @commands.command(name="faq")
+    async def faq_help(
+            self,
+            ctx: commands.Context[BignessLeagueBot],
+    ) -> None:
+        content = self.bot.localizer.translate(
+            I18N.messages.text_commands.faq_help.content,
+        )
+        await _send_text_command_content(self.bot, ctx, content)
 
 
 async def setup(bot: BignessLeagueBot) -> None:
@@ -114,3 +211,23 @@ def _build_slash_command_help_lines(bot: BignessLeagueBot) -> list[str]:
         )
 
     return lines
+
+
+async def _send_text_command_content(
+        bot: BignessLeagueBot,
+        ctx: commands.Context[BignessLeagueBot],
+        content: str,
+) -> None:
+    for chunk in split_discord_message_content(content):
+        sent_message = await ctx.send(
+            chunk,
+            allowed_mentions=discord.AllowedMentions.none(),
+            suppress_embeds=True,
+        )
+        if ctx.command is not None:
+            invoked_command_name = ctx.invoked_with or ctx.command.qualified_name
+            await mirror_ticket_text_command_message(
+                bot,
+                sent_message,
+                command_name=f"!{invoked_command_name}",
+            )
