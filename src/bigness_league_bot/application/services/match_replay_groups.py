@@ -13,17 +13,26 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from bigness_league_bot.application.services.channel_closure import (
+    KEYCAP_SUFFIX,
+    MATCH_CHANNEL_J_PREFIX,
+    MATCH_CHANNEL_P_PREFIX,
+    MATCH_CHANNEL_STATUS_PATTERN,
+    MATCH_CHANNEL_STATUS_SEPARATOR,
+)
 from bigness_league_bot.application.services.match_replays import MatchReplayDivision
 
 MATCHUP_SEPARATOR = "\U0001F19A"
+KEYCAP_DIGIT_PATTERN = rf"[0-9]{re.escape(KEYCAP_SUFFIX)}"
 
 MATCH_CHANNEL_LEGACY_REFERENCE_PATTERN = re.compile(
-    r"^j(?P<jornada>[1-9][0-9]?)-partido-(?P<partido>[1-9][0-9]?)(?:・[⚽📆✅🔒])?$"
+    rf"^j(?P<jornada>[1-9][0-9]?)-partido-(?P<partido>[1-9][0-9]?)"
+    rf"(?:{re.escape(MATCH_CHANNEL_STATUS_SEPARATOR)}{MATCH_CHANNEL_STATUS_PATTERN})?$"
 )
 MATCH_CHANNEL_EMOJI_REFERENCE_PATTERN = re.compile(
-    r"^『𝗝?』(?P<jornada>(?:[0-9]️?⃣){1,2})"
-    r"『𝗣?』(?P<partido>(?:[0-9]️?⃣){1,2})"
-    r"・[⚽📆✅🔒]$"
+    rf"^{re.escape(MATCH_CHANNEL_J_PREFIX)}(?P<jornada>(?:{KEYCAP_DIGIT_PATTERN}){{1,2}})"
+    rf"{re.escape(MATCH_CHANNEL_P_PREFIX)}(?P<partido>(?:{KEYCAP_DIGIT_PATTERN}){{1,2}})"
+    rf"{re.escape(MATCH_CHANNEL_STATUS_SEPARATOR)}{MATCH_CHANNEL_STATUS_PATTERN}$"
 )
 
 
