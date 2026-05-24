@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 NULL_MATCH_SCORE = "nulo"
+MATCH_SCORE_SUFFIXES = ("fw", "wo")
 MATCH_STANDINGS_RANGE = "A3:I11"
 MATCH_STANDINGS_TEAM_COUNT = 8
 MATCH_STANDINGS_ROW_COUNT = MATCH_STANDINGS_TEAM_COUNT + 1
@@ -362,13 +363,24 @@ def _string_cell(value: object) -> str:
 
 
 def _parse_score(value: str) -> tuple[int, int] | None:
-    parts = value.replace("(FW)", "").split("-", maxsplit=1)
+    score_text = _strip_score_suffix(value)
+    parts = score_text.split("-", maxsplit=1)
     if len(parts) != 2:
         return None
     try:
         return int(parts[0].strip()), int(parts[1].strip())
     except ValueError:
         return None
+
+
+def _strip_score_suffix(value: str) -> str:
+    score_text = value.strip()
+    normalized_suffixes = tuple(f"({suffix})" for suffix in MATCH_SCORE_SUFFIXES)
+    normalized_score_text = "".join(score_text.casefold().split())
+    for suffix in normalized_suffixes:
+        if normalized_score_text.endswith(suffix):
+            return score_text[: -len(suffix)].strip()
+    return score_text
 
 
 def _is_null_score(value: str) -> bool:
