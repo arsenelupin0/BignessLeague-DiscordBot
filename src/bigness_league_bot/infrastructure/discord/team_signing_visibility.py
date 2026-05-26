@@ -55,8 +55,9 @@ if TYPE_CHECKING:
     from bigness_league_bot.core.settings import Settings
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
     from bigness_league_bot.infrastructure.discord.team_role_assignment import (
+        TeamRoleAssignmentSummary,
         TeamRoleRemovalSummary,
-        TeamStaffRoleSyncSummary, TeamRoleAssignmentSummary,
+        TeamStaffRoleSyncSummary,
     )
     from bigness_league_bot.infrastructure.google.team_sheet_repository import (
         TeamSigningRemovalResult,
@@ -97,7 +98,7 @@ async def collect_team_signing_visibility_links(
             else ()
         ),
         *(
-            staff_sync_summary.assigned_members
+            staff_sync_summary.team_role_assigned_members
             if staff_sync_summary is not None
             else ()
         ),

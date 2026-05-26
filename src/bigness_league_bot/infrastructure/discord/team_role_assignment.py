@@ -68,6 +68,7 @@ class TeamStaffRoleSyncSummary:
     already_configured_members: tuple[discord.Member, ...]
     unresolved_names: tuple[str, ...]
     ambiguous_names: tuple[str, ...]
+    team_role_assigned_members: tuple[discord.Member, ...] = ()
     assigned_staff_entries: tuple[TeamStaffRoleEntry, ...] = ()
     removed_staff_entries: tuple[TeamStaffRoleEntry, ...] = ()
 
@@ -161,6 +162,7 @@ async def sync_team_staff_roles_by_names(
     if not normalized_entries and not prune_entries:
         return TeamStaffRoleSyncSummary(
             assigned_members=(),
+            team_role_assigned_members=(),
             removed_members=(),
             already_configured_members=(),
             unresolved_names=(),
@@ -188,6 +190,7 @@ async def sync_team_staff_roles_by_names(
     members = await _load_guild_members(guild)
     members_by_lookup = _index_members_by_lookup_keys(members)
     assigned_members: list[discord.Member] = []
+    team_role_assigned_members: list[discord.Member] = []
     removed_members: list[discord.Member] = []
     already_configured_members: list[discord.Member] = []
     unresolved_names: list[str] = []
@@ -236,6 +239,7 @@ async def sync_team_staff_roles_by_names(
             for role in (team_role, participant_role)
             if role not in member.roles
         )
+        is_team_role_assigned = team_role in base_roles_to_add
         staff_roles_to_add = tuple(
             role
             for role in desired_staff_roles
@@ -296,6 +300,8 @@ async def sync_team_staff_roles_by_names(
             )
         if roles_to_add:
             assigned_members.append(member)
+            if is_team_role_assigned:
+                team_role_assigned_members.append(member)
         elif count_existing_staff_roles_as_assigned and assigned_role_keys:
             assigned_members.append(member)
         assigned_staff_entries.extend(
@@ -328,6 +334,9 @@ async def sync_team_staff_roles_by_names(
 
     return TeamStaffRoleSyncSummary(
         assigned_members=tuple(_deduplicate_members(assigned_members)),
+        team_role_assigned_members=tuple(
+            _deduplicate_members(team_role_assigned_members)
+        ),
         removed_members=tuple(_deduplicate_members(removed_members)),
         already_configured_members=tuple(_deduplicate_members(already_configured_members)),
         unresolved_names=tuple(unresolved_names),
