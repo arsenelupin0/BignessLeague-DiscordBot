@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from itertools import combinations
 from typing import Iterable
 
 NULL_MATCH_SCORE = "nulo"
@@ -110,6 +111,15 @@ class _SeriesAccumulator:
     has_null_result: bool = False
 
 
+@dataclass(frozen=True, slots=True)
+class _CompletedSeries:
+    team_one_key: str
+    team_two_key: str
+    games: tuple[MatchStandingGameResult, ...]
+    team_one_games: int
+    team_two_games: int
+
+
 def match_standings_headers() -> list[str]:
     return [
         "Pos",
@@ -187,6 +197,7 @@ def build_match_standings_rows(
         elif game_winner == "team_two":
             series.team_two_games += 1
 
+    completed_series: list[_CompletedSeries] = []
     for series in series_by_key.values():
         team_one_key = _normalize_team_name(series.team_one_name)
         team_two_key = _normalize_team_name(series.team_two_name)
@@ -201,6 +212,15 @@ def build_match_standings_rows(
         if series.team_one_games == series.team_two_games:
             continue
 
+        completed_series.append(
+            _CompletedSeries(
+                team_one_key=team_one_key,
+                team_two_key=team_two_key,
+                games=tuple(series.games),
+                team_one_games=series.team_one_games,
+                team_two_games=series.team_two_games,
+            )
+        )
         team_one = standings[team_one_key]
         team_two = standings[team_two_key]
         for game in series.games:
@@ -225,16 +245,9 @@ def build_match_standings_rows(
             team_two.series_won += 1
             team_two.points += 3
 
-    ordered_rows = sorted(
-        standings.values(),
-        key=lambda row: (
-            -row.points,
-            -row.series_won,
-            -row.game_diff,
-            -row.goal_diff,
-            -row.goals_for,
-            row.team_name.casefold(),
-        ),
+    ordered_rows = _order_standings_rows(
+        standings,
+        completed_series=completed_series,
     )
     return [
         MatchStandingRow(
@@ -250,6 +263,142 @@ def build_match_standings_rows(
         )
         for index, row in enumerate(ordered_rows, start=1)
     ]
+
+
+def _order_standings_rows(
+        standings: dict[str, _MutableStanding],
+        *,
+        completed_series: Iterable[_CompletedSeries],
+) -> list[_MutableStanding]:
+    completed_series_tuple = tuple(completed_series)
+    rows_by_points: dict[int, list[tuple[str, _MutableStanding]]] = {}
+    for team_key, row in standings.items():
+        rows_by_points.setdefault(row.points, []).append((team_key, row))
+
+    ordered_rows: list[_MutableStanding] = []
+    for points in sorted(rows_by_points, reverse=True):
+        tied_rows = rows_by_points[points]
+        h2h_rows = _build_head_to_head_standings(
+            tuple(team_key for team_key, _ in tied_rows),
+            completed_series=completed_series_tuple,
+        )
+        if h2h_rows is None:
+            ordered_rows.extend(
+                row for _, row in sorted(
+                    tied_rows,
+                    key=lambda item: _general_tiebreak_key(item[1]),
+                )
+            )
+            continue
+
+        h2h_tiebreak_rows = h2h_rows
+        ordered_rows.extend(
+            row for team_key, row in sorted(
+                tied_rows,
+                key=lambda item: (
+                    _head_to_head_tiebreak_key(h2h_tiebreak_rows[item[0]]),
+                    _general_tiebreak_key(item[1]),
+                ),
+            )
+        )
+    return ordered_rows
+
+
+def _build_head_to_head_standings(
+        tied_team_keys: tuple[str, ...],
+        *,
+        completed_series: Iterable[_CompletedSeries],
+) -> dict[str, _MutableStanding] | None:
+    if len(tied_team_keys) < 2:
+        return None
+
+    tied_key_set = frozenset(tied_team_keys)
+    h2h_rows = {
+        team_key: _MutableStanding(team_name=team_key)
+        for team_key in tied_team_keys
+    }
+    played_pairs: set[tuple[str, str]] = set()
+
+    for series in completed_series:
+        if series.team_one_key not in tied_key_set or series.team_two_key not in tied_key_set:
+            continue
+
+        pair_key = _team_pair_key(series.team_one_key, series.team_two_key)
+        played_pairs.add(pair_key)
+        team_one = h2h_rows[series.team_one_key]
+        team_two = h2h_rows[series.team_two_key]
+        _apply_completed_series_to_rows(
+            team_one,
+            team_two,
+            series=series,
+        )
+
+    required_pairs = {
+        _team_pair_key(pair[0], pair[1])
+        for pair in combinations(tied_team_keys, 2)
+    }
+    if not required_pairs.issubset(played_pairs):
+        return None
+    return h2h_rows
+
+
+def _team_pair_key(team_one_key: str, team_two_key: str) -> tuple[str, str]:
+    if team_one_key <= team_two_key:
+        return team_one_key, team_two_key
+    return team_two_key, team_one_key
+
+
+def _apply_completed_series_to_rows(
+        team_one: _MutableStanding,
+        team_two: _MutableStanding,
+        *,
+        series: _CompletedSeries,
+) -> None:
+    for game in series.games:
+        team_one.goals_for += game.team_one_goals
+        team_one.goals_against += game.team_two_goals
+        team_two.goals_for += game.team_two_goals
+        team_two.goals_against += game.team_one_goals
+
+        if game.team_one_goals > game.team_two_goals:
+            team_one.games_won += 1
+            team_two.games_lost += 1
+        elif game.team_two_goals > game.team_one_goals:
+            team_two.games_won += 1
+            team_one.games_lost += 1
+
+    team_one.series_played += 1
+    team_two.series_played += 1
+    if series.team_one_games > series.team_two_games:
+        team_one.series_won += 1
+        team_one.points += 3
+    else:
+        team_two.series_won += 1
+        team_two.points += 3
+
+
+def _head_to_head_tiebreak_key(row: _MutableStanding) -> tuple[int, int, int, int, int, int, int]:
+    return (
+        -row.points,
+        -row.series_won,
+        -row.game_diff,
+        -row.games_won,
+        -row.goal_diff,
+        -row.goals_for,
+        row.goals_against,
+    )
+
+
+def _general_tiebreak_key(row: _MutableStanding) -> tuple[int, int, int, int, int, int, str]:
+    return (
+        -row.series_won,
+        -row.game_diff,
+        -row.games_won,
+        -row.goal_diff,
+        -row.goals_for,
+        row.goals_against,
+        row.team_name.casefold(),
+    )
 
 
 def match_standings_sheet_rows(rows: Iterable[MatchStandingRow]) -> list[list[object]]:
