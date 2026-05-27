@@ -9,6 +9,7 @@
 #  license notices must be preserved. Contributors provide an express grant of patent rights.
 from __future__ import annotations
 
+from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Mapping
@@ -34,6 +35,25 @@ from bigness_league_bot.infrastructure.discord.match_summary_image_shared import
     _resolve_team_logo_url,
     _save_png,
     _text_width,
+)
+
+
+@dataclass(frozen=True, slots=True)
+class _StandingZoneRules:
+    top_positions: frozenset[int]
+    danger_positions: frozenset[int]
+    danger_label: str
+
+
+_GOLD_ZONE_RULES = _StandingZoneRules(
+    top_positions=frozenset((1, 2, 3, 4)),
+    danger_positions=frozenset((6,)),
+    danger_label="Play-out Descenso",
+)
+_SILVER_ZONE_RULES = _StandingZoneRules(
+    top_positions=frozenset((1, 2)),
+    danger_positions=frozenset((3,)),
+    danger_label="Play-off Ascenso",
 )
 
 
@@ -82,6 +102,7 @@ def _render_match_standings_image(
     value_font = _load_font(size=28, font_path=font_path)
     small_font = _load_font(size=20, font_path=font_path)
     logo_font = _load_font(size=22, font_path=font_path)
+    zone_rules = _standing_zone_rules_for_division(division_name)
 
     _draw_standings_background(draw, width=width, height=height)
     _draw_standings_title(
@@ -112,8 +133,9 @@ def _render_match_standings_image(
         row_font=row_font,
         value_font=value_font,
         logo_font=logo_font,
+        zone_rules=zone_rules,
     )
-    _draw_standings_legend(draw, x=220, y=800, width=1160, font=small_font)
+    _draw_standings_legend(draw, x=220, y=800, width=1160, font=small_font, zone_rules=zone_rules)
     return _save_png(image)
 
 
@@ -158,6 +180,7 @@ def _draw_standings_table(
         row_font: FontLike,
         value_font: FontLike,
         logo_font: FontLike,
+        zone_rules: _StandingZoneRules,
 ) -> None:
     columns = (118, 520, 116, 116, 226, 116, 116, 128)
     headers = ("POS", "EQUIPO", "PTS", "S.J.", "PARTIDOS", "GF", "GC", "DG")
@@ -170,7 +193,7 @@ def _draw_standings_table(
         current_x += columns[index]
     row_y = y + header_height
     for index, row in enumerate(rows):
-        zone = _standing_zone(index + 1)
+        zone = _standing_zone(index + 1, zone_rules=zone_rules)
         zone_color = _standing_zone_color(zone)
         fill = _standing_zone_fill(zone)
         draw.rounded_rectangle(
@@ -281,12 +304,21 @@ def _draw_standing_position(
     draw.text((x + digit_width // 2 + 5, y - 8), "o", font=suffix_font, fill=fill, anchor="mm")
 
 
-def _draw_standings_legend(draw: ImageDrawLike, *, x: int, y: int, width: int, font: FontLike) -> None:
+def _draw_standings_legend(
+        draw: ImageDrawLike,
+        *,
+        x: int,
+        y: int,
+        width: int,
+        font: FontLike,
+        zone_rules: _StandingZoneRules,
+) -> None:
     draw.rounded_rectangle((x, y, x + width, y + 52), radius=10, fill=(8, 18, 32), outline=(75, 85, 105), width=1)
+    top_label = f"Top {max(zone_rules.top_positions)}"
     items = (
-        ("Top 4", GREEN),
+        (top_label, GREEN),
         ("Zona media", TEXT),
-        ("Play-out Descenso", (251, 146, 60)),
+        (zone_rules.danger_label, (251, 146, 60)),
         ("Descenso", RED),
     )
     item_widths = tuple(48 + 16 + _text_width(font, label) for label, _ in items)
@@ -298,14 +330,21 @@ def _draw_standings_legend(draw: ImageDrawLike, *, x: int, y: int, width: int, f
         item_x += item_widths[index] + gap
 
 
-def _standing_zone(position: int) -> str:
-    if position <= 4:
+def _standing_zone(position: int, *, zone_rules: _StandingZoneRules) -> str:
+    if position in zone_rules.top_positions:
         return "top"
-    if position == 5:
-        return "middle"
-    if position == 6:
+    if position in zone_rules.danger_positions:
         return "danger"
-    return "relegation"
+    if position >= 6:
+        return "relegation"
+    return "middle"
+
+
+def _standing_zone_rules_for_division(division_name: str) -> _StandingZoneRules:
+    normalized = " ".join(division_name.casefold().strip().split())
+    if "silver" in normalized:
+        return _SILVER_ZONE_RULES
+    return _GOLD_ZONE_RULES
 
 
 def _standing_zone_color(zone: str) -> Color:
