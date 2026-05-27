@@ -364,6 +364,7 @@ class StaffRosterModificationModal(discord.ui.Modal):
                 signing_batch=None,
                 technical_staff_batch=technical_staff_batch,
                 require_new_team_block=False,
+                publish_announcements=False,
             )
         except CommandUserError as exc:
             await interaction.followup.send(

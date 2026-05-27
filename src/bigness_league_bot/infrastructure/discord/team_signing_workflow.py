@@ -71,6 +71,7 @@ async def handle_team_signing_import(
         signing_batch: TeamSigningBatch | None,
         technical_staff_batch: TeamTechnicalStaffBatch | None,
         require_new_team_block: bool,
+        publish_announcements: bool = True,
 ) -> None:
     settings = interaction.client.settings
     role_catalog = get_channel_access_role_catalog(
@@ -173,18 +174,24 @@ async def handle_team_signing_import(
                 previous_team_profile
             ),
             count_existing_staff_roles_as_assigned=True,
+            suppress_team_role_signing_announcements=not publish_announcements,
             suppress_staff_signing_announcements=True,
+            suppress_staff_removal_announcements=not publish_announcements,
         )
 
-    visibility_links = await collect_team_signing_visibility_links(
-        settings=settings,
-        guild=guild,
-        bot=bot,
-        team_role=resolved_team_role,
-        assignment_summary=assignment_summary,
-        technical_staff_batch=technical_staff_batch,
-        staff_sync_summary=staff_role_sync_summary,
-        since=announcement_since,
+    visibility_links = (
+        await collect_team_signing_visibility_links(
+            settings=settings,
+            guild=guild,
+            bot=bot,
+            team_role=resolved_team_role,
+            assignment_summary=assignment_summary,
+            technical_staff_batch=technical_staff_batch,
+            staff_sync_summary=staff_role_sync_summary,
+            since=announcement_since,
+        )
+        if publish_announcements
+        else None
     )
     completed_message = build_team_signing_import_completed_message(
         localizer=interaction.client.localizer,
@@ -203,34 +210,51 @@ async def handle_team_signing_import(
         localizer=interaction.client.localizer,
         locale=interaction.locale,
         team_role_mention=resolved_team_role.mention,
-        team_links=visibility_links.team_links,
-        staff_links=visibility_links.staff_links,
+        team_links=(
+            visibility_links.team_links
+            if visibility_links is not None
+            else ()
+        ),
+        staff_links=(
+            visibility_links.staff_links
+            if visibility_links is not None
+            else ()
+        ),
     )
     removal_visibility_message = build_team_signing_removal_visibility_message(
         localizer=interaction.client.localizer,
         locale=interaction.locale,
         team_role_mention=resolved_team_role.mention,
-        staff_links=visibility_links.staff_removal_links,
+        staff_links=(
+            visibility_links.staff_removal_links
+            if visibility_links is not None
+            else ()
+        ),
     )
     await interaction.followup.send(
         f"{completed_message}{visibility_message}{removal_visibility_message}",
         allowed_mentions=discord.AllowedMentions.none(),
     )
-    _record_pending_assignments_for_unresolved_members(
-        settings=settings,
-        guild=guild,
-        team_role=resolved_team_role,
-        division_name=division_name,
-        team_image_url=signing_batch.team_logo_url if signing_batch is not None else None,
-        assignment_summary=assignment_summary,
-        staff_sync_summary=staff_role_sync_summary,
-        staff_entries=staff_entries,
-        source=(
-            "hacer_inscripcion"
-            if require_new_team_block
-            else "hacer_fichaje"
-        ),
-    )
+    if publish_announcements:
+        _record_pending_assignments_for_unresolved_members(
+            settings=settings,
+            guild=guild,
+            team_role=resolved_team_role,
+            division_name=division_name,
+            team_image_url=(
+                signing_batch.team_logo_url
+                if signing_batch is not None
+                else None
+            ),
+            assignment_summary=assignment_summary,
+            staff_sync_summary=staff_role_sync_summary,
+            staff_entries=staff_entries,
+            source=(
+                "hacer_inscripcion"
+                if require_new_team_block
+                else "hacer_fichaje"
+            ),
+        )
 
 
 def _record_pending_assignments_for_unresolved_members(
