@@ -178,6 +178,61 @@
           }
         }
       },
+      "manual_result": {
+        "parameters": {
+          "local": {
+            "description": "Rol del equipo local."
+          },
+          "visitante": {
+            "description": "Rol del equipo visitante."
+          },
+          "winner": {
+            "description": "Rol del equipo que gana la serie por resultado administrativo."
+          }
+        }
+      },
+      "free_win": {
+        "name": "replay_free_win",
+        "description": "Registra una free win y actualiza la clasificación.",
+        "parameters": {
+          "local": {
+            "description": "Rol del equipo local."
+          },
+          "visitante": {
+            "description": "Rol del equipo visitante."
+          },
+          "winner": {
+            "description": "Rol del equipo que gana la free win."
+          }
+        }
+      },
+      "walkover": {
+        "name": "replay_walkover",
+        "description": "Registra un walkover y actualiza la clasificación.",
+        "parameters": {
+          "local": {
+            "description": "Rol del equipo local."
+          },
+          "visitante": {
+            "description": "Rol del equipo visitante."
+          },
+          "winner": {
+            "description": "Rol del equipo que gana por walkover."
+          }
+        }
+      },
+      "null_result": {
+        "name": "replay_nulo",
+        "description": "Registra un partido nulo y actualiza la clasificación.",
+        "parameters": {
+          "local": {
+            "description": "Rol del equipo local."
+          },
+          "visitante": {
+            "description": "Rol del equipo visitante."
+          }
+        }
+      },
       "refresh_standings": {
         "name": "clasificacion",
         "description": "Recalcula la clasificación desde la tabla principal de jornadas.",
@@ -377,6 +432,7 @@
         "roster_validation_with_unmatched": "## Verificación de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- Métodos de coincidencia: {match_methods}\n{method_breakdown}\n- Jugadores no encontrados:\n{unmatched_players}\n- Epic Names no encontrados: **{epic_name_unmatched_count}/{unique_players}** {epic_name_status_icon}\n{epic_name_unmatched_players}\n_ _\n## Información incorrecta\n- En caso de jugar con algún jugador que no coincida con los datos registrados, algún miembro del **Staff** se pondrá en contacto con vosotros para revisar este caso.\n- Si se juega con alineación indebida, podrá conllevar sanción grave, tanto al club como al jugador.\n- Se debe aportar toda la información posible si esto ocurre.\n_ _\n## Resumen de estadísticas",
         "roster_validation_more_unmatched": "  - Y {remaining} más."
       },
+      "manual_result_registered": "# {green_arrow} Resultado administrativo registrado\n- **{division_emoji} {division} {division_emoji}**\n  - **Jornada {jornada} | Partido {partido}**\n  - **{team_one} {score_label} {team_two}**\n- Clasificación actualizada en `{standings_sheet_name}`.",
       "standings_refreshed": "# Clasificación actual de {division_emoji}\n- Se ha actualizado la tabla.\n- En caso de detectar un error, abrir un ticket de tipo competición.",
       "image_render_failed": "\n\nNo he podido renderizar la imagen resumen. El proceso principal se ha completado correctamente."
     },
@@ -773,6 +829,7 @@
       "channel_group_context_missing": "No he podido leer jornada y partido desde el canal `{channel_name}`. Usa el comando en un canal de partido válido.",
       "channel_group_context_mismatch": "El canal `{channel_name}` corresponde a J{channel_jornada} P{channel_partido}, pero el comando se ha ejecutado con J{command_jornada} P{command_partido}.",
       "channel_division_context_missing": "No he podido resolver la división desde la categoría del canal `{channel_name}`. Usa el comando dentro de una categoría de Gold o Silver configurada.",
+      "manual_result_winner_mismatch": "El equipo ganador debe ser el rol local o el rol visitante indicado.",
       "worksheet_not_found": "No existe la hoja de replays `{sheet_name}` en Google Sheets. Hojas disponibles: {available_sheets}.",
       "google_write_failed": "Google Sheets ha rechazado la escritura de replays: {details}."
     },

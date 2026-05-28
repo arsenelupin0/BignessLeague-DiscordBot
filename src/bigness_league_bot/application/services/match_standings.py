@@ -42,6 +42,7 @@ class MatchStandingGameResult:
     team_one_goals: int
     team_two_goals: int
     is_null: bool = False
+    is_series_result: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +50,13 @@ class MatchGridGameScore:
     game_number: int
     team_one_goals: int
     team_two_goals: int
+
+
+@dataclass(frozen=True, slots=True)
+class MatchGridManualResult:
+    team_one_name: str
+    team_two_name: str
+    score_label: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,6 +190,14 @@ def build_match_standings_rows(
         )
         if game.is_null:
             series.has_null_result = True
+            continue
+
+        if game.is_series_result:
+            series.games.append(game)
+            if game.team_one_goals > game.team_two_goals:
+                series.team_one_games += 1
+            elif game.team_two_goals > game.team_one_goals:
+                series.team_two_games += 1
             continue
 
         if game.team_one_goals > game.team_two_goals:
@@ -455,6 +471,42 @@ def build_match_grid_row_values(
     return values
 
 
+def build_match_grid_manual_result_row_values(result: MatchGridManualResult) -> list[object]:
+    score_labels = _manual_result_game_score_labels(result.score_label)
+    values: list[object] = []
+    for score_label in score_labels:
+        values.extend(
+            [
+                result.team_one_name,
+                score_label,
+                result.team_two_name,
+                "",
+            ]
+        )
+    values.extend([""] * ((MATCH_GRID_MAX_GAMES - len(score_labels)) * MATCH_GRID_GAME_WIDTH))
+    return values
+
+
+def _manual_result_game_score_labels(score_label: str) -> tuple[str, ...]:
+    if _is_null_score(score_label):
+        return score_label, score_label, score_label
+
+    score = _parse_score(score_label)
+    if score is None:
+        return (score_label,)
+
+    suffix = _score_suffix(score_label)
+    if suffix is None:
+        return (score_label,)
+
+    team_one_goals, team_two_goals = score
+    if team_one_goals == 3 and team_two_goals == 0:
+        return score_label, score_label, score_label
+    if team_one_goals == 0 and team_two_goals == 3:
+        return score_label, score_label, score_label
+    return (score_label,)
+
+
 def build_match_grid_standing_games(
         rows: Iterable[Iterable[object]],
 ) -> tuple[MatchStandingGameResult, ...]:
@@ -486,6 +538,7 @@ def build_match_grid_standing_games(
                     team_one_goals=score[0] if score is not None else 0,
                     team_two_goals=score[1] if score is not None else 0,
                     is_null=score is None,
+                    is_series_result=_has_score_suffix(score_cell),
                 )
             )
     return tuple(games)
@@ -530,6 +583,19 @@ def _strip_score_suffix(value: str) -> str:
         if normalized_score_text.endswith(suffix):
             return score_text[: -len(suffix)].strip()
     return score_text
+
+
+def _has_score_suffix(value: str) -> bool:
+    return _score_suffix(value) is not None
+
+
+def _score_suffix(value: str) -> str | None:
+    score_text = value.strip()
+    normalized_score_text = "".join(score_text.casefold().split())
+    for suffix in MATCH_SCORE_SUFFIXES:
+        if normalized_score_text.endswith(f"({suffix})"):
+            return suffix.upper()
+    return None
 
 
 def _is_null_score(value: str) -> bool:

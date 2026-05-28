@@ -10,54 +10,25 @@
 
 from __future__ import annotations
 
-import asyncio
-import hashlib
-import logging
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from bigness_league_bot.application.services.match_replay_groups import (
-    build_match_replay_group_path,
-    build_match_replay_title,
-    parse_match_channel_reference,
-)
 from bigness_league_bot.application.services.match_replay_summaries import (
-    build_match_replay_roster_validation_summary,
     collect_match_replay_standings_team_names,
 )
 from bigness_league_bot.application.services.match_replays import (
-    InvalidReplayCountError,
-    InvalidReplayExtensionError,
     MATCH_REPLAY_EXTENSION,
-    MATCH_REPLAY_MAX_FILES,
-    MATCH_REPLAY_MIN_FILES,
     MatchReplayDivision,
     MatchReplayValidationError,
-    build_match_replay_report,
-    resolve_match_replay_report_players,
-    sort_match_replay_games_by_replay_date,
     validate_replay_filenames,
 )
-from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.core.localization import localize
-from bigness_league_bot.infrastructure.ballchasing.client import (
-    BallchasingClient,
-    BallchasingReplayUpload,
-)
 from bigness_league_bot.infrastructure.discord.channel_access_management import (
     UnsupportedChannelError,
     ensure_allowed_member,
-)
-from bigness_league_bot.infrastructure.discord.emojis import (
-    DiscordEmojiRef,
-    GOLD_DIVISION_EMOJI,
-    MATCH_SCHEDULE_GREEN_ARROW_EMOJI,
-    SILVER_DIVISION_EMOJI,
-    render_custom_emoji,
 )
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
@@ -68,20 +39,24 @@ from bigness_league_bot.infrastructure.discord.match_channel_creation import (
 from bigness_league_bot.infrastructure.discord.match_replay_assets import (
     guild_icon_url,
     team_logo_url_map,
-    write_replay_diagnostic_copy,
 )
-from bigness_league_bot.infrastructure.discord.match_replay_messages import (
-    format_match_replay_game_score_lines,
-    format_match_replay_roster_validation,
+from bigness_league_bot.infrastructure.discord.match_replay_discord_helpers import (
+    render_division_emoji,
+    to_user_error,
+)
+from bigness_league_bot.infrastructure.discord.match_replay_workflows import (
+    process_administrative_result,
+    process_replay_attachments,
 )
 from bigness_league_bot.infrastructure.discord.match_summary_images import (
-    build_match_replay_summary_image_file,
     build_match_standings_image_file,
 )
 from bigness_league_bot.infrastructure.discord.message_links import fetch_linked_message
 from bigness_league_bot.infrastructure.google.match_replay_repository import (
     GoogleSheetsMatchReplayRepository,
-    MatchStandingsRefreshResult,
+)
+from bigness_league_bot.infrastructure.google.match_standings_repository import (
+    GoogleSheetsMatchStandingsRepository,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
@@ -89,13 +64,14 @@ from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
-LOGGER = logging.getLogger(__name__)
 
 def _string_choice(
         name: str | app_commands.locale_str,
         value: str,
 ) -> app_commands.Choice[str]:
     return app_commands.Choice[str](name=name, value=value)
+
+
 MATCH_REPLAY_DIVISION_CHOICES: list[app_commands.Choice[str]] = [
     _string_choice(
         localized_locale_str(I18N.commands.match_replays.choices.gold_division),
@@ -150,18 +126,8 @@ class MatchReplaysCog(commands.Cog):
             replay_4: discord.Attachment | None = None,
             replay_5: discord.Attachment | None = None,
     ) -> None:
-        guild = interaction.guild
-        if guild is None or not isinstance(interaction.user, discord.Member):
-            raise UnsupportedChannelError(localize(I18N.errors.channel_management.server_only))
-
-        ensure_allowed_member(interaction.user)
-        validate_match_team_roles(
-            guild,
-            team_one=local,
-            team_two=visitante,
-            range_start_role_id=interaction.client.settings.channel_access_range_start_role_id,
-            range_end_role_id=interaction.client.settings.channel_access_range_end_role_id,
-        )
+        guild = _ensure_guild_member_interaction(interaction)
+        _ensure_match_team_roles(interaction, guild=guild, local=local, visitante=visitante)
         attachments = tuple(
             attachment
             for attachment in (replay_1, replay_2, replay_3, replay_4, replay_5)
@@ -170,10 +136,10 @@ class MatchReplaysCog(commands.Cog):
         try:
             validate_replay_filenames(attachment.filename for attachment in attachments)
         except MatchReplayValidationError as exc:
-            raise _to_user_error(exc) from exc
+            raise to_user_error(exc) from exc
 
         await interaction.response.defer(thinking=True, ephemeral=True)
-        await self._process_replay_attachments(
+        await process_replay_attachments(
             interaction,
             local=local,
             visitante=visitante,
@@ -205,18 +171,8 @@ class MatchReplaysCog(commands.Cog):
             visitante: discord.Role,
             mensaje: str,
     ) -> None:
-        guild = interaction.guild
-        if guild is None or not isinstance(interaction.user, discord.Member):
-            raise UnsupportedChannelError(localize(I18N.errors.channel_management.server_only))
-
-        ensure_allowed_member(interaction.user)
-        validate_match_team_roles(
-            guild,
-            team_one=local,
-            team_two=visitante,
-            range_start_role_id=interaction.client.settings.channel_access_range_start_role_id,
-            range_end_role_id=interaction.client.settings.channel_access_range_end_role_id,
-        )
+        guild = _ensure_guild_member_interaction(interaction)
+        _ensure_match_team_roles(interaction, guild=guild, local=local, visitante=visitante)
 
         await interaction.response.defer(thinking=True, ephemeral=True)
         linked_message = await fetch_linked_message(interaction.client, guild, mensaje)
@@ -225,259 +181,107 @@ class MatchReplaysCog(commands.Cog):
             for attachment in linked_message.attachments
             if attachment.filename.lower().endswith(MATCH_REPLAY_EXTENSION)
         )
-        await self._process_replay_attachments(
+        await process_replay_attachments(
             interaction,
             local=local,
             visitante=visitante,
             attachments=attachments,
         )
 
-    async def _process_replay_attachments(
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.match_replays.free_win.name),
+        description=localized_locale_str(
+            I18N.commands.match_replays.free_win.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        local=localized_locale_str(
+            I18N.commands.match_replays.free_win.parameters.local.description
+        ),
+        visitante=localized_locale_str(
+            I18N.commands.match_replays.free_win.parameters.visitante.description
+        ),
+        ganador=localized_locale_str(
+            I18N.commands.match_replays.free_win.parameters.winner.description
+        ),
+    )
+    async def replay_free_win(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
-            *,
             local: discord.Role,
             visitante: discord.Role,
-            attachments: tuple[discord.Attachment, ...],
+            ganador: discord.Role,
     ) -> None:
-        guild = interaction.guild
-        if guild is None:
-            raise UnsupportedChannelError(localize(I18N.errors.channel_management.server_only))
-
-        try:
-            validate_replay_filenames(attachment.filename for attachment in attachments)
-        except MatchReplayValidationError as exc:
-            raise _to_user_error(exc) from exc
-
-        channel_name = _interaction_channel_name(interaction)
-        channel_reference = parse_match_channel_reference(channel_name)
-        if channel_reference is None:
-            raise CommandUserError(
-                localize(
-                    I18N.errors.match_replays.channel_group_context_missing,
-                    channel_name=channel_name or "-",
-                )
-            )
-        division_value = _resolve_replay_division_from_channel(interaction)
-        jornada = channel_reference.matchday
-        partido = channel_reference.match_number
-
-        diagnostics_dir = interaction.client.settings.log_dir.parent / "match_replays" / "uploads"
-        uploads = await asyncio.gather(
-            *(
-                _read_replay_attachment(
-                    attachment,
-                    diagnostics_dir=diagnostics_dir,
-                )
-                for attachment in attachments
-            )
-        )
-        repository = GoogleSheetsMatchReplayRepository(interaction.client.settings)
-        existing_replays = await repository.list_existing_replay_entries(division_value)
-        existing_sha256 = {
-            replay.replay_sha256.casefold()
-            for replay in existing_replays
-            if replay.replay_sha256
-        }
-        if uploads and all(upload.sha256 and upload.sha256.casefold() in existing_sha256 for upload in uploads):
-            await interaction.followup.send(
-                interaction.client.localizer.translate(
-                    I18N.messages.match_replays.uploaded.all_duplicates,
-                    locale=interaction.locale,
-                    replay_count=len(uploads),
-                )
-            )
-            return
-
-        ballchasing_client = _build_ballchasing_client(interaction.client)
-        ballchasing_group_id = await _resolve_ballchasing_group_id(
+        await process_administrative_result(
             interaction,
-            ballchasing_client=ballchasing_client,
-            division=division_value,
-            matchday=jornada,
-            team_one_name=local.name,
-            team_two_name=visitante.name,
+            local=local,
+            visitante=visitante,
+            winner=ganador,
+            suffix="FW",
         )
-        games = []
-        failed_uploads: list[str] = []
-        for index, upload in enumerate(uploads, start=1):
-            try:
-                game = await ballchasing_client.upload_and_fetch_replay(
-                    upload,
-                    title=build_match_replay_title(
-                        matchday=jornada,
-                        game_number=index,
-                        team_one_name=local.name,
-                        team_two_name=visitante.name,
-                    ),
-                    group_id=ballchasing_group_id,
-                )
-            except CommandUserError as exc:
-                LOGGER.warning(
-                    "No se pudo procesar la replay filename=%s game_number=%s reason=%s",
-                    upload.filename,
-                    index,
-                    exc,
-                )
-                failed_uploads.append(f"Game {index} ({upload.filename})")
-                continue
-            games.append(game)
 
-        ordered_games = sort_match_replay_games_by_replay_date(games)
-        for index, game in enumerate(ordered_games, start=1):
-            await ballchasing_client.update_replay_metadata(
-                game.replay_id,
-                {
-                    "title": build_match_replay_title(
-                        matchday=jornada,
-                        game_number=index,
-                        team_one_name=local.name,
-                        team_two_name=visitante.name,
-                    )
-                },
-            )
-
-        try:
-            report = build_match_replay_report(
-                division=division_value,
-                matchday=jornada,
-                match_number=partido,
-                team_one_name=local.name,
-                team_two_name=visitante.name,
-                games=ordered_games,
-            )
-        except MatchReplayValidationError as exc:
-            raise _to_user_error(exc) from exc
-        roster_data = await repository.list_division_roster_data(
-            report.division.label
-        )
-        roster_players = roster_data.roster_players
-        report = resolve_match_replay_report_players(report, roster_players)
-        append_result = await repository.append_report(report)
-        standings_result: MatchStandingsRefreshResult | None = None
-        if append_result.appended_games > 0:
-            standings_result = await repository.sync_report_to_standings(
-                report,
-                team_names=collect_match_replay_standings_team_names(
-                    roster_players=roster_players,
-                    fallback_team_names=(report.team_one_name, report.team_two_name),
-                ),
-            )
-
-        unresolved = ""
-        if report.unresolved_winners:
-            unresolved = interaction.client.localizer.translate(
-                I18N.messages.match_replays.uploaded.unresolved_winners,
-                locale=interaction.locale,
-                winners=", ".join(report.unresolved_winners),
-            )
-        failed_replays = ""
-        if failed_uploads:
-            failed_replays = interaction.client.localizer.translate(
-                I18N.messages.match_replays.uploaded.failed_replays,
-                locale=interaction.locale,
-                failed_replays=", ".join(failed_uploads),
-            )
-        skipped_duplicates = ""
-        skipped_count = len(report.games) - append_result.appended_games
-        if skipped_count > 0:
-            skipped_duplicates = interaction.client.localizer.translate(
-                I18N.messages.match_replays.uploaded.skipped_duplicates,
-                locale=interaction.locale,
-                skipped_count=skipped_count,
-                replay_ids=", ".join(append_result.skipped_replay_ids) or "-",
-            )
-
-        roster_validation = format_match_replay_roster_validation(
-            localizer=interaction.client.localizer,
-            locale=interaction.locale,
-            summary=build_match_replay_roster_validation_summary(report),
-        )
-        image_warning = ""
-        replay_summary_image_file: discord.File | None = None
-        try:
-            replay_summary_image_file = build_match_replay_summary_image_file(
-                report=report,
-                font_path=interaction.client.settings.team_profile_font_path,
-                team_logo_urls=team_logo_url_map(roster_data.team_logos),
-                fallback_logo_url=guild_icon_url(interaction.guild),
-            )
-        except RuntimeError:
-            LOGGER.exception("No se pudo renderizar la imagen resumen de replays")
-            image_warning = interaction.client.localizer.translate(
-                I18N.messages.match_replays.image_render_failed,
-                locale=interaction.locale,
-            )
-
-        standings_image_file: discord.File | None = None
-        if standings_result is not None:
-            try:
-                standings_image_file = build_match_standings_image_file(
-                    division_name=report.division.label,
-                    rows=standings_result.rows,
-                    font_path=interaction.client.settings.team_profile_font_path,
-                    team_logo_urls=team_logo_url_map(roster_data.team_logos),
-                    fallback_logo_url=guild_icon_url(interaction.guild),
-                )
-            except RuntimeError:
-                LOGGER.exception("No se pudo renderizar la imagen de clasificacion")
-                image_warning = interaction.client.localizer.translate(
-                    I18N.messages.match_replays.image_render_failed,
-                    locale=interaction.locale,
-                )
-
-        message = interaction.client.localizer.translate(
-            I18N.messages.match_replays.uploaded.summary,
-            locale=interaction.locale,
-            green_arrow=render_custom_emoji(
-                guild=guild,
-                bot=interaction.client,
-                emoji=MATCH_SCHEDULE_GREEN_ARROW_EMOJI,
-            ),
-            division_emoji=_render_division_emoji(guild, interaction.client, report.division),
-            division=report.division.label,
-            jornada=report.matchday,
-            partido=report.match_number,
-            team_one=report.team_one_name,
-            team_two=report.team_two_name,
-            series_score=report.series_score,
-            game_scores=format_match_replay_game_score_lines(
-                report,
-                winner_label=_game_winner_label(interaction.locale),
-            ),
-            roster_validation=roster_validation,
-            unresolved_winners=unresolved,
-            failed_replays=failed_replays,
-            skipped_duplicates=skipped_duplicates,
-            image_warning=image_warning,
-        )
-        await _send_channel_message(
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.match_replays.walkover.name),
+        description=localized_locale_str(
+            I18N.commands.match_replays.walkover.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        local=localized_locale_str(
+            I18N.commands.match_replays.walkover.parameters.local.description
+        ),
+        visitante=localized_locale_str(
+            I18N.commands.match_replays.walkover.parameters.visitante.description
+        ),
+        ganador=localized_locale_str(
+            I18N.commands.match_replays.walkover.parameters.winner.description
+        ),
+    )
+    async def replay_walkover(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            local: discord.Role,
+            visitante: discord.Role,
+            ganador: discord.Role,
+    ) -> None:
+        await process_administrative_result(
             interaction,
-            content=message,
-            file=replay_summary_image_file,
+            local=local,
+            visitante=visitante,
+            winner=ganador,
+            suffix="WO",
         )
-        if standings_result is not None:
-            standings_message = interaction.client.localizer.translate(
-                I18N.messages.match_replays.uploaded.standings_image,
-                locale=interaction.locale,
-                green_arrow=render_custom_emoji(
-                    guild=guild,
-                    bot=interaction.client,
-                    emoji=MATCH_SCHEDULE_GREEN_ARROW_EMOJI,
-                ),
-            )
-            if standings_image_file is None:
-                await _send_channel_message(
-                    interaction,
-                    content=standings_message + image_warning,
-                )
-            else:
-                await _send_channel_message(
-                    interaction,
-                    content=standings_message,
-                    file=standings_image_file,
-                )
-        await _delete_original_interaction_response(interaction)
+
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.match_replays.null_result.name),
+        description=localized_locale_str(
+            I18N.commands.match_replays.null_result.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        local=localized_locale_str(
+            I18N.commands.match_replays.null_result.parameters.local.description
+        ),
+        visitante=localized_locale_str(
+            I18N.commands.match_replays.null_result.parameters.visitante.description
+        ),
+    )
+    async def replay_nulo(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            local: discord.Role,
+            visitante: discord.Role,
+    ) -> None:
+        await process_administrative_result(
+            interaction,
+            local=local,
+            visitante=visitante,
+            winner=None,
+            suffix=None,
+        )
 
     @app_commands.command(
         name=localized_locale_str(I18N.commands.match_replays.refresh_standings.name),
@@ -497,16 +301,13 @@ class MatchReplaysCog(commands.Cog):
             interaction: discord.Interaction[BignessLeagueBot],
             division: app_commands.Choice[str],
     ) -> None:
-        guild = interaction.guild
-        if guild is None or not isinstance(interaction.user, discord.Member):
-            raise UnsupportedChannelError(localize(I18N.errors.channel_management.server_only))
-
-        ensure_allowed_member(interaction.user)
+        guild = _ensure_guild_member_interaction(interaction)
         await interaction.response.defer(thinking=True)
         division_value = MatchReplayDivision(division.value)
-        repository = GoogleSheetsMatchReplayRepository(interaction.client.settings)
-        roster_data = await repository.list_division_roster_data(division_value.label)
-        standings_result = await repository.refresh_division_standings_report(
+        replay_repository = GoogleSheetsMatchReplayRepository(interaction.client.settings)
+        standings_repository = GoogleSheetsMatchStandingsRepository(interaction.client.settings)
+        roster_data = await replay_repository.list_division_roster_data(division_value.label)
+        standings_result = await standings_repository.refresh_division_standings_report(
             division_value,
             team_names=collect_match_replay_standings_team_names(
                 roster_players=roster_data.roster_players,
@@ -524,7 +325,6 @@ class MatchReplaysCog(commands.Cog):
                 fallback_logo_url=guild_icon_url(guild),
             )
         except RuntimeError:
-            LOGGER.exception("No se pudo renderizar la imagen de clasificación")
             image_warning = interaction.client.localizer.translate(
                 I18N.messages.match_replays.image_render_failed,
                 locale=interaction.locale,
@@ -533,7 +333,7 @@ class MatchReplaysCog(commands.Cog):
         message = interaction.client.localizer.translate(
             I18N.messages.match_replays.standings_refreshed,
             locale=interaction.locale,
-            division_emoji=_render_division_emoji(guild, interaction.client, division_value),
+            division_emoji=render_division_emoji(guild, interaction.client, division_value),
         )
         if image_file is None:
             await interaction.followup.send(content=message + image_warning)
@@ -557,213 +357,30 @@ class MatchReplaysCog(commands.Cog):
         await interaction.response.send_message(message)
 
 
-async def _read_replay_attachment(
-        attachment: discord.Attachment,
-        *,
-        diagnostics_dir: Path,
-) -> BallchasingReplayUpload:
-    content = await attachment.read()
-    digest = hashlib.sha256(content).hexdigest()
-    diagnostics_path = write_replay_diagnostic_copy(
-        diagnostics_dir=diagnostics_dir,
-        filename=attachment.filename,
-        content=content,
-        digest=digest,
-    )
-    LOGGER.info(
-        "Replay descargada desde Discord filename=%s discord_size=%s downloaded_size=%s sha256=%s content_type=%s saved_to=%s",
-        attachment.filename,
-        attachment.size,
-        len(content),
-        digest,
-        attachment.content_type or "-",
-        diagnostics_path,
-    )
-    if attachment.size is not None and attachment.size != len(content):
-        LOGGER.warning(
-            "El tamano descargado de la replay no coincide con Discord filename=%s discord_size=%s downloaded_size=%s",
-            attachment.filename,
-            attachment.size,
-            len(content),
-        )
-    return BallchasingReplayUpload(
-        filename=attachment.filename,
-        content=content,
-        expected_size=attachment.size,
-        sha256=digest,
-        content_type=attachment.content_type,
-    )
+def _ensure_guild_member_interaction(
+        interaction: discord.Interaction[BignessLeagueBot],
+) -> discord.Guild:
+    guild = interaction.guild
+    if guild is None or not isinstance(interaction.user, discord.Member):
+        raise UnsupportedChannelError(localize(I18N.errors.channel_management.server_only))
+    ensure_allowed_member(interaction.user)
+    return guild
 
 
-async def _resolve_ballchasing_group_id(
+def _ensure_match_team_roles(
         interaction: discord.Interaction[BignessLeagueBot],
         *,
-        ballchasing_client: BallchasingClient,
-        division: MatchReplayDivision,
-        matchday: int,
-        team_one_name: str,
-        team_two_name: str,
-) -> str | None:
-    settings = interaction.client.settings
-    if not settings.ballchasing_auto_groups_enabled:
-        LOGGER.info(
-            "Grupos automaticos de Ballchasing desactivados; se usara el grupo configurado como destino final group_id=%s",
-            settings.ballchasing_group_id or "-",
-        )
-        return settings.ballchasing_group_id
-    if not settings.ballchasing_group_id:
-        raise CommandUserError(localize(I18N.errors.match_replays.ballchasing_group_missing))
-
-    group_path = build_match_replay_group_path(
-        division=division,
-        matchday=matchday,
-        team_one_name=team_one_name,
-        team_two_name=team_two_name,
-    )
-    resolved_group = await ballchasing_client.ensure_group_path(
-        parent_group_id=settings.ballchasing_group_id,
-        group_names=group_path.names,
-    )
-    LOGGER.info(
-        "Grupo Ballchasing resuelto root_group_id=%s target_group_id=%s path=%s",
-        settings.ballchasing_group_id,
-        resolved_group.id,
-        group_path.label,
-    )
-    return resolved_group.id
-
-
-def _interaction_channel_name(
-        interaction: discord.Interaction[BignessLeagueBot],
-) -> str:
-    channel = interaction.channel
-    channel_name = getattr(channel, "name", "")
-    if isinstance(channel_name, str):
-        return channel_name
-    return ""
-
-
-def _resolve_replay_division_from_channel(
-        interaction: discord.Interaction[BignessLeagueBot],
-) -> MatchReplayDivision:
-    category_id = _interaction_channel_category_id(interaction)
-    settings = interaction.client.settings
-    if category_id == settings.gold_division_category_id:
-        return MatchReplayDivision.GOLD
-    if category_id == settings.silver_division_category_id:
-        return MatchReplayDivision.SILVER
-
-    raise CommandUserError(
-        localize(
-            I18N.errors.match_replays.channel_division_context_missing,
-            channel_name=_interaction_channel_name(interaction) or "-",
-        )
-    )
-
-
-def _division_emoji(division: MatchReplayDivision) -> DiscordEmojiRef:
-    if division is MatchReplayDivision.GOLD:
-        return GOLD_DIVISION_EMOJI
-    return SILVER_DIVISION_EMOJI
-
-
-def _render_division_emoji(
         guild: discord.Guild,
-        bot: BignessLeagueBot,
-        division: MatchReplayDivision,
-) -> str:
-    return render_custom_emoji(
-        guild=guild,
-        bot=bot,
-        emoji=_division_emoji(division),
-    )
-
-
-def _game_winner_label(locale: str | discord.Locale | None) -> str:
-    if str(locale or "").lower().startswith("en"):
-        return "Winner"
-    return "Gana"
-
-
-async def _send_channel_message(
-        interaction: discord.Interaction[BignessLeagueBot],
-        *,
-        content: str,
-        file: discord.File | None = None,
+        local: discord.Role,
+        visitante: discord.Role,
 ) -> None:
-    channel = interaction.channel
-    if isinstance(channel, discord.abc.Messageable):
-        if file is None:
-            await channel.send(content=content)
-            return
-        await channel.send(content=content, file=file)
-        return
-
-    if file is None:
-        await interaction.followup.send(content=content)
-        return
-    await interaction.followup.send(content=content, file=file)
-
-
-async def _delete_original_interaction_response(
-        interaction: discord.Interaction[BignessLeagueBot],
-) -> None:
-    try:
-        await interaction.delete_original_response()
-    except (discord.NotFound, discord.Forbidden, discord.HTTPException):
-        return
-
-
-def _interaction_channel_category_id(
-        interaction: discord.Interaction[BignessLeagueBot],
-) -> int | None:
-    channel = interaction.channel
-    category_id = getattr(channel, "category_id", None)
-    if isinstance(category_id, int):
-        return category_id
-
-    category = getattr(channel, "category", None)
-    category_id = getattr(category, "id", None)
-    if isinstance(category_id, int):
-        return category_id
-    return None
-
-
-def _build_ballchasing_client(
-        bot: BignessLeagueBot,
-) -> BallchasingClient:
-    settings = bot.settings
-    return BallchasingClient(
-        api_base_url=settings.ballchasing_api_base_url,
-        api_token=settings.ballchasing_api_token,
-        visibility=settings.ballchasing_upload_visibility,
-        group_id=settings.ballchasing_group_id,
-        timeout_seconds=settings.ballchasing_request_timeout_seconds,
-        poll_interval_seconds=settings.ballchasing_poll_interval_seconds,
-        max_poll_attempts=settings.ballchasing_max_poll_attempts,
-        min_request_interval_seconds=settings.ballchasing_min_request_interval_seconds,
-        rate_limit_retry_seconds=settings.ballchasing_rate_limit_retry_seconds,
-        rate_limit_max_retries=settings.ballchasing_rate_limit_max_retries,
+    validate_match_team_roles(
+        guild,
+        team_one=local,
+        team_two=visitante,
+        range_start_role_id=interaction.client.settings.channel_access_range_start_role_id,
+        range_end_role_id=interaction.client.settings.channel_access_range_end_role_id,
     )
-
-
-def _to_user_error(error: MatchReplayValidationError) -> CommandUserError:
-    if isinstance(error, InvalidReplayCountError):
-        return CommandUserError(
-            localize(
-                I18N.errors.match_replays.invalid_replay_count,
-                min_count=MATCH_REPLAY_MIN_FILES,
-                max_count=MATCH_REPLAY_MAX_FILES,
-            )
-        )
-    if isinstance(error, InvalidReplayExtensionError):
-        return CommandUserError(
-            localize(
-                I18N.errors.match_replays.invalid_replay_extension,
-                filenames=", ".join(error.filenames),
-            )
-        )
-    return CommandUserError(localize(I18N.errors.slash.unexpected))
 
 
 async def setup(bot: BignessLeagueBot) -> None:

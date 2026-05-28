@@ -126,6 +126,61 @@
           }
         }
       },
+      "manual_result": {
+        "parameters": {
+          "local": {
+            "description": "Home team role."
+          },
+          "visitante": {
+            "description": "Away team role."
+          },
+          "winner": {
+            "description": "Team role that wins the series by administrative result."
+          }
+        }
+      },
+      "free_win": {
+        "name": "replay_free_win",
+        "description": "Registers a free win and refreshes standings.",
+        "parameters": {
+          "local": {
+            "description": "Home team role."
+          },
+          "visitante": {
+            "description": "Away team role."
+          },
+          "winner": {
+            "description": "Team role that receives the free win."
+          }
+        }
+      },
+      "walkover": {
+        "name": "replay_walkover",
+        "description": "Registers a walkover and refreshes standings.",
+        "parameters": {
+          "local": {
+            "description": "Home team role."
+          },
+          "visitante": {
+            "description": "Away team role."
+          },
+          "winner": {
+            "description": "Team role that wins by walkover."
+          }
+        }
+      },
+      "null_result": {
+        "name": "replay_nulo",
+        "description": "Registers a null match and refreshes standings.",
+        "parameters": {
+          "local": {
+            "description": "Home team role."
+          },
+          "visitante": {
+            "description": "Away team role."
+          }
+        }
+      },
       "refresh_standings": {
         "name": "clasificacion",
         "description": "Recalculates standings from the main matchday table.",
@@ -348,6 +403,7 @@
         "roster_validation_with_unmatched": "## Player verification\n- Verified players: **{matched_unique}/{unique_players}** {status_icon}\n- Match methods: {match_methods}\n{method_breakdown}\n- Unmatched players:\n{unmatched_players}\n- Epic Names not found: **{epic_name_unmatched_count}/{unique_players}** {epic_name_status_icon}\n{epic_name_unmatched_players}\n_ _\n## Incorrect information\n- If a played player does not match the registered data, a **Staff** member will contact you to review the case.\n- Playing with an invalid lineup may lead to a serious sanction for both the club and the player.\n- Provide as much information as possible if this happens.",
         "roster_validation_more_unmatched": "  - And {remaining} more."
       },
+      "manual_result_registered": "# {green_arrow} Administrative result registered\n- **{division_emoji} {division} {division_emoji}**\n  - **Matchday {jornada} | Match {partido}**\n  - **{team_one} {score_label} {team_two}**\n- Updated standings in `{standings_sheet_name}`.",
       "standings_refreshed": "# Current standings for {division_emoji}\n- The table has been updated.\n- If you detect an error, open a competition ticket.",
       "image_render_failed": "\n\nI could not render the summary image. The main process completed correctly."
     },
@@ -626,6 +682,7 @@
       "channel_group_context_missing": "I could not read matchday and match number from channel `{channel_name}`. Use this command in a valid match channel.",
       "channel_group_context_mismatch": "Channel `{channel_name}` belongs to J{channel_jornada} P{channel_partido}, but the command was executed with J{command_jornada} P{command_partido}.",
       "channel_division_context_missing": "I could not resolve the division from channel `{channel_name}` category. Use this command inside a configured Gold or Silver category.",
+      "manual_result_winner_mismatch": "The winner must be either the selected home role or away role.",
       "worksheet_not_found": "Replay sheet `{sheet_name}` does not exist in Google Sheets. Available sheets: {available_sheets}.",
       "google_write_failed": "Google Sheets rejected the replay write: {details}."
     },

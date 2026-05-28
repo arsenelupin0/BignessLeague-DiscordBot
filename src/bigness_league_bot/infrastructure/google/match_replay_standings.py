@@ -23,8 +23,10 @@ from bigness_league_bot.application.services.match_standings import (
     MATCH_STANDINGS_ROW_COUNT,
     MATCH_STANDINGS_TEAM_COUNT,
     MatchGridGameScore,
+    MatchGridManualResult,
     MatchStandingRow,
     MatchStandingGameResult,
+    build_match_grid_manual_result_row_values,
     build_match_grid_row_values,
     build_match_grid_standing_games,
     build_match_standings_rows,
@@ -118,6 +120,42 @@ class MatchReplayStandingsGateway:
             team_two_name=report.team_two_name,
             game_scores=game_scores,
         )
+        try:
+            service.spreadsheets().values().update(
+                spreadsheetId=self.config.spreadsheet_id,
+                range=f"'{escape_worksheet_name(worksheet_name)}'!B{row_number}:U{row_number}",
+                valueInputOption="USER_ENTERED",
+                body={"values": [values]},
+            ).execute()
+        except HttpError as exc:
+            raise TeamSheetWriteError(
+                localize(
+                    I18N.errors.match_replays.google_write_failed,
+                    details=extract_http_error_message(exc),
+                )
+            ) from exc
+
+    def write_match_grid_manual_result(
+            self,
+            service: Any,
+            *,
+            worksheet_name: str,
+            matchday: int,
+            match_number: int,
+            result: MatchGridManualResult,
+    ) -> None:
+        try:
+            from googleapiclient.errors import HttpError
+        except ImportError as exc:
+            raise GoogleSheetsDependencyError(
+                localize(I18N.errors.team_profile.google_dependencies_missing)
+            ) from exc
+
+        row_number = match_grid_row_number(
+            matchday=matchday,
+            match_number=match_number,
+        )
+        values = build_match_grid_manual_result_row_values(result)
         try:
             service.spreadsheets().values().update(
                 spreadsheetId=self.config.spreadsheet_id,
