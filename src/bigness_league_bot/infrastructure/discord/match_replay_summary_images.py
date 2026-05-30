@@ -47,6 +47,7 @@ from bigness_league_bot.infrastructure.discord.match_summary_image_shared import
     _draw_card,
     _draw_section_label,
     _draw_table,
+    _fit_text,
     _load_font,
     _load_logo_image,
     _parse_score,
@@ -247,6 +248,13 @@ def _draw_series_score_panel(
     _draw_card(draw, (x, y, x + width, y + 126), fill=(10, 20, 35), outline=(75, 85, 105))
     center_x = x + width // 2
     goals_one, goals_two = _series_goals(report)
+    won_games_badge_width = 78
+    team_logo_size = 76
+    team_two_won_games_x = x + width - 505
+    team_two_logo_x = x + width - 106
+    team_two_name_left = team_two_won_games_x + won_games_badge_width + 24
+    team_two_name_right = team_two_logo_x - 24
+    team_two_name_width = team_two_name_right - team_two_name_left
     _draw_badge(
         image,
         draw,
@@ -279,7 +287,7 @@ def _draw_series_score_panel(
     draw.text((center_x, y + 64), f"{goals_one} - {goals_two}", font=score_font, fill=TEXT, anchor="mm")
     _draw_won_games_badge(
         draw,
-        x=x + width - 505,
+        x=team_two_won_games_x,
         y=y + 36,
         games=report.team_two_games,
         color=team_two_color,
@@ -287,9 +295,9 @@ def _draw_series_score_panel(
     )
     _draw_wrapped_team_name(
         draw,
-        x=x + width - 128 - 170,
+        x=team_two_name_left + team_two_name_width // 2,
         y=y + 63,
-        width=340,
+        width=team_two_name_width,
         text=report.team_two_name,
         font=team_name_font,
         fill=TEXT,
@@ -298,9 +306,9 @@ def _draw_series_score_panel(
     _draw_badge(
         image,
         draw,
-        x=x + width - 106,
+        x=team_two_logo_x,
         y=y + 25,
-        size=76,
+        size=team_logo_size,
         team_name=report.team_two_name,
         fill=team_two_header_color,
         font=team_name_font,
@@ -474,7 +482,14 @@ def _draw_wrapped_team_name(
     first_y = y - ((len(lines) - 1) * line_height // 2)
     line_anchor = "mm" if anchor == "mm" else anchor
     for index, line in enumerate(lines):
-        draw.text((x, first_y + index * line_height), line, font=font, fill=fill, anchor=line_anchor)
+        fitted_line = _fit_text(font, line, width)
+        draw.text(
+            (x, first_y + index * line_height),
+            fitted_line,
+            font=font,
+            fill=fill,
+            anchor=line_anchor,
+        )
 
 
 def _wrap_text_lines(
