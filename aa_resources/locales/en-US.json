@@ -399,7 +399,7 @@
         "skipped_duplicates": "\n- Skipped **{skipped_count}** duplicate replays. Replay IDs: {replay_ids}.",
         "standings_update": "\n- Updated standings in `{standings_sheet_name}`.",
         "all_duplicates": "The {replay_count} attached replays were already registered. I did not process them again.",
-        "roster_validation_all_matched": "## Player verification\n- Verified players: **{matched_unique}/{unique_players}** {status_icon}\n- Match methods: {match_methods}\n{method_breakdown}\n- Every detected player matches the registered Platform + Platform ID.\n- Every Epic Name is valid: **{epic_name_unmatched_count}/{unique_players}** {epic_name_status_icon}",
+        "roster_validation_all_matched": "## Player verification\n- Verified players: **{matched_unique}/{unique_players}** {status_icon}\n- Match methods: {match_methods}\n{method_breakdown}\n- Every detected player matches the registered Platform + Platform ID.",
         "roster_validation_with_unmatched": "## Player verification\n- Verified players: **{matched_unique}/{unique_players}** {status_icon}\n- Match methods: {match_methods}\n{method_breakdown}\n- Unmatched players:\n{unmatched_players}\n- Epic Names not found: **{epic_name_unmatched_count}/{unique_players}** {epic_name_status_icon}\n{epic_name_unmatched_players}\n_ _\n## Incorrect information\n- If a played player does not match the registered data, a **Staff** member will contact you to review the case.\n- Playing with an invalid lineup may lead to a serious sanction for both the club and the player.\n- Provide as much information as possible if this happens.",
         "roster_validation_more_unmatched": "  - And {remaining} more."
       },
