@@ -79,9 +79,10 @@ def format_match_replay_roster_validation(
     unmatched_text = "\n".join(
         _format_unmatched_player_line(player) for player in summary.unmatched_players
     )
-    epic_name_unmatched_text = "\n".join(
-        _format_unmatched_player_line(player, include_missing_methods=False)
-        for player in summary.epic_name_unmatched_players
+    epic_name_unmatched_section = _format_epic_name_unmatched_section(
+        summary=summary,
+        epic_name_matched_count=epic_name_matched_count,
+        epic_name_status_icon=epic_name_status_icon,
     )
     return localizer.translate(
         I18N.messages.match_replays.uploaded.roster_validation_with_unmatched,
@@ -94,9 +95,7 @@ def format_match_replay_roster_validation(
         method_breakdown=method_breakdown,
         status_icon=status_icon,
         unmatched_players=unmatched_text,
-        epic_name_unmatched_count=epic_name_matched_count,
-        epic_name_status_icon=epic_name_status_icon,
-        epic_name_unmatched_players=epic_name_unmatched_text,
+        epic_name_unmatched_section=epic_name_unmatched_section,
     )
 
 
@@ -127,6 +126,26 @@ def _format_method_label(method: str) -> str:
     if method == "epic_name":
         return "Epic Name"
     return "_".join(part.title() for part in method.split("_"))
+
+
+def _format_epic_name_unmatched_section(
+        *,
+        summary: MatchReplayRosterValidationSummary,
+        epic_name_matched_count: int,
+        epic_name_status_icon: str,
+) -> str:
+    if not summary.epic_name_unmatched_players:
+        return ""
+
+    epic_name_unmatched_text = "\n".join(
+        _format_unmatched_player_line(player, include_missing_methods=False)
+        for player in summary.epic_name_unmatched_players
+    )
+    return (
+        "\n- Epic Names no encontrados: "
+        f"**{epic_name_matched_count}/{summary.unique_players}** {epic_name_status_icon}\n"
+        f"{epic_name_unmatched_text}"
+    )
 
 
 def _format_unmatched_player_line(
