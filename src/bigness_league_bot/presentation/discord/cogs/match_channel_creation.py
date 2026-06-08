@@ -17,6 +17,8 @@ from discord import app_commands
 from discord.ext import commands
 
 from bigness_league_bot.application.services.match_channel_creation import (
+    FINAL_FOUR_SEMIFINAL_MAX,
+    FINAL_FOUR_SEMIFINAL_MIN,
     MATCH_BEST_OF_MAX,
     MATCH_BEST_OF_MIN,
     MATCH_COURTESY_MINUTES_MAX,
@@ -34,13 +36,17 @@ from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
 )
 from bigness_league_bot.infrastructure.discord.match_channel_creation import (
+    build_final_four_match_channel_specification,
     build_match_channel_specification,
+    build_promotion_relegation_match_channel_specification,
     create_match_channel,
     resolve_match_channel_category,
     validate_match_team_roles,
 )
 from bigness_league_bot.infrastructure.discord.match_channel_welcome import (
+    send_final_four_match_channel_welcome_message,
     send_match_channel_welcome_message,
+    send_promotion_relegation_match_channel_welcome_message,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
@@ -168,6 +174,213 @@ class MatchChannelCreation(commands.Cog):
             extra_role_ids=settings.match_channel_extra_role_ids,
         )
         await send_match_channel_welcome_message(
+            channel=creation_result.channel,
+            localizer=interaction.client.localizer,
+            locale=interaction.locale,
+            settings=interaction.client.settings,
+            specification=specification,
+            team_one=equipo_1,
+            team_two=equipo_2,
+        )
+        await interaction.followup.send(
+            interaction.client.localizer.render(
+                creation_result.summary,
+                locale=interaction.locale,
+            )
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(
+            I18N.commands.match_channel_creation.create_final_four_channel.name
+        ),
+        description=localized_locale_str(
+            I18N.commands.match_channel_creation.create_final_four_channel.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        semifinal=localized_locale_str(
+            I18N.commands.match_channel_creation.create_final_four_channel.parameters.semifinal.description
+        ),
+        minutos_cortesia=localized_locale_str(
+            I18N.commands.match_channel_creation.create_final_four_channel.parameters.courtesy_minutes.description
+        ),
+        fecha=localized_locale_str(
+            I18N.commands.match_channel_creation.create_final_four_channel.parameters.date.description
+        ),
+        hora=localized_locale_str(
+            I18N.commands.match_channel_creation.create_final_four_channel.parameters.time.description
+        ),
+        bo_x=localized_locale_str(
+            I18N.commands.match_channel_creation.create_final_four_channel.parameters.best_of.description
+        ),
+        categoria=localized_locale_str(
+            I18N.commands.match_channel_creation.create_final_four_channel.parameters.categoria.description
+        ),
+        equipo_1=localized_locale_str(
+            I18N.commands.match_channel_creation.create_final_four_channel.parameters.equipo_1.description
+        ),
+        equipo_2=localized_locale_str(
+            I18N.commands.match_channel_creation.create_final_four_channel.parameters.equipo_2.description
+        ),
+    )
+    @app_commands.choices(categoria=MATCH_CHANNEL_CATEGORY_CHOICES)
+    async def create_final_four_channel_command(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            minutos_cortesia: app_commands.Range[int, MATCH_COURTESY_MINUTES_MIN, MATCH_COURTESY_MINUTES_MAX],
+            fecha: str,
+            hora: str,
+            bo_x: app_commands.Range[int, MATCH_BEST_OF_MIN, MATCH_BEST_OF_MAX],
+            categoria: app_commands.Choice[str],
+            equipo_1: discord.Role,
+            equipo_2: discord.Role,
+            semifinal: app_commands.Range[int, FINAL_FOUR_SEMIFINAL_MIN, FINAL_FOUR_SEMIFINAL_MAX] | None = None,
+    ) -> None:
+        guild = interaction.guild
+        if guild is None or not isinstance(interaction.user, discord.Member):
+            raise UnsupportedChannelError(
+                localize(I18N.errors.channel_management.server_only)
+            )
+
+        settings = interaction.client.settings
+        ensure_allowed_member(interaction.user)
+        division = MatchChannelDivision(categoria.value)
+        validate_match_team_roles(
+            guild,
+            team_one=equipo_1,
+            team_two=equipo_2,
+            range_start_role_id=settings.channel_access_range_start_role_id,
+            range_end_role_id=settings.channel_access_range_end_role_id,
+        )
+        category = resolve_match_channel_category(
+            guild,
+            division=division,
+            gold_division_category_id=settings.gold_division_category_id,
+            silver_division_category_id=settings.silver_division_category_id,
+        )
+        specification = build_final_four_match_channel_specification(
+            semifinal=semifinal,
+            courtesy_minutes=minutos_cortesia,
+            date_value=fecha,
+            time_value=hora,
+            best_of=bo_x,
+            timezone_name=settings.timezone,
+        )
+
+        await interaction.response.defer(thinking=True)
+        creation_result = await create_match_channel(
+            guild=guild,
+            actor=interaction.user,
+            category=category,
+            specification=specification,
+            team_one=equipo_1,
+            team_two=equipo_2,
+            extra_role_ids=settings.match_channel_extra_role_ids,
+            command_name="canal_de_final_four",
+        )
+        await send_final_four_match_channel_welcome_message(
+            channel=creation_result.channel,
+            localizer=interaction.client.localizer,
+            locale=interaction.locale,
+            settings=interaction.client.settings,
+            specification=specification,
+            team_one=equipo_1,
+            team_two=equipo_2,
+        )
+        await interaction.followup.send(
+            interaction.client.localizer.render(
+                creation_result.summary,
+                locale=interaction.locale,
+            )
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(
+            I18N.commands.match_channel_creation.create_asc_desc_channel.name
+        ),
+        description=localized_locale_str(
+            I18N.commands.match_channel_creation.create_asc_desc_channel.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        minutos_cortesia=localized_locale_str(
+            I18N.commands.match_channel_creation.create_asc_desc_channel.parameters.courtesy_minutes.description
+        ),
+        fecha=localized_locale_str(
+            I18N.commands.match_channel_creation.create_asc_desc_channel.parameters.date.description
+        ),
+        hora=localized_locale_str(
+            I18N.commands.match_channel_creation.create_asc_desc_channel.parameters.time.description
+        ),
+        bo_x=localized_locale_str(
+            I18N.commands.match_channel_creation.create_asc_desc_channel.parameters.best_of.description
+        ),
+        categoria=localized_locale_str(
+            I18N.commands.match_channel_creation.create_asc_desc_channel.parameters.categoria.description
+        ),
+        equipo_1=localized_locale_str(
+            I18N.commands.match_channel_creation.create_asc_desc_channel.parameters.equipo_1.description
+        ),
+        equipo_2=localized_locale_str(
+            I18N.commands.match_channel_creation.create_asc_desc_channel.parameters.equipo_2.description
+        ),
+    )
+    @app_commands.choices(categoria=MATCH_CHANNEL_CATEGORY_CHOICES)
+    async def create_asc_desc_channel_command(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            minutos_cortesia: app_commands.Range[int, MATCH_COURTESY_MINUTES_MIN, MATCH_COURTESY_MINUTES_MAX],
+            fecha: str,
+            hora: str,
+            bo_x: app_commands.Range[int, MATCH_BEST_OF_MIN, MATCH_BEST_OF_MAX],
+            categoria: app_commands.Choice[str],
+            equipo_1: discord.Role,
+            equipo_2: discord.Role,
+    ) -> None:
+        guild = interaction.guild
+        if guild is None or not isinstance(interaction.user, discord.Member):
+            raise UnsupportedChannelError(
+                localize(I18N.errors.channel_management.server_only)
+            )
+
+        settings = interaction.client.settings
+        ensure_allowed_member(interaction.user)
+        division = MatchChannelDivision(categoria.value)
+        validate_match_team_roles(
+            guild,
+            team_one=equipo_1,
+            team_two=equipo_2,
+            range_start_role_id=settings.channel_access_range_start_role_id,
+            range_end_role_id=settings.channel_access_range_end_role_id,
+        )
+        category = resolve_match_channel_category(
+            guild,
+            division=division,
+            gold_division_category_id=settings.gold_division_category_id,
+            silver_division_category_id=settings.silver_division_category_id,
+        )
+        specification = build_promotion_relegation_match_channel_specification(
+            courtesy_minutes=minutos_cortesia,
+            date_value=fecha,
+            time_value=hora,
+            best_of=bo_x,
+            timezone_name=settings.timezone,
+        )
+
+        await interaction.response.defer(thinking=True)
+        creation_result = await create_match_channel(
+            guild=guild,
+            actor=interaction.user,
+            category=category,
+            specification=specification,
+            team_one=equipo_1,
+            team_two=equipo_2,
+            extra_role_ids=settings.match_channel_extra_role_ids,
+            command_name="canal_de_asc_des",
+        )
+        await send_promotion_relegation_match_channel_welcome_message(
             channel=creation_result.channel,
             localizer=interaction.client.localizer,
             locale=interaction.locale,

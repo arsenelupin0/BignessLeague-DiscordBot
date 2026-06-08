@@ -72,6 +72,71 @@
           "gold_division": "Gold Division",
           "silver_division": "Silver Division"
         }
+      },
+      "create_final_four_channel": {
+        "name": "final_four_channel",
+        "description": "Creates a Final Four semifinal or final channel.",
+        "parameters": {
+          "semifinal": {
+            "description": "Semifinal number: 1 or 2. If omitted, creates the final."
+          },
+          "categoria": {
+            "description": "Division where the channel will be created"
+          },
+          "equipo_1": {
+            "description": "First team role"
+          },
+          "equipo_2": {
+            "description": "Second team role"
+          },
+          "courtesy_minutes": {
+            "description": "Courtesy minutes before the match starts"
+          },
+          "date": {
+            "description": "Match date in DD/MM/YYYY or YYYY-MM-DD format"
+          },
+          "time": {
+            "description": "Match time in HH:MM format"
+          },
+          "best_of": {
+            "description": "Number of games in the best of X series"
+          }
+        },
+        "choices": {
+          "gold_division": "Gold Division",
+          "silver_division": "Silver Division"
+        }
+      },
+      "create_asc_desc_channel": {
+        "name": "asc_desc_channel",
+        "description": "Creates a promotion/relegation channel.",
+        "parameters": {
+          "categoria": {
+            "description": "Division where the channel will be created"
+          },
+          "equipo_1": {
+            "description": "First team role"
+          },
+          "equipo_2": {
+            "description": "Second team role"
+          },
+          "courtesy_minutes": {
+            "description": "Courtesy minutes before the match starts"
+          },
+          "date": {
+            "description": "Match date in DD/MM/YYYY or YYYY-MM-DD format"
+          },
+          "time": {
+            "description": "Match time in HH:MM format"
+          },
+          "best_of": {
+            "description": "Number of games in the best of X series"
+          }
+        },
+        "choices": {
+          "gold_division": "Gold Division",
+          "silver_division": "Silver Division"
+        }
       }
     },
     "match_schedules": {
@@ -114,6 +179,102 @@
       "link_replays": {
         "name": "link_replays",
         "description": "Processes BO5 replays attached to a linked message.",
+        "parameters": {
+          "local": {
+            "description": "Home team role."
+          },
+          "visitante": {
+            "description": "Away team role."
+          },
+          "mensaje": {
+            "description": "Discord message link containing the replays."
+          }
+        }
+      },
+      "upload_replays_finalfour": {
+        "name": "upload_replays_finalfour",
+        "description": "Uploads Final Four BO7 replays to Ballchasing and writes their data to Google Sheets.",
+        "parameters": {
+          "local": {
+            "description": "Home team role."
+          },
+          "visitante": {
+            "description": "Away team role."
+          },
+          "replay_1": {
+            "description": "Game 1 replay."
+          },
+          "replay_2": {
+            "description": "Game 2 replay."
+          },
+          "replay_3": {
+            "description": "Game 3 replay."
+          },
+          "replay_4": {
+            "description": "Game 4 replay."
+          },
+          "replay_5": {
+            "description": "Game 5 replay, if played."
+          },
+          "replay_6": {
+            "description": "Game 6 replay, if played."
+          },
+          "replay_7": {
+            "description": "Game 7 replay, if played."
+          }
+        }
+      },
+      "upload_replays_asc_des": {
+        "name": "upload_replays_asc_des",
+        "description": "Uploads promotion/relegation BO7 replays to Ballchasing and writes their data to Google Sheets.",
+        "parameters": {
+          "local": {
+            "description": "Home team role."
+          },
+          "visitante": {
+            "description": "Away team role."
+          },
+          "replay_1": {
+            "description": "Game 1 replay."
+          },
+          "replay_2": {
+            "description": "Game 2 replay."
+          },
+          "replay_3": {
+            "description": "Game 3 replay."
+          },
+          "replay_4": {
+            "description": "Game 4 replay."
+          },
+          "replay_5": {
+            "description": "Game 5 replay, if played."
+          },
+          "replay_6": {
+            "description": "Game 6 replay, if played."
+          },
+          "replay_7": {
+            "description": "Game 7 replay, if played."
+          }
+        }
+      },
+      "link_replays_finalfour": {
+        "name": "link_replays_finalfour",
+        "description": "Processes Final Four BO7 replays attached to a linked message.",
+        "parameters": {
+          "local": {
+            "description": "Home team role."
+          },
+          "visitante": {
+            "description": "Away team role."
+          },
+          "mensaje": {
+            "description": "Discord message link containing the replays."
+          }
+        }
+      },
+      "link_replays_asc_des": {
+        "name": "link_replays_asc_des",
+        "description": "Processes promotion/relegation BO7 replays attached to a linked message.",
         "parameters": {
           "local": {
             "description": "Home team role."
@@ -392,7 +553,7 @@
     },
     "match_replays": {
       "uploaded": {
-        "summary": "# {green_arrow} Replay processing\nReplays processed for (Bo5):\n- **{division_emoji} {division} {division_emoji}:**\n  - **Matchday {jornada} | Match {partido}**\n  - **{team_one} {series_score} {team_two}**\n- Scores by _game_\n{game_scores}\n_ _\n{roster_validation}{unresolved_winners}{failed_replays}{skipped_duplicates}{image_warning}",
+        "summary": "# {green_arrow} Replay processing\nReplays processed for ({series_label}):\n- **{division_emoji} {division} {division_emoji}:**\n  - **{match_context}**\n  - **{team_one} {series_score} {team_two}**\n- Scores by _game_\n{game_scores}\n_ _\n{roster_validation}{unresolved_winners}{failed_replays}{skipped_duplicates}{image_warning}",
         "standings_image": "# {green_arrow} Current standings\n- Updated with this new match",
         "unresolved_winners": "\n- I could not automatically match these winners with the selected roles: {winners}. Review the team names in Ballchasing.",
         "failed_replays": "\n- Ballchasing could not process these replays, so they were skipped: {failed_replays}.",
@@ -608,6 +769,67 @@
           "create_ticket": "Create ticket",
           "rules": "Rules - Bigness League"
         }
+      },
+      "final_four_welcome": {
+        "semifinal": {
+          "content": "# Semifinal {semifinal_emoji}\n## Welcome\n### {team_one}  {team_two}\n\nThis is the private auto-generated channel for your semifinal. Use this text channel for warmups and everything related to this semifinal. If issues appear later, external conversations will not be considered. More serious cases will be reviewed by Staff.\n\nGood luck to both teams.\n　",
+          "embeds": {
+            "details": {
+              "title": " Important details ",
+              "description": "- Remember to be **punctual** for this **date** and **time** in case the match is **casted**. If a **team** does **not show up**, the match will be marked as **void** and the other team will advance directly to the **final**.\n- Everyone should do their part to **play the match**.\n- There are **courtesy minutes** depending on the **match time**. If the match is set for **16:00**, it should start no later than **16:10**, unless **Staff/Caster decides otherwise** if there is a delay."
+            },
+            "issues": {
+              "title": " In case of issues ",
+              "description": "\n- Any **in-game** problem related to the **match**:\n  - Take **screenshots** of incidents.\n  - Save evidence of **toxic** behaviour.\n  - Record any **match incident**.\n- The match is considered **finished** once Staff switches the channel to **read-only**. Any **appeal** must be handled by **opening a ticket**."
+            },
+            "match_data": {
+              "title": "⚽  Match data  ⚽",
+              "description": "- Lobby information\n  - ⌛ {courtesy_minutes} courtesy minutes\n  - ️ {match_date}\n  - ⏰ {match_time}\n  - ⚔️ {best_of_label} (best of {best_of})\n- Private lobby\n  - Name: `{blsemiX}`\n  - Password: `{blsemiX}` \n  - Created by: {team_one}"
+            }
+          },
+          "buttons": {
+            "create_ticket": "Create ticket",
+            "rules": "Rules - Bigness League"
+          }
+        },
+        "final": {
+          "content": "# Final\n## Welcome\n### {team_one}  {team_two}\n\nThis is the private auto-generated channel for your grand final. Use this text channel for warmups and everything related to this final. If issues appear later, external conversations will not be considered. More serious cases will be reviewed by Staff.\n\nGood luck to both teams.\n　",
+          "embeds": {
+            "details": {
+              "title": " Important details ",
+              "description": "- Remember to be **punctual** for this **date** and **time** in case the match is **casted**. If a **team** does **not show up**, the match will be marked as **void** and the other team will become the **final** winner directly.\n- Everyone should do their part to **play the match**.\n- There are **courtesy minutes** depending on the **match time**. If the match is set for **16:00**, it should start no later than **16:10**, unless **Staff/Caster decides otherwise** if there is a delay."
+            },
+            "issues": {
+              "title": " In case of issues ",
+              "description": "\n- Any **in-game** problem related to the **match**:\n  - Take **screenshots** of incidents.\n  - Save evidence of **toxic** behaviour.\n  - Record any **match incident**.\n- The match is considered **finished** once Staff switches the channel to **read-only**. Any **appeal** must be handled by **opening a ticket**."
+            },
+            "match_data": {
+              "title": "⚽  Match data  ⚽",
+              "description": "- Lobby information\n  - ⌛ {courtesy_minutes} courtesy minutes\n  - ️ {match_date}\n  - ⏰ {match_time}\n  - ⚔️ {best_of_label} (best of {best_of})\n- Private lobby\n  - Name: `blfinal`\n  - Password: `blfinal` \n  - Created by: {team_one}"
+            }
+          }
+        }
+      },
+      "asc_desc_welcome": {
+        "content": "# Promotion/Relegation\n## Welcome\n### {team_one}  {team_two}\n\nThis is the private auto-generated channel for this possible promotion, stay-up, or relegation match. Use this text channel for warmups and everything related to this match. If issues appear later, external conversations will not be considered. More serious cases will be reviewed by Staff.\n\nGood luck to both teams.\n　",
+        "embeds": {
+          "details": {
+            "title": " Important details ",
+            "description": "- Remember to be **punctual** for this **date** and **time** in case the match is **casted**. If a **team** does **not show up**, the match will be marked as **void** and the other team will become the **final** winner directly.\n- Everyone should do their part to **play the match**.\n- There are **courtesy minutes** depending on the **match time**. If the match is set for **16:00**, it should start no later than **16:10**, unless **Staff/Caster decides otherwise** if there is a delay."
+          },
+          "issues": {
+            "title": " In case of issues ",
+            "description": "\n- Any **in-game** problem related to the **match**:\n  - Take **screenshots** of incidents.\n  - Save evidence of **toxic** behaviour.\n  - Record any **match incident**.\n- The match is considered **finished** once Staff switches the channel to **read-only**. Any **appeal** must be handled by **opening a ticket**."
+          },
+          "match_data": {
+            "title": "⚽  Match data  ⚽",
+            "description": "- Lobby information\n  - ⌛ {courtesy_minutes} courtesy minutes\n  -  {match_date}\n  - ⏰ {match_time}\n  - ⚔️ {best_of_label} (best of {best_of})\n- Private lobby\n  - Name: `blasc`\n  - Password: `bldes` \n  - Created by: {team_one}"
+          }
+        },
+        "buttons": {
+          "create_ticket": "Create ticket",
+          "rules": "Rules - Bigness League"
+        }
       }
     },
     "tickets": {
@@ -772,7 +994,8 @@
       "match_in_progress_summary": "# {green_arrow} Schedule in dispute\n_ _\n- The fixed schedule has been cancelled.\n- If no one reaches an agreement, the match will be voided."
     },
     "match_channel_creation": {
-      "created_summary": "Created {channel} in `{category}` for matchday {jornada}, match {partido}, between {team_one} and {team_two}, and posted the channel welcome message."
+      "created_summary": "Created {channel} in `{category}` for matchday {jornada}, match {partido}, between {team_one} and {team_two}, and posted the channel welcome message.",
+      "created_special_summary": "Created {channel} in `{category}` for {round_label}, between {team_one} and {team_two}, and posted the channel welcome message."
     },
     "team_signing": {
       "completed": "Registered {inserted_count} signings in `{team_name}` within `{division_name}`. Current roster: {total_players}/6.",

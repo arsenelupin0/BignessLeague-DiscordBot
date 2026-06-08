@@ -124,6 +124,71 @@
           "gold_division": "Gold Division",
           "silver_division": "Silver Division"
         }
+      },
+      "create_final_four_channel": {
+        "name": "canal_de_final_four",
+        "description": "Crea un canal de Final Four para una semifinal o la final.",
+        "parameters": {
+          "semifinal": {
+            "description": "Número de semifinal: 1 o 2. Si se omite, crea la final."
+          },
+          "categoria": {
+            "description": "División donde se creará el canal"
+          },
+          "equipo_1": {
+            "description": "Rol del primer equipo"
+          },
+          "equipo_2": {
+            "description": "Rol del segundo equipo"
+          },
+          "courtesy_minutes": {
+            "description": "Minutos de cortesía antes de iniciar el partido"
+          },
+          "date": {
+            "description": "Fecha del partido en formato DD/MM/YYYY o YYYY-MM-DD"
+          },
+          "time": {
+            "description": "Hora del partido en formato HH:MM"
+          },
+          "best_of": {
+            "description": "Número de partidas del mejor de X"
+          }
+        },
+        "choices": {
+          "gold_division": "Gold Division",
+          "silver_division": "Silver Division"
+        }
+      },
+      "create_asc_desc_channel": {
+        "name": "canal_de_asc_des",
+        "description": "Crea un canal de Ascenso/Descenso.",
+        "parameters": {
+          "categoria": {
+            "description": "División donde se creará el canal"
+          },
+          "equipo_1": {
+            "description": "Rol del primer equipo"
+          },
+          "equipo_2": {
+            "description": "Rol del segundo equipo"
+          },
+          "courtesy_minutes": {
+            "description": "Minutos de cortesía antes de iniciar el partido"
+          },
+          "date": {
+            "description": "Fecha del partido en formato DD/MM/YYYY o YYYY-MM-DD"
+          },
+          "time": {
+            "description": "Hora del partido en formato HH:MM"
+          },
+          "best_of": {
+            "description": "Número de partidas del mejor de X"
+          }
+        },
+        "choices": {
+          "gold_division": "Gold Division",
+          "silver_division": "Silver Division"
+        }
       }
     },
     "match_schedules": {
@@ -166,6 +231,102 @@
       "link_replays": {
         "name": "enlazar_replays",
         "description": "Procesa las replays de un BO5 adjuntas en un mensaje enlazado.",
+        "parameters": {
+          "local": {
+            "description": "Rol del equipo local."
+          },
+          "visitante": {
+            "description": "Rol del equipo visitante."
+          },
+          "mensaje": {
+            "description": "Enlace al mensaje de Discord que contiene las replays."
+          }
+        }
+      },
+      "upload_replays_finalfour": {
+        "name": "subir_replays_finalfour",
+        "description": "Sube las replays de un BO7 de Final Four a Ballchasing y vuelca sus datos en Google Sheets.",
+        "parameters": {
+          "local": {
+            "description": "Rol del equipo local."
+          },
+          "visitante": {
+            "description": "Rol del equipo visitante."
+          },
+          "replay_1": {
+            "description": "Replay del Game 1."
+          },
+          "replay_2": {
+            "description": "Replay del Game 2."
+          },
+          "replay_3": {
+            "description": "Replay del Game 3."
+          },
+          "replay_4": {
+            "description": "Replay del Game 4."
+          },
+          "replay_5": {
+            "description": "Replay del Game 5, si se jugó."
+          },
+          "replay_6": {
+            "description": "Replay del Game 6, si se jugó."
+          },
+          "replay_7": {
+            "description": "Replay del Game 7, si se jugó."
+          }
+        }
+      },
+      "upload_replays_asc_des": {
+        "name": "subir_replays_asc_des",
+        "description": "Sube las replays de un BO7 de Ascenso/Descenso a Ballchasing y vuelca sus datos en Google Sheets.",
+        "parameters": {
+          "local": {
+            "description": "Rol del equipo local."
+          },
+          "visitante": {
+            "description": "Rol del equipo visitante."
+          },
+          "replay_1": {
+            "description": "Replay del Game 1."
+          },
+          "replay_2": {
+            "description": "Replay del Game 2."
+          },
+          "replay_3": {
+            "description": "Replay del Game 3."
+          },
+          "replay_4": {
+            "description": "Replay del Game 4."
+          },
+          "replay_5": {
+            "description": "Replay del Game 5, si se jugó."
+          },
+          "replay_6": {
+            "description": "Replay del Game 6, si se jugó."
+          },
+          "replay_7": {
+            "description": "Replay del Game 7, si se jugó."
+          }
+        }
+      },
+      "link_replays_finalfour": {
+        "name": "enlazar_replays_finalfour",
+        "description": "Procesa las replays de un BO7 de Final Four adjuntas en un mensaje enlazado.",
+        "parameters": {
+          "local": {
+            "description": "Rol del equipo local."
+          },
+          "visitante": {
+            "description": "Rol del equipo visitante."
+          },
+          "mensaje": {
+            "description": "Enlace al mensaje de Discord que contiene las replays."
+          }
+        }
+      },
+      "link_replays_asc_des": {
+        "name": "enlazar_replays_asc_des",
+        "description": "Procesa las replays de un BO7 de Ascenso/Descenso adjuntas en un mensaje enlazado.",
         "parameters": {
           "local": {
             "description": "Rol del equipo local."
@@ -421,7 +582,7 @@
     },
     "match_replays": {
       "uploaded": {
-        "summary": "# {green_arrow} Procesamiento de replays\nReplays procesadas para (Bo5):\n- **{division_emoji} {division} {division_emoji}**\n  - **Jornada {jornada} | Partido {partido}**\n  - **{team_one} {series_score} {team_two}**\n- Marcadores por _game_\n{game_scores}\n_ _\n{roster_validation}{unresolved_winners}{failed_replays}{skipped_duplicates}{image_warning}",
+        "summary": "# {green_arrow} Procesamiento de replays\nReplays procesadas para ({series_label}):\n- **{division_emoji} {division} {division_emoji}**\n  - **{match_context}**\n  - **{team_one} {series_score} {team_two}**\n- Marcadores por _game_\n{game_scores}\n_ _\n{roster_validation}{unresolved_winners}{failed_replays}{skipped_duplicates}{image_warning}",
         "standings_image": "# {green_arrow} Clasificación actual\n- Actualizada con este nuevo partido",
         "unresolved_winners": "\n- No he podido vincular automáticamente estos ganadores con los roles indicados: {winners}. Revisa los nombres de equipo en Ballchasing.",
         "failed_replays": "\n- Ballchasing no pudo procesar estas replays y se han omitido: {failed_replays}.",
@@ -771,6 +932,67 @@
           "create_ticket": "Apelación",
           "rules": "Normativa - Bigness League"
         }
+      },
+      "final_four_welcome": {
+        "semifinal": {
+          "content": "# Semifinal {semifinal_emoji}　\n## Bienvenid@s\n### {team_one}  {team_two}\n\nEste es el canal privado y autogenerado de vuestro partido para esta semifinal. Para las pruebas y todo lo relacionado de esta semifinal, deberá hablarse únicamente y exclusivamente por este canal de texto. Si surge algún problema a futuro, no se tendrá en cuenta en caso de que sea a través de otros medios. Los casos más graves lo evaluará el Staff.\n\n¡Mucha suerte a ambos equipos!\n　",
+          "embeds": {
+            "details": {
+              "title": " Detalles a tener en cuenta ",
+              "description": "- Recordar **ser puntuales** para esta **hora** y **fecha** por si se **castea** el partido. En caso de que **no se presente** un **equipo**, se dará directamente como **nulo** y **pasará** a la **final** directamente.\n- Pongamos todos de nuestra parte para poder **jugar el partido**\n- Habrá **minutos** de **cortesía** según la **hora del partido**. Si la fecha **está puesta** a las **16:00**, como tarde deberá iniciarse a las **16:10**, salvo **lo que dicte el staff/caster** (en caso de que se vaya con retraso)."
+            },
+            "issues": {
+              "title": " En caso de problemas ",
+              "description": "\n- Cualquier **problema** relacionado con el **partido** (in-game):\n  - Sacar **capturas** de incidentes.\n  - Guardad evidencias de comportamientos **tóxicos**.\n  - Registrad cualquier **incidencia del partido**.\n- El partido se dará como **finalizado** cuando alguien del Staff ponga el canal en **modo lectura**. Para cualquier **apelación** se deberá **abrir un ticket**."
+            },
+            "match_data": {
+              "title": "⚽  Datos del partido  ⚽",
+              "description": "- Información de sala\n  - ⌛ {courtesy_minutes} minutos de cortesía\n  - 📆 {match_date}\n  - ⏰ {match_time}\n  - ⚔️ {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `{blsemiX}`\n  - Contraseña: `{blsemiX}` \n  - Crea: {team_one}"
+            }
+          },
+          "buttons": {
+            "create_ticket": "Apelación",
+            "rules": "Normativa - Bigness League"
+          }
+        },
+        "final": {
+          "content": "# Final 🔥 \n## Bienvenid@s\n### {team_one}  {team_two}\n\nEste es el canal privado y autogenerado de vuestro partido para esta gran final final. Para las pruebas y todo lo relacionado de esta final, deberá hablarse únicamente y exclusivamente por este canal de texto. Si surge algún problema a futuro, no se tendrá en cuenta en caso de que sea a través de otros medios. Los casos más graves lo evaluará el Staff.\n\n¡Mucha suerte a ambos equipos!\n　",
+          "embeds": {
+            "details": {
+              "title": " Detalles a tener en cuenta ",
+              "description": "- Recordar **ser puntuales** para esta **hora** y **fecha** por si se **castea** el partido. En caso de que **no se presente** un **equipo**, se dará directamente como **nulo** y **este** será el ganador de la **final** directamente.\n- Pongamos todos de nuestra parte para poder **jugar el partido**\n- Habrá **minutos** de **cortesía** según la **hora del partido**. Si la fecha **está puesta** a las **16:00**, como tarde deberá iniciarse a las **16:10**, salvo **lo que dicte el staff/caster** (en caso de que se vaya con retraso)."
+            },
+            "issues": {
+              "title": " En caso de problemas ",
+              "description": "\n- Cualquier **problema** relacionado con el **partido** (in-game):\n  - Sacar **capturas** de incidentes.\n  - Guardad evidencias de comportamientos **tóxicos**.\n  - Registrad cualquier **incidencia del partido**.\n- El partido se dará como **finalizado** cuando alguien del Staff ponga el canal en **modo lectura**. Para cualquier **apelación** se deberá **abrir un ticket**."
+            },
+            "match_data": {
+              "title": "⚽  Datos del partido  ⚽",
+              "description": "- Información de sala\n  - ⌛ {courtesy_minutes} minutos de cortesía\n  - 📆 {match_date}\n  - ⏰ {match_time}\n  - ⚔️ {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `blfinal`\n  - Contraseña: `blfinal` \n  - Crea: {team_one}"
+            }
+          }
+        }
+      },
+      "asc_desc_welcome": {
+        "content": "# Ascenso/Descenso 　\n## Bienvenid@s\n### {team_one}  {team_two}\n\nEste es el canal privado y autogenerado de vuestro partido para este posible ascenso, permanencia o descenso. Para las pruebas y todo lo relacionado de este partido, deberá hablarse únicamente y exclusivamente por este canal de texto. Si surge algún problema a futuro, no se tendrá en cuenta en caso de que sea a través de otros medios. Los casos más graves lo evaluará el Staff.\n\n¡Mucha suerte a ambos equipos!\n　",
+        "embeds": {
+          "details": {
+            "title": " Detalles a tener en cuenta ",
+            "description": "- Recordar **ser puntuales** para esta **hora** y **fecha** por si se **castea** el partido. En caso de que **no se presente** un **equipo**, se dará directamente como **nulo** y **este** será el ganador de la **final** directamente.\n- Pongamos todos de nuestra parte para poder **jugar el partido**.\n- Habrá **minutos** de **cortesía** según la **hora del partido**. Si la fecha **está puesta** a las **16:00**, como tarde deberá iniciarse a las **16:10**, salvo **lo que dicte el staff/caster** (en caso de que se vaya con retraso)."
+          },
+          "issues": {
+            "title": " En caso de problemas ",
+            "description": "\n- Cualquier **problema** relacionado con el **partido** (in-game):\n  - Sacar **capturas** de incidentes.\n  - Guardad evidencias de comportamientos **tóxicos**.\n  - Registrad cualquier **incidencia del partido**.\n- El partido se dará como **finalizado** cuando alguien del Staff ponga el canal en **modo lectura**. Para cualquier **apelación** se deberá **abrir un ticket**."
+          },
+          "match_data": {
+            "title": "⚽  Datos del partido  ⚽",
+            "description": "- Información de sala\n  - ⌛ {courtesy_minutes} minutos de cortesía\n  - 📆 {match_date}\n  - ⏰ {match_time}\n  - ⚔️ {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `blasc`\n  - Contraseña: `bldes` \n  - Crea: {team_one}"
+          }
+        },
+        "buttons": {
+          "create_ticket": "Apelación",
+          "rules": "Normativa - Bigness League"
+        }
       }
     }
   },
@@ -919,7 +1141,8 @@
       "match_in_progress_summary": "# {green_arrow} Horario en disputa\n_ _\n- Se ha cancelado el horario fijado.\n- Si nadie se pone de acuerdo, el partido se dará como nulo.\n- Debido a que el horario está en disputa:\n  - No hay fecha fija de momento.\n  - Se cancela el casteo, {caster_mentions}"
     },
     "match_channel_creation": {
-      "created_summary": "Se ha creado {channel} en `{category}` para la jornada {jornada}, partido {partido}, entre {team_one} y {team_two}, y se ha enviado el mensaje inicial del canal."
+      "created_summary": "Se ha creado {channel} en `{category}` para la jornada {jornada}, partido {partido}, entre {team_one} y {team_two}, y se ha enviado el mensaje inicial del canal.",
+      "created_special_summary": "Se ha creado {channel} en `{category}` para {round_label}, entre {team_one} y {team_two}, y se ha enviado el mensaje inicial del canal."
     },
     "team_signing": {
       "completed": "Se han registrado {inserted_count} fichajes en `{team_name}` dentro de `{division_name}`. Plantilla actual: {total_players}/6.",

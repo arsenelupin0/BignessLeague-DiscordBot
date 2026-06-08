@@ -14,11 +14,16 @@ import re
 from dataclasses import dataclass
 
 from bigness_league_bot.application.services.channel_closure import (
+    FINAL_FOUR_FINAL_MARKER,
+    FINAL_FOUR_FINAL_PREFIX,
+    FINAL_FOUR_SEMIFINAL_PREFIX,
     KEYCAP_SUFFIX,
     MATCH_CHANNEL_J_PREFIX,
     MATCH_CHANNEL_P_PREFIX,
     MATCH_CHANNEL_STATUS_PATTERN,
     MATCH_CHANNEL_STATUS_SEPARATOR,
+    PROMOTION_RELEGATION_MARKER,
+    PROMOTION_RELEGATION_PREFIX,
 )
 from bigness_league_bot.application.services.match_replays import MatchReplayDivision
 
@@ -34,6 +39,19 @@ MATCH_CHANNEL_EMOJI_REFERENCE_PATTERN = re.compile(
     rf"{re.escape(MATCH_CHANNEL_P_PREFIX)}(?P<partido>(?:{KEYCAP_DIGIT_PATTERN}){{1,2}})"
     rf"{re.escape(MATCH_CHANNEL_STATUS_SEPARATOR)}{MATCH_CHANNEL_STATUS_PATTERN}$"
 )
+FINAL_FOUR_SEMIFINAL_REFERENCE_PATTERN = re.compile(
+    rf"^{re.escape(FINAL_FOUR_SEMIFINAL_PREFIX)}"
+    rf"(?P<semifinal>[12]{re.escape(KEYCAP_SUFFIX)})"
+    rf"{re.escape(MATCH_CHANNEL_STATUS_SEPARATOR)}{MATCH_CHANNEL_STATUS_PATTERN}$"
+)
+FINAL_FOUR_FINAL_REFERENCE_PATTERN = re.compile(
+    rf"^{re.escape(FINAL_FOUR_FINAL_PREFIX)}{re.escape(FINAL_FOUR_FINAL_MARKER)}"
+    rf"{re.escape(MATCH_CHANNEL_STATUS_SEPARATOR)}{MATCH_CHANNEL_STATUS_PATTERN}$"
+)
+PROMOTION_RELEGATION_REFERENCE_PATTERN = re.compile(
+    rf"^{re.escape(PROMOTION_RELEGATION_PREFIX)}{re.escape(PROMOTION_RELEGATION_MARKER)}"
+    rf"{re.escape(MATCH_CHANNEL_STATUS_SEPARATOR)}{MATCH_CHANNEL_STATUS_PATTERN}$"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,18 +61,30 @@ class MatchChannelReference:
 
 
 @dataclass(frozen=True, slots=True)
-class MatchReplayGroupPath:
-    division_group_name: str
-    matchday_group_name: str
-    matchup_group_name: str
+class FinalFourMatchReference:
+    round_name: str
+    matchday: int
+    match_number: int
 
     @property
-    def names(self) -> tuple[str, str, str]:
-        return (
-            self.division_group_name,
-            self.matchday_group_name,
-            self.matchup_group_name,
-        )
+    def label(self) -> str:
+        return self.round_name
+
+
+@dataclass(frozen=True, slots=True)
+class PromotionRelegationMatchReference:
+    round_name: str = "Ascenso/Descenso"
+    matchday: int = 10
+    match_number: int = 1
+
+    @property
+    def label(self) -> str:
+        return self.round_name
+
+
+@dataclass(frozen=True, slots=True)
+class MatchReplayGroupPath:
+    names: tuple[str, ...]
 
     @property
     def label(self) -> str:
@@ -80,6 +110,37 @@ def parse_match_channel_reference(channel_name: str) -> MatchChannelReference | 
     )
 
 
+def parse_final_four_channel_reference(channel_name: str) -> FinalFourMatchReference | None:
+    normalized_name = channel_name.strip()
+    semifinal_match = FINAL_FOUR_SEMIFINAL_REFERENCE_PATTERN.fullmatch(normalized_name)
+    if semifinal_match is not None:
+        semifinal_number = _parse_keycap_number(semifinal_match.group("semifinal"))
+        return FinalFourMatchReference(
+            round_name=f"Semifinal {semifinal_number}",
+            matchday=8,
+            match_number=semifinal_number,
+        )
+
+    if FINAL_FOUR_FINAL_REFERENCE_PATTERN.fullmatch(normalized_name) is not None:
+        return FinalFourMatchReference(
+            round_name="Final",
+            matchday=9,
+            match_number=1,
+        )
+
+    return None
+
+
+def parse_promotion_relegation_channel_reference(
+        channel_name: str,
+) -> PromotionRelegationMatchReference | None:
+    normalized_name = channel_name.strip()
+    if PROMOTION_RELEGATION_REFERENCE_PATTERN.fullmatch(normalized_name) is None:
+        return None
+
+    return PromotionRelegationMatchReference()
+
+
 def build_match_replay_group_path(
         *,
         division: MatchReplayDivision,
@@ -88,12 +149,37 @@ def build_match_replay_group_path(
         team_two_name: str,
 ) -> MatchReplayGroupPath:
     return MatchReplayGroupPath(
-        division_group_name=_division_group_name(division),
-        matchday_group_name=f"Jornada {matchday}",
-        matchup_group_name=build_matchup_name(
-            team_one_name=team_one_name,
-            team_two_name=team_two_name,
+        names=(
+            _division_group_name(division),
+            f"Jornada {matchday}",
+            build_matchup_name(
+                team_one_name=team_one_name,
+                team_two_name=team_two_name,
+            ),
         ),
+    )
+
+
+def build_final_four_replay_group_path(
+        *,
+        round_name: str,
+) -> MatchReplayGroupPath:
+    return MatchReplayGroupPath(names=("FINAL FOUR", round_name))
+
+
+def build_promotion_relegation_replay_group_path(
+        *,
+        team_one_name: str,
+        team_two_name: str,
+) -> MatchReplayGroupPath:
+    return MatchReplayGroupPath(
+        names=(
+            "ASCENSO / DESCENSO",
+            build_matchup_name(
+                team_one_name=team_one_name,
+                team_two_name=team_two_name,
+            ),
+        )
     )
 
 
@@ -115,6 +201,31 @@ def build_match_replay_title(
     return (
         f"{build_matchup_name(team_one_name=team_one_name, team_two_name=team_two_name)} "
         f"- Jornada {matchday} | Match {game_number}"
+    )
+
+
+def build_final_four_replay_title(
+        *,
+        round_name: str,
+        game_number: int,
+        team_one_name: str,
+        team_two_name: str,
+) -> str:
+    return (
+        f"{build_matchup_name(team_one_name=team_one_name, team_two_name=team_two_name)} "
+        f"- Final Four | {round_name} | Match {game_number}"
+    )
+
+
+def build_promotion_relegation_replay_title(
+        *,
+        game_number: int,
+        team_one_name: str,
+        team_two_name: str,
+) -> str:
+    return (
+        f"{build_matchup_name(team_one_name=team_one_name, team_two_name=team_two_name)} "
+        f"- Ascenso/Descenso | Match {game_number}"
     )
 
 

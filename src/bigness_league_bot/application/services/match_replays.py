@@ -15,6 +15,7 @@
 #
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Iterable
 
@@ -34,10 +35,33 @@ from bigness_league_bot.application.services.match_replay_team_names import (
 MATCH_REPLAY_MIN_FILES = 3
 MATCH_REPLAY_MAX_FILES = 5
 MATCH_REPLAY_EXTENSION = ".replay"
+
+
+@dataclass(frozen=True, slots=True)
+class MatchReplaySeriesRules:
+    label: str
+    min_games: int
+    max_games: int
+
+
+MATCH_REPLAY_BO5_RULES = MatchReplaySeriesRules(
+    label="Bo5",
+    min_games=MATCH_REPLAY_MIN_FILES,
+    max_games=MATCH_REPLAY_MAX_FILES,
+)
+MATCH_REPLAY_FINAL_FOUR_BO7_RULES = MatchReplaySeriesRules(
+    label="Bo7",
+    min_games=4,
+    max_games=7,
+)
+
+
 __all__ = [
     "InvalidReplayCountError",
     "InvalidReplayExtensionError",
+    "MATCH_REPLAY_BO5_RULES",
     "MATCH_REPLAY_EXTENSION",
+    "MATCH_REPLAY_FINAL_FOUR_BO7_RULES",
     "MATCH_REPLAY_MAX_FILES",
     "MATCH_REPLAY_MIN_FILES",
     "MatchReplayDivision",
@@ -45,6 +69,7 @@ __all__ = [
     "MatchReplayPlayer",
     "MatchReplayReport",
     "MatchReplayRosterPlayer",
+    "MatchReplaySeriesRules",
     "MatchReplayTeam",
     "MatchReplayValidationError",
     "build_match_replay_report",
@@ -63,7 +88,11 @@ class MatchReplayValidationError(ValueError):
 
 
 class InvalidReplayCountError(MatchReplayValidationError):
-    """Raised when the series does not have a BO5-compatible replay count."""
+    """Raised when the series does not have a compatible replay count."""
+
+    def __init__(self, rules: MatchReplaySeriesRules = MATCH_REPLAY_BO5_RULES) -> None:
+        super().__init__(f"{rules.min_games}-{rules.max_games}")
+        self.rules = rules
 
 
 class InvalidReplayExtensionError(MatchReplayValidationError):
@@ -74,10 +103,12 @@ class InvalidReplayExtensionError(MatchReplayValidationError):
 
 def validate_replay_filenames(
         filenames: Iterable[str],
+        *,
+        rules: MatchReplaySeriesRules = MATCH_REPLAY_BO5_RULES,
 ) -> tuple[str, ...]:
     names = tuple(name.strip() for name in filenames if name.strip())
-    if len(names) < MATCH_REPLAY_MIN_FILES or len(names) > MATCH_REPLAY_MAX_FILES:
-        raise InvalidReplayCountError()
+    if len(names) < rules.min_games or len(names) > rules.max_games:
+        raise InvalidReplayCountError(rules)
 
     invalid_names = tuple(
         name for name in names if not name.lower().endswith(MATCH_REPLAY_EXTENSION)
@@ -96,6 +127,7 @@ def build_match_replay_report(
         team_one_name: str,
         team_two_name: str,
         games: Iterable[MatchReplayGame],
+        rules: MatchReplaySeriesRules = MATCH_REPLAY_BO5_RULES,
 ) -> MatchReplayReport:
     ordered_games = tuple(
         MatchReplayGame(
@@ -112,8 +144,8 @@ def build_match_replay_report(
             start=1,
         )
     )
-    if len(ordered_games) < MATCH_REPLAY_MIN_FILES or len(ordered_games) > MATCH_REPLAY_MAX_FILES:
-        raise InvalidReplayCountError()
+    if len(ordered_games) < rules.min_games or len(ordered_games) > rules.max_games:
+        raise InvalidReplayCountError(rules)
 
     team_one_games = 0
     team_two_games = 0

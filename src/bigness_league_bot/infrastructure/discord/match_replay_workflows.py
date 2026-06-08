@@ -3,22 +3,35 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import discord
 
 from bigness_league_bot.application.services.match_replay_groups import (
+    FinalFourMatchReference,
+    MatchChannelReference,
+    PromotionRelegationMatchReference,
+    build_final_four_replay_group_path,
+    build_final_four_replay_title,
     build_match_replay_group_path,
     build_match_replay_title,
+    build_promotion_relegation_replay_group_path,
+    build_promotion_relegation_replay_title,
+    parse_final_four_channel_reference,
     parse_match_channel_reference,
+    parse_promotion_relegation_channel_reference,
 )
 from bigness_league_bot.application.services.match_replay_summaries import (
     build_match_replay_roster_validation_summary,
     collect_match_replay_standings_team_names,
 )
 from bigness_league_bot.application.services.match_replays import (
+    MATCH_REPLAY_BO5_RULES,
+    MATCH_REPLAY_FINAL_FOUR_BO7_RULES,
     MatchReplayDivision,
+    MatchReplaySeriesRules,
     MatchReplayValidationError,
     build_match_replay_report,
     resolve_match_replay_report_players,
@@ -79,6 +92,29 @@ if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
 LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, slots=True)
+class MatchReplayWorkflowContext:
+    rules: MatchReplaySeriesRules
+    final_four: bool = False
+    promotion_relegation: bool = False
+    sync_standings: bool = True
+
+
+MATCH_REPLAY_REGULAR_CONTEXT = MatchReplayWorkflowContext(
+    rules=MATCH_REPLAY_BO5_RULES,
+)
+MATCH_REPLAY_FINAL_FOUR_CONTEXT = MatchReplayWorkflowContext(
+    rules=MATCH_REPLAY_FINAL_FOUR_BO7_RULES,
+    final_four=True,
+    sync_standings=False,
+)
+MATCH_REPLAY_PROMOTION_RELEGATION_CONTEXT = MatchReplayWorkflowContext(
+    rules=MATCH_REPLAY_FINAL_FOUR_BO7_RULES,
+    promotion_relegation=True,
+    sync_standings=False,
+)
 
 
 async def process_administrative_result(
@@ -189,28 +225,41 @@ async def process_replay_attachments(
         local: discord.Role,
         visitante: discord.Role,
         attachments: tuple[discord.Attachment, ...],
+        context: MatchReplayWorkflowContext = MATCH_REPLAY_REGULAR_CONTEXT,
 ) -> None:
     guild = interaction.guild
     if guild is None:
         raise UnsupportedChannelError(localize(I18N.errors.channel_management.server_only))
 
     try:
-        validate_replay_filenames(attachment.filename for attachment in attachments)
+        validate_replay_filenames(
+            (attachment.filename for attachment in attachments),
+            rules=context.rules,
+        )
     except MatchReplayValidationError as exc:
         raise to_user_error(exc) from exc
 
     channel_name = interaction_channel_name(interaction)
-    channel_reference = parse_match_channel_reference(channel_name)
-    if channel_reference is None:
+    channel_reference = _resolve_replay_channel_reference(
+        channel_name,
+        context=context,
+    )
+    division_value = resolve_replay_division_from_channel(interaction)
+    if context.final_four and division_value is not MatchReplayDivision.GOLD:
         raise CommandUserError(
             localize(
-                I18N.errors.match_replays.channel_group_context_missing,
+                I18N.errors.match_replays.channel_division_context_missing,
                 channel_name=channel_name or "-",
             )
         )
-    division_value = resolve_replay_division_from_channel(interaction)
     jornada = channel_reference.matchday
     partido = channel_reference.match_number
+    final_four_round_name = (
+        channel_reference.round_name
+        if isinstance(channel_reference, FinalFourMatchReference)
+        else None
+    )
+    promotion_relegation = isinstance(channel_reference, PromotionRelegationMatchReference)
 
     diagnostics_dir = interaction.client.settings.log_dir.parent / "match_replays" / "uploads"
     uploads = await asyncio.gather(
@@ -247,6 +296,8 @@ async def process_replay_attachments(
         matchday=jornada,
         team_one_name=local.name,
         team_two_name=visitante.name,
+        final_four_round_name=final_four_round_name,
+        promotion_relegation=promotion_relegation,
     )
     games = []
     failed_uploads: list[str] = []
@@ -254,8 +305,11 @@ async def process_replay_attachments(
         try:
             game = await ballchasing_client.upload_and_fetch_replay(
                 upload,
-                title=build_match_replay_title(
+                title=_build_workflow_replay_title(
+                    context=context,
                     matchday=jornada,
+                    final_four_round_name=final_four_round_name,
+                    promotion_relegation=promotion_relegation,
                     game_number=index,
                     team_one_name=local.name,
                     team_two_name=visitante.name,
@@ -278,8 +332,11 @@ async def process_replay_attachments(
         await ballchasing_client.update_replay_metadata(
             game.replay_id,
             {
-                "title": build_match_replay_title(
+                "title": _build_workflow_replay_title(
+                    context=context,
                     matchday=jornada,
+                    final_four_round_name=final_four_round_name,
+                    promotion_relegation=promotion_relegation,
                     game_number=index,
                     team_one_name=local.name,
                     team_two_name=visitante.name,
@@ -295,6 +352,7 @@ async def process_replay_attachments(
             team_one_name=local.name,
             team_two_name=visitante.name,
             games=ordered_games,
+            rules=context.rules,
         )
     except MatchReplayValidationError as exc:
         raise to_user_error(exc) from exc
@@ -305,7 +363,7 @@ async def process_replay_attachments(
     report = resolve_match_replay_report_players(report, roster_players)
     append_result = await replay_repository.append_report(report)
     standings_result = None
-    if append_result.appended_games > 0:
+    if append_result.appended_games > 0 and context.sync_standings:
         standings_repository = GoogleSheetsMatchStandingsRepository(interaction.client.settings)
         standings_result = await standings_repository.sync_report_to_standings(
             report,
@@ -349,6 +407,11 @@ async def process_replay_attachments(
     try:
         replay_summary_image_file = build_match_replay_summary_image_file(
             report=report,
+            series_label=context.rules.label,
+            match_context_label=_match_context_label(
+                channel_reference,
+                context=context,
+            ),
             font_path=interaction.client.settings.team_profile_font_path,
             team_logo_urls=team_logo_url_map(roster_data.team_logos),
             fallback_logo_url=guild_icon_url(interaction.guild),
@@ -380,6 +443,8 @@ async def process_replay_attachments(
     message = interaction.client.localizer.translate(
         I18N.messages.match_replays.uploaded.summary,
         locale=interaction.locale,
+        series_label=context.rules.label,
+        match_context=_match_context_label(channel_reference, context=context),
         green_arrow=render_custom_emoji(
             guild=guild,
             bot=interaction.client,
@@ -477,9 +542,15 @@ async def resolve_ballchasing_group_id(
         matchday: int,
         team_one_name: str,
         team_two_name: str,
+        final_four_round_name: str | None = None,
+        promotion_relegation: bool = False,
 ) -> str | None:
     settings = interaction.client.settings
-    if not settings.ballchasing_auto_groups_enabled:
+    if (
+            not settings.ballchasing_auto_groups_enabled
+            and final_four_round_name is None
+            and not promotion_relegation
+    ):
         LOGGER.info(
             "Grupos automaticos de Ballchasing desactivados; se usara el grupo configurado como destino final group_id=%s",
             settings.ballchasing_group_id or "-",
@@ -488,12 +559,22 @@ async def resolve_ballchasing_group_id(
     if not settings.ballchasing_group_id:
         raise CommandUserError(localize(I18N.errors.match_replays.ballchasing_group_missing))
 
-    group_path = build_match_replay_group_path(
-        division=division,
-        matchday=matchday,
-        team_one_name=team_one_name,
-        team_two_name=team_two_name,
-    )
+    if final_four_round_name is not None:
+        group_path = build_final_four_replay_group_path(
+            round_name=final_four_round_name,
+        )
+    elif promotion_relegation:
+        group_path = build_promotion_relegation_replay_group_path(
+            team_one_name=team_one_name,
+            team_two_name=team_two_name,
+        )
+    else:
+        group_path = build_match_replay_group_path(
+            division=division,
+            matchday=matchday,
+            team_one_name=team_one_name,
+            team_two_name=team_two_name,
+        )
     resolved_group = await ballchasing_client.ensure_group_path(
         parent_group_id=settings.ballchasing_group_id,
         group_names=group_path.names,
@@ -505,3 +586,77 @@ async def resolve_ballchasing_group_id(
         group_path.label,
     )
     return resolved_group.id
+
+
+def _resolve_replay_channel_reference(
+        channel_name: str,
+        *,
+        context: MatchReplayWorkflowContext,
+) -> MatchChannelReference | FinalFourMatchReference | PromotionRelegationMatchReference:
+    if context.final_four:
+        final_four_reference = parse_final_four_channel_reference(channel_name)
+        if final_four_reference is not None:
+            return final_four_reference
+    elif context.promotion_relegation:
+        promotion_relegation_reference = parse_promotion_relegation_channel_reference(channel_name)
+        if promotion_relegation_reference is not None:
+            return promotion_relegation_reference
+    else:
+        regular_reference = parse_match_channel_reference(channel_name)
+        if regular_reference is not None:
+            return regular_reference
+
+    raise CommandUserError(
+        localize(
+            I18N.errors.match_replays.channel_group_context_missing,
+            channel_name=channel_name or "-",
+        )
+    )
+
+
+def _build_workflow_replay_title(
+        *,
+        context: MatchReplayWorkflowContext,
+        matchday: int,
+        final_four_round_name: str | None,
+        promotion_relegation: bool,
+        game_number: int,
+        team_one_name: str,
+        team_two_name: str,
+) -> str:
+    if context.final_four and final_four_round_name is not None:
+        return build_final_four_replay_title(
+            round_name=final_four_round_name,
+            game_number=game_number,
+            team_one_name=team_one_name,
+            team_two_name=team_two_name,
+        )
+
+    if context.promotion_relegation and promotion_relegation:
+        return build_promotion_relegation_replay_title(
+            game_number=game_number,
+            team_one_name=team_one_name,
+            team_two_name=team_two_name,
+        )
+
+    return build_match_replay_title(
+        matchday=matchday,
+        game_number=game_number,
+        team_one_name=team_one_name,
+        team_two_name=team_two_name,
+    )
+
+
+def _match_context_label(
+        channel_reference: MatchChannelReference | FinalFourMatchReference | PromotionRelegationMatchReference,
+        *,
+        context: MatchReplayWorkflowContext,
+) -> str:
+    if context.final_four and isinstance(channel_reference, FinalFourMatchReference):
+        return f"Final Four | {channel_reference.label}"
+    if context.promotion_relegation and isinstance(channel_reference, PromotionRelegationMatchReference):
+        return channel_reference.label
+    return (
+        f"Jornada {channel_reference.matchday} | "
+        f"Partido {channel_reference.match_number}"
+    )

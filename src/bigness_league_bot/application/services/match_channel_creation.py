@@ -15,13 +15,18 @@ from datetime import date, datetime, time
 from enum import StrEnum
 
 from bigness_league_bot.application.services.channel_closure import (
+    format_final_four_final_channel_name,
+    format_final_four_semifinal_channel_name,
     format_match_channel_name,
+    format_promotion_relegation_channel_name,
     legacy_match_channel_names,
 )
 from bigness_league_bot.core.timezones import resolve_timezone
 
 MATCH_NUMBER_MIN = 1
 MATCH_NUMBER_MAX = 99
+FINAL_FOUR_SEMIFINAL_MIN = 1
+FINAL_FOUR_SEMIFINAL_MAX = 2
 MATCH_COURTESY_MINUTES_MIN = 0
 MATCH_COURTESY_MINUTES_MAX = 120
 MATCH_BEST_OF_MIN = 1
@@ -100,3 +105,79 @@ class MatchChannelSpecification:
     @property
     def room_password(self) -> str:
         return f"bpartido{self.partido}"
+
+
+@dataclass(frozen=True, slots=True)
+class FinalFourMatchChannelSpecification:
+    semifinal: int | None
+    courtesy_minutes: int
+    start_at: datetime
+    best_of: int
+
+    @property
+    def legacy_channel_names(self) -> tuple[str, ...]:
+        return ()
+
+    @property
+    def channel_name(self) -> str:
+        if self.semifinal is None:
+            return format_final_four_final_channel_name()
+
+        return format_final_four_semifinal_channel_name(self.semifinal)
+
+    @property
+    def start_timestamp(self) -> int:
+        return int(self.start_at.timestamp())
+
+    @property
+    def is_final(self) -> bool:
+        return self.semifinal is None
+
+    @property
+    def round_label(self) -> str:
+        if self.semifinal is None:
+            return "Final"
+
+        return f"Semifinal {self.semifinal}"
+
+    @property
+    def room_name(self) -> str:
+        if self.semifinal is None:
+            return "blfinal"
+
+        return f"blsemi{self.semifinal}"
+
+    @property
+    def room_password(self) -> str:
+        return self.room_name
+
+
+@dataclass(frozen=True, slots=True)
+class PromotionRelegationMatchChannelSpecification:
+    courtesy_minutes: int
+    start_at: datetime
+    best_of: int
+
+    @property
+    def legacy_channel_names(self) -> tuple[str, ...]:
+        return ()
+
+    @property
+    def channel_name(self) -> str:
+        return format_promotion_relegation_channel_name()
+
+    @property
+    def start_timestamp(self) -> int:
+        return int(self.start_at.timestamp())
+
+    @property
+    def round_label(self) -> str:
+        return "Ascenso/Descenso"
+
+    @property
+    def room_name(self) -> str:
+        return "blasc"
+
+    @property
+    def room_password(self) -> str:
+        return "bldes"

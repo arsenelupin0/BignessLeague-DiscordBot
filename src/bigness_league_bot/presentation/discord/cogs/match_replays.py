@@ -20,6 +20,7 @@ from bigness_league_bot.application.services.match_replay_summaries import (
     collect_match_replay_standings_team_names,
 )
 from bigness_league_bot.application.services.match_replays import (
+    MATCH_REPLAY_FINAL_FOUR_BO7_RULES,
     MATCH_REPLAY_EXTENSION,
     MatchReplayDivision,
     MatchReplayValidationError,
@@ -45,6 +46,8 @@ from bigness_league_bot.infrastructure.discord.match_replay_discord_helpers impo
     to_user_error,
 )
 from bigness_league_bot.infrastructure.discord.match_replay_workflows import (
+    MATCH_REPLAY_FINAL_FOUR_CONTEXT,
+    MATCH_REPLAY_PROMOTION_RELEGATION_CONTEXT,
     process_administrative_result,
     process_replay_attachments,
 )
@@ -147,6 +150,152 @@ class MatchReplaysCog(commands.Cog):
         )
 
     @app_commands.command(
+        name=localized_locale_str(I18N.commands.match_replays.upload_replays_finalfour.name),
+        description=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_finalfour.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        local=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_finalfour.parameters.local.description
+        ),
+        visitante=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_finalfour.parameters.visitante.description
+        ),
+        replay_1=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_finalfour.parameters.replay_1.description
+        ),
+        replay_2=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_finalfour.parameters.replay_2.description
+        ),
+        replay_3=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_finalfour.parameters.replay_3.description
+        ),
+        replay_4=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_finalfour.parameters.replay_4.description
+        ),
+        replay_5=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_finalfour.parameters.replay_5.description
+        ),
+        replay_6=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_finalfour.parameters.replay_6.description
+        ),
+        replay_7=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_finalfour.parameters.replay_7.description
+        ),
+    )
+    async def upload_replays_finalfour(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            local: discord.Role,
+            visitante: discord.Role,
+            replay_1: discord.Attachment,
+            replay_2: discord.Attachment,
+            replay_3: discord.Attachment,
+            replay_4: discord.Attachment,
+            replay_5: discord.Attachment | None = None,
+            replay_6: discord.Attachment | None = None,
+            replay_7: discord.Attachment | None = None,
+    ) -> None:
+        guild = _ensure_guild_member_interaction(interaction)
+        _ensure_match_team_roles(interaction, guild=guild, local=local, visitante=visitante)
+        attachments = tuple(
+            attachment
+            for attachment in (replay_1, replay_2, replay_3, replay_4, replay_5, replay_6, replay_7)
+            if attachment is not None
+        )
+        try:
+            validate_replay_filenames(
+                (attachment.filename for attachment in attachments),
+                rules=MATCH_REPLAY_FINAL_FOUR_BO7_RULES,
+            )
+        except MatchReplayValidationError as exc:
+            raise to_user_error(exc) from exc
+
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        await process_replay_attachments(
+            interaction,
+            local=local,
+            visitante=visitante,
+            attachments=attachments,
+            context=MATCH_REPLAY_FINAL_FOUR_CONTEXT,
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.match_replays.upload_replays_asc_des.name),
+        description=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_asc_des.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        local=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_asc_des.parameters.local.description
+        ),
+        visitante=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_asc_des.parameters.visitante.description
+        ),
+        replay_1=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_asc_des.parameters.replay_1.description
+        ),
+        replay_2=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_asc_des.parameters.replay_2.description
+        ),
+        replay_3=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_asc_des.parameters.replay_3.description
+        ),
+        replay_4=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_asc_des.parameters.replay_4.description
+        ),
+        replay_5=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_asc_des.parameters.replay_5.description
+        ),
+        replay_6=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_asc_des.parameters.replay_6.description
+        ),
+        replay_7=localized_locale_str(
+            I18N.commands.match_replays.upload_replays_asc_des.parameters.replay_7.description
+        ),
+    )
+    async def upload_replays_asc_des(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            local: discord.Role,
+            visitante: discord.Role,
+            replay_1: discord.Attachment,
+            replay_2: discord.Attachment,
+            replay_3: discord.Attachment,
+            replay_4: discord.Attachment,
+            replay_5: discord.Attachment | None = None,
+            replay_6: discord.Attachment | None = None,
+            replay_7: discord.Attachment | None = None,
+    ) -> None:
+        guild = _ensure_guild_member_interaction(interaction)
+        _ensure_match_team_roles(interaction, guild=guild, local=local, visitante=visitante)
+        attachments = tuple(
+            attachment
+            for attachment in (replay_1, replay_2, replay_3, replay_4, replay_5, replay_6, replay_7)
+            if attachment is not None
+        )
+        try:
+            validate_replay_filenames(
+                (attachment.filename for attachment in attachments),
+                rules=MATCH_REPLAY_FINAL_FOUR_BO7_RULES,
+            )
+        except MatchReplayValidationError as exc:
+            raise to_user_error(exc) from exc
+
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        await process_replay_attachments(
+            interaction,
+            local=local,
+            visitante=visitante,
+            attachments=attachments,
+            context=MATCH_REPLAY_PROMOTION_RELEGATION_CONTEXT,
+        )
+
+    @app_commands.command(
         name=localized_locale_str(I18N.commands.match_replays.link_replays.name),
         description=localized_locale_str(
             I18N.commands.match_replays.link_replays.description
@@ -186,6 +335,92 @@ class MatchReplaysCog(commands.Cog):
             local=local,
             visitante=visitante,
             attachments=attachments,
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.match_replays.link_replays_finalfour.name),
+        description=localized_locale_str(
+            I18N.commands.match_replays.link_replays_finalfour.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        local=localized_locale_str(
+            I18N.commands.match_replays.link_replays_finalfour.parameters.local.description
+        ),
+        visitante=localized_locale_str(
+            I18N.commands.match_replays.link_replays_finalfour.parameters.visitante.description
+        ),
+        mensaje=localized_locale_str(
+            I18N.commands.match_replays.link_replays_finalfour.parameters.mensaje.description
+        ),
+    )
+    async def link_replays_finalfour(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            local: discord.Role,
+            visitante: discord.Role,
+            mensaje: str,
+    ) -> None:
+        guild = _ensure_guild_member_interaction(interaction)
+        _ensure_match_team_roles(interaction, guild=guild, local=local, visitante=visitante)
+
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        linked_message = await fetch_linked_message(interaction.client, guild, mensaje)
+        attachments = tuple(
+            attachment
+            for attachment in linked_message.attachments
+            if attachment.filename.lower().endswith(MATCH_REPLAY_EXTENSION)
+        )
+        await process_replay_attachments(
+            interaction,
+            local=local,
+            visitante=visitante,
+            attachments=attachments,
+            context=MATCH_REPLAY_FINAL_FOUR_CONTEXT,
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.match_replays.link_replays_asc_des.name),
+        description=localized_locale_str(
+            I18N.commands.match_replays.link_replays_asc_des.description
+        ),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(
+        local=localized_locale_str(
+            I18N.commands.match_replays.link_replays_asc_des.parameters.local.description
+        ),
+        visitante=localized_locale_str(
+            I18N.commands.match_replays.link_replays_asc_des.parameters.visitante.description
+        ),
+        mensaje=localized_locale_str(
+            I18N.commands.match_replays.link_replays_asc_des.parameters.mensaje.description
+        ),
+    )
+    async def link_replays_asc_des(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            local: discord.Role,
+            visitante: discord.Role,
+            mensaje: str,
+    ) -> None:
+        guild = _ensure_guild_member_interaction(interaction)
+        _ensure_match_team_roles(interaction, guild=guild, local=local, visitante=visitante)
+
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        linked_message = await fetch_linked_message(interaction.client, guild, mensaje)
+        attachments = tuple(
+            attachment
+            for attachment in linked_message.attachments
+            if attachment.filename.lower().endswith(MATCH_REPLAY_EXTENSION)
+        )
+        await process_replay_attachments(
+            interaction,
+            local=local,
+            visitante=visitante,
+            attachments=attachments,
+            context=MATCH_REPLAY_PROMOTION_RELEGATION_CONTEXT,
         )
 
     @app_commands.command(

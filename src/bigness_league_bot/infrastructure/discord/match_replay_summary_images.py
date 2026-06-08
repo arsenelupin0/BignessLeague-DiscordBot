@@ -64,12 +64,16 @@ LEADER_TITLE_GOLD: Color = (226, 184, 88)
 def build_match_replay_summary_image_file(
         *,
         report: MatchReplayReport,
+        series_label: str = "Bo5",
+        match_context_label: str | None = None,
         font_path: Path | None = None,
         team_logo_urls: Mapping[str, str | None] | None = None,
         fallback_logo_url: str | None = None,
 ) -> discord.File:
     image_data = _render_match_replay_summary_image(
         report=report,
+        series_label=series_label,
+        match_context_label=match_context_label,
         font_path=font_path,
         team_logo_urls=team_logo_urls or {},
         fallback_logo_url=fallback_logo_url,
@@ -85,6 +89,8 @@ def build_match_replay_summary_image_file(
 def _render_match_replay_summary_image(
         *,
         report: MatchReplayReport,
+        series_label: str,
+        match_context_label: str | None,
         font_path: Path | None,
         team_logo_urls: Mapping[str, str | None],
         fallback_logo_url: str | None,
@@ -131,7 +137,7 @@ def _render_match_replay_summary_image(
     team_two_header_color, team_two_color = _result_colors(won=team_two_won_series)
     draw.text(
         (width // 2, y),
-        f"{report.division.label}  |  Jornada {report.matchday}  |  Partido {report.match_number}",
+        f"{report.division.label}  |  {match_context_label or _regular_match_context_label(report)}",
         font=subtitle_font,
         fill=MUTED,
         anchor="ma",
@@ -156,7 +162,7 @@ def _render_match_replay_summary_image(
     )
     y += 150
 
-    _draw_section_label(draw, PADDING_X, y, "RESULTADOS POR GAME (BO5)", section_font)
+    _draw_section_label(draw, PADDING_X, y, f"RESULTADOS POR GAME ({series_label.upper()})", section_font)
     y += 42
     _draw_game_cards(
         draw,
@@ -169,6 +175,7 @@ def _render_match_replay_summary_image(
         small_font=small_font,
         team_one_color=team_one_color,
         team_two_color=team_two_color,
+        max_games=7 if series_label.casefold() == "bo7" else 5,
     )
     y += 178
 
@@ -220,6 +227,10 @@ def _render_match_replay_summary_image(
     return _save_png(image)
 
 
+def _regular_match_context_label(report: MatchReplayReport) -> str:
+    return f"Jornada {report.matchday}  |  Partido {report.match_number}"
+
+
 def _draw_replay_background(draw: ImageDrawLike, *, width: int, height: int) -> None:
     for y in range(0, height, 28):
         color = (10, 29, 56) if y % 56 == 0 else (9, 22, 42)
@@ -266,6 +277,7 @@ def _draw_series_score_panel(
         font=team_name_font,
         logo_image=team_one_logo,
     )
+
     _draw_wrapped_team_name(
         draw,
         x=x + 128 + 130,

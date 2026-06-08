@@ -41,6 +41,24 @@ MATCH_CHANNEL_EMOJI_NAME_PATTERN = re.compile(
 )
 MATCH_CHANNEL_J_PREFIX = "\u300e\U0001d5dd\u300f"
 MATCH_CHANNEL_P_PREFIX = "\u300e\U0001d5e3\u300f"
+FINAL_FOUR_SEMIFINAL_PREFIX = (
+    "\u300e"
+    "\U0001d412\U0001d404\U0001d40c\U0001d408\U0001d405"
+    "\U0001d408\U0001d40d\U0001d400\U0001d40b"
+    "\u300f"
+)
+FINAL_FOUR_FINAL_PREFIX = (
+    "\u300e"
+    "\U0001d405\U0001d408\U0001d40d\U0001d400\U0001d40b"
+    "\u300f"
+)
+FINAL_FOUR_FINAL_MARKER = "\U0001f525"
+PROMOTION_RELEGATION_PREFIX = (
+    "\u300e"
+    "\U0001d400\U0001d412\U0001d402-\U0001d403\U0001d404\U0001d412"
+    "\u300f"
+)
+PROMOTION_RELEGATION_MARKER = "\U0001f525"
 KEYCAP_SUFFIX = "\ufe0f\u20e3"
 KEYCAP_DIGITS: dict[str, str] = {
     digit: f"{digit}{KEYCAP_SUFFIX}"
@@ -58,12 +76,25 @@ MATCH_CHANNEL_EMOJI_STATUS_PATTERN = re.compile(
     rf"{re.escape(MATCH_CHANNEL_P_PREFIX)}(?:[0-9]{KEYCAP_SUFFIX}){{1,2}}"
     rf"{re.escape(MATCH_CHANNEL_STATUS_SEPARATOR)}{MATCH_CHANNEL_STATUS_PATTERN}$"
 )
+FINAL_FOUR_CHANNEL_STATUS_PATTERN = re.compile(
+    rf"^(?:"
+    rf"{re.escape(FINAL_FOUR_SEMIFINAL_PREFIX)}(?:1{KEYCAP_SUFFIX}|2{KEYCAP_SUFFIX})"
+    rf"|{re.escape(FINAL_FOUR_FINAL_PREFIX)}{re.escape(FINAL_FOUR_FINAL_MARKER)}"
+    rf")"
+    rf"{re.escape(MATCH_CHANNEL_STATUS_SEPARATOR)}{MATCH_CHANNEL_STATUS_PATTERN}$"
+)
+PROMOTION_RELEGATION_CHANNEL_STATUS_PATTERN = re.compile(
+    rf"^{re.escape(PROMOTION_RELEGATION_PREFIX)}{re.escape(PROMOTION_RELEGATION_MARKER)}"
+    rf"{re.escape(MATCH_CHANNEL_STATUS_SEPARATOR)}{MATCH_CHANNEL_STATUS_PATTERN}$"
+)
 
 
 def is_match_channel_name(channel_name: str) -> bool:
     return (
             MATCH_CHANNEL_LEGACY_STATUS_PATTERN.fullmatch(channel_name) is not None
             or MATCH_CHANNEL_EMOJI_STATUS_PATTERN.fullmatch(channel_name) is not None
+            or FINAL_FOUR_CHANNEL_STATUS_PATTERN.fullmatch(channel_name) is not None
+            or PROMOTION_RELEGATION_CHANNEL_STATUS_PATTERN.fullmatch(channel_name) is not None
             or MATCH_CHANNEL_LEGACY_NAME_PATTERN.fullmatch(channel_name) is not None
             or MATCH_CHANNEL_EMOJI_NAME_PATTERN.fullmatch(channel_name) is not None
     )
@@ -77,6 +108,27 @@ def format_match_channel_name(jornada: int, partido: int) -> str:
     return (
         f"{MATCH_CHANNEL_J_PREFIX}{format_match_channel_number(jornada)}"
         f"{MATCH_CHANNEL_P_PREFIX}{format_match_channel_number(partido)}"
+        f"{MATCH_CHANNEL_NAME_SUFFIX}"
+    )
+
+
+def format_final_four_semifinal_channel_name(semifinal: int) -> str:
+    return (
+        f"{FINAL_FOUR_SEMIFINAL_PREFIX}{format_match_channel_number(semifinal)}"
+        f"{MATCH_CHANNEL_NAME_SUFFIX}"
+    )
+
+
+def format_final_four_final_channel_name() -> str:
+    return (
+        f"{FINAL_FOUR_FINAL_PREFIX}{FINAL_FOUR_FINAL_MARKER}"
+        f"{MATCH_CHANNEL_NAME_SUFFIX}"
+    )
+
+
+def format_promotion_relegation_channel_name() -> str:
+    return (
+        f"{PROMOTION_RELEGATION_PREFIX}{PROMOTION_RELEGATION_MARKER}"
         f"{MATCH_CHANNEL_NAME_SUFFIX}"
     )
 

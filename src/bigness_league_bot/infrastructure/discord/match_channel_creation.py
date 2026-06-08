@@ -12,13 +12,18 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from typing import TypeAlias
 
 import discord
 
 from bigness_league_bot.application.services.channel_closure import PROTECTED_ROLE_NAMES
 from bigness_league_bot.application.services.match_channel_creation import (
+    FINAL_FOUR_SEMIFINAL_MAX,
+    FINAL_FOUR_SEMIFINAL_MIN,
+    FinalFourMatchChannelSpecification,
     MatchChannelDivision,
     MatchChannelSpecification,
+    PromotionRelegationMatchChannelSpecification,
     build_match_start_at,
 )
 from bigness_league_bot.core.localization import LocalizedText, localize
@@ -56,6 +61,13 @@ class InvalidMatchScheduleError(ChannelManagementError):
 class MatchChannelCreationResult:
     channel: discord.TextChannel
     summary: LocalizedText
+
+
+MatchChannelSpecificationLike: TypeAlias = (
+        MatchChannelSpecification
+        | FinalFourMatchChannelSpecification
+        | PromotionRelegationMatchChannelSpecification
+)
 
 
 def _set_text_permissions(
@@ -126,7 +138,7 @@ def _resolve_extra_roles(
 
 def _ensure_match_channel_absent(
         category: discord.CategoryChannel,
-        specification: MatchChannelSpecification,
+        specification: MatchChannelSpecificationLike,
 ) -> None:
     channel_name = specification.channel_name
     candidate_names = {*specification.legacy_channel_names, channel_name}
@@ -268,15 +280,94 @@ def build_match_channel_specification(
     )
 
 
+def build_final_four_match_channel_specification(
+        *,
+        semifinal: int | None,
+        courtesy_minutes: int,
+        date_value: str,
+        time_value: str,
+        best_of: int,
+        timezone_name: str,
+) -> FinalFourMatchChannelSpecification:
+    if (
+            semifinal is not None
+            and (semifinal < FINAL_FOUR_SEMIFINAL_MIN or semifinal > FINAL_FOUR_SEMIFINAL_MAX)
+    ):
+        raise ValueError("semifinal fuera del rango soportado.")
+
+    try:
+        start_at = build_match_start_at(
+            date_value=date_value,
+            time_value=time_value,
+            timezone_name=timezone_name,
+        )
+    except ValueError as exc:
+        error_code = exc.args[0] if exc.args else ""
+        if error_code == "invalid_date":
+            raise InvalidMatchScheduleError(
+                localize(I18N.errors.match_channel_creation.invalid_date_format)
+            ) from exc
+
+        if error_code == "invalid_time":
+            raise InvalidMatchScheduleError(
+                localize(I18N.errors.match_channel_creation.invalid_time_format)
+            ) from exc
+
+        raise
+
+    return FinalFourMatchChannelSpecification(
+        semifinal=semifinal,
+        courtesy_minutes=courtesy_minutes,
+        start_at=start_at,
+        best_of=best_of,
+    )
+
+
+def build_promotion_relegation_match_channel_specification(
+        *,
+        courtesy_minutes: int,
+        date_value: str,
+        time_value: str,
+        best_of: int,
+        timezone_name: str,
+) -> PromotionRelegationMatchChannelSpecification:
+    try:
+        start_at = build_match_start_at(
+            date_value=date_value,
+            time_value=time_value,
+            timezone_name=timezone_name,
+        )
+    except ValueError as exc:
+        error_code = exc.args[0] if exc.args else ""
+        if error_code == "invalid_date":
+            raise InvalidMatchScheduleError(
+                localize(I18N.errors.match_channel_creation.invalid_date_format)
+            ) from exc
+
+        if error_code == "invalid_time":
+            raise InvalidMatchScheduleError(
+                localize(I18N.errors.match_channel_creation.invalid_time_format)
+            ) from exc
+
+        raise
+
+    return PromotionRelegationMatchChannelSpecification(
+        courtesy_minutes=courtesy_minutes,
+        start_at=start_at,
+        best_of=best_of,
+    )
+
+
 async def create_match_channel(
         *,
         guild: discord.Guild,
         actor: discord.Member,
         category: discord.CategoryChannel,
-        specification: MatchChannelSpecification,
+        specification: MatchChannelSpecificationLike,
         team_one: discord.Role,
         team_two: discord.Role,
         extra_role_ids: tuple[int, ...] = (),
+        command_name: str = "canal_de_jornada",
 ) -> MatchChannelCreationResult:
     _ensure_match_channel_absent(category, specification)
     extra_roles = _resolve_extra_roles(guild, extra_role_ids)
@@ -286,26 +377,26 @@ async def create_match_channel(
         (team_one, team_two),
         extra_roles,
     )
+    context_label = _audit_specification_label(specification)
     created_channel = await guild.create_text_channel(
         specification.channel_name,
         category=category,
         overwrites=overwrites,
         reason=(
-            f"{actor} ({actor.id}) ejecutó /canal_de_jornada "
-            f"jornada={specification.jornada} partido={specification.partido} "
+            f"{actor} ({actor.id}) ejecuto /{command_name} "
+            f"{context_label} "
             f"equipo_1={team_one.id} equipo_2={team_two.id} "
             f"roles_extra={extra_role_ids_label} "
             f"categoría={category.id}"
         ),
     )
     LOGGER.info(
-        "MATCH_CHANNEL_CREATED channel=%s(%s) actor=%s(%s) jornada=%s partido=%s team_one=%s(%s) team_two=%s(%s)",
+        "MATCH_CHANNEL_CREATED channel=%s(%s) actor=%s(%s) context=%s team_one=%s(%s) team_two=%s(%s)",
         created_channel.name,
         created_channel.id,
         actor,
         actor.id,
-        specification.jornada,
-        specification.partido,
+        context_label,
         team_one.name,
         team_one.id,
         team_two.name,
@@ -313,13 +404,56 @@ async def create_match_channel(
     )
     return MatchChannelCreationResult(
         channel=created_channel,
-        summary=localize(
-            I18N.actions.match_channel_creation.created_summary,
-            channel=created_channel.mention,
-            category=category.name,
-            jornada=specification.jornada,
-            partido=specification.partido,
-            team_one=team_one.mention,
-            team_two=team_two.mention,
+        summary=_created_summary(
+            specification,
+            channel=created_channel,
+            category=category,
+            team_one=team_one,
+            team_two=team_two,
         ),
     )
+
+
+def _created_summary(
+        specification: MatchChannelSpecificationLike,
+        *,
+        channel: discord.TextChannel,
+        category: discord.CategoryChannel,
+        team_one: discord.Role,
+        team_two: discord.Role,
+) -> LocalizedText:
+    if isinstance(
+            specification,
+            (FinalFourMatchChannelSpecification, PromotionRelegationMatchChannelSpecification),
+    ):
+        return localize(
+            I18N.actions.match_channel_creation.created_special_summary,
+            channel=channel.mention,
+            category=category.name,
+            round_label=specification.round_label,
+            team_one=team_one.mention,
+            team_two=team_two.mention,
+        )
+
+    return localize(
+        I18N.actions.match_channel_creation.created_summary,
+        channel=channel.mention,
+        category=category.name,
+        jornada=specification.jornada,
+        partido=specification.partido,
+        team_one=team_one.mention,
+        team_two=team_two.mention,
+    )
+
+
+def _audit_specification_label(specification: MatchChannelSpecificationLike) -> str:
+    if isinstance(specification, FinalFourMatchChannelSpecification):
+        if specification.semifinal is None:
+            return "final_four=final"
+
+        return f"final_four=semifinal semifinal={specification.semifinal}"
+
+    if isinstance(specification, PromotionRelegationMatchChannelSpecification):
+        return "promotion_relegation=true"
+
+    return f"jornada={specification.jornada} partido={specification.partido}"

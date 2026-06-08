@@ -15,7 +15,11 @@ from dataclasses import dataclass
 import discord
 
 from bigness_league_bot.application.services.channel_closure import format_match_channel_number
-from bigness_league_bot.application.services.match_channel_creation import MatchChannelSpecification
+from bigness_league_bot.application.services.match_channel_creation import (
+    FinalFourMatchChannelSpecification,
+    MatchChannelSpecification,
+    PromotionRelegationMatchChannelSpecification,
+)
 from bigness_league_bot.core.settings import Settings
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import LocalizationService
@@ -39,6 +43,49 @@ def _welcome_template_params(
     return {
         "jornada_emoji": format_match_channel_number(specification.jornada),
         "partido_emoji": format_match_channel_number(specification.partido),
+        "team_one": team_one.mention,
+        "team_two": team_two.mention,
+        "courtesy_minutes": str(specification.courtesy_minutes),
+        "match_date": f"<t:{specification.start_timestamp}:D>",
+        "match_time": f"<t:{specification.start_timestamp}:t>",
+        "best_of": str(specification.best_of),
+        "best_of_label": f"Bo{specification.best_of}",
+        "room_name": specification.room_name,
+        "room_password": specification.room_password,
+    }
+
+
+def _final_four_welcome_template_params(
+        specification: FinalFourMatchChannelSpecification,
+        team_one: discord.Role,
+        team_two: discord.Role,
+) -> dict[str, str]:
+    semifinal_emoji = (
+        format_match_channel_number(specification.semifinal)
+        if specification.semifinal is not None
+        else ""
+    )
+    return {
+        "semifinal_emoji": semifinal_emoji,
+        "team_one": team_one.mention,
+        "team_two": team_two.mention,
+        "courtesy_minutes": str(specification.courtesy_minutes),
+        "match_date": f"<t:{specification.start_timestamp}:D>",
+        "match_time": f"<t:{specification.start_timestamp}:t>",
+        "best_of": str(specification.best_of),
+        "best_of_label": f"Bo{specification.best_of}",
+        "blsemiX": specification.room_name,
+        "room_name": specification.room_name,
+        "room_password": specification.room_password,
+    }
+
+
+def _promotion_relegation_welcome_template_params(
+        specification: PromotionRelegationMatchChannelSpecification,
+        team_one: discord.Role,
+        team_two: discord.Role,
+) -> dict[str, str]:
+    return {
         "team_one": team_one.mention,
         "team_two": team_two.mention,
         "courtesy_minutes": str(specification.courtesy_minutes),
@@ -144,6 +191,134 @@ def build_match_channel_welcome_message(
     )
 
 
+def build_final_four_match_channel_welcome_message(
+        *,
+        localizer: LocalizationService,
+        locale: str | discord.Locale | None,
+        settings: Settings,
+        specification: FinalFourMatchChannelSpecification,
+        team_one: discord.Role,
+        team_two: discord.Role,
+) -> MatchChannelWelcomeMessage:
+    params = _final_four_welcome_template_params(specification, team_one, team_two)
+    template = (
+        I18N.messages.match_channel_creation.final_four_welcome.final
+        if specification.is_final
+        else I18N.messages.match_channel_creation.final_four_welcome.semifinal
+    )
+    details_embed = discord.Embed(
+        title=localizer.translate(
+            template.embeds.details.title,
+            locale=locale,
+        ),
+        description=localizer.translate(
+            template.embeds.details.description,
+            locale=locale,
+            **params,
+        ),
+        color=DETAILS_EMBED_COLOR,
+    )
+    issues_embed = discord.Embed(
+        title=localizer.translate(
+            template.embeds.issues.title,
+            locale=locale,
+        ),
+        description=localizer.translate(
+            template.embeds.issues.description,
+            locale=locale,
+            **params,
+        ),
+        color=DETAILS_EMBED_COLOR,
+    )
+    match_data_embed = discord.Embed(
+        title=localizer.translate(
+            template.embeds.match_data.title,
+            locale=locale,
+        ),
+        description=localizer.translate(
+            template.embeds.match_data.description,
+            locale=locale,
+            **params,
+        ),
+        color=MATCH_DATA_EMBED_COLOR,
+    )
+    return MatchChannelWelcomeMessage(
+        content=localizer.translate(
+            template.content,
+            locale=locale,
+            **params,
+        ),
+        embeds=(details_embed, issues_embed, match_data_embed),
+        view=_build_button_view(
+            localizer=localizer,
+            locale=locale,
+            settings=settings,
+        ),
+    )
+
+
+def build_promotion_relegation_match_channel_welcome_message(
+        *,
+        localizer: LocalizationService,
+        locale: str | discord.Locale | None,
+        settings: Settings,
+        specification: PromotionRelegationMatchChannelSpecification,
+        team_one: discord.Role,
+        team_two: discord.Role,
+) -> MatchChannelWelcomeMessage:
+    params = _promotion_relegation_welcome_template_params(specification, team_one, team_two)
+    template = I18N.messages.match_channel_creation.asc_desc_welcome
+    details_embed = discord.Embed(
+        title=localizer.translate(
+            template.embeds.details.title,
+            locale=locale,
+        ),
+        description=localizer.translate(
+            template.embeds.details.description,
+            locale=locale,
+            **params,
+        ),
+        color=DETAILS_EMBED_COLOR,
+    )
+    issues_embed = discord.Embed(
+        title=localizer.translate(
+            template.embeds.issues.title,
+            locale=locale,
+        ),
+        description=localizer.translate(
+            template.embeds.issues.description,
+            locale=locale,
+            **params,
+        ),
+        color=DETAILS_EMBED_COLOR,
+    )
+    match_data_embed = discord.Embed(
+        title=localizer.translate(
+            template.embeds.match_data.title,
+            locale=locale,
+        ),
+        description=localizer.translate(
+            template.embeds.match_data.description,
+            locale=locale,
+            **params,
+        ),
+        color=MATCH_DATA_EMBED_COLOR,
+    )
+    return MatchChannelWelcomeMessage(
+        content=localizer.translate(
+            template.content,
+            locale=locale,
+            **params,
+        ),
+        embeds=(details_embed, issues_embed, match_data_embed),
+        view=_build_button_view(
+            localizer=localizer,
+            locale=locale,
+            settings=settings,
+        ),
+    )
+
+
 async def send_match_channel_welcome_message(
         *,
         channel: discord.TextChannel,
@@ -155,6 +330,68 @@ async def send_match_channel_welcome_message(
         team_two: discord.Role,
 ) -> discord.Message:
     welcome_message = build_match_channel_welcome_message(
+        localizer=localizer,
+        locale=locale,
+        settings=settings,
+        specification=specification,
+        team_one=team_one,
+        team_two=team_two,
+    )
+    return await channel.send(
+        content=welcome_message.content,
+        embeds=list(welcome_message.embeds),
+        view=welcome_message.view,
+        allowed_mentions=discord.AllowedMentions(
+            roles=True,
+            users=False,
+            everyone=False,
+            replied_user=False,
+        ),
+    )
+
+
+async def send_final_four_match_channel_welcome_message(
+        *,
+        channel: discord.TextChannel,
+        localizer: LocalizationService,
+        locale: str | discord.Locale | None,
+        settings: Settings,
+        specification: FinalFourMatchChannelSpecification,
+        team_one: discord.Role,
+        team_two: discord.Role,
+) -> discord.Message:
+    welcome_message = build_final_four_match_channel_welcome_message(
+        localizer=localizer,
+        locale=locale,
+        settings=settings,
+        specification=specification,
+        team_one=team_one,
+        team_two=team_two,
+    )
+    return await channel.send(
+        content=welcome_message.content,
+        embeds=list(welcome_message.embeds),
+        view=welcome_message.view,
+        allowed_mentions=discord.AllowedMentions(
+            roles=True,
+            users=False,
+            everyone=False,
+            replied_user=False,
+        ),
+    )
+
+
+async def send_promotion_relegation_match_channel_welcome_message(
+        *,
+        channel: discord.TextChannel,
+        localizer: LocalizationService,
+        locale: str | discord.Locale | None,
+        settings: Settings,
+        specification: PromotionRelegationMatchChannelSpecification,
+        team_one: discord.Role,
+        team_two: discord.Role,
+) -> discord.Message:
+    welcome_message = build_promotion_relegation_match_channel_welcome_message(
         localizer=localizer,
         locale=locale,
         settings=settings,

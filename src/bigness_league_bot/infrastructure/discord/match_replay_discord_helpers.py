@@ -7,8 +7,6 @@ import discord
 from bigness_league_bot.application.services.match_replays import (
     InvalidReplayCountError,
     InvalidReplayExtensionError,
-    MATCH_REPLAY_MAX_FILES,
-    MATCH_REPLAY_MIN_FILES,
     MatchReplayDivision,
     MatchReplayValidationError,
 )
@@ -162,8 +160,8 @@ def to_user_error(error: MatchReplayValidationError) -> CommandUserError:
         return CommandUserError(
             localize(
                 I18N.errors.match_replays.invalid_replay_count,
-                min_count=MATCH_REPLAY_MIN_FILES,
-                max_count=MATCH_REPLAY_MAX_FILES,
+                min_count=error.rules.min_games,
+                max_count=error.rules.max_games,
             )
         )
     if isinstance(error, InvalidReplayExtensionError):

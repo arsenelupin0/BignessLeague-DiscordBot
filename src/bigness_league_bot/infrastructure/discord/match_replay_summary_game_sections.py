@@ -46,10 +46,11 @@ def _draw_game_cards(
         small_font: FontLike,
         team_one_color: Color,
         team_two_color: Color,
+        max_games: int = 5,
 ) -> None:
     gap = 18
-    card_width = (width - gap * 4) // 5
-    for index in range(5):
+    card_width = (width - gap * (max_games - 1)) // max_games
+    for index in range(max_games):
         card_x = x + index * (card_width + gap)
         _draw_card(draw, (card_x, y, card_x + card_width, y + 152), fill=(9, 22, 42), outline=(80, 91, 113))
         draw.text((card_x + card_width // 2, y + 22), f"GAME {index + 1}", font=title_font, fill=TEXT, anchor="mm")
