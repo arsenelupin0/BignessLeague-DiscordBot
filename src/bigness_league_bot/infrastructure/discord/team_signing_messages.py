@@ -26,9 +26,6 @@ from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     TeamStaffRoleEntry,
     TeamStaffRoleSyncSummary,
 )
-from bigness_league_bot.infrastructure.discord.team_role_bulk_sync import (
-    TeamRoleBulkSyncSummary,
-)
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     TeamSigningRemovalResult,
     TeamSigningWriteResult,
@@ -37,6 +34,9 @@ from bigness_league_bot.infrastructure.google.team_sheet_repository import (
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 
 if TYPE_CHECKING:
+    from bigness_league_bot.infrastructure.discord.team_role_bulk_sync import (
+        TeamRoleBulkSyncSummary,
+    )
     from bigness_league_bot.infrastructure.i18n.service import LocalizationService
 
 DISCORD_MESSAGE_CONTENT_LIMIT = 2000

@@ -17,13 +17,17 @@ from bigness_league_bot.infrastructure.discord.team_member_lookup import (
     normalize_member_lookup_text,
     resolve_members_for_name,
 )
-from bigness_league_bot.infrastructure.discord.team_signing_role_reconciliation import (
-    build_team_profile_affiliations,
-)
 from bigness_league_bot.infrastructure.discord.team_staff_roles import (
     filter_team_staff_role_names_for_player_status,
     normalize_team_staff_role_name,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class TeamProfileAffiliation:
+    discord_name: str
+    is_player: bool
+    staff_role_names: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -187,3 +191,49 @@ def _add_desired_role(
         role: discord.Role,
 ) -> None:
     desired_roles[role.id] = role
+
+
+def build_team_profile_affiliations(
+        team_profile: TeamProfile,
+) -> dict[str, TeamProfileAffiliation]:
+    collected_affiliations: dict[str, TeamProfileAffiliation] = {}
+
+    for player in team_profile.players:
+        normalized_discord_name = normalize_member_lookup_text(player.discord_name)
+        if normalized_discord_name in PLACEHOLDER_MEMBER_NAMES:
+            continue
+
+        existing_affiliation = collected_affiliations.get(normalized_discord_name)
+        collected_affiliations[normalized_discord_name] = TeamProfileAffiliation(
+            discord_name=player.discord_name,
+            is_player=True,
+            staff_role_names=(
+                existing_affiliation.staff_role_names
+                if existing_affiliation is not None
+                else ()
+            ),
+        )
+
+    for staff_member in team_profile.technical_staff:
+        normalized_discord_name = normalize_member_lookup_text(staff_member.discord_name)
+        if normalized_discord_name in PLACEHOLDER_MEMBER_NAMES:
+            continue
+
+        existing_affiliation = collected_affiliations.get(normalized_discord_name)
+        staff_role_names = set(
+            existing_affiliation.staff_role_names
+            if existing_affiliation is not None
+            else ()
+        )
+        staff_role_names.add(staff_member.role_name)
+        collected_affiliations[normalized_discord_name] = TeamProfileAffiliation(
+            discord_name=staff_member.discord_name,
+            is_player=(
+                existing_affiliation.is_player
+                if existing_affiliation is not None
+                else False
+            ),
+            staff_role_names=tuple(sorted(staff_role_names)),
+        )
+
+    return collected_affiliations
