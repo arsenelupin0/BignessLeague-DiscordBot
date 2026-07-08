@@ -266,7 +266,8 @@ Aviso automático al perder rol de equipo:
 Etiquetas esperadas en el foro de tickets:
 
 - `Soporte general`
-- `Competicion`
+- `Competicion BL`
+- `Competición BCJ`
 - `Mercado`
 - `Streaming`
 - `Apelaciones`

@@ -12,6 +12,7 @@ class TicketCategory:
     tag_name: str
     emoji: str
     thread_prefix: str
+    aliases: tuple[str, ...] = ()
 
 
 TICKET_CATEGORIES: tuple[TicketCategory, ...] = (
@@ -25,9 +26,18 @@ TICKET_CATEGORIES: tuple[TicketCategory, ...] = (
     TicketCategory(
         key="competition",
         label="Competici\u00f3n Bigness League",
-        tag_name="Competicion",
+        tag_name="Competicion BL",
         emoji="\U0001f4dd",
         thread_prefix="competicion",
+        aliases=("Competicion",),
+    ),
+    TicketCategory(
+        key="junior_cup",
+        label="Competici\u00f3n Bigness Cup Junior",
+        tag_name="Competici\u00f3n BCJ",
+        emoji="\U0001f3c6",
+        thread_prefix="cup-junior",
+        aliases=("Cup Junior", "Bigness Cup Junior", "BCJ"),
     ),
     TicketCategory(
         key="player_market",
@@ -37,18 +47,18 @@ TICKET_CATEGORIES: tuple[TicketCategory, ...] = (
         thread_prefix="mercado",
     ),
     TicketCategory(
-        key="stream",
-        label="\u00bfQuieres hacer stream de tu partido?",
-        tag_name="Streaming",
-        emoji="\U0001f310",
-        thread_prefix="stream",
-    ),
-    TicketCategory(
         key="appeals",
         label="Apelaciones, problemas con alg\u00fan equipo, jugador, etc",
         tag_name="Apelaciones",
         emoji="\U0001f4dc",
         thread_prefix="apelaciones",
+    ),
+    TicketCategory(
+        key="stream",
+        label="\u00bfQuieres hacer stream de tu partido?",
+        tag_name="Streaming",
+        emoji="\U0001f310",
+        thread_prefix="stream",
     ),
     TicketCategory(
         key="bot",
@@ -105,5 +115,6 @@ for _category in TICKET_CATEGORIES:
             _category.label,
             _category.tag_name,
             _category.thread_prefix,
+            *_category.aliases,
     ):
         TICKET_CATEGORY_KEYS_BY_ALIAS[_normalize_ticket_category_lookup_key(_alias)] = _category.key

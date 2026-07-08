@@ -41,6 +41,16 @@
       "fechas",
       "prizepool"
     ],
+    "Cup Junior": [
+      "bigness cup junior",
+      "cup junior",
+      "copa junior",
+      "reglamento cup junior",
+      "inscripcion cup junior",
+      "formato de copa",
+      "max rango cup junior",
+      "prizepool cup junior"
+    ],
     "Mercado": [
       "fichajes",
       "bajas",
@@ -637,6 +647,7 @@
         "panel",
         "soporte general",
         "competición",
+        "cup junior",
         "mercado",
         "streaming",
         "apelaciones",
@@ -648,10 +659,11 @@
         "¿Dónde abro una duda de mercado?",
         "¿Qué hago si no sé qué categoría usar?"
       ],
-      "answer": "Las categorías visibles del panel son: Soporte general, Competición, Mercado, Streaming, Apelaciones, Bot y Social. Si el tema no encaja claramente en otra categoría, debe usarse Soporte general.",
+      "answer": "Las categorías visibles del panel son: Soporte general, Competición Bigness League, Competición Bigness Cup Junior, Mercado, Apelaciones, Streaming, Bot y Social. Si el tema no encaja claramente en otra categoría, debe usarse Soporte general.",
       "bullets": [
         "Soporte general se usa como categoría por defecto.",
-        "Competición cubre reglas, formato y prizepool.",
+        "Competición Bigness League cubre reglas, formato y prizepool de la liga.",
+        "Competición Bigness Cup Junior cubre reglas, inscripción, formato y prizepool de la copa.",
         "Mercado cubre fichajes, bajas y cambios de staff técnico."
       ],
       "related_commands": [],
