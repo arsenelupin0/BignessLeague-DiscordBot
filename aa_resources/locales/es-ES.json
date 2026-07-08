@@ -508,6 +508,10 @@
             "description": "Rol del equipo que quieres recargar desde Google Sheets."
           }
         }
+      },
+      "bulk_sync": {
+        "name": "actualización_roles_masivo",
+        "description": "Sincroniza masivamente roles de equipos, participante, jugador y staff desde Google Sheets."
       }
     }
   },
@@ -1175,9 +1179,12 @@
     },
     "team_role_assignment": {
       "completed": "Sincronización de roles completada para `{team_name}`: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
+      "bulk_completed": "Sincronización masiva de roles completada: equipos_procesados={team_count}, miembros_con_roles_añadidos={assigned_member_count}, miembros_con_roles_retirados={removed_member_count}, roles_añadidos={assigned_role_count}, roles_retirados={removed_role_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}, equipos_sin_rol_discord={missing_team_role_count}.",
       "staff_role_sync_summary": "Sincronización de staff técnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",
       "unresolved": "Sin coincidencia en Discord: {names}.",
-      "ambiguous": "Coincidencias ambiguas en Discord: {names}."
+      "ambiguous": "Coincidencias ambiguas en Discord: {names}.",
+      "missing_team_roles": "Equipos de Google Sheets sin rol de equipo en Discord: {names}.",
+      "more_items": ", y {remaining_count} más"
     }
   }
 }

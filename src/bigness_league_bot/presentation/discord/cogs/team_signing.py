@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import discord
@@ -20,6 +21,9 @@ from bigness_league_bot.infrastructure.discord.channel_access_management import 
 from bigness_league_bot.infrastructure.discord.error_handling import (
     classify_app_command_error,
 )
+from bigness_league_bot.infrastructure.discord.team_member_lookup import (
+    normalize_member_lookup_text,
+)
 from bigness_league_bot.infrastructure.discord.team_removal_interactive import (
     resolve_interactive_removal_context,
 )
@@ -31,11 +35,15 @@ from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     resolve_player_role,
     sync_team_staff_roles_by_names,
 )
+from bigness_league_bot.infrastructure.discord.team_role_bulk_sync import (
+    sync_all_team_roles_from_profiles,
+)
 from bigness_league_bot.infrastructure.discord.team_signing_imports import (
     parse_player_signing_batch,
     parse_technical_staff_batch,
 )
 from bigness_league_bot.infrastructure.discord.team_signing_messages import (
+    build_team_role_bulk_sync_message,
     build_team_role_sync_message,
     split_discord_message_content,
 )
@@ -47,6 +55,9 @@ from bigness_league_bot.infrastructure.discord.team_signing_workflow import (
 )
 from bigness_league_bot.infrastructure.discord.team_staff_interactive import (
     interactive_team_autocomplete,
+)
+from bigness_league_bot.infrastructure.discord.team_staff_roles import (
+    resolve_configured_team_staff_roles,
 )
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     GoogleSheetsTeamRepository,
@@ -417,6 +428,90 @@ class TeamSigningCog(commands.Cog):
                 team_name=equipo.name,
                 assignment_summary=assignment_summary,
                 staff_sync_summary=staff_role_sync_summary,
+            ),
+            allowed_mentions=discord.AllowedMentions.none(),
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.team_role_assignment.bulk_sync.name),
+        description=localized_locale_str(
+            I18N.commands.team_role_assignment.bulk_sync.description
+        ),
+    )
+    @app_commands.guild_only()
+    async def bulk_sync_team_role_assignment(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+    ) -> None:
+        guild = interaction.guild
+        if guild is None or not isinstance(interaction.user, discord.Member):
+            raise UnsupportedChannelError(
+                localize(I18N.errors.channel_management.server_only)
+            )
+
+        ensure_allowed_member(interaction.user)
+        settings = interaction.client.settings
+        role_catalog = get_channel_access_role_catalog(
+            guild,
+            settings.channel_access_range_start_role_id,
+            settings.channel_access_range_end_role_id,
+        )
+        participant_role = resolve_participant_role(
+            guild,
+            settings.participant_role_id,
+        )
+        player_role = resolve_player_role(
+            guild,
+            settings.player_role_id,
+        )
+        staff_roles_by_key = resolve_configured_team_staff_roles(
+            guild,
+            ceo_role_id=settings.staff_ceo_role_id,
+            analyst_role_id=settings.staff_analyst_role_id,
+            coach_role_id=settings.staff_coach_role_id,
+            manager_role_id=settings.staff_manager_role_id,
+            second_manager_role_id=settings.staff_second_manager_role_id,
+            captain_role_id=settings.staff_captain_role_id,
+        )
+        await interaction.response.defer(thinking=True)
+        repository = GoogleSheetsTeamRepository(settings)
+        sheet_metadata = await repository.list_team_sheet_metadata()
+        roles_by_name = {
+            normalize_member_lookup_text(role.name): role
+            for role in role_catalog.roles
+        }
+        team_profiles = []
+        missing_team_role_names = []
+        for metadata in sheet_metadata:
+            team_role = roles_by_name.get(normalize_member_lookup_text(metadata.team_name))
+            if team_role is None:
+                missing_team_role_names.append(metadata.team_name)
+                continue
+
+            team_profiles.append(await repository.find_team_profile_for_role(team_role))
+
+        bulk_sync_summary = await sync_all_team_roles_from_profiles(
+            guild,
+            actor=interaction.user,
+            role_catalog=role_catalog,
+            participant_role=participant_role,
+            player_role=player_role,
+            staff_roles_by_key=staff_roles_by_key,
+            team_profiles=team_profiles,
+        )
+        if missing_team_role_names:
+            bulk_sync_summary = replace(
+                bulk_sync_summary,
+                missing_team_role_names=(
+                    *bulk_sync_summary.missing_team_role_names,
+                    *missing_team_role_names,
+                ),
+            )
+        await interaction.followup.send(
+            build_team_role_bulk_sync_message(
+                localizer=interaction.client.localizer,
+                locale=interaction.locale,
+                summary=bulk_sync_summary,
             ),
             allowed_mentions=discord.AllowedMentions.none(),
         )

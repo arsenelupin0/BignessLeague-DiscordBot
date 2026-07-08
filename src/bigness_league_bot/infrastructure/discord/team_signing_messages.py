@@ -26,6 +26,9 @@ from bigness_league_bot.infrastructure.discord.team_role_assignment import (
     TeamStaffRoleEntry,
     TeamStaffRoleSyncSummary,
 )
+from bigness_league_bot.infrastructure.discord.team_role_bulk_sync import (
+    TeamRoleBulkSyncSummary,
+)
 from bigness_league_bot.infrastructure.google.team_sheet_repository import (
     TeamSigningRemovalResult,
     TeamSigningWriteResult,
@@ -418,6 +421,82 @@ def build_team_role_sync_message(
         )
     )
     return "\n".join(message_lines)
+
+
+def build_team_role_bulk_sync_message(
+        *,
+        localizer: LocalizationService,
+        locale: str | discord.Locale | None,
+        summary: TeamRoleBulkSyncSummary,
+) -> str:
+    message_lines = [
+        localizer.translate(
+            I18N.actions.team_role_assignment.bulk_completed,
+            locale=locale,
+            team_count=str(summary.processed_team_count),
+            assigned_member_count=str(summary.assigned_member_count),
+            removed_member_count=str(summary.removed_member_count),
+            assigned_role_count=str(summary.assigned_role_count),
+            removed_role_count=str(summary.removed_role_count),
+            already_count=str(summary.already_configured_member_count),
+            unresolved_count=str(len(summary.unresolved_names)),
+            ambiguous_count=str(len(summary.ambiguous_names)),
+            missing_team_role_count=str(len(summary.missing_team_role_names)),
+        )
+    ]
+    message_lines.extend(
+        _build_limited_detail_lines(
+            localizer=localizer,
+            locale=locale,
+            values=summary.unresolved_names,
+            key=I18N.actions.team_role_assignment.unresolved,
+        )
+    )
+    message_lines.extend(
+        _build_limited_detail_lines(
+            localizer=localizer,
+            locale=locale,
+            values=summary.ambiguous_names,
+            key=I18N.actions.team_role_assignment.ambiguous,
+        )
+    )
+    message_lines.extend(
+        _build_limited_detail_lines(
+            localizer=localizer,
+            locale=locale,
+            values=summary.missing_team_role_names,
+            key=I18N.actions.team_role_assignment.missing_team_roles,
+        )
+    )
+    return "\n".join(message_lines)
+
+
+def _build_limited_detail_lines(
+        *,
+        localizer: LocalizationService,
+        locale: str | discord.Locale | None,
+        values: tuple[str, ...],
+        key: TranslationKeyLike,
+        limit: int = 20,
+) -> tuple[str, ...]:
+    if not values:
+        return ()
+
+    displayed_values = values[:limit]
+    suffix = ""
+    if len(values) > limit:
+        suffix = localizer.translate(
+            I18N.actions.team_role_assignment.more_items,
+            locale=locale,
+            remaining_count=str(len(values) - limit),
+        )
+    return (
+        localizer.translate(
+            key,
+            locale=locale,
+            names=", ".join(displayed_values) + suffix,
+        ),
+    )
 
 
 def collect_technical_staff_role_entries(

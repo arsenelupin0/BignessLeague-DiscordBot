@@ -479,6 +479,10 @@
             "description": "Team role you want to reload from Google Sheets."
           }
         }
+      },
+      "bulk_sync": {
+        "name": "bulk_role_update",
+        "description": "Bulk-synchronizes team, participant, player, and staff roles from Google Sheets."
       }
     }
   },
@@ -1028,9 +1032,12 @@
     },
     "team_role_assignment": {
       "completed": "Role synchronization completed for `{team_name}`: new={assigned_count}, already_set={already_count}, unresolved={unresolved_count}, ambiguous={ambiguous_count}.",
+      "bulk_completed": "Bulk role synchronization completed: processed_teams={team_count}, members_with_roles_added={assigned_member_count}, members_with_roles_removed={removed_member_count}, roles_added={assigned_role_count}, roles_removed={removed_role_count}, already_set={already_count}, unresolved={unresolved_count}, ambiguous={ambiguous_count}, teams_without_discord_role={missing_team_role_count}.",
       "staff_role_sync_summary": "Technical staff role synchronization: new={assigned_count}, removed={removed_count}, already_set={already_count}, unresolved={unresolved_count}, ambiguous={ambiguous_count}.",
       "unresolved": "No Discord match found for: {names}.",
-      "ambiguous": "Ambiguous Discord matches for: {names}."
+      "ambiguous": "Ambiguous Discord matches for: {names}.",
+      "missing_team_roles": "Google Sheets teams without a Discord team role: {names}.",
+      "more_items": ", and {remaining_count} more"
     }
   }
 }

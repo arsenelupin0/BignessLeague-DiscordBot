@@ -220,54 +220,45 @@ class _CommandsMatchChannelCreationCreateMatchChannel:
     parameters: _CommandsMatchChannelCreationCreateMatchChannelParameters = _CommandsMatchChannelCreationCreateMatchChannelParameters()
     choices: _CommandsMatchChannelCreationCreateMatchChannelChoices = _CommandsMatchChannelCreationCreateMatchChannelChoices()
 
-
 class _CommandsMatchChannelCreationCreateFinalFourChannelParametersSemifinal:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_final_four_channel.parameters.semifinal.description",
         default_text="N\u00famero de semifinal: 1 o 2. Si se omite, crea la final.")
-
 
 class _CommandsMatchChannelCreationCreateFinalFourChannelParametersCategoria:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_final_four_channel.parameters.categoria.description",
         default_text="Divisi\u00f3n donde se crear\u00e1 el canal")
 
-
 class _CommandsMatchChannelCreationCreateFinalFourChannelParametersEquipo1:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_final_four_channel.parameters.equipo_1.description",
         default_text="Rol del primer equipo")
-
 
 class _CommandsMatchChannelCreationCreateFinalFourChannelParametersEquipo2:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_final_four_channel.parameters.equipo_2.description",
         default_text="Rol del segundo equipo")
 
-
 class _CommandsMatchChannelCreationCreateFinalFourChannelParametersCourtesyMinutes:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_final_four_channel.parameters.courtesy_minutes.description",
         default_text="Minutos de cortes\u00eda antes de iniciar el partido")
-
 
 class _CommandsMatchChannelCreationCreateFinalFourChannelParametersDate:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_final_four_channel.parameters.date.description",
         default_text="Fecha del partido en formato DD/MM/YYYY o YYYY-MM-DD")
 
-
 class _CommandsMatchChannelCreationCreateFinalFourChannelParametersTime:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_final_four_channel.parameters.time.description",
         default_text="Hora del partido en formato HH:MM")
 
-
 class _CommandsMatchChannelCreationCreateFinalFourChannelParametersBestOf:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_final_four_channel.parameters.best_of.description",
         default_text="N\u00famero de partidas del mejor de X")
-
 
 class _CommandsMatchChannelCreationCreateFinalFourChannelParameters:
     semifinal: _CommandsMatchChannelCreationCreateFinalFourChannelParametersSemifinal = _CommandsMatchChannelCreationCreateFinalFourChannelParametersSemifinal()
@@ -279,7 +270,6 @@ class _CommandsMatchChannelCreationCreateFinalFourChannelParameters:
     time: _CommandsMatchChannelCreationCreateFinalFourChannelParametersTime = _CommandsMatchChannelCreationCreateFinalFourChannelParametersTime()
     best_of: _CommandsMatchChannelCreationCreateFinalFourChannelParametersBestOf = _CommandsMatchChannelCreationCreateFinalFourChannelParametersBestOf()
 
-
 class _CommandsMatchChannelCreationCreateFinalFourChannelChoices:
     gold_division: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_final_four_channel.choices.gold_division",
@@ -287,7 +277,6 @@ class _CommandsMatchChannelCreationCreateFinalFourChannelChoices:
     silver_division: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_final_four_channel.choices.silver_division",
         default_text="Silver Division")
-
 
 class _CommandsMatchChannelCreationCreateFinalFourChannel:
     name: TranslationKey = TranslationKey(key="commands.match_channel_creation.create_final_four_channel.name",
@@ -298,48 +287,40 @@ class _CommandsMatchChannelCreationCreateFinalFourChannel:
     parameters: _CommandsMatchChannelCreationCreateFinalFourChannelParameters = _CommandsMatchChannelCreationCreateFinalFourChannelParameters()
     choices: _CommandsMatchChannelCreationCreateFinalFourChannelChoices = _CommandsMatchChannelCreationCreateFinalFourChannelChoices()
 
-
 class _CommandsMatchChannelCreationCreateAscDescChannelParametersCategoria:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_asc_desc_channel.parameters.categoria.description",
         default_text="Divisi\u00f3n donde se crear\u00e1 el canal")
-
 
 class _CommandsMatchChannelCreationCreateAscDescChannelParametersEquipo1:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_asc_desc_channel.parameters.equipo_1.description",
         default_text="Rol del primer equipo")
 
-
 class _CommandsMatchChannelCreationCreateAscDescChannelParametersEquipo2:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_asc_desc_channel.parameters.equipo_2.description",
         default_text="Rol del segundo equipo")
-
 
 class _CommandsMatchChannelCreationCreateAscDescChannelParametersCourtesyMinutes:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_asc_desc_channel.parameters.courtesy_minutes.description",
         default_text="Minutos de cortes\u00eda antes de iniciar el partido")
 
-
 class _CommandsMatchChannelCreationCreateAscDescChannelParametersDate:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_asc_desc_channel.parameters.date.description",
         default_text="Fecha del partido en formato DD/MM/YYYY o YYYY-MM-DD")
-
 
 class _CommandsMatchChannelCreationCreateAscDescChannelParametersTime:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_asc_desc_channel.parameters.time.description",
         default_text="Hora del partido en formato HH:MM")
 
-
 class _CommandsMatchChannelCreationCreateAscDescChannelParametersBestOf:
     description: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_asc_desc_channel.parameters.best_of.description",
         default_text="N\u00famero de partidas del mejor de X")
-
 
 class _CommandsMatchChannelCreationCreateAscDescChannelParameters:
     categoria: _CommandsMatchChannelCreationCreateAscDescChannelParametersCategoria = _CommandsMatchChannelCreationCreateAscDescChannelParametersCategoria()
@@ -350,7 +331,6 @@ class _CommandsMatchChannelCreationCreateAscDescChannelParameters:
     time: _CommandsMatchChannelCreationCreateAscDescChannelParametersTime = _CommandsMatchChannelCreationCreateAscDescChannelParametersTime()
     best_of: _CommandsMatchChannelCreationCreateAscDescChannelParametersBestOf = _CommandsMatchChannelCreationCreateAscDescChannelParametersBestOf()
 
-
 class _CommandsMatchChannelCreationCreateAscDescChannelChoices:
     gold_division: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_asc_desc_channel.choices.gold_division",
@@ -358,7 +338,6 @@ class _CommandsMatchChannelCreationCreateAscDescChannelChoices:
     silver_division: TranslationKey = TranslationKey(
         key="commands.match_channel_creation.create_asc_desc_channel.choices.silver_division",
         default_text="Silver Division")
-
 
 class _CommandsMatchChannelCreationCreateAscDescChannel:
     name: TranslationKey = TranslationKey(key="commands.match_channel_creation.create_asc_desc_channel.name",
@@ -461,60 +440,50 @@ class _CommandsMatchReplaysLinkReplays:
                                                  default_text="Procesa las replays de un BO5 adjuntas en un mensaje enlazado.")
     parameters: _CommandsMatchReplaysLinkReplaysParameters = _CommandsMatchReplaysLinkReplaysParameters()
 
-
 class _CommandsMatchReplaysUploadReplaysFinalfourParametersLocal:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_finalfour.parameters.local.description",
         default_text="Rol del equipo local.")
-
 
 class _CommandsMatchReplaysUploadReplaysFinalfourParametersVisitante:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_finalfour.parameters.visitante.description",
         default_text="Rol del equipo visitante.")
 
-
 class _CommandsMatchReplaysUploadReplaysFinalfourParametersReplay1:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_finalfour.parameters.replay_1.description",
         default_text="Replay del Game 1.")
-
 
 class _CommandsMatchReplaysUploadReplaysFinalfourParametersReplay2:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_finalfour.parameters.replay_2.description",
         default_text="Replay del Game 2.")
 
-
 class _CommandsMatchReplaysUploadReplaysFinalfourParametersReplay3:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_finalfour.parameters.replay_3.description",
         default_text="Replay del Game 3.")
-
 
 class _CommandsMatchReplaysUploadReplaysFinalfourParametersReplay4:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_finalfour.parameters.replay_4.description",
         default_text="Replay del Game 4.")
 
-
 class _CommandsMatchReplaysUploadReplaysFinalfourParametersReplay5:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_finalfour.parameters.replay_5.description",
         default_text="Replay del Game 5, si se jug\u00f3.")
-
 
 class _CommandsMatchReplaysUploadReplaysFinalfourParametersReplay6:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_finalfour.parameters.replay_6.description",
         default_text="Replay del Game 6, si se jug\u00f3.")
 
-
 class _CommandsMatchReplaysUploadReplaysFinalfourParametersReplay7:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_finalfour.parameters.replay_7.description",
         default_text="Replay del Game 7, si se jug\u00f3.")
-
 
 class _CommandsMatchReplaysUploadReplaysFinalfourParameters:
     local: _CommandsMatchReplaysUploadReplaysFinalfourParametersLocal = _CommandsMatchReplaysUploadReplaysFinalfourParametersLocal()
@@ -527,7 +496,6 @@ class _CommandsMatchReplaysUploadReplaysFinalfourParameters:
     replay_6: _CommandsMatchReplaysUploadReplaysFinalfourParametersReplay6 = _CommandsMatchReplaysUploadReplaysFinalfourParametersReplay6()
     replay_7: _CommandsMatchReplaysUploadReplaysFinalfourParametersReplay7 = _CommandsMatchReplaysUploadReplaysFinalfourParametersReplay7()
 
-
 class _CommandsMatchReplaysUploadReplaysFinalfour:
     name: TranslationKey = TranslationKey(key="commands.match_replays.upload_replays_finalfour.name",
                                           default_text="subir_replays_finalfour")
@@ -535,60 +503,50 @@ class _CommandsMatchReplaysUploadReplaysFinalfour:
                                                  default_text="Sube las replays de un BO7 de Final Four a Ballchasing y vuelca sus datos en Google Sheets.")
     parameters: _CommandsMatchReplaysUploadReplaysFinalfourParameters = _CommandsMatchReplaysUploadReplaysFinalfourParameters()
 
-
 class _CommandsMatchReplaysUploadReplaysAscDesParametersLocal:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_asc_des.parameters.local.description",
         default_text="Rol del equipo local.")
-
 
 class _CommandsMatchReplaysUploadReplaysAscDesParametersVisitante:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_asc_des.parameters.visitante.description",
         default_text="Rol del equipo visitante.")
 
-
 class _CommandsMatchReplaysUploadReplaysAscDesParametersReplay1:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_asc_des.parameters.replay_1.description",
         default_text="Replay del Game 1.")
-
 
 class _CommandsMatchReplaysUploadReplaysAscDesParametersReplay2:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_asc_des.parameters.replay_2.description",
         default_text="Replay del Game 2.")
 
-
 class _CommandsMatchReplaysUploadReplaysAscDesParametersReplay3:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_asc_des.parameters.replay_3.description",
         default_text="Replay del Game 3.")
-
 
 class _CommandsMatchReplaysUploadReplaysAscDesParametersReplay4:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_asc_des.parameters.replay_4.description",
         default_text="Replay del Game 4.")
 
-
 class _CommandsMatchReplaysUploadReplaysAscDesParametersReplay5:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_asc_des.parameters.replay_5.description",
         default_text="Replay del Game 5, si se jug\u00f3.")
-
 
 class _CommandsMatchReplaysUploadReplaysAscDesParametersReplay6:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_asc_des.parameters.replay_6.description",
         default_text="Replay del Game 6, si se jug\u00f3.")
 
-
 class _CommandsMatchReplaysUploadReplaysAscDesParametersReplay7:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.upload_replays_asc_des.parameters.replay_7.description",
         default_text="Replay del Game 7, si se jug\u00f3.")
-
 
 class _CommandsMatchReplaysUploadReplaysAscDesParameters:
     local: _CommandsMatchReplaysUploadReplaysAscDesParametersLocal = _CommandsMatchReplaysUploadReplaysAscDesParametersLocal()
@@ -601,7 +559,6 @@ class _CommandsMatchReplaysUploadReplaysAscDesParameters:
     replay_6: _CommandsMatchReplaysUploadReplaysAscDesParametersReplay6 = _CommandsMatchReplaysUploadReplaysAscDesParametersReplay6()
     replay_7: _CommandsMatchReplaysUploadReplaysAscDesParametersReplay7 = _CommandsMatchReplaysUploadReplaysAscDesParametersReplay7()
 
-
 class _CommandsMatchReplaysUploadReplaysAscDes:
     name: TranslationKey = TranslationKey(key="commands.match_replays.upload_replays_asc_des.name",
                                           default_text="subir_replays_asc_des")
@@ -609,30 +566,25 @@ class _CommandsMatchReplaysUploadReplaysAscDes:
                                                  default_text="Sube las replays de un BO7 de Ascenso/Descenso a Ballchasing y vuelca sus datos en Google Sheets.")
     parameters: _CommandsMatchReplaysUploadReplaysAscDesParameters = _CommandsMatchReplaysUploadReplaysAscDesParameters()
 
-
 class _CommandsMatchReplaysLinkReplaysFinalfourParametersLocal:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.link_replays_finalfour.parameters.local.description",
         default_text="Rol del equipo local.")
-
 
 class _CommandsMatchReplaysLinkReplaysFinalfourParametersVisitante:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.link_replays_finalfour.parameters.visitante.description",
         default_text="Rol del equipo visitante.")
 
-
 class _CommandsMatchReplaysLinkReplaysFinalfourParametersMensaje:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.link_replays_finalfour.parameters.mensaje.description",
         default_text="Enlace al mensaje de Discord que contiene las replays.")
 
-
 class _CommandsMatchReplaysLinkReplaysFinalfourParameters:
     local: _CommandsMatchReplaysLinkReplaysFinalfourParametersLocal = _CommandsMatchReplaysLinkReplaysFinalfourParametersLocal()
     visitante: _CommandsMatchReplaysLinkReplaysFinalfourParametersVisitante = _CommandsMatchReplaysLinkReplaysFinalfourParametersVisitante()
     mensaje: _CommandsMatchReplaysLinkReplaysFinalfourParametersMensaje = _CommandsMatchReplaysLinkReplaysFinalfourParametersMensaje()
-
 
 class _CommandsMatchReplaysLinkReplaysFinalfour:
     name: TranslationKey = TranslationKey(key="commands.match_replays.link_replays_finalfour.name",
@@ -641,30 +593,25 @@ class _CommandsMatchReplaysLinkReplaysFinalfour:
                                                  default_text="Procesa las replays de un BO7 de Final Four adjuntas en un mensaje enlazado.")
     parameters: _CommandsMatchReplaysLinkReplaysFinalfourParameters = _CommandsMatchReplaysLinkReplaysFinalfourParameters()
 
-
 class _CommandsMatchReplaysLinkReplaysAscDesParametersLocal:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.link_replays_asc_des.parameters.local.description",
         default_text="Rol del equipo local.")
-
 
 class _CommandsMatchReplaysLinkReplaysAscDesParametersVisitante:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.link_replays_asc_des.parameters.visitante.description",
         default_text="Rol del equipo visitante.")
 
-
 class _CommandsMatchReplaysLinkReplaysAscDesParametersMensaje:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.link_replays_asc_des.parameters.mensaje.description",
         default_text="Enlace al mensaje de Discord que contiene las replays.")
 
-
 class _CommandsMatchReplaysLinkReplaysAscDesParameters:
     local: _CommandsMatchReplaysLinkReplaysAscDesParametersLocal = _CommandsMatchReplaysLinkReplaysAscDesParametersLocal()
     visitante: _CommandsMatchReplaysLinkReplaysAscDesParametersVisitante = _CommandsMatchReplaysLinkReplaysAscDesParametersVisitante()
     mensaje: _CommandsMatchReplaysLinkReplaysAscDesParametersMensaje = _CommandsMatchReplaysLinkReplaysAscDesParametersMensaje()
-
 
 class _CommandsMatchReplaysLinkReplaysAscDes:
     name: TranslationKey = TranslationKey(key="commands.match_replays.link_replays_asc_des.name",
@@ -687,31 +634,25 @@ class _CommandsMatchReplaysManualResultParametersWinner:
         key="commands.match_replays.manual_result.parameters.winner.description",
         default_text="Rol del equipo que gana la serie por resultado administrativo.")
 
-
 class _CommandsMatchReplaysManualResultParameters:
     local: _CommandsMatchReplaysManualResultParametersLocal = _CommandsMatchReplaysManualResultParametersLocal()
     visitante: _CommandsMatchReplaysManualResultParametersVisitante = _CommandsMatchReplaysManualResultParametersVisitante()
     winner: _CommandsMatchReplaysManualResultParametersWinner = _CommandsMatchReplaysManualResultParametersWinner()
 
-
 class _CommandsMatchReplaysManualResult:
     parameters: _CommandsMatchReplaysManualResultParameters = _CommandsMatchReplaysManualResultParameters()
-
 
 class _CommandsMatchReplaysFreeWinParametersLocal:
     description: TranslationKey = TranslationKey(key="commands.match_replays.free_win.parameters.local.description",
                                                  default_text="Rol del equipo local.")
 
-
 class _CommandsMatchReplaysFreeWinParametersVisitante:
     description: TranslationKey = TranslationKey(key="commands.match_replays.free_win.parameters.visitante.description",
                                                  default_text="Rol del equipo visitante.")
 
-
 class _CommandsMatchReplaysFreeWinParametersWinner:
     description: TranslationKey = TranslationKey(key="commands.match_replays.free_win.parameters.winner.description",
                                                  default_text="Rol del equipo que gana la free win.")
-
 
 class _CommandsMatchReplaysFreeWinParameters:
     local: _CommandsMatchReplaysFreeWinParametersLocal = _CommandsMatchReplaysFreeWinParametersLocal()
@@ -724,21 +665,17 @@ class _CommandsMatchReplaysFreeWin:
                                                  default_text="Registra una free win y actualiza la clasificaci\u00f3n.")
     parameters: _CommandsMatchReplaysFreeWinParameters = _CommandsMatchReplaysFreeWinParameters()
 
-
 class _CommandsMatchReplaysWalkoverParametersLocal:
     description: TranslationKey = TranslationKey(key="commands.match_replays.walkover.parameters.local.description",
                                                  default_text="Rol del equipo local.")
-
 
 class _CommandsMatchReplaysWalkoverParametersVisitante:
     description: TranslationKey = TranslationKey(key="commands.match_replays.walkover.parameters.visitante.description",
                                                  default_text="Rol del equipo visitante.")
 
-
 class _CommandsMatchReplaysWalkoverParametersWinner:
     description: TranslationKey = TranslationKey(key="commands.match_replays.walkover.parameters.winner.description",
                                                  default_text="Rol del equipo que gana por walkover.")
-
 
 class _CommandsMatchReplaysWalkoverParameters:
     local: _CommandsMatchReplaysWalkoverParametersLocal = _CommandsMatchReplaysWalkoverParametersLocal()
@@ -751,17 +688,14 @@ class _CommandsMatchReplaysWalkover:
                                                  default_text="Registra un walkover y actualiza la clasificaci\u00f3n.")
     parameters: _CommandsMatchReplaysWalkoverParameters = _CommandsMatchReplaysWalkoverParameters()
 
-
 class _CommandsMatchReplaysNullResultParametersLocal:
     description: TranslationKey = TranslationKey(key="commands.match_replays.null_result.parameters.local.description",
                                                  default_text="Rol del equipo local.")
-
 
 class _CommandsMatchReplaysNullResultParametersVisitante:
     description: TranslationKey = TranslationKey(
         key="commands.match_replays.null_result.parameters.visitante.description",
         default_text="Rol del equipo visitante.")
-
 
 class _CommandsMatchReplaysNullResultParameters:
     local: _CommandsMatchReplaysNullResultParametersLocal = _CommandsMatchReplaysNullResultParametersLocal()
@@ -975,8 +909,16 @@ class _CommandsTeamRoleAssignmentSyncTeamRole:
                                                  default_text="Sincroniza en Discord los roles del equipo a partir de la hoja actual.")
     parameters: _CommandsTeamRoleAssignmentSyncTeamRoleParameters = _CommandsTeamRoleAssignmentSyncTeamRoleParameters()
 
+
+class _CommandsTeamRoleAssignmentBulkSync:
+    name: TranslationKey = TranslationKey(key="commands.team_role_assignment.bulk_sync.name",
+                                          default_text="actualizaci\u00f3n_roles_masivo")
+    description: TranslationKey = TranslationKey(key="commands.team_role_assignment.bulk_sync.description",
+                                                 default_text="Sincroniza masivamente roles de equipos, participante, jugador y staff desde Google Sheets.")
+
 class _CommandsTeamRoleAssignment:
     sync_team_role: _CommandsTeamRoleAssignmentSyncTeamRole = _CommandsTeamRoleAssignmentSyncTeamRole()
+    bulk_sync: _CommandsTeamRoleAssignmentBulkSync = _CommandsTeamRoleAssignmentBulkSync()
 
 class _Commands:
     channel_management: _CommandsChannelManagement = _CommandsChannelManagement()
@@ -989,7 +931,6 @@ class _Commands:
     team_profile: _CommandsTeamProfile = _CommandsTeamProfile()
     team_signing: _CommandsTeamSigning = _CommandsTeamSigning()
     team_role_assignment: _CommandsTeamRoleAssignment = _CommandsTeamRoleAssignment()
-
 
 class _MessagesMatchSchedules:
     fixed_header: TranslationKey = TranslationKey(key="messages.match_schedules.fixed_header",
@@ -1429,7 +1370,6 @@ class _MessagesTicketsParticipantsCloseForUser:
         key="messages.tickets.participants.close_for_user.closed_ephemeral",
         default_text="Ticket cerrado para {user}. Ya puede abrir otro ticket.")
 
-
 class _MessagesTicketsParticipantsSummary:
     added: TranslationKey = TranslationKey(key="messages.tickets.participants.summary.added",
                                            default_text="A\u00f1adidos: {users}")
@@ -1737,7 +1677,6 @@ class _MessagesMatchChannelCreationWelcome:
     embeds: _MessagesMatchChannelCreationWelcomeEmbeds = _MessagesMatchChannelCreationWelcomeEmbeds()
     buttons: _MessagesMatchChannelCreationWelcomeButtons = _MessagesMatchChannelCreationWelcomeButtons()
 
-
 class _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbedsDetails:
     title: TranslationKey = TranslationKey(
         key="messages.match_channel_creation.final_four_welcome.semifinal.embeds.details.title",
@@ -1745,7 +1684,6 @@ class _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbedsDetails:
     description: TranslationKey = TranslationKey(
         key="messages.match_channel_creation.final_four_welcome.semifinal.embeds.details.description",
         default_text="- Recordar **ser puntuales** para esta **hora** y **fecha** por si se **castea** el partido. En caso de que **no se presente** un **equipo**, se dar\u00e1 directamente como **nulo** y **pasar\u00e1** a la **final** directamente.\n- Pongamos todos de nuestra parte para poder **jugar el partido**\n- Habr\u00e1 **minutos** de **cortes\u00eda** seg\u00fan la **hora del partido**. Si la fecha **est\u00e1 puesta** a las **16:00**, como tarde deber\u00e1 iniciarse a las **16:10**, salvo **lo que dicte el staff/caster** (en caso de que se vaya con retraso).")
-
 
 class _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbedsIssues:
     title: TranslationKey = TranslationKey(
@@ -1755,7 +1693,6 @@ class _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbedsIssues:
         key="messages.match_channel_creation.final_four_welcome.semifinal.embeds.issues.description",
         default_text="\n- Cualquier **problema** relacionado con el **partido** (in-game):\n  - Sacar **capturas** de incidentes.\n  - Guardad evidencias de comportamientos **t\u00f3xicos**.\n  - Registrad cualquier **incidencia del partido**.\n- El partido se dar\u00e1 como **finalizado** cuando alguien del Staff ponga el canal en **modo lectura**. Para cualquier **apelaci\u00f3n** se deber\u00e1 **abrir un ticket**.")
 
-
 class _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbedsMatchData:
     title: TranslationKey = TranslationKey(
         key="messages.match_channel_creation.final_four_welcome.semifinal.embeds.match_data.title",
@@ -1764,12 +1701,10 @@ class _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbedsMatchData:
         key="messages.match_channel_creation.final_four_welcome.semifinal.embeds.match_data.description",
         default_text="- Informaci\u00f3n de sala\n  - \u231b {courtesy_minutes} minutos de cortes\u00eda\n  - \ud83d\udcc6 {match_date}\n  - \u23f0 {match_time}\n  - \u2694\ufe0f {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `{blsemiX}`\n  - Contrase\u00f1a: `{blsemiX}` \n  - Crea: {team_one}")
 
-
 class _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbeds:
     details: _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbedsDetails = _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbedsDetails()
     issues: _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbedsIssues = _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbedsIssues()
     match_data: _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbedsMatchData = _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbedsMatchData()
-
 
 class _MessagesMatchChannelCreationFinalFourWelcomeSemifinalButtons:
     create_ticket: TranslationKey = TranslationKey(
@@ -1779,13 +1714,11 @@ class _MessagesMatchChannelCreationFinalFourWelcomeSemifinalButtons:
         key="messages.match_channel_creation.final_four_welcome.semifinal.buttons.rules",
         default_text="Normativa - Bigness League")
 
-
 class _MessagesMatchChannelCreationFinalFourWelcomeSemifinal:
     content: TranslationKey = TranslationKey(key="messages.match_channel_creation.final_four_welcome.semifinal.content",
                                              default_text="# Semifinal {semifinal_emoji}\u3000\n## Bienvenid@s\n### {team_one}  {team_two}\n\nEste es el canal privado y autogenerado de vuestro partido para esta semifinal. Para las pruebas y todo lo relacionado de esta semifinal, deber\u00e1 hablarse \u00fanicamente y exclusivamente por este canal de texto. Si surge alg\u00fan problema a futuro, no se tendr\u00e1 en cuenta en caso de que sea a trav\u00e9s de otros medios. Los casos m\u00e1s graves lo evaluar\u00e1 el Staff.\n\n\u00a1Mucha suerte a ambos equipos!\n\u3000")
     embeds: _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbeds = _MessagesMatchChannelCreationFinalFourWelcomeSemifinalEmbeds()
     buttons: _MessagesMatchChannelCreationFinalFourWelcomeSemifinalButtons = _MessagesMatchChannelCreationFinalFourWelcomeSemifinalButtons()
-
 
 class _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbedsDetails:
     title: TranslationKey = TranslationKey(
@@ -1795,7 +1728,6 @@ class _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbedsDetails:
         key="messages.match_channel_creation.final_four_welcome.final.embeds.details.description",
         default_text="- Recordar **ser puntuales** para esta **hora** y **fecha** por si se **castea** el partido. En caso de que **no se presente** un **equipo**, se dar\u00e1 directamente como **nulo** y **este** ser\u00e1 el ganador de la **final** directamente.\n- Pongamos todos de nuestra parte para poder **jugar el partido**\n- Habr\u00e1 **minutos** de **cortes\u00eda** seg\u00fan la **hora del partido**. Si la fecha **est\u00e1 puesta** a las **16:00**, como tarde deber\u00e1 iniciarse a las **16:10**, salvo **lo que dicte el staff/caster** (en caso de que se vaya con retraso).")
 
-
 class _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbedsIssues:
     title: TranslationKey = TranslationKey(
         key="messages.match_channel_creation.final_four_welcome.final.embeds.issues.title",
@@ -1803,7 +1735,6 @@ class _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbedsIssues:
     description: TranslationKey = TranslationKey(
         key="messages.match_channel_creation.final_four_welcome.final.embeds.issues.description",
         default_text="\n- Cualquier **problema** relacionado con el **partido** (in-game):\n  - Sacar **capturas** de incidentes.\n  - Guardad evidencias de comportamientos **t\u00f3xicos**.\n  - Registrad cualquier **incidencia del partido**.\n- El partido se dar\u00e1 como **finalizado** cuando alguien del Staff ponga el canal en **modo lectura**. Para cualquier **apelaci\u00f3n** se deber\u00e1 **abrir un ticket**.")
-
 
 class _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbedsMatchData:
     title: TranslationKey = TranslationKey(
@@ -1813,23 +1744,19 @@ class _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbedsMatchData:
         key="messages.match_channel_creation.final_four_welcome.final.embeds.match_data.description",
         default_text="- Informaci\u00f3n de sala\n  - \u231b {courtesy_minutes} minutos de cortes\u00eda\n  - \ud83d\udcc6 {match_date}\n  - \u23f0 {match_time}\n  - \u2694\ufe0f {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `blfinal`\n  - Contrase\u00f1a: `blfinal` \n  - Crea: {team_one}")
 
-
 class _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbeds:
     details: _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbedsDetails = _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbedsDetails()
     issues: _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbedsIssues = _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbedsIssues()
     match_data: _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbedsMatchData = _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbedsMatchData()
-
 
 class _MessagesMatchChannelCreationFinalFourWelcomeFinal:
     content: TranslationKey = TranslationKey(key="messages.match_channel_creation.final_four_welcome.final.content",
                                              default_text="# Final \ud83d\udd25 \n## Bienvenid@s\n### {team_one}  {team_two}\n\nEste es el canal privado y autogenerado de vuestro partido para esta gran final final. Para las pruebas y todo lo relacionado de esta final, deber\u00e1 hablarse \u00fanicamente y exclusivamente por este canal de texto. Si surge alg\u00fan problema a futuro, no se tendr\u00e1 en cuenta en caso de que sea a trav\u00e9s de otros medios. Los casos m\u00e1s graves lo evaluar\u00e1 el Staff.\n\n\u00a1Mucha suerte a ambos equipos!\n\u3000")
     embeds: _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbeds = _MessagesMatchChannelCreationFinalFourWelcomeFinalEmbeds()
 
-
 class _MessagesMatchChannelCreationFinalFourWelcome:
     semifinal: _MessagesMatchChannelCreationFinalFourWelcomeSemifinal = _MessagesMatchChannelCreationFinalFourWelcomeSemifinal()
     final: _MessagesMatchChannelCreationFinalFourWelcomeFinal = _MessagesMatchChannelCreationFinalFourWelcomeFinal()
-
 
 class _MessagesMatchChannelCreationAscDescWelcomeEmbedsDetails:
     title: TranslationKey = TranslationKey(key="messages.match_channel_creation.asc_desc_welcome.embeds.details.title",
@@ -1838,7 +1765,6 @@ class _MessagesMatchChannelCreationAscDescWelcomeEmbedsDetails:
         key="messages.match_channel_creation.asc_desc_welcome.embeds.details.description",
         default_text="- Recordar **ser puntuales** para esta **hora** y **fecha** por si se **castea** el partido. En caso de que **no se presente** un **equipo**, se dar\u00e1 directamente como **nulo** y **este** ser\u00e1 el ganador de la **final** directamente.\n- Pongamos todos de nuestra parte para poder **jugar el partido**.\n- Habr\u00e1 **minutos** de **cortes\u00eda** seg\u00fan la **hora del partido**. Si la fecha **est\u00e1 puesta** a las **16:00**, como tarde deber\u00e1 iniciarse a las **16:10**, salvo **lo que dicte el staff/caster** (en caso de que se vaya con retraso).")
 
-
 class _MessagesMatchChannelCreationAscDescWelcomeEmbedsIssues:
     title: TranslationKey = TranslationKey(key="messages.match_channel_creation.asc_desc_welcome.embeds.issues.title",
                                            default_text=" En caso de problemas ")
@@ -1846,28 +1772,24 @@ class _MessagesMatchChannelCreationAscDescWelcomeEmbedsIssues:
         key="messages.match_channel_creation.asc_desc_welcome.embeds.issues.description",
         default_text="\n- Cualquier **problema** relacionado con el **partido** (in-game):\n  - Sacar **capturas** de incidentes.\n  - Guardad evidencias de comportamientos **t\u00f3xicos**.\n  - Registrad cualquier **incidencia del partido**.\n- El partido se dar\u00e1 como **finalizado** cuando alguien del Staff ponga el canal en **modo lectura**. Para cualquier **apelaci\u00f3n** se deber\u00e1 **abrir un ticket**.")
 
-
 class _MessagesMatchChannelCreationAscDescWelcomeEmbedsMatchData:
     title: TranslationKey = TranslationKey(
         key="messages.match_channel_creation.asc_desc_welcome.embeds.match_data.title",
         default_text="\u26bd  Datos del partido  \u26bd")
     description: TranslationKey = TranslationKey(
         key="messages.match_channel_creation.asc_desc_welcome.embeds.match_data.description",
-        default_text="- Informaci\u00f3n de sala\n  - \u231b {courtesy_minutes} minutos de cortes\u00eda\n  -  {match_date}\n  - \u23f0 {match_time}\n  - \u2694\ufe0f {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `blasc`\n  - Contrase\u00f1a: `bldes` \n  - Crea: {team_one}")
-
+        default_text="- Informaci\u00f3n de sala\n  - \u231b {courtesy_minutes} minutos de cortes\u00eda\n  - \ud83d\udcc6 {match_date}\n  - \u23f0 {match_time}\n  - \u2694\ufe0f {best_of_label} (al mejor de {best_of} partidos)\n- Sala privada\n  - Nombre: `blasc`\n  - Contrase\u00f1a: `bldes` \n  - Crea: {team_one}")
 
 class _MessagesMatchChannelCreationAscDescWelcomeEmbeds:
     details: _MessagesMatchChannelCreationAscDescWelcomeEmbedsDetails = _MessagesMatchChannelCreationAscDescWelcomeEmbedsDetails()
     issues: _MessagesMatchChannelCreationAscDescWelcomeEmbedsIssues = _MessagesMatchChannelCreationAscDescWelcomeEmbedsIssues()
     match_data: _MessagesMatchChannelCreationAscDescWelcomeEmbedsMatchData = _MessagesMatchChannelCreationAscDescWelcomeEmbedsMatchData()
 
-
 class _MessagesMatchChannelCreationAscDescWelcomeButtons:
     create_ticket: TranslationKey = TranslationKey(
         key="messages.match_channel_creation.asc_desc_welcome.buttons.create_ticket", default_text="Apelaci\u00f3n")
     rules: TranslationKey = TranslationKey(key="messages.match_channel_creation.asc_desc_welcome.buttons.rules",
                                            default_text="Normativa - Bigness League")
-
 
 class _MessagesMatchChannelCreationAscDescWelcome:
     content: TranslationKey = TranslationKey(key="messages.match_channel_creation.asc_desc_welcome.content",
@@ -2281,12 +2203,18 @@ class _ActionsTeamSigning:
 class _ActionsTeamRoleAssignment:
     completed: TranslationKey = TranslationKey(key="actions.team_role_assignment.completed",
                                                default_text="Sincronizaci\u00f3n de roles completada para `{team_name}`: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
+    bulk_completed: TranslationKey = TranslationKey(key="actions.team_role_assignment.bulk_completed",
+                                                    default_text="Sincronizaci\u00f3n masiva de roles completada: equipos_procesados={team_count}, miembros_con_roles_a\u00f1adidos={assigned_member_count}, miembros_con_roles_retirados={removed_member_count}, roles_a\u00f1adidos={assigned_role_count}, roles_retirados={removed_role_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}, equipos_sin_rol_discord={missing_team_role_count}.")
     staff_role_sync_summary: TranslationKey = TranslationKey(key="actions.team_role_assignment.staff_role_sync_summary",
                                                              default_text="Sincronizaci\u00f3n de staff t\u00e9cnico: nuevos={assigned_count}, retirados={removed_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.")
     unresolved: TranslationKey = TranslationKey(key="actions.team_role_assignment.unresolved",
                                                 default_text="Sin coincidencia en Discord: {names}.")
     ambiguous: TranslationKey = TranslationKey(key="actions.team_role_assignment.ambiguous",
                                                default_text="Coincidencias ambiguas en Discord: {names}.")
+    missing_team_roles: TranslationKey = TranslationKey(key="actions.team_role_assignment.missing_team_roles",
+                                                        default_text="Equipos de Google Sheets sin rol de equipo en Discord: {names}.")
+    more_items: TranslationKey = TranslationKey(key="actions.team_role_assignment.more_items",
+                                                default_text=", y {remaining_count} m\u00e1s")
 
 class _Actions:
     channel_management: _ActionsChannelManagement = _ActionsChannelManagement()
