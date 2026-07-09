@@ -361,6 +361,12 @@ class TicketThreadRelay:
                         parent.id,
                         WEBHOOK_CREATE_RETRY_SECONDS,
                     )
+                elif _is_max_webhooks_reached(error):
+                    LOGGER.warning(
+                        "TICKET_THREAD_WEBHOOK_LIMIT_REACHED forum=%s retry_seconds=%.0f",
+                        parent.id,
+                        WEBHOOK_CREATE_RETRY_SECONDS,
+                    )
                 else:
                     LOGGER.exception("TICKET_THREAD_WEBHOOK_CREATE_FAILED forum=%s", parent.id)
                 return None
@@ -433,3 +439,7 @@ def _message_reference_id(message: discord.Message) -> int | None:
 
 def _is_rate_limited(error: discord.HTTPException) -> bool:
     return getattr(error, "status", None) == 429
+
+
+def _is_max_webhooks_reached(error: discord.HTTPException) -> bool:
+    return getattr(error, "code", None) == 30007
