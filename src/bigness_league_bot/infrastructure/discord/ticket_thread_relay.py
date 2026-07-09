@@ -90,7 +90,7 @@ class TicketThreadRelay:
                     message.author.id,
                 )
 
-        webhook = await self._get_thread_relay_webhook(thread, allow_existing_lookup=False)
+        webhook = await self._get_thread_relay_webhook(thread, allow_existing_lookup=True)
         if webhook is None:
             relay_message = await thread.send(
                 build_ticket_user_relay_message(
