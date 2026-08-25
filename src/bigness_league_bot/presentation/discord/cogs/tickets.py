@@ -42,6 +42,9 @@ from bigness_league_bot.infrastructure.discord.ticket_thread_relay import (
 from bigness_league_bot.infrastructure.discord.tickets import TicketStateStore
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
+from bigness_league_bot.presentation.discord.cogs.ticket_inactivity_controls import (
+    TicketInactivityControlsCog,
+)
 from bigness_league_bot.presentation.discord.ticket_ai_interactions import (
     TicketAiInteractions,
 )
@@ -484,3 +487,4 @@ async def setup(bot: BignessLeagueBot) -> None:
     bot.add_view(TicketPanelView(store))
     bot.add_view(TicketThreadControlsView(store))
     await bot.add_cog(TicketsCog(bot, store))
+    await bot.add_cog(TicketInactivityControlsCog(bot, store))

@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
 
 LOGGER = logging.getLogger(__name__)
-TICKET_STATE_VERSION = 5
+TICKET_STATE_VERSION = 7
 TICKET_OPEN_STATUS_TAG_NAME = "Abierto"
 TICKET_CLOSED_STATUS_TAG_NAME = "Cerrado"
 
@@ -45,7 +45,12 @@ class TicketStateStore:
     def __init__(self, path: Path) -> None:
         self.path = path
         self.creation_lock = asyncio.Lock()
+        self._default_inactivity_reminders_enabled = False
         self._records: dict[int, TicketRecord] = self._load_records()
+
+    @property
+    def default_inactivity_reminders_enabled(self) -> bool:
+        return self._default_inactivity_reminders_enabled
 
     def next_ticket_number(self) -> int:
         if not self._records:
@@ -96,6 +101,32 @@ class TicketStateStore:
         self._save_records()
         return updated_record
 
+    def set_inactivity_reminders_enabled(
+            self,
+            thread_id: int,
+            *,
+            enabled: bool,
+    ) -> TicketRecord | None:
+        record = self.active_for_thread(thread_id)
+        if record is None:
+            return None
+
+        updated_record = record.set_inactivity_reminders_enabled(enabled)
+        if updated_record is record:
+            return record
+
+        self._records[thread_id] = updated_record
+        self._save_records()
+        return updated_record
+
+    def set_default_inactivity_reminders_enabled(self, enabled: bool) -> bool:
+        if self._default_inactivity_reminders_enabled == enabled:
+            return False
+
+        self._default_inactivity_reminders_enabled = enabled
+        self._save_records()
+        return True
+
     def close_thread(self, thread_id: int) -> TicketRecord | None:
         record = self._records.get(thread_id)
         if record is None:
@@ -129,6 +160,15 @@ class TicketStateStore:
             LOGGER.warning("TICKET_STATE_INVALID path=%s reason=tickets_not_list", self.path)
             return {}
 
+        raw_default = payload.get("default_inactivity_reminders_enabled")
+        if isinstance(raw_default, bool):
+            self._default_inactivity_reminders_enabled = raw_default
+        elif raw_default is not None:
+            LOGGER.warning(
+                "TICKET_STATE_INVALID path=%s reason=default_reminders_not_bool",
+                self.path,
+            )
+
         records: dict[int, TicketRecord] = {}
         for index, raw_ticket in enumerate(raw_tickets, start=1):
             if not isinstance(raw_ticket, dict):
@@ -151,6 +191,9 @@ class TicketStateStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
             "version": TICKET_STATE_VERSION,
+            "default_inactivity_reminders_enabled": (
+                self._default_inactivity_reminders_enabled
+            ),
             "tickets": [
                 record.to_dict()
                 for record in sorted(

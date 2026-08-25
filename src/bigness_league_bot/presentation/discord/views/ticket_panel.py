@@ -281,6 +281,9 @@ class TicketPanelView(discord.ui.View):
                     dm_start_message_id=dm_message.id,
                     category_key=category.key,
                     created_at=created_at,
+                    inactivity_reminders_enabled=(
+                        self.store.default_inactivity_reminders_enabled
+                    ),
                 )
             )
             await interaction.followup.send(

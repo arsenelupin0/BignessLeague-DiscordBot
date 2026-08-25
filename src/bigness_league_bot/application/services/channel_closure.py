@@ -16,7 +16,8 @@ from enum import StrEnum
 
 from bigness_league_bot.core.localization import LocalizedText
 
-PROTECTED_ROLE_NAMES: tuple[str, ...] = ("Staff", "Administrador", "Ceo")
+STAFF_ROLE_NAME = "Staff"
+PROTECTED_ROLE_NAMES: tuple[str, ...] = (STAFF_ROLE_NAME, "Administrador", "Ceo")
 MATCH_CHANNEL_STATUS_SEPARATOR = "\u30fb"
 MATCH_CHANNEL_STATUS_OPEN = "\u26bd"
 MATCH_CHANNEL_STATUS_SCHEDULED = "\U0001f4c6"

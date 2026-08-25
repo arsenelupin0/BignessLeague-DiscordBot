@@ -50,8 +50,14 @@ class TicketInactivityMonitor:
 
     @tasks.loop(seconds=TICKET_INACTIVITY_CHECK_SECONDS)
     async def _check_inactive_tickets(self) -> None:
+        await self.check_inactive_tickets()
+
+    async def check_inactive_tickets(self) -> None:
         now = parse_utc_timestamp(current_utc_timestamp())
         for record in self.store.active_records():
+            if not record.inactivity_reminders_enabled:
+                continue
+
             last_activity_at = record.last_activity_at or record.created_at
             if now - parse_utc_timestamp(last_activity_at) < TICKET_INACTIVITY_NOTICE_INTERVAL:
                 continue
@@ -67,6 +73,11 @@ class TicketInactivityMonitor:
         if thread is None:
             self.store.remove_thread(record.thread_id)
             return
+
+        current_record = self.store.active_for_thread(record.thread_id)
+        if current_record is None or not current_record.inactivity_reminders_enabled:
+            return
+        record = current_record
 
         if record.inactivity_notice_count >= TICKET_INACTIVITY_NOTICE_MAX_COUNT:
             await self._close_for_inactivity(record, thread)
@@ -87,7 +98,7 @@ class TicketInactivityMonitor:
             return
 
         updated_record = self.store.active_for_thread(record.thread_id)
-        if updated_record is None:
+        if updated_record is None or not updated_record.inactivity_reminders_enabled:
             return
 
         updated_record = updated_record.mark_inactivity_notice(sent_at=sent_at)

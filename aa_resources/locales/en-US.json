@@ -405,6 +405,24 @@
             "description": "Team role whose members you want to add to the ticket."
           }
         }
+      },
+      "configure_reminders": {
+        "name": "ticket_reminders",
+        "description": "Enables or disables inactivity reminders for the current ticket.",
+        "parameters": {
+          "enabled": {
+            "description": "Whether inactivity reminders should be enabled."
+          }
+        }
+      },
+      "configure_default_reminders": {
+        "name": "ticket_reminders_default",
+        "description": "Configures the reminder default for newly created tickets.",
+        "parameters": {
+          "enabled": {
+            "description": "Whether new tickets should be created with reminders enabled."
+          }
+        }
       }
     },
     "team_signing": {
@@ -858,6 +876,18 @@
       },
       "inactivity": {
         "close_reason": "Your ticket has been closed automatically because of inactivity. If you still need help, open another ticket.",
+        "controls": {
+          "enabled": "Inactivity reminders enabled. The first notice may be sent after 8 hours without activity.",
+          "disabled": "Inactivity reminders disabled. This ticket will not receive notices or close automatically because of inactivity.",
+          "already_enabled": "Inactivity reminders were already enabled for this ticket.",
+          "already_disabled": "Inactivity reminders were already disabled for this ticket."
+        },
+        "default_controls": {
+          "enabled": "New tickets will be created with inactivity reminders enabled. Existing tickets are unchanged.",
+          "disabled": "New tickets will be created with inactivity reminders disabled. Existing tickets are unchanged.",
+          "already_enabled": "Inactivity reminders were already enabled by default for new tickets.",
+          "already_disabled": "Inactivity reminders were already disabled by default for new tickets."
+        },
         "embed": {
           "title": "⚠️ Ticket inactivity ⚠️",
           "description": "_ _\nMore than {inactive_hours}h have passed without anyone interacting in the chat.\n_ _\nThis is the **{notice_label}** notice. On the fifth notice, the ticket will be closed automatically. If that happens, you will need to open another ticket.\n_ _\nRemember to open a ticket when you have everything available, so the ticket queue stays manageable.\n_ _\nThank you for your understanding.",
@@ -886,6 +916,9 @@
       "match_channel_caster_roles_unresolved": "Could not resolve the caster role from the configured extra match-channel roles.",
       "dm_guild_unavailable": "I could not resolve the Bigness League server to validate your roles from DMs.",
       "dm_member_not_found": "I could not find you as a member of the Bigness League server. Join the server or check that you are using the same account."
+    },
+    "tickets": {
+      "staff_only": "Only members with the `Staff` role can configure ticket reminders."
     },
     "match_channel_creation": {
       "same_team_roles": "You cannot create a match using the same role twice: `{role_name}`.",

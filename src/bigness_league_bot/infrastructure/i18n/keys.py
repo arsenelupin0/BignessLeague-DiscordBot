@@ -142,12 +142,50 @@ class _CommandsTicketsAiStatus:
     description: TranslationKey = TranslationKey(key="commands.tickets.ai_status.description",
                                                  default_text="Muestra el estado actual de la IA local para tickets.")
 
+
+class _CommandsTicketsConfigureRemindersParametersEnabled:
+    description: TranslationKey = TranslationKey(
+        key="commands.tickets.configure_reminders.parameters.enabled.description",
+        default_text="Indica si los recordatorios deben quedar activados.")
+
+
+class _CommandsTicketsConfigureRemindersParameters:
+    enabled: _CommandsTicketsConfigureRemindersParametersEnabled = _CommandsTicketsConfigureRemindersParametersEnabled()
+
+
+class _CommandsTicketsConfigureReminders:
+    name: TranslationKey = TranslationKey(key="commands.tickets.configure_reminders.name",
+                                          default_text="recordatorios_ticket")
+    description: TranslationKey = TranslationKey(key="commands.tickets.configure_reminders.description",
+                                                 default_text="Activa o desactiva los recordatorios de inactividad del ticket actual.")
+    parameters: _CommandsTicketsConfigureRemindersParameters = _CommandsTicketsConfigureRemindersParameters()
+
+
+class _CommandsTicketsConfigureDefaultRemindersParametersEnabled:
+    description: TranslationKey = TranslationKey(
+        key="commands.tickets.configure_default_reminders.parameters.enabled.description",
+        default_text="Indica si los nuevos tickets deben crear los recordatorios activados.")
+
+
+class _CommandsTicketsConfigureDefaultRemindersParameters:
+    enabled: _CommandsTicketsConfigureDefaultRemindersParametersEnabled = _CommandsTicketsConfigureDefaultRemindersParametersEnabled()
+
+
+class _CommandsTicketsConfigureDefaultReminders:
+    name: TranslationKey = TranslationKey(key="commands.tickets.configure_default_reminders.name",
+                                          default_text="recordatorios_tickets_default")
+    description: TranslationKey = TranslationKey(key="commands.tickets.configure_default_reminders.description",
+                                                 default_text="Configura los recordatorios predeterminados para los nuevos tickets.")
+    parameters: _CommandsTicketsConfigureDefaultRemindersParameters = _CommandsTicketsConfigureDefaultRemindersParameters()
+
 class _CommandsTickets:
     publish_panel: _CommandsTicketsPublishPanel = _CommandsTicketsPublishPanel()
     add_to_ticket: _CommandsTicketsAddToTicket = _CommandsTicketsAddToTicket()
     close_for_user: _CommandsTicketsCloseForUser = _CommandsTicketsCloseForUser()
     add_team_to_ticket: _CommandsTicketsAddTeamToTicket = _CommandsTicketsAddTeamToTicket()
     ai_status: _CommandsTicketsAiStatus = _CommandsTicketsAiStatus()
+    configure_reminders: _CommandsTicketsConfigureReminders = _CommandsTicketsConfigureReminders()
+    configure_default_reminders: _CommandsTicketsConfigureDefaultReminders = _CommandsTicketsConfigureDefaultReminders()
 
 class _CommandsMatchChannelCreationCreateMatchChannelParametersJornada:
     description: TranslationKey = TranslationKey(
@@ -1446,9 +1484,34 @@ class _MessagesTicketsInactivityEmbed:
     footer: TranslationKey = TranslationKey(key="messages.tickets.inactivity.embed.footer",
                                             default_text="Desarrollado por el equipo de la Bigness League")
 
+
+class _MessagesTicketsInactivityControls:
+    enabled: TranslationKey = TranslationKey(key="messages.tickets.inactivity.controls.enabled",
+                                             default_text="Recordatorios de inactividad activados. El primer aviso podr\u00e1 enviarse tras 8 horas sin actividad.")
+    disabled: TranslationKey = TranslationKey(key="messages.tickets.inactivity.controls.disabled",
+                                              default_text="Recordatorios de inactividad desactivados. Este ticket no recibir\u00e1 avisos ni se cerrar\u00e1 autom\u00e1ticamente por inactividad.")
+    already_enabled: TranslationKey = TranslationKey(key="messages.tickets.inactivity.controls.already_enabled",
+                                                     default_text="Los recordatorios de inactividad ya estaban activados para este ticket.")
+    already_disabled: TranslationKey = TranslationKey(key="messages.tickets.inactivity.controls.already_disabled",
+                                                      default_text="Los recordatorios de inactividad ya estaban desactivados para este ticket.")
+
+
+class _MessagesTicketsInactivityDefaultControls:
+    enabled: TranslationKey = TranslationKey(key="messages.tickets.inactivity.default_controls.enabled",
+                                             default_text="Los nuevos tickets se crear\u00e1n con los recordatorios de inactividad activados. Los tickets ya abiertos no cambian.")
+    disabled: TranslationKey = TranslationKey(key="messages.tickets.inactivity.default_controls.disabled",
+                                              default_text="Los nuevos tickets se crear\u00e1n con los recordatorios de inactividad desactivados. Los tickets ya abiertos no cambian.")
+    already_enabled: TranslationKey = TranslationKey(key="messages.tickets.inactivity.default_controls.already_enabled",
+                                                     default_text="Los recordatorios de inactividad ya estaban activados por defecto para los nuevos tickets.")
+    already_disabled: TranslationKey = TranslationKey(
+        key="messages.tickets.inactivity.default_controls.already_disabled",
+        default_text="Los recordatorios de inactividad ya estaban desactivados por defecto para los nuevos tickets.")
+
 class _MessagesTicketsInactivity:
     close_reason: TranslationKey = TranslationKey(key="messages.tickets.inactivity.close_reason",
                                                   default_text="Su ticket ha sido cerrado autom\u00e1ticamente por inactividad. Si sigue necesitando ayuda, vuelva a abrir otro ticket.")
+    controls: _MessagesTicketsInactivityControls = _MessagesTicketsInactivityControls()
+    default_controls: _MessagesTicketsInactivityDefaultControls = _MessagesTicketsInactivityDefaultControls()
     embed: _MessagesTicketsInactivityEmbed = _MessagesTicketsInactivityEmbed()
 
 class _MessagesTicketsButtons:
@@ -1884,6 +1947,8 @@ class _ErrorsChannelManagement:
 class _ErrorsTickets:
     ceo_only: TranslationKey = TranslationKey(key="errors.tickets.ceo_only",
                                               default_text="Solo puede publicar el panel de tickets un miembro con el rol `CEO`.")
+    staff_only: TranslationKey = TranslationKey(key="errors.tickets.staff_only",
+                                                default_text="Solo los miembros con el rol `Staff` pueden configurar los recordatorios de tickets.")
     category_unknown: TranslationKey = TranslationKey(key="errors.tickets.category_unknown",
                                                       default_text="La categor\u00eda de ticket seleccionada no es v\u00e1lida.")
     forum_channel_not_configured: TranslationKey = TranslationKey(key="errors.tickets.forum_channel_not_configured",

@@ -85,6 +85,24 @@
       "ai_status": {
         "name": "ai_estado",
         "description": "Muestra el estado actual de la IA local para tickets."
+      },
+      "configure_reminders": {
+        "name": "recordatorios_ticket",
+        "description": "Activa o desactiva los recordatorios de inactividad del ticket actual.",
+        "parameters": {
+          "enabled": {
+            "description": "Indica si los recordatorios deben quedar activados."
+          }
+        }
+      },
+      "configure_default_reminders": {
+        "name": "recordatorios_tickets_default",
+        "description": "Configura los recordatorios predeterminados para los nuevos tickets.",
+        "parameters": {
+          "enabled": {
+            "description": "Indica si los nuevos tickets deben crear los recordatorios activados."
+          }
+        }
       }
     },
     "match_channel_creation": {
@@ -807,6 +825,18 @@
       },
       "inactivity": {
         "close_reason": "Su ticket ha sido cerrado automáticamente por inactividad. Si sigue necesitando ayuda, vuelva a abrir otro ticket.",
+        "controls": {
+          "enabled": "Recordatorios de inactividad activados. El primer aviso podrá enviarse tras 8 horas sin actividad.",
+          "disabled": "Recordatorios de inactividad desactivados. Este ticket no recibirá avisos ni se cerrará automáticamente por inactividad.",
+          "already_enabled": "Los recordatorios de inactividad ya estaban activados para este ticket.",
+          "already_disabled": "Los recordatorios de inactividad ya estaban desactivados para este ticket."
+        },
+        "default_controls": {
+          "enabled": "Los nuevos tickets se crearán con los recordatorios de inactividad activados. Los tickets ya abiertos no cambian.",
+          "disabled": "Los nuevos tickets se crearán con los recordatorios de inactividad desactivados. Los tickets ya abiertos no cambian.",
+          "already_enabled": "Los recordatorios de inactividad ya estaban activados por defecto para los nuevos tickets.",
+          "already_disabled": "Los recordatorios de inactividad ya estaban desactivados por defecto para los nuevos tickets."
+        },
         "embed": {
           "title": "⚠️ Inactividad en el ticket ⚠️",
           "description": "_ _\nHan pasado más de {inactive_hours}h sin que nadie interactúe en el chat.\n_ _\nEste es el **{notice_label}** aviso. Al quinto aviso se cerrará el ticket automáticamente. Si esto ocurre, deberá de volver a abrir otro ticket.\n_ _\nRecuerda abrir el ticket cuando tengas todo disponible, para así evitar mucha cola de tickets.\n_ _\nMuchas gracias por su comprensión.",
@@ -1027,6 +1057,7 @@
     },
     "tickets": {
       "ceo_only": "Solo puede publicar el panel de tickets un miembro con el rol `CEO`.",
+      "staff_only": "Solo los miembros con el rol `Staff` pueden configurar los recordatorios de tickets.",
       "category_unknown": "La categoría de ticket seleccionada no es válida.",
       "forum_channel_not_configured": "Falta configurar `BOT_TICKET_FORUM_CHANNEL_ID` con el ID del foro de tickets.",
       "forum_channel_not_found": "No se encontró el foro de tickets configurado: `{channel_id}`.",

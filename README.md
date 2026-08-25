@@ -102,6 +102,10 @@ crea un canal de partido con permisos para ambos equipos.
 - `/dar_de_baja_staff discord_staff:<texto> equipo:<rol>`: elimina solo sus cargos de `STAFF TÉCNICO` en ese equipo.
 - `/asignar_rol_equipo_automatico equipo:<rol>`: revisa la hoja del equipo y sincroniza los roles en Discord.
 - `/integracion_de_tickets`: publica el panel de soporte para abrir tickets desde un menu desplegable.
+- `/recordatorios_ticket activados:<sí/no>`: activa o desactiva los avisos y el cierre automático por inactividad del
+  ticket actual. Solo está disponible para el rol `Staff` dentro de un hilo de ticket activo.
+- `/recordatorios_tickets_default activados:<sí/no>`: decide si los tickets que se abran a partir de ese momento nacen
+  con los recordatorios activados o desactivados. Solo está disponible para el rol `Staff`.
 - `/subir_replays`: sube entre 3 y 5 ficheros `.replay` a Ballchasing, vuelca el resumen de la serie, games y
   jugadores en Google Sheets, evita duplicados por `Replay ID`/SHA256 y actualiza la clasificación de la división.
 
@@ -261,6 +265,12 @@ Aviso automático al perder rol de equipo:
 - cada usuario solo puede tener un ticket activo a la vez
 - el hilo incluye botones persistentes para `🔒 Cerrar ticket` y `🔏 Cerrar con razón`
 - el estado de tickets activos se guarda en `BOT_TICKET_STATE_FILE`
+- los tickets nuevos nacen con los recordatorios de inactividad desactivados hasta que `Staff` cambie ese valor con
+  `/recordatorios_tickets_default`; el ajuste queda persistido en `BOT_TICKET_STATE_FILE`
+- el valor predeterminado solo afecta a los tickets creados después del cambio; los tickets ya abiertos conservan su
+  configuración y pueden ajustarse individualmente con `/recordatorios_ticket`
+- al habilitarlos, el contador se reinicia y el primer aviso se programa tras 8 horas sin actividad; después del quinto
+  aviso, el ticket se cierra automáticamente
 - el foro usa las etiquetas de categoria y las etiquetas de estado `🔓 Abierto` / `🔒 Cerrado`
 
 Etiquetas esperadas en el foro de tickets:

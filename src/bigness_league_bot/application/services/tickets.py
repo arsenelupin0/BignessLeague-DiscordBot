@@ -48,6 +48,7 @@ from bigness_league_bot.application.services.ticket_payload import (
     TicketParticipant,
     coerce_int,
     normalize_ticket_participants,
+    optional_bool,
     optional_int,
     optional_text,
     required_int,
@@ -91,6 +92,7 @@ class TicketRecord:
     thread_relay_message_authors: tuple[tuple[int, int], ...] = ()
     dm_thread_relay_messages: tuple[DmThreadRelayMessage, ...] = ()
     participant_dm_relay_messages: tuple[ParticipantDmRelayMessage, ...] = ()
+    inactivity_reminders_enabled: bool = False
 
     @classmethod
     def create(
@@ -106,6 +108,7 @@ class TicketRecord:
             participants: tuple[TicketParticipant, ...] | None = None,
             category_key: str,
             created_at: str | None = None,
+            inactivity_reminders_enabled: bool = False,
     ) -> "TicketRecord":
         resolved_created_at = created_at or current_utc_timestamp()
         normalized_participants = normalize_ticket_participants(
@@ -127,6 +130,7 @@ class TicketRecord:
             created_at=resolved_created_at,
             last_activity_at=resolved_created_at,
             thread_relay_message_authors=(),
+            inactivity_reminders_enabled=inactivity_reminders_enabled,
         )
 
     @classmethod
@@ -165,6 +169,10 @@ class TicketRecord:
         participant_dm_relay_messages = parse_participant_dm_relay_messages(
             payload.get("participant_dm_relay_messages")
         )
+        inactivity_reminders_enabled = optional_bool(
+            payload,
+            "inactivity_reminders_enabled",
+        )
         user_id = required_int(payload, "user_id")
         return cls(
             ticket_number=optional_int(payload, "ticket_number") or fallback_ticket_number,
@@ -188,6 +196,11 @@ class TicketRecord:
             inactivity_notice_count=max(
                 0,
                 optional_int(payload, "inactivity_notice_count") or 0,
+            ),
+            inactivity_reminders_enabled=(
+                True
+                if inactivity_reminders_enabled is None
+                else inactivity_reminders_enabled
             ),
             thread_relay_message_authors=thread_relay_message_authors,
             dm_thread_relay_messages=dm_thread_relay_messages,
@@ -225,6 +238,7 @@ class TicketRecord:
             "closed_at": self.closed_at,
             "last_activity_at": self.last_activity_at,
             "inactivity_notice_count": self.inactivity_notice_count,
+            "inactivity_reminders_enabled": self.inactivity_reminders_enabled,
         }
 
     def close(self) -> "TicketRecord":
@@ -246,6 +260,22 @@ class TicketRecord:
             self,
             last_activity_at=sent_at or current_utc_timestamp(),
             inactivity_notice_count=self.inactivity_notice_count + 1,
+        )
+
+    def set_inactivity_reminders_enabled(
+            self,
+            enabled: bool,
+            *,
+            occurred_at: str | None = None,
+    ) -> "TicketRecord":
+        if self.inactivity_reminders_enabled == enabled:
+            return self
+
+        return replace(
+            self,
+            inactivity_reminders_enabled=enabled,
+            last_activity_at=occurred_at or current_utc_timestamp(),
+            inactivity_notice_count=0,
         )
 
     def includes_user(self, user_id: int) -> bool:

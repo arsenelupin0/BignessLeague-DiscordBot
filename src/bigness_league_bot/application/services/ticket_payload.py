@@ -137,6 +137,16 @@ def optional_int(payload: dict[str, object], key: str) -> int | None:
     return parsed_value
 
 
+def optional_bool(payload: dict[str, object], key: str) -> bool | None:
+    value = payload.get(key)
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return value
+
+    raise ValueError(f"El campo `{key}` debe ser booleano.")
+
+
 def coerce_int(value: object) -> int | None:
     if isinstance(value, bool):
         return None
