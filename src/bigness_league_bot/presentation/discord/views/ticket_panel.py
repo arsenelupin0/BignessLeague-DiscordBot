@@ -68,7 +68,7 @@ class _TicketCategorySelect(discord.ui.Select["TicketPanelView"]):
                     value=category.key,
                     emoji=category.emoji,
                 )
-                for category in TICKET_CATEGORIES
+                for category in categories
             ],
         )
 
