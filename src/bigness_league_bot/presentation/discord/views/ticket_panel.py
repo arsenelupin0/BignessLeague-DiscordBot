@@ -17,6 +17,7 @@ import discord
 
 from bigness_league_bot.application.services.tickets import (
     TICKET_CATEGORIES,
+    TicketCategory,
     TicketRecord,
     build_dm_message_link,
     current_utc_timestamp,
@@ -49,10 +50,16 @@ LOGGER = logging.getLogger(__name__)
 
 
 class _TicketCategorySelect(discord.ui.Select["TicketPanelView"]):
-    def __init__(self) -> None:
+    def __init__(
+            self,
+            *,
+            categories: tuple[TicketCategory, ...],
+            custom_id: str,
+            placeholder: str,
+    ) -> None:
         super().__init__(
-            custom_id="bigness_league:tickets:category",
-            placeholder=I18N.messages.tickets.panel.select_placeholder.default,
+            custom_id=custom_id,
+            placeholder=placeholder,
             min_values=1,
             max_values=1,
             options=[
@@ -77,10 +84,20 @@ class _TicketCategorySelect(discord.ui.Select["TicketPanelView"]):
 
 
 class TicketPanelView(discord.ui.View):
+    categories: tuple[TicketCategory, ...] = TICKET_CATEGORIES
+    select_custom_id = "bigness_league:tickets:category"
+    select_placeholder = I18N.messages.tickets.panel.select_placeholder.default
+
     def __init__(self, store: TicketStateStore) -> None:
         super().__init__(timeout=None)
         self.store = store
-        self.add_item(_TicketCategorySelect())
+        self.add_item(
+            _TicketCategorySelect(
+                categories=self.categories,
+                custom_id=self.select_custom_id,
+                placeholder=self.select_placeholder,
+            )
+        )
 
     async def open_ticket(
             self,
@@ -458,7 +475,7 @@ class TicketPanelView(discord.ui.View):
             return
 
         try:
-            await interaction.message.edit(view=TicketPanelView(self.store))
+            await interaction.message.edit(view=type(self)(self.store))
         except discord.HTTPException:
             LOGGER.exception(
                 "TICKET_PANEL_REFRESH_FAILED message=%s user=%s(%s)",

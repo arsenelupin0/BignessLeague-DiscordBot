@@ -40,6 +40,10 @@
         "name": "integracion_de_tickets",
         "description": "Publica el panel de soporte para abrir tickets."
       },
+      "publish_registration_panel": {
+        "name": "integracion_de_inscripciones",
+        "description": "Publica el panel para abrir tickets de inscripción."
+      },
       "add_to_ticket": {
         "name": "anadir_al_ticket",
         "description": "Añade uno o varios usuarios al ticket actual.",
@@ -757,6 +761,11 @@
         "select_placeholder": "Soporte General",
         "published": "Panel de tickets publicado."
       },
+      "registration_panel": {
+        "content": "# 🔰 Inscripciones abiertas 🔰\n_ _\n➡️ Selecciona **una** de las siguientes **opciones** en el **menú desplegable** abajo de este mensaje. Si **no sabes** sobre qué **tema** quieres abrir **ticket**, **lee** atentamente **aquí debajo**.\n_ _\n➡️ Recuerda tener todos los datos disponibles antes de abrir el ticket.\n_ _\n➡️ Si no sabes qué poner o cómo funcionan las inscripciones, **REVISA EL CANAL DE FAQS - OBLIGATORIO**.\n_ _\n\n## 1️⃣ Bigness League\n- Inscribe a tu equipo aquí para la liga regular de la Bigness League.\n## 2️⃣ Bigness Cup Junior\n- Inscribe a tu equipo aquí para la copa de la Bigness Cup Junior.\n## 3️⃣ Bigness Cup\n- Inscribe a tu equipo aquí para la copa de la Bigness Cup.\n## 4️⃣ Bigness Extras\n- Inscribe a tu equipo aquí para las competiciones extras que se hagan en la Bigness.",
+        "select_placeholder": "Inscripciones",
+        "published": "Panel de inscripciones publicado."
+      },
       "open": {
         "embed": {
           "title": "🔓 Nuevo Ticket Creado",
@@ -1063,7 +1072,8 @@
       "forum_channel_not_found": "No se encontró el foro de tickets configurado: `{channel_id}`.",
       "forum_channel_not_in_guild": "El canal configurado como foro de tickets no pertenece a este servidor: `{channel_id}`.",
       "forum_channel_invalid_type": "El canal configurado como foro de tickets debe ser un foro de Discord: `{channel_id}`.",
-      "forum_tag_missing": "No existe la etiqueta `{tag_name}` en el foro `{forum_name}`. Crea esa etiqueta en el foro o ajusta la configuración de categorías."
+      "forum_tag_missing": "No existe la etiqueta `{tag_name}` en el foro `{forum_name}`. Crea esa etiqueta en el foro o ajusta la configuración de categorías.",
+      "forum_tag_id_missing": "No existe la etiqueta `{tag_id}` para `{category_label}` en el foro `{forum_name}`. Revisa que esa etiqueta siga configurada en el foro."
     },
     "match_channel_creation": {
       "same_team_roles": "No puedes crear un partido usando el mismo rol dos veces: `{role_name}`.",

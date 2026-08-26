@@ -70,6 +70,15 @@ class _CommandsTicketsPublishPanel:
     description: TranslationKey = TranslationKey(key="commands.tickets.publish_panel.description",
                                                  default_text="Publica el panel de soporte para abrir tickets.")
 
+
+class _CommandsTicketsPublishRegistrationPanel:
+    name: TranslationKey = TranslationKey(
+        key="commands.tickets.publish_registration_panel.name", default_text="integracion_de_inscripciones")
+    description: TranslationKey = TranslationKey(
+        key="commands.tickets.publish_registration_panel.description",
+        default_text="Publica el panel para abrir tickets de inscripci\u00f3n.")
+
+
 class _CommandsTicketsAddToTicketParametersUser1:
     description: TranslationKey = TranslationKey(key="commands.tickets.add_to_ticket.parameters.user_1.description",
                                                  default_text="Primer usuario que quieres a\u00f1adir al ticket.")
@@ -180,6 +189,7 @@ class _CommandsTicketsConfigureDefaultReminders:
 
 class _CommandsTickets:
     publish_panel: _CommandsTicketsPublishPanel = _CommandsTicketsPublishPanel()
+    publish_registration_panel: _CommandsTicketsPublishRegistrationPanel = _CommandsTicketsPublishRegistrationPanel()
     add_to_ticket: _CommandsTicketsAddToTicket = _CommandsTicketsAddToTicket()
     close_for_user: _CommandsTicketsCloseForUser = _CommandsTicketsCloseForUser()
     add_team_to_ticket: _CommandsTicketsAddTeamToTicket = _CommandsTicketsAddTeamToTicket()
@@ -1354,6 +1364,17 @@ class _MessagesTicketsPanel:
     published: TranslationKey = TranslationKey(key="messages.tickets.panel.published",
                                                default_text="Panel de tickets publicado.")
 
+
+class _MessagesTicketsRegistrationPanel:
+    content: TranslationKey = TranslationKey(
+        key="messages.tickets.registration_panel.content",
+        default_text="# \ud83d\udd30 Inscripciones abiertas \ud83d\udd30\n_ _\n\u27a1\ufe0f Selecciona **una** de las siguientes **opciones** en el **men\u00fa desplegable** abajo de este mensaje. Si **no sabes** sobre qu\u00e9 **tema** quieres abrir **ticket**, **lee** atentamente **aqu\u00ed debajo**.\n_ _\n\u27a1\ufe0f Recuerda tener todos los datos disponibles antes de abrir el ticket.\n_ _\n\u27a1\ufe0f Si no sabes qu\u00e9 poner o c\u00f3mo funcionan las inscripciones, **REVISA EL CANAL DE FAQS - OBLIGATORIO**.\n_ _\n\n## 1\ufe0f\u20e3 Bigness League\n- Inscribe a tu equipo aqu\u00ed para la liga regular de la Bigness League.\n## 2\ufe0f\u20e3 Bigness Cup Junior\n- Inscribe a tu equipo aqu\u00ed para la copa de la Bigness Cup Junior.\n## 3\ufe0f\u20e3 Bigness Cup\n- Inscribe a tu equipo aqu\u00ed para la copa de la Bigness Cup.\n## 4\ufe0f\u20e3 Bigness Extras\n- Inscribe a tu equipo aqu\u00ed para las competiciones extras que se hagan en la Bigness.")
+    select_placeholder: TranslationKey = TranslationKey(
+        key="messages.tickets.registration_panel.select_placeholder", default_text="Inscripciones")
+    published: TranslationKey = TranslationKey(
+        key="messages.tickets.registration_panel.published", default_text="Panel de inscripciones publicado.")
+
+
 class _MessagesTicketsOpenEmbedFields:
     ticket_number: TranslationKey = TranslationKey(key="messages.tickets.open.embed.fields.ticket_number",
                                                    default_text="\ud83d\udcdd N\u00famero de Ticket")
@@ -1597,6 +1618,7 @@ class _MessagesTicketsClose:
 
 class _MessagesTickets:
     panel: _MessagesTicketsPanel = _MessagesTicketsPanel()
+    registration_panel: _MessagesTicketsRegistrationPanel = _MessagesTicketsRegistrationPanel()
     open: _MessagesTicketsOpen = _MessagesTicketsOpen()
     participants: _MessagesTicketsParticipants = _MessagesTicketsParticipants()
     relay: _MessagesTicketsRelay = _MessagesTicketsRelay()
@@ -1961,6 +1983,9 @@ class _ErrorsTickets:
                                                                 default_text="El canal configurado como foro de tickets debe ser un foro de Discord: `{channel_id}`.")
     forum_tag_missing: TranslationKey = TranslationKey(key="errors.tickets.forum_tag_missing",
                                                        default_text="No existe la etiqueta `{tag_name}` en el foro `{forum_name}`. Crea esa etiqueta en el foro o ajusta la configuraci\u00f3n de categor\u00edas.")
+    forum_tag_id_missing: TranslationKey = TranslationKey(
+        key="errors.tickets.forum_tag_id_missing",
+        default_text="No existe la etiqueta `{tag_id}` para `{category_label}` en el foro `{forum_name}`. Revisa que esa etiqueta siga configurada en el foro.")
 
 class _ErrorsMatchChannelCreation:
     same_team_roles: TranslationKey = TranslationKey(key="errors.match_channel_creation.same_team_roles",

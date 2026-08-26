@@ -13,6 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 from bigness_league_bot.application.services.ticket_categories import (
+    REGISTRATION_TICKET_CATEGORIES,
     TICKET_CATEGORIES,
     TicketCategory,
     get_ticket_category,
@@ -57,6 +58,7 @@ from bigness_league_bot.application.services.ticket_payload import (
 
 __all__ = [
     "TICKET_CATEGORIES",
+    "REGISTRATION_TICKET_CATEGORIES",
     "TicketCategory",
     "TicketParticipant",
     "TicketRecord",

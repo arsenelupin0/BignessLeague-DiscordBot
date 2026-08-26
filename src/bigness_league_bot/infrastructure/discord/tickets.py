@@ -14,8 +14,9 @@ import asyncio
 import json
 import logging
 import re
+from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol, TypeVar
 
 import discord
 import unicodedata
@@ -35,6 +36,25 @@ LOGGER = logging.getLogger(__name__)
 TICKET_STATE_VERSION = 7
 TICKET_OPEN_STATUS_TAG_NAME = "Abierto"
 TICKET_CLOSED_STATUS_TAG_NAME = "Cerrado"
+
+
+class _ForumTagLike(Protocol):
+    @property
+    def id(self) -> int: ...
+
+    @property
+    def name(self) -> str: ...
+
+
+_ForumTagT = TypeVar("_ForumTagT", bound=_ForumTagLike, covariant=True)
+
+
+class _ForumTagSource(Protocol[_ForumTagT]):
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def available_tags(self) -> Sequence[_ForumTagT]: ...
 
 
 class TicketIntegrationError(CommandUserError):
@@ -238,9 +258,23 @@ def build_ticket_thread_name(
 
 
 def resolve_forum_tag(
-        forum_channel: discord.ForumChannel,
+        forum_channel: _ForumTagSource[_ForumTagT],
         category: TicketCategory,
-) -> discord.ForumTag:
+) -> _ForumTagT:
+    if category.forum_tag_id is not None:
+        for tag in forum_channel.available_tags:
+            if tag.id == category.forum_tag_id:
+                return tag
+
+        raise TicketIntegrationError(
+            localize(
+                I18N.errors.tickets.forum_tag_id_missing,
+                tag_id=str(category.forum_tag_id),
+                category_label=category.label,
+                forum_name=forum_channel.name,
+            )
+        )
+
     return _resolve_forum_tag(
         forum_channel,
         expected_labels={
@@ -342,11 +376,11 @@ async def resolve_ticket_forum_channel(
 
 
 def _resolve_forum_tag(
-        forum_channel: discord.ForumChannel,
+        forum_channel: _ForumTagSource[_ForumTagT],
         *,
         expected_labels: set[str],
         missing_tag_name: str,
-) -> discord.ForumTag:
+) -> _ForumTagT:
     normalized_expected_labels = {
         _normalized_label(label)
         for label in expected_labels

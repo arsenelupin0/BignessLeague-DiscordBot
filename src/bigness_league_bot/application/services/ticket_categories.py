@@ -13,6 +13,7 @@ class TicketCategory:
     emoji: str
     thread_prefix: str
     aliases: tuple[str, ...] = ()
+    forum_tag_id: int | None = None
 
 
 TICKET_CATEGORIES: tuple[TicketCategory, ...] = (
@@ -75,9 +76,50 @@ TICKET_CATEGORIES: tuple[TicketCategory, ...] = (
         thread_prefix="social",
     ),
 )
+
+REGISTRATION_TICKET_CATEGORIES: tuple[TicketCategory, ...] = (
+    TicketCategory(
+        key="registration_league",
+        label="Bigness League",
+        tag_name="Bigness League",
+        emoji="1\ufe0f\u20e3",
+        thread_prefix="inscripcion-league",
+        forum_tag_id=1541966369158078464,
+    ),
+    TicketCategory(
+        key="registration_junior_cup",
+        label="Bigness Cup Junior",
+        tag_name="Bigness Cup Junior",
+        emoji="2\ufe0f\u20e3",
+        thread_prefix="inscripcion-cup-junior",
+        forum_tag_id=1541966446060376104,
+    ),
+    TicketCategory(
+        key="registration_cup",
+        label="Bigness Cup",
+        tag_name="Bigness Cup",
+        emoji="3\ufe0f\u20e3",
+        thread_prefix="inscripcion-cup",
+        forum_tag_id=1541966538393788486,
+    ),
+    TicketCategory(
+        key="registration_extras",
+        label="Bigness League Extras",
+        tag_name="Bigness League Extras",
+        emoji="4\ufe0f\u20e3",
+        thread_prefix="inscripcion-extras",
+        aliases=("Bigness Extras",),
+        forum_tag_id=1541966573777068092,
+    ),
+)
+
+ALL_TICKET_CATEGORIES: tuple[TicketCategory, ...] = (
+    *TICKET_CATEGORIES,
+    *REGISTRATION_TICKET_CATEGORIES,
+)
 TICKET_CATEGORIES_BY_KEY: dict[str, TicketCategory] = {
     category.key: category
-    for category in TICKET_CATEGORIES
+    for category in ALL_TICKET_CATEGORIES
 }
 
 
@@ -109,7 +151,7 @@ def _normalize_ticket_category_lookup_key(value: str) -> str:
 
 
 TICKET_CATEGORY_KEYS_BY_ALIAS: dict[str, str] = {}
-for _category in TICKET_CATEGORIES:
+for _category in ALL_TICKET_CATEGORIES:
     for _alias in (
             _category.key,
             _category.label,

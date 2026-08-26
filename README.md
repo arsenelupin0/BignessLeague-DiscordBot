@@ -102,6 +102,7 @@ crea un canal de partido con permisos para ambos equipos.
 - `/dar_de_baja_staff discord_staff:<texto> equipo:<rol>`: elimina solo sus cargos de `STAFF TÉCNICO` en ese equipo.
 - `/asignar_rol_equipo_automatico equipo:<rol>`: revisa la hoja del equipo y sincroniza los roles en Discord.
 - `/integracion_de_tickets`: publica el panel de soporte para abrir tickets desde un menu desplegable.
+- `/integracion_de_inscripciones`: publica el panel de inscripciones con sus cuatro competiciones.
 - `/recordatorios_ticket activados:<sí/no>`: activa o desactiva los avisos y el cierre automático por inactividad del
   ticket actual. Solo está disponible para el rol `Staff` dentro de un hilo de ticket activo.
 - `/recordatorios_tickets_default activados:<sí/no>`: decide si los tickets que se abran a partir de ese momento nacen
@@ -253,10 +254,10 @@ Aviso automático al perder rol de equipo:
 - si el equipo no tiene imagen enlazada, usa el icono del servidor como fallback
 - este flujo solo escucha la perdida de roles de equipo; no se activa por cambios de roles técnicos
 
-`/integracion_de_tickets`:
+`/integracion_de_tickets` y `/integracion_de_inscripciones`:
 
 - solo puede usarlo un miembro con el rol `CEO`
-- publica en el canal actual un panel persistente con menu desplegable para abrir tickets
+- publica en el canal actual un panel persistente con menu desplegable para abrir tickets de soporte o inscripción
 - al seleccionar una categoria, el bot crea un post dentro del foro configurado por `BOT_TICKET_FORUM_CHANNEL_ID`
 - el post aplica la etiqueta del foro que coincida con la categoria seleccionada
 - el usuario continua la conversación por DM con el bot
@@ -285,6 +286,13 @@ Etiquetas esperadas en el foro de tickets:
 - `Social`
 - `🔓 Abierto`
 - `🔒 Cerrado`
+
+El panel de inscripciones aplica las etiquetas del mismo foro por ID:
+
+- `Bigness League`: `1541966369158078464`
+- `Bigness Cup Junior`: `1541966446060376104`
+- `Bigness Cup`: `1541966538393788486`
+- `Bigness League Extras`: `1541966573777068092`
 
 ## IA local para tickets
 

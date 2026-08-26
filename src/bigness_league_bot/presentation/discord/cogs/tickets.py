@@ -18,7 +18,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from bigness_league_bot.core.errors import CommandUserError
-from bigness_league_bot.core.localization import localize
+from bigness_league_bot.core.localization import TranslationKey, localize
 from bigness_league_bot.infrastructure.discord.channel_access_management import (
     ChannelManagementError,
     ensure_allowed_member,
@@ -61,6 +61,9 @@ from bigness_league_bot.presentation.discord.ticket_participant_removal import (
     TicketParticipantRemoval,
 )
 from bigness_league_bot.presentation.discord.views.ticket_panel import TicketPanelView
+from bigness_league_bot.presentation.discord.views.ticket_registration_panel import (
+    RegistrationTicketPanelView,
+)
 from bigness_league_bot.presentation.discord.views.ticket_thread_controls import (
     TicketThreadControlsView,
 )
@@ -133,6 +136,41 @@ class TicketsCog(commands.Cog):
             self,
             interaction: discord.Interaction[BignessLeagueBot],
     ) -> None:
+        await self._publish_panel(
+            interaction,
+            content_key=I18N.messages.tickets.panel.content,
+            published_key=I18N.messages.tickets.panel.published,
+            view=TicketPanelView(self.store),
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(
+            I18N.commands.tickets.publish_registration_panel.name
+        ),
+        description=localized_locale_str(
+            I18N.commands.tickets.publish_registration_panel.description
+        ),
+    )
+    @app_commands.guild_only()
+    async def publish_registration_ticket_panel(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+    ) -> None:
+        await self._publish_panel(
+            interaction,
+            content_key=I18N.messages.tickets.registration_panel.content,
+            published_key=I18N.messages.tickets.registration_panel.published,
+            view=RegistrationTicketPanelView(self.store),
+        )
+
+    async def _publish_panel(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            *,
+            content_key: TranslationKey,
+            published_key: TranslationKey,
+            view: discord.ui.View,
+    ) -> None:
         if not isinstance(interaction.user, discord.Member):
             raise CommandUserError(localize(I18N.errors.channel_management.server_only))
 
@@ -146,15 +184,15 @@ class TicketsCog(commands.Cog):
         await interaction.response.defer(ephemeral=True, thinking=True)
         await channel.send(
             content=interaction.client.localizer.translate(
-                I18N.messages.tickets.panel.content,
+                content_key,
                 locale=interaction.locale,
             ),
-            view=TicketPanelView(self.store),
+            view=view,
             allowed_mentions=discord.AllowedMentions.none(),
         )
         await interaction.followup.send(
             interaction.client.localizer.translate(
-                I18N.messages.tickets.panel.published,
+                published_key,
                 locale=interaction.locale,
             ),
             ephemeral=True,
@@ -485,6 +523,7 @@ class TicketsCog(commands.Cog):
 async def setup(bot: BignessLeagueBot) -> None:
     store = TicketStateStore(bot.settings.ticket_state_file)
     bot.add_view(TicketPanelView(store))
+    bot.add_view(RegistrationTicketPanelView(store))
     bot.add_view(TicketThreadControlsView(store))
     await bot.add_cog(TicketsCog(bot, store))
     await bot.add_cog(TicketInactivityControlsCog(bot, store))
