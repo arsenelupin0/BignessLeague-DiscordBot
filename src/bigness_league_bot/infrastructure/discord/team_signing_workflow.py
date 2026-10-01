@@ -78,6 +78,7 @@ async def handle_team_signing_import(
         guild,
         settings.channel_access_range_start_role_id,
         settings.channel_access_range_end_role_id,
+        allow_empty=signing_batch is not None,
     )
     division_name, team_name = resolve_team_signing_import_target(
         signing_batch=signing_batch,

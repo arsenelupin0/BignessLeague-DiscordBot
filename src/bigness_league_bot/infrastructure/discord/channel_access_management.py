@@ -156,6 +156,8 @@ def get_channel_access_role_catalog(
         guild: discord.Guild,
         range_start_role_id: int,
         range_end_role_id: int,
+        *,
+        allow_empty: bool = False,
 ) -> ChannelAccessRoleCatalog:
     range_start = guild.get_role(range_start_role_id)
     if range_start is None:
@@ -191,7 +193,7 @@ def get_channel_access_role_catalog(
             reverse=True,
         )
     )
-    if not candidate_roles:
+    if not candidate_roles and not allow_empty:
         raise ChannelAccessRoleRangeError(
             localize(I18N.errors.channel_management.range_empty)
         )

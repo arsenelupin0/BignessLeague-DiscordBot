@@ -182,6 +182,16 @@ Restricciones de `/cerrar_canal`:
 - permite fijar una fuente propia con `BOT_TEAM_PROFILE_FONT_PATH`, por ejemplo
   `aa_resources/fonts/MapleMono-NF-CN-Regular.ttf`
 
+`/hacer_inscripción`:
+
+- registra un equipo nuevo desde `enlace_jugadores`, con logo y un mínimo de 3 jugadores
+- los separadores configurados en `BOT_CHANNEL_ACCESS_RANGE_START_ROLE_ID` y
+  `BOT_CHANNEL_ACCESS_RANGE_END_ROLE_ID` deben existir; el segmento puede estar vacío
+- tras registrar el equipo en Google Sheets, reutiliza su rol si ya existe en el segmento o crea uno con color
+  aleatorio, visible por separado en la lista de miembros
+- coloca los roles de equipo en orden alfabético entre ambos separadores y asigna los roles de equipo,
+  participante y jugador a los miembros de la plantilla que estén en Discord
+
 `/hacer_fichaje`:
 
 - solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
@@ -383,7 +393,7 @@ Configuración de Google Sheets:
   `BOT_STAFF_SECOND_MANAGER_ROLE_ID`, `BOT_STAFF_CAPTAIN_ROLE_ID`: roles extra que las bajas y sincronizaciones pueden
   retirar si el Discord también aparece en `STAFF TÉCNICO`
 - `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME`: hojas de equipo que el bot debe consultar, separadas por comas. Por defecto se
-  limita a `GOLD DIVISION S3,SILVER DIVISION S3`.
+  limita a `GOLD DIVISION S4,SILVER DIVISION S4`.
 - la hoja debe estar organizada por bloques de equipo con este esquema: título del equipo, cabecera `Jugador`,
   `Discord ID`, `Platform`, `Platform ID`, `Epic Name` y `MMR`, hasta 6 jugadores y una fila de resumen con fichajes
   restantes

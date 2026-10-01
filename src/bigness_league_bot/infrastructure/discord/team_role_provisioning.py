@@ -57,7 +57,10 @@ async def resolve_or_create_team_role(
         extra_roles=(created_role,),
         actor=actor,
     )
-    return TeamRoleProvisionResult(role=created_role, created=True)
+    return TeamRoleProvisionResult(
+        role=guild.get_role(created_role.id) or created_role,
+        created=True,
+    )
 
 
 async def sort_team_roles_alphabetically(
@@ -81,13 +84,33 @@ async def sort_team_roles_alphabetically(
             key=lambda role: normalize_member_lookup_text(role.name),
         )
     )
-    range_start = guild.get_role(role_catalog.range_start.id) or role_catalog.range_start
-    range_end = guild.get_role(role_catalog.range_end.id) or role_catalog.range_end
-    upper_position = max(range_start.position, range_end.position)
+    # Creation changes positions below the separators, and the gateway cache may
+    # not reflect it yet. Use the current server hierarchy to insert the new role.
+    current_roles = sorted(await guild.fetch_roles())
+    current_roles_by_id = {role.id: role for role in current_roles}
+    range_start = current_roles_by_id[role_catalog.range_start.id]
+    range_end = current_roles_by_id[role_catalog.range_end.id]
+    upper_separator = max(range_start, range_end)
+    remaining_roles = [role for role in current_roles if role.id not in roles_by_id]
+    insertion_index = next(
+        index for index, role in enumerate(remaining_roles)
+        if role.id == upper_separator.id
+    )
+    # Guild roles run from bottom to top; alphabetical display runs top to bottom.
+    desired_roles = (
+            remaining_roles[:insertion_index]
+            + list(reversed(ordered_roles))
+            + remaining_roles[insertion_index:]
+    )
+    # Reuse the existing slots; roles outside the affected interval must not be
+    # renumbered, including roles above the bot that it cannot move.
     positions = {
-        role: upper_position - index - 1
-        for index, role in enumerate(ordered_roles)
+        desired_role: current_role.position
+        for current_role, desired_role in zip(current_roles, desired_roles)
+        if desired_role.id != current_role.id
     }
+    if not positions:
+        return
     await guild.edit_role_positions(
         positions=positions,
         reason=(

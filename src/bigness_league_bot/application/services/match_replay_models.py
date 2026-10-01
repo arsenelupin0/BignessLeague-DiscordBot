@@ -20,8 +20,8 @@ class MatchReplayDivision(StrEnum):
     @property
     def label(self) -> str:
         if self is MatchReplayDivision.GOLD:
-            return "GOLD DIVISION S3"
-        return "SILVER DIVISION S3"
+            return "GOLD DIVISION S4"
+        return "SILVER DIVISION S4"
 
 
 @dataclass(frozen=True, slots=True)
