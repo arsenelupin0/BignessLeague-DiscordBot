@@ -198,12 +198,13 @@ def build_team_signing_import_completed_message(
         assignment_summary: TeamRoleAssignmentSummary | None,
         staff_sync_summary: TeamStaffRoleSyncSummary | None,
         created_team_role: bool = False,
+        registration: bool = False,
 ) -> str:
     message_lines: list[str] = []
     if player_result is not None and signing_batch is not None and assignment_summary is not None:
         message_lines.append(
             localizer.translate(
-                I18N.actions.team_signing.completed,
+                I18N.actions.team_signing.registration_completed if registration else I18N.actions.team_signing.completed,
                 locale=locale,
                 division_name=division_name,
                 team_name=team_name,
@@ -281,6 +282,7 @@ def build_team_signing_visibility_message(
         team_role_mention: str,
         team_links: tuple[TeamSigningTeamAnnouncementLink, ...] = (),
         staff_links: tuple[TeamSigningStaffAnnouncementLink, ...] = (),
+        registration: bool = False,
 ) -> str:
     if not team_links and not staff_links:
         return ""
@@ -314,7 +316,7 @@ def build_team_signing_visibility_message(
     )
 
     return localizer.translate(
-        I18N.actions.team_signing.visibility.content,
+        I18N.actions.team_signing.visibility.registration_content if registration else I18N.actions.team_signing.visibility.content,
         locale=locale,
         team_lines=team_lines,
         staff_lines=f"\n{staff_lines}" if staff_lines else "",

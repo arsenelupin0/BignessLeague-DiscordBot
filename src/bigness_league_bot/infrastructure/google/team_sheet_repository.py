@@ -60,6 +60,7 @@ from bigness_league_bot.infrastructure.google.team_sheets.models import (
 )
 from bigness_league_bot.infrastructure.google.team_sheets.mutations import TeamSheetMutationService
 from bigness_league_bot.infrastructure.google.team_sheets.queries import TeamSheetQueryService
+from bigness_league_bot.infrastructure.google.team_sheets.team_registration import register_team_sync
 
 
 class GoogleSheetsTeamRepository:
@@ -95,6 +96,13 @@ class GoogleSheetsTeamRepository:
         return await asyncio.to_thread(
             self.mutations.register_team_technical_staff_sync,
             technical_staff_batch,
+        )
+
+    async def register_team(
+            self, signing_batch: TeamSigningBatch, technical_staff_batch: TeamTechnicalStaffBatch,
+    ) -> tuple[TeamSigningWriteResult, TeamTechnicalStaffWriteResult]:
+        return await asyncio.to_thread(
+            register_team_sync, self.client, self.config, signing_batch, technical_staff_batch,
         )
 
     async def update_team_roster_player(

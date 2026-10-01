@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import discord
 
+from bigness_league_bot.application.services.team_divisions import division_names_match
 from bigness_league_bot.application.services.team_signing import (
     TeamSigningBatch,
     TeamSigningParseError,
@@ -93,7 +94,7 @@ def resolve_team_signing_import_target(
             signing_batch is not None
             and technical_staff_batch is not None
             and (
-            signing_batch.division_name != technical_staff_batch.division_name
+            not division_names_match(signing_batch.division_name, technical_staff_batch.division_name)
             or signing_batch.team_name != technical_staff_batch.team_name
     )
     ):

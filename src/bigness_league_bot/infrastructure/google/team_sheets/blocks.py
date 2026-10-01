@@ -9,6 +9,7 @@
 #  license notices must be preserved. Contributors provide an express grant of patent rights.
 from __future__ import annotations
 
+from bigness_league_bot.application.services.team_divisions import division_name_parts
 from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.google.team_sheets.cells import (
     _is_free_block_title,
@@ -16,6 +17,7 @@ from bigness_league_bot.infrastructure.google.team_sheets.cells import (
 )
 from bigness_league_bot.infrastructure.google.team_sheets.errors import (
     TeamSheetDivisionNotFoundError,
+    TeamSheetDivisionAmbiguousError,
     TeamSheetNoFreeBlockError,
 )
 from bigness_league_bot.infrastructure.google.team_sheets.models import SheetCell, TeamBlockAnchor
@@ -124,9 +126,22 @@ def _find_division_sheet(
         sheet_grids: tuple[tuple[str, dict[int, dict[int, SheetCell]]], ...],
 ) -> tuple[str, dict[int, dict[int, SheetCell]]]:
     normalized_division = _normalize_lookup_text(division_name)
-    for worksheet_title, cell_grid in sheet_grids:
-        if normalized_division in _division_lookup_aliases(worksheet_title):
-            return worksheet_title, cell_grid
+    # Prefer explicit titles (including season) over aliases without a season.
+    for include_seasonless in (False, True):
+        matches = tuple(
+            (title, grid) for title, grid in sheet_grids
+            if normalized_division in _division_lookup_aliases(
+                title, include_seasonless=include_seasonless,
+            )
+        )
+        if len(matches) == 1:
+            return matches[0]
+        if len(matches) > 1:
+            raise TeamSheetDivisionAmbiguousError(localize(
+                I18N.errors.team_signing.division_ambiguous,
+                division_name=division_name,
+                sheet_names=", ".join(title for title, _ in matches),
+            ))
 
     raise TeamSheetDivisionNotFoundError(
         localize(
@@ -136,12 +151,17 @@ def _find_division_sheet(
     )
 
 
-def _division_lookup_aliases(worksheet_title: str) -> frozenset[str]:
+def _division_lookup_aliases(
+        worksheet_title: str, *, include_seasonless: bool = True,
+) -> frozenset[str]:
     normalized_title = _normalize_lookup_text(worksheet_title)
     aliases = {normalized_title}
     for suffix in (" test", " dev", " development"):
         if normalized_title.endswith(suffix):
             aliases.add(normalized_title.removesuffix(suffix).strip())
+
+    if include_seasonless:
+        aliases.update(division_name_parts(alias)[0] for alias in tuple(aliases))
 
     return frozenset(alias for alias in aliases if alias)
 

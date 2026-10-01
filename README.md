@@ -184,19 +184,29 @@ Restricciones de `/cerrar_canal`:
 
 `/hacer_inscripción`:
 
-- registra un equipo nuevo desde `enlace_jugadores`, con logo y un mínimo de 3 jugadores
+- requiere `enlace_jugadores` y `enlace_staff_tecnico` para registrar un equipo nuevo con logo, de 3 a 6 jugadores
+  y su staff técnico; ambos mensajes deben identificar el mismo equipo y división
+- la temporada en la división de la plantilla es opcional: `Gold Division` y `Gold Division S4` pueden resolver
+  la hoja configurada `Gold Division S4`; si varias hojas coinciden, debes indicar la temporada
+- valida ambas plantillas antes de escribir jugadores y staff en una sola operación de Google Sheets; si no hay
+  un bloque libre o falla la validación, no registra el equipo ni crea o asigna roles
+- limpia los datos anteriores de jugadores y staff del bloque libre, conservando el esquema y los cargos
 - los separadores configurados en `BOT_CHANNEL_ACCESS_RANGE_START_ROLE_ID` y
   `BOT_CHANNEL_ACCESS_RANGE_END_ROLE_ID` deben existir; el segmento puede estar vacío
 - tras registrar el equipo en Google Sheets, reutiliza su rol si ya existe en el segmento o crea uno con color
   aleatorio, visible por separado en la lista de miembros
 - coloca los roles de equipo en orden alfabético entre ambos separadores y asigna los roles de equipo,
   participante y jugador a los miembros de la plantilla que estén en Discord
+- publica un único anuncio `Ficha por` por miembro en `BOT_TEAM_ROLE_REMOVAL_ANNOUNCEMENT_CHANNEL_ID`, incluyendo
+  staff, sin anuncios `Nuevo cargo en`; los miembros pendientes conservan este comportamiento al entrar al servidor
+- el resultado muestra `¿Dónde ver mi inscripción?`; su copia por MD representa los roles como `@Nombre del equipo`
 
 `/hacer_fichaje`:
 
 - solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
 - recibe `enlace_jugadores` y `enlace_staff_tecnico` como enlaces opcionales; debes indicar al menos uno
 - ambos mensajes enlazados deben incluir siempre las cabeceras `Division:` y `Equipo:`
+- la temporada de `Division:` también es opcional cuando identifica una única hoja configurada
 - ambos mensajes enlazados pueden venir encerrados en un bloque de código de Discord con triple backtick
 - si indicas ambos enlaces, ambos deben apuntar a la misma `Division` y al mismo `Equipo`
 - `enlace_jugadores` usa el formato `Division`, `Equipo` y bloques repetidos de jugador

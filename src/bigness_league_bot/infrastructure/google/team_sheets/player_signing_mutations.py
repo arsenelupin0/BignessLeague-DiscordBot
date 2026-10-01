@@ -46,7 +46,7 @@ from bigness_league_bot.infrastructure.google.team_sheets.http_errors import (
     _extract_http_error_message,
     _maybe_wrap_google_http_error,
 )
-from bigness_league_bot.infrastructure.google.team_sheets.models import TeamSigningWriteResult
+from bigness_league_bot.infrastructure.google.team_sheets.models import SheetCell, TeamSigningWriteResult
 from bigness_league_bot.infrastructure.google.team_sheets.parser import (
     _build_player_values_grid,
     _parse_players,
@@ -72,6 +72,18 @@ def register_team_signings_sync(
 ) -> TeamSigningWriteResult:
     service = client.build_service(read_only=False)
     _, sheet_grids = client.fetch_sheet_grids(service)
+    result, update_data = prepare_team_signings(
+        signing_batch, sheet_grids, require_new_team_block=require_new_team_block,
+    )
+    write_team_updates(service, config, update_data)
+    return result
+
+
+def prepare_team_signings(
+        signing_batch: TeamSigningBatch,
+        sheet_grids: tuple[tuple[str, dict[int, dict[int, SheetCell]]], ...],
+        *, require_new_team_block: bool = False,
+) -> tuple[TeamSigningWriteResult, list[dict[str, Any]]]:
     worksheet_title, cell_grid = _find_division_sheet(
         signing_batch.division_name,
         sheet_grids,
@@ -200,6 +212,20 @@ def register_team_signings_sync(
             }
         )
 
+    result = TeamSigningWriteResult(
+        worksheet_title=worksheet_title,
+        team_name=signing_batch.team_name,
+        inserted_count=len(signing_batch.players),
+        total_players=len(merged_players),
+        created_team_block=is_new_team_block,
+    )
+
+    return result, update_data
+
+
+def write_team_updates(
+        service: Any, config: TeamSheetLookupConfig, update_data: list[dict[str, Any]],
+) -> None:
     try:
         service.spreadsheets().values().batchUpdate(
             spreadsheetId=config.spreadsheet_id,
@@ -219,13 +245,6 @@ def register_team_signings_sync(
             ) from exc
         raise
 
-    return TeamSigningWriteResult(
-        worksheet_title=worksheet_title,
-        team_name=signing_batch.team_name,
-        inserted_count=len(signing_batch.players),
-        total_players=len(merged_players),
-        created_team_block=is_new_team_block,
-    )
 
 
 def _ensure_signing_players_are_not_already_registered(

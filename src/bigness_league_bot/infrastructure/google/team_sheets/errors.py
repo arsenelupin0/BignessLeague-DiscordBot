@@ -44,6 +44,10 @@ class TeamSheetDivisionNotFoundError(TeamSheetError):
     """Raised when the requested division sheet cannot be found."""
 
 
+class TeamSheetDivisionAmbiguousError(TeamSheetError):
+    """Raised when a seasonless division matches multiple configured sheets."""
+
+
 class TeamSheetNoFreeBlockError(TeamSheetError):
     """Raised when there is no free team block left in the selected sheet."""
 

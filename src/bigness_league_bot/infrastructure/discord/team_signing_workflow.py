@@ -89,6 +89,7 @@ async def handle_team_signing_import(
     participant_role = resolve_participant_role(guild, settings.participant_role_id)
     announcement_since = monotonic()
     player_result = None
+    technical_staff_result = None
     assignment_summary = None
     team_role_created = False
     team_role: discord.Role | None = None
@@ -97,10 +98,16 @@ async def handle_team_signing_import(
 
     if signing_batch is not None:
         player_role = resolve_player_role(guild, settings.player_role_id)
-        player_result = await repository.register_team_signings(
-            signing_batch,
-            require_new_team_block=require_new_team_block,
-        )
+        if require_new_team_block and technical_staff_batch is not None:
+            player_result, technical_staff_result = await repository.register_team(
+                signing_batch, technical_staff_batch,
+            )
+        else:
+            player_result = await repository.register_team_signings(
+                signing_batch,
+                require_new_team_block=require_new_team_block,
+            )
+        division_name = player_result.worksheet_title
         team_role_result = await resolve_or_create_team_role(
             guild,
             team_name=team_name,
@@ -118,9 +125,9 @@ async def handle_team_signing_import(
             actor=interaction.user,
             member_names=(player.discord_name for player in signing_batch.players),
             suppress_player_signing_announcements=True,
+            suppress_team_signing_announcements=require_new_team_block or not publish_announcements,
         )
 
-    technical_staff_result = None
     staff_role_sync_summary = None
     staff_entries: tuple[TeamStaffRoleEntry, ...] = ()
     resolved_team_role = (
@@ -129,12 +136,14 @@ async def handle_team_signing_import(
         else resolve_team_role_by_name(team_name, role_catalog)
     )
     if technical_staff_batch is not None:
-        previous_team_profile = await repository.find_team_profile_for_role(
-            resolved_team_role
+        previous_team_profile = (
+            None if require_new_team_block else
+            await repository.find_team_profile_for_role(resolved_team_role)
         )
-        technical_staff_result = await repository.register_team_technical_staff(
-            technical_staff_batch
-        )
+        if technical_staff_result is None:
+            technical_staff_result = await repository.register_team_technical_staff(
+                technical_staff_batch
+            )
         current_team_profile = await repository.find_team_profile_for_role(
             resolved_team_role
         )
@@ -146,7 +155,7 @@ async def handle_team_signing_import(
             )
         )
         staff_entries = collect_technical_staff_role_entries(technical_staff_batch)
-        previous_affected_staff_names = _collect_previous_staff_names_for_roles(
+        previous_affected_staff_names = () if previous_team_profile is None else _collect_previous_staff_names_for_roles(
             previous_team_profile,
             technical_staff_batch,
         )
@@ -171,13 +180,13 @@ async def handle_team_signing_import(
             staff_entries=staff_entries,
             player_member_names=player_member_names,
             staff_member_names_to_prune=previous_affected_staff_names,
-            unchanged_staff_entries=collect_team_profile_staff_role_entries(
+            unchanged_staff_entries=() if previous_team_profile is None else collect_team_profile_staff_role_entries(
                 previous_team_profile
             ),
             count_existing_staff_roles_as_assigned=True,
-            suppress_team_role_signing_announcements=not publish_announcements,
+            suppress_team_role_signing_announcements=require_new_team_block or not publish_announcements,
             suppress_staff_signing_announcements=True,
-            suppress_staff_removal_announcements=not publish_announcements,
+            suppress_staff_removal_announcements=require_new_team_block or not publish_announcements,
         )
 
     visibility_links = (
@@ -190,6 +199,7 @@ async def handle_team_signing_import(
             technical_staff_batch=technical_staff_batch,
             staff_sync_summary=staff_role_sync_summary,
             since=announcement_since,
+            registration=require_new_team_block,
         )
         if publish_announcements
         else None
@@ -206,11 +216,13 @@ async def handle_team_signing_import(
         assignment_summary=assignment_summary,
         staff_sync_summary=staff_role_sync_summary,
         created_team_role=team_role_created,
+        registration=require_new_team_block,
     )
     visibility_message = build_team_signing_visibility_message(
         localizer=interaction.client.localizer,
         locale=interaction.locale,
         team_role_mention=resolved_team_role.mention,
+        registration=require_new_team_block,
         team_links=(
             visibility_links.team_links
             if visibility_links is not None

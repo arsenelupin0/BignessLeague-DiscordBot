@@ -90,6 +90,7 @@ async def collect_team_signing_visibility_links(
         technical_staff_batch: TeamTechnicalStaffBatch | None,
         staff_sync_summary: TeamStaffRoleSyncSummary | None,
         since: float,
+        registration: bool = False,
 ) -> TeamSigningVisibilityLinks:
     team_members = _deduplicate_members_by_id(
         *(
@@ -103,6 +104,21 @@ async def collect_team_signing_visibility_links(
             else ()
         ),
     )
+    if registration:
+        team_members = _deduplicate_members_by_id(
+            *team_members,
+            *(assignment_summary.already_configured_members if assignment_summary is not None else ()),
+            *(staff_sync_summary.assigned_members if staff_sync_summary is not None else ()),
+            *(staff_sync_summary.already_configured_members if staff_sync_summary is not None else ()),
+        )
+        announcements = await send_missing_team_change_announcements(
+            settings=settings, guild=guild, bot=bot, team_role=team_role,
+            members=team_members, spec=TEAM_ROLE_SIGNING_SPEC,
+            failure_log_code="TEAM_REGISTRATION_ANNOUNCEMENT_SEND_FAILED",
+        ) if team_members else ()
+        return TeamSigningVisibilityLinks(
+            team_links=team_links_from_announcements(announcements), staff_links=(),
+        )
     team_links, staff_links, staff_removal_links = await asyncio.gather(
         _collect_team_signing_team_links(
             settings=settings,

@@ -279,7 +279,9 @@ class PendingTeamSigningAssignmentResolver:
             if team_message is not None:
                 sent_messages.append(team_message)
 
-        for staff_role in staff_roles:
+        sources = set(assignment.source.split("+"))
+        registration = "hacer_inscripcion" in sources and "hacer_fichaje" not in sources
+        for staff_role in (() if registration else staff_roles):
             if staff_role.id not in added_role_ids:
                 continue
 

@@ -9,6 +9,8 @@ import discord
 from bigness_league_bot.application.services.team_signing import (
     TeamSigningBatch,
     TeamSigningPlayer,
+    TeamTechnicalStaffBatch,
+    TeamTechnicalStaffMember,
 )
 from bigness_league_bot.core.errors import CommandUserError
 from bigness_league_bot.infrastructure.discord import team_signing_workflow as workflow
@@ -185,7 +187,7 @@ class TeamRegistrationWorkflowTests(unittest.IsolatedAsyncioTestCase):
             ) for index in range(3)),
         )
         self.repository = SimpleNamespace(register_team_signings=AsyncMock(
-            return_value=SimpleNamespace(created_team_block=True),
+            return_value=SimpleNamespace(created_team_block=True, worksheet_title="GOLD DIVISION S4"),
         ))
         self.assignment = AsyncMock()
         self.dependencies = patch.multiple(
@@ -245,6 +247,42 @@ class TeamRegistrationWorkflowTests(unittest.IsolatedAsyncioTestCase):
                 require_new_team_block=False, publish_announcements=False,
             )
         self.repository.register_team_signings.assert_not_awaited()
+
+    async def test_complete_registration_writes_both_templates_before_assigning_roles(self) -> None:
+        staff = TeamTechnicalStaffBatch('Gold Division', self.batch.team_name, (
+            TeamTechnicalStaffMember('CEO', '', '1000', ''),
+        ))
+        player_result = self.repository.register_team_signings.return_value
+        self.repository.register_team = AsyncMock(return_value=(player_result, SimpleNamespace(updated_count=1)))
+        self.repository.register_team_technical_staff = AsyncMock()
+        self.repository.find_team_profile_for_role = AsyncMock(return_value=SimpleNamespace(technical_staff=()))
+        for name in ('ceo', 'analyst', 'coach', 'manager', 'second_manager', 'captain'):
+            setattr(self.settings, f'staff_{name}_role_id', 0)
+        with patch.object(workflow, 'sync_team_staff_roles_by_names', new_callable=AsyncMock) as sync:
+            await workflow.handle_team_signing_import(
+                self.interaction, bot=self.interaction.client, guild=self.guild,
+                signing_batch=self.batch, technical_staff_batch=staff,
+                require_new_team_block=True, publish_announcements=False,
+            )
+        self.repository.register_team.assert_awaited_once_with(self.batch, staff)
+        self.repository.register_team_signings.assert_not_awaited()
+        self.repository.register_team_technical_staff.assert_not_awaited()
+        self.repository.find_team_profile_for_role.assert_awaited_once()
+        self.assertTrue(sync.await_args.kwargs['suppress_staff_signing_announcements'])
+        self.assertTrue(sync.await_args.kwargs['suppress_team_role_signing_announcements'])
+        self.assertTrue(self.assignment.await_args.kwargs['suppress_team_signing_announcements'])
+
+    async def test_combined_registration_failure_has_no_discord_side_effects(self) -> None:
+        self.repository.register_team = AsyncMock(side_effect=RuntimeError('Invalid staff'))
+        with self.assertRaisesRegex(RuntimeError, 'Invalid staff'):
+            await workflow.handle_team_signing_import(
+                self.interaction, bot=self.interaction.client, guild=self.guild,
+                signing_batch=self.batch,
+                technical_staff_batch=TeamTechnicalStaffBatch('Gold Division', self.batch.team_name, ()),
+                require_new_team_block=True, publish_announcements=False,
+            )
+        self.guild.create_role.assert_not_awaited()
+        self.assignment.assert_not_awaited()
 
 
 if __name__ == "__main__":

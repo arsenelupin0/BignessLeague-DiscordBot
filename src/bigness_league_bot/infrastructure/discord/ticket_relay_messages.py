@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
@@ -73,7 +74,7 @@ def build_ticket_command_relay_message(
         else f"/{command_name}"
     )
     return truncate_relay_text(
-        localizer.translate(
+        role_mentions_as_text(localizer.translate(
             I18N.messages.tickets.relay.from_command_result,
             command_name=command_label,
             body=(
@@ -84,8 +85,20 @@ def build_ticket_command_relay_message(
                 attachment_mode="names",
             )
             ),
-        )
+        ), guild=message.guild)
     )
+
+
+def role_mentions_as_text(content: str, *, guild: discord.Guild | None) -> str:
+    """Role mentions have no guild context in a direct message."""
+
+    def replace(match: re.Match[str]) -> str:
+        role_id = int(match.group(1))
+        role = guild.get_role(role_id) if guild is not None else None
+        name = role.name if role is not None else str(role_id)
+        return f"@{discord.utils.escape_markdown(name)}"
+
+    return re.sub(r"<@&(\d+)>", replace, content)
 
 
 def build_ticket_dm_relay_embed(
@@ -103,6 +116,7 @@ def build_ticket_dm_relay_embed(
         if deleted
         else message_content_body(localizer=localizer, message=message)
     )
+    body_value = role_mentions_as_text(body_value, guild=message.guild)
     description = f"{mention_line}**:** {body_value}\n\n_ _"
     embed = discord.Embed(
         description=description,
@@ -289,10 +303,20 @@ def attachment_signature(
 
 
 def clone_message_embeds(message: discord.Message) -> list[discord.Embed]:
-    return [
-        discord.Embed.from_dict(embed.to_dict())
-        for embed in message.embeds
-    ]
+    embeds = []
+    for original in message.embeds:
+        embed = discord.Embed.from_dict(original.to_dict())
+        if embed.title:
+            embed.title = role_mentions_as_text(embed.title, guild=message.guild)
+        if embed.description:
+            embed.description = role_mentions_as_text(embed.description, guild=message.guild)
+        for index, field in enumerate(embed.fields):
+            embed.set_field_at(
+                index, name=role_mentions_as_text(field.name, guild=message.guild),
+                value=role_mentions_as_text(field.value, guild=message.guild), inline=field.inline,
+            )
+        embeds.append(embed)
+    return embeds
 
 
 async def clone_message_attachments_as_files(

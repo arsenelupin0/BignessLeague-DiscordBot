@@ -461,10 +461,13 @@
     "team_signing": {
       "make_registration": {
         "name": "hacer_inscripción",
-        "description": "Inscripción completa de 3 a 6 jugadores desde un mensaje enlazado siguiendo la plantilla.",
+        "description": "Inscribe un equipo de 3 a 6 jugadores y su staff técnico desde mensajes enlazados.",
         "parameters": {
           "message_link": {
             "description": "Enlace al mensaje de Discord que contiene la plantilla completa de jugadores."
+          },
+          "technical_staff_message_link": {
+            "description": "Enlace obligatorio al mensaje de Discord que contiene la plantilla de staff técnico."
           }
         }
       },
@@ -915,9 +918,9 @@
       "modal": {
         "title": "Buscar roles",
         "query_label": "Nombre, ID o mención del rol",
-        "query_placeholder": "Ejemplo: Dragons, 123456789 o \u003c@\u0026123456789\u003e"
+        "query_placeholder": "Ejemplo: Dragons, 123456789 o <@&123456789>"
       },
-      "render_content": "Selecciona los roles que quieres añadir a este canal.\nRango filtrado: `{range_start}` \u003c roles \u003c `{range_end}`.\nPágina {page}/{page_count} | Seleccionados: {selected_count} | Disponibles: {visible_count}/{candidate_count}.\nBúsqueda: {search_query}.\nUsa Confirmar para aplicar los permisos al canal.",
+      "render_content": "Selecciona los roles que quieres añadir a este canal.\nRango filtrado: `{range_start}` < roles < `{range_end}`.\nPágina {page}/{page_count} | Seleccionados: {selected_count} | Disponibles: {visible_count}/{candidate_count}.\nBúsqueda: {search_query}.\nUsa Confirmar para aplicar los permisos al canal.",
       "search_none": "sin filtro",
       "only_actor": "Solo quien ejecutó el comando puede usar este selector.",
       "timeout": "La selección de roles ha expirado. No se han aplicado cambios.",
@@ -1078,7 +1081,7 @@
     "match_channel_creation": {
       "same_team_roles": "No puedes crear un partido usando el mismo rol dos veces: `{role_name}`.",
       "invalid_team_role": "El rol `{role_name}` no se puede usar como equipo en un canal de partido.",
-      "team_role_out_of_range": "El rol `{role_name}` no está dentro del rango de roles de equipos configurado: `{range_start}` \u003c rol \u003c `{range_end}`.",
+      "team_role_out_of_range": "El rol `{role_name}` no está dentro del rango de roles de equipos configurado: `{range_start}` < rol < `{range_end}`.",
       "channel_already_exists": "Ya existe un canal para esa jornada y ese partido: `{channel_name}`.",
       "category_missing": "No existe la categoria configurada para crear este canal: `{category_id}`.",
       "invalid_date_format": "La fecha no es valida. Usa `DD/MM/YYYY` o `YYYY-MM-DD`.",
@@ -1150,7 +1153,8 @@
       "remaining_signings_invalid": "La celda de fichajes restantes no es válida para `{team_name}` en `{sheet_name}`.",
       "remaining_signings_exceeded": "No quedan fichajes suficientes en `{team_name}`. Restantes: {remaining_signings}. Solicitados: {requested_signings}.",
       "team_roster_full": "No hay hueco suficiente en `{team_name}` para estos fichajes. Huecos libres: {available_slots}. Fichajes solicitados: {requested_slots}.",
-      "google_write_failed": "Google Sheets ha rechazado la escritura de fichajes: {details}."
+      "google_write_failed": "Google Sheets ha rechazado la escritura de fichajes: {details}.",
+      "division_ambiguous": "La división `{division_name}` coincide con varias hojas: {sheet_names}. Indica la temporada en la plantilla."
     },
     "team_role_assignment": {
       "participant_role_missing": "No existe el rol de participante configurado: `{role_id}`.",
@@ -1209,14 +1213,16 @@
         "content": "\n\n# ¿Dónde ver mi fichaje?\n{team_lines}{staff_lines}",
         "team_line": "- [Fichado por]({team_message_url}) {team_role_mention}",
         "team_line_unlinked": "- Fichado por {team_role_mention}",
-        "staff_line": "  - [Nuevo cargo de {staff_role_name} para]({staff_message_url}) {member_mention} >> {team_role_mention}"
+        "staff_line": "  - [Nuevo cargo de {staff_role_name} para]({staff_message_url}) {member_mention} >> {team_role_mention}",
+        "registration_content": "\n\n# ¿Dónde ver mi inscripción?\n{team_lines}{staff_lines}"
       },
       "removal_visibility": {
         "content": "\n\n# ¿Dónde ver mi baja?\n{lines}",
         "team_line": "- [Baja del club]({team_message_url}) {team_role_mention}",
         "player_line": "- [Baja como jugador para]({player_message_url}) {member_mention} >> {team_role_mention}",
         "staff_line": "- [Baja del cargo de {staff_role_name} para]({staff_message_url}) {member_mention} >> {team_role_mention}"
-      }
+      },
+      "registration_completed": "Se ha inscrito el equipo `{team_name}` en `{division_name}` con {total_players}/6 jugadores."
     },
     "team_role_assignment": {
       "completed": "Sincronización de roles completada para `{team_name}`: nuevos={assigned_count}, ya_correctos={already_count}, sin_coincidencia={unresolved_count}, ambiguos={ambiguous_count}.",

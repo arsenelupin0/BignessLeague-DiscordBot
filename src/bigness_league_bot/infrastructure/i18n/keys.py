@@ -838,14 +838,22 @@ class _CommandsTeamSigningMakeRegistrationParametersMessageLink:
         key="commands.team_signing.make_registration.parameters.message_link.description",
         default_text="Enlace al mensaje de Discord que contiene la plantilla completa de jugadores.")
 
+
+class _CommandsTeamSigningMakeRegistrationParametersTechnicalStaffMessageLink:
+    description: TranslationKey = TranslationKey(
+        key="commands.team_signing.make_registration.parameters.technical_staff_message_link.description",
+        default_text="Enlace obligatorio al mensaje de Discord que contiene la plantilla de staff t\u00e9cnico.")
+
+
 class _CommandsTeamSigningMakeRegistrationParameters:
     message_link: _CommandsTeamSigningMakeRegistrationParametersMessageLink = _CommandsTeamSigningMakeRegistrationParametersMessageLink()
+    technical_staff_message_link: _CommandsTeamSigningMakeRegistrationParametersTechnicalStaffMessageLink = _CommandsTeamSigningMakeRegistrationParametersTechnicalStaffMessageLink()
 
 class _CommandsTeamSigningMakeRegistration:
     name: TranslationKey = TranslationKey(key="commands.team_signing.make_registration.name",
                                           default_text="hacer_inscripci\u00f3n")
     description: TranslationKey = TranslationKey(key="commands.team_signing.make_registration.description",
-                                                 default_text="Inscripci\u00f3n completa de 3 a 6 jugadores desde un mensaje enlazado siguiendo la plantilla.")
+                                                 default_text="Inscribe un equipo de 3 a 6 jugadores y su staff t\u00e9cnico desde mensajes enlazados.")
     parameters: _CommandsTeamSigningMakeRegistrationParameters = _CommandsTeamSigningMakeRegistrationParameters()
 
 class _CommandsTeamSigningMakeSigningParametersMessageLink:
@@ -2152,6 +2160,8 @@ class _ErrorsTeamSigning:
                                                       default_text="No hay hueco suficiente en `{team_name}` para estos fichajes. Huecos libres: {available_slots}. Fichajes solicitados: {requested_slots}.")
     google_write_failed: TranslationKey = TranslationKey(key="errors.team_signing.google_write_failed",
                                                          default_text="Google Sheets ha rechazado la escritura de fichajes: {details}.")
+    division_ambiguous: TranslationKey = TranslationKey(key="errors.team_signing.division_ambiguous",
+                                                        default_text="La divisi\u00f3n `{division_name}` coincide con varias hojas: {sheet_names}. Indica la temporada en la plantilla.")
 
 class _ErrorsTeamRoleAssignment:
     participant_role_missing: TranslationKey = TranslationKey(
@@ -2245,6 +2255,8 @@ class _ActionsTeamSigningVisibility:
                                                         default_text="- Fichado por {team_role_mention}")
     staff_line: TranslationKey = TranslationKey(key="actions.team_signing.visibility.staff_line",
                                                 default_text="  - [Nuevo cargo de {staff_role_name} para]({staff_message_url}) {member_mention} >> {team_role_mention}")
+    registration_content: TranslationKey = TranslationKey(key="actions.team_signing.visibility.registration_content",
+                                                          default_text="\n\n# \u00bfD\u00f3nde ver mi inscripci\u00f3n?\n{team_lines}{staff_lines}")
 
 class _ActionsTeamSigningRemovalVisibility:
     content: TranslationKey = TranslationKey(key="actions.team_signing.removal_visibility.content",
@@ -2289,6 +2301,8 @@ class _ActionsTeamSigning:
                                                                default_text="Coincidencias ambiguas en Discord: {names}.")
     visibility: _ActionsTeamSigningVisibility = _ActionsTeamSigningVisibility()
     removal_visibility: _ActionsTeamSigningRemovalVisibility = _ActionsTeamSigningRemovalVisibility()
+    registration_completed: TranslationKey = TranslationKey(key="actions.team_signing.registration_completed",
+                                                            default_text="Se ha inscrito el equipo `{team_name}` en `{division_name}` con {total_players}/6 jugadores.")
 
 class _ActionsTeamRoleAssignment:
     completed: TranslationKey = TranslationKey(key="actions.team_role_assignment.completed",

@@ -441,6 +441,7 @@ async def assign_team_roles_by_names(
         actor: discord.abc.User,
         member_names: Iterable[str],
         suppress_player_signing_announcements: bool = False,
+        suppress_team_signing_announcements: bool = False,
 ) -> TeamRoleAssignmentSummary:
     members = await _load_guild_members(guild)
     members_by_lookup = _index_members_by_lookup_keys(members)
@@ -484,6 +485,11 @@ async def assign_team_roles_by_names(
                 member=member,
                 team_role=team_role,
                 roles_to_add=roles_to_add,
+            )
+        if suppress_team_signing_announcements and team_role in roles_to_add:
+            suppress_team_change_announcement(
+                guild_id=guild.id, member_id=member.id, team_role_id=team_role.id,
+                spec=TEAM_ROLE_SIGNING_SPEC,
             )
         await member.add_roles(
             *roles_to_add,

@@ -206,11 +206,15 @@ class TeamSigningCog(commands.Cog):
         enlace_jugadores=localized_locale_str(
             I18N.commands.team_signing.make_registration.parameters.message_link.description
         ),
+        enlace_staff_tecnico=localized_locale_str(
+            I18N.commands.team_signing.make_registration.parameters.technical_staff_message_link.description
+        ),
     )
     async def make_registration(
             self,
             interaction: discord.Interaction[BignessLeagueBot],
             enlace_jugadores: str,
+            enlace_staff_tecnico: str,
     ) -> None:
         guild = interaction.guild
         if guild is None or not isinstance(interaction.user, discord.Member):
@@ -227,12 +231,17 @@ class TeamSigningCog(commands.Cog):
             require_team_logo=True,
             min_players=3,
         )
+        technical_staff_batch = await parse_technical_staff_batch(
+            interaction.client,
+            guild=guild,
+            message_link=enlace_staff_tecnico,
+        )
         await handle_team_signing_import(
             interaction,
             bot=self.bot,
             guild=guild,
             signing_batch=signing_batch,
-            technical_staff_batch=None,
+            technical_staff_batch=technical_staff_batch,
             require_new_team_block=True,
         )
 
