@@ -281,9 +281,19 @@ Aviso automático al perder rol de equipo:
 
 - si un miembro pierde uno o varios roles de equipo, el bot publica un embed en
   `BOT_TEAM_ROLE_REMOVAL_ANNOUNCEMENT_CHANNEL_ID`
-- el embed intenta resolver la division real desde Google Sheets y usa como thumbnail el hipervínculo de la celda del
-  equipo
-- si el equipo no tiene imagen enlazada, usa el icono del servidor como fallback
+- el embed intenta resolver la division real desde Google Sheets y obtiene el escudo del hipervínculo de la celda del
+  equipo, incluyendo fórmulas y enlaces de texto; varios destinos distintos se registran como ambiguos
+- descarga el escudo con la URL completa, valida la imagen y publica una copia PNG como adjunto del anuncio
+- conserva un único PNG por equipo en `aa_var/team_logos/`, identificado por los IDs de servidor y rol;
+  cambiar la URL elimina el escudo anterior en el siguiente anuncio, descarga y valida la nueva imagen y guarda
+  únicamente esa nueva copia
+- si falta el enlace, es inválido o falla la descarga o la validación, elimina la copia del equipo y publica el
+  icono del servidor (logo de Bigness League) como imagen por defecto; nunca recupera el escudo anterior tras el fallo
+- reutiliza durante una hora una copia válida de la misma fuente, ignorando los parámetros de firma `ex`, `is` y `hm`
+  de Discord; al refrescarla, un fallo también elimina la copia y activa la imagen por defecto
+- las copias del formato anterior por URL se migran y eliminan al usar ese enlace; los fallos se registran con
+  equipo, hoja y motivo (`TEAM_CHANGE_LOGO_FALLBACK`)
+- los enlaces de Drive terminados en `/view` son páginas HTML y no funcionan como imágenes directas en este flujo
 - este flujo solo escucha la perdida de roles de equipo; no se activa por cambios de roles técnicos
 
 `/integracion_de_tickets` y `/integracion_de_inscripciones`:

@@ -9,6 +9,7 @@
 #  license notices must be preserved. Contributors provide an express grant of patent rights.
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any
 
@@ -24,6 +25,7 @@ HYPERLINK_FORMULA_PATTERN = re.compile(
     re.IGNORECASE,
 )
 INTEGER_VALUE_PATTERN = re.compile(r"-?\d+")
+LOGGER = logging.getLogger("bigness_league_bot.activity")
 
 
 def _normalize_cell_value(value: Any) -> str:
@@ -96,10 +98,62 @@ def _extract_hyperlink_value(
     if hyperlink is not None:
         return hyperlink
 
-    if formula is None:
-        return None
+    if formula is not None:
+        return _extract_hyperlink_from_formula(formula)
 
-    return _extract_hyperlink_from_formula(formula)
+    # Sheets leaves `hyperlink` empty for some rich-text cells. Preserve a
+    # single unambiguous destination, including links on part of the title.
+    inherited_link = None
+    for field in ("effectiveFormat", "userEnteredFormat"):
+        cell_format = raw_cell.get(field)
+        if isinstance(cell_format, dict):
+            if link := _extract_text_format_link(cell_format.get("textFormat")):
+                inherited_link = link
+                break
+    links = _extract_rich_text_links(raw_cell, inherited_link)
+    if len(links) == 1:
+        return next(iter(links))
+    if len(links) > 1:
+        LOGGER.warning("SHEET_CELL_HYPERLINK_AMBIGUOUS value=%s destinations=%s",
+                       raw_cell.get("formattedValue", ""), len(links))
+    return None
+
+
+def _extract_rich_text_links(raw_cell: dict[str, Any], inherited_link: str | None) -> set[str]:
+    raw_runs = raw_cell.get("textFormatRuns", [])
+    if not isinstance(raw_runs, list):
+        raw_runs = []
+    runs = sorted((run for run in raw_runs if isinstance(run, dict)
+                   and isinstance(run.get("startIndex"), int) and run["startIndex"] >= 0),
+                  key=lambda run: run["startIndex"])
+    # API indices count UTF-16 code units, rather than Python characters.
+    text_length = len(str(raw_cell.get("formattedValue", "")).encode("utf-16-le")) // 2
+    links: set[str] = set()
+    cursor = 0
+    active_link = inherited_link
+    for run in runs:
+        index = min(run["startIndex"], text_length)
+        if index > cursor and active_link:
+            links.add(active_link)
+        text_format = run.get("format")
+        active_link = (_extract_text_format_link(text_format)
+                       if isinstance(text_format, dict) and "link" in text_format else inherited_link)
+        cursor = index
+    if cursor < text_length and active_link:
+        links.add(active_link)
+    return links
+
+
+def _extract_text_format_link(text_format: Any) -> str | None:
+    if not isinstance(text_format, dict):
+        return None
+    link = text_format.get("link")
+    if not isinstance(link, dict):
+        return None
+    uri = link.get("uri")
+    if isinstance(uri, str):
+        return uri.strip() or None
+    return None
 
 
 def _extract_hyperlink_from_formula(formula: str) -> str | None:

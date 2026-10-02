@@ -74,7 +74,9 @@ class GoogleSheetsClient:
             "includeGridData": True,
             "fields": (
                 "sheets(properties(title),"
-                "data(startRow,startColumn,rowData(values(formattedValue,hyperlink,userEnteredValue))))"
+                "data(startRow,startColumn,rowData(values(formattedValue,hyperlink,userEnteredValue,"
+                "userEnteredFormat(textFormat(link)),effectiveFormat(textFormat(link)),"
+                "textFormatRuns(startIndex,format(link))))))"
             ),
         }
         if self.config.worksheet_names:

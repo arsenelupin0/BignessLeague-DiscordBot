@@ -17,6 +17,7 @@ from bigness_league_bot.infrastructure.discord.team_change_announcements import 
     build_team_change_content,
     build_team_change_embed,
 )
+from bigness_league_bot.infrastructure.discord.team_change_logo import attach_team_change_logo
 from bigness_league_bot.infrastructure.google.team_sheet_repository import TeamRoleSheetMetadata
 
 LOGGER = logging.getLogger("bigness_league_bot.activity")
@@ -41,6 +42,7 @@ class SentTeamChangeAnnouncement:
 _sent_announcements: list[SentTeamChangeAnnouncement] = []
 _sent_announcements_condition = asyncio.Condition()
 _suppressed_announcement_keys: dict[tuple[object, ...], float] = {}
+_inflight_announcement_keys: set[tuple[object, ...]] = set()
 
 
 async def wait_for_team_change_announcement(
@@ -51,7 +53,7 @@ async def wait_for_team_change_announcement(
         spec: TeamChangeAnnouncementSpec,
         since: float,
         staff_role_id: int | None = None,
-        timeout: float = 3.0,
+        timeout: float = 12.0,
 ) -> SentTeamChangeAnnouncement | None:
     spec_key = _resolve_announcement_spec_key(spec)
 
@@ -138,6 +140,9 @@ class TeamChangeAnnouncementDeduplicator:
             _resolve_announcement_spec_key(spec),
             staff_role.id if staff_role is not None else None,
         )
+        if announcement_key in _inflight_announcement_keys:
+            LOGGER.info("TEAM_CHANGE_ANNOUNCEMENT_INFLIGHT_SKIPPED key=%s", announcement_key)
+            return None
         previous_timestamp = self._recent_announcement_keys.get(announcement_key)
         previous_announcement = _find_sent_announcement(
             guild_id=guild.id,
@@ -203,16 +208,22 @@ class TeamChangeAnnouncementDeduplicator:
             return None
 
         self._recent_announcement_keys[announcement_key] = current_timestamp
+        _inflight_announcement_keys.add(announcement_key)
         return announcement_key
 
     def release(self, announcement_key: tuple[object, ...]) -> None:
         self._recent_announcement_keys.pop(announcement_key, None)
+        self.complete(announcement_key)
+
+    def complete(self, announcement_key: tuple[object, ...]) -> None:
+        _inflight_announcement_keys.discard(announcement_key)
 
     def _prune_recent_announcements(self, current_timestamp: float) -> None:
         stale_keys = tuple(
             announcement_key
             for announcement_key, timestamp in self._recent_announcement_keys.items()
-            if current_timestamp - timestamp >= ANNOUNCEMENT_DEDUPLICATION_WINDOW_SECONDS
+            if announcement_key not in _inflight_announcement_keys
+            and current_timestamp - timestamp >= ANNOUNCEMENT_DEDUPLICATION_WINDOW_SECONDS
         )
         for stale_key in stale_keys:
             self._recent_announcement_keys.pop(stale_key, None)
@@ -284,6 +295,8 @@ class TeamRoleChangeAnnouncementSender:
         except Exception:
             self.deduplicator.release(announcement_key)
             raise
+        finally:
+            self.deduplicator.complete(announcement_key)
 
     async def send_staff_role_change_announcement(
             self,
@@ -345,6 +358,8 @@ class TeamRoleChangeAnnouncementSender:
         except Exception:
             self.deduplicator.release(announcement_key)
             raise
+        finally:
+            self.deduplicator.complete(announcement_key)
 
     async def _send_announcement(
             self,
@@ -373,6 +388,9 @@ class TeamRoleChangeAnnouncementSender:
             metadata=metadata,
             description=_build_role_removal_description(guild=guild, bot=self.bot),
         )
+        logo_file = await attach_team_change_logo(
+            embed=embed, metadata=metadata, team_key=f"{guild.id}:{team_role.id}",
+        )
         allowed_mentions = discord.AllowedMentions(
             everyone=False,
             replied_user=False,
@@ -384,9 +402,17 @@ class TeamRoleChangeAnnouncementSender:
             "embed": embed,
             "allowed_mentions": allowed_mentions,
         }
-        if image_file is not None:
-            send_kwargs["file"] = image_file
-        return await channel.send(**send_kwargs)
+        files = [file for file in (image_file, logo_file) if file is not None]
+        if len(files) == 1:
+            send_kwargs["file"] = files[0]
+        elif files:
+            send_kwargs["files"] = files
+        try:
+            return await channel.send(**send_kwargs)
+        finally:
+            for file in files:
+                file.close()
+                file.fp.close()
 
 
 async def _remember_sent_announcement(

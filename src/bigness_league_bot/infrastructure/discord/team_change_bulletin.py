@@ -57,7 +57,11 @@ async def load_team_change_metadata(
         return fallback
 
     try:
-        return await repository.find_team_sheet_metadata_for_role(team_role)
+        metadata = await repository.find_team_sheet_metadata_for_role(team_role)
+        LOGGER.info("TEAM_CHANGE_BULLETIN_METADATA_LOADED role=%s(%s) team=%s worksheet=%s has_logo=%s",
+                    team_role.name, team_role.id, metadata.team_name, metadata.worksheet_title,
+                    bool(metadata.team_image_url))
+        return metadata
     except TeamSheetError as exc:
         LOGGER.warning(
             "TEAM_CHANGE_BULLETIN_METADATA_FALLBACK guild=%s(%s) role=%s(%s) details=%s",

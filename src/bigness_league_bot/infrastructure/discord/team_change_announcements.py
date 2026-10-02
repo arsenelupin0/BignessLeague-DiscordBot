@@ -116,11 +116,9 @@ def build_team_change_embed(
     embed.set_author(name=author_name)
     embed.set_footer(text=footer_text)
 
-    thumbnail_url = metadata.team_image_url
-    if not thumbnail_url and (guild_icon := guild.icon) is not None:
-        thumbnail_url = guild_icon.url
-    if thumbnail_url:
-        embed.set_thumbnail(url=thumbnail_url)
+    # The sender replaces this default with a validated logo attachment.
+    if (guild_icon := guild.icon) is not None:
+        embed.set_thumbnail(url=guild_icon.url)
 
     try:
         image_file = build_team_role_removal_image_file(
