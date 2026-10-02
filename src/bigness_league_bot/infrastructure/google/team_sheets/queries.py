@@ -52,6 +52,25 @@ class TeamSheetQueryService:
     def __init__(self, client: GoogleSheetsClient) -> None:
         self.client = client
 
+    def list_team_profiles_sync(self) -> tuple[TeamProfile, ...]:
+        service = self.client.build_service(read_only=True)
+        sheet_scope, sheet_grids = self.client.fetch_sheet_grids(service)
+        if not sheet_grids:
+            raise TeamSheetEmptyError(localize(
+                I18N.errors.team_profile.team_sheet_empty, sheet_name=sheet_scope,
+            ))
+        return tuple(
+            build_team_profile(
+                team_name=block.title, division_name=title,
+                remaining_signings="", top_three_average="",
+                players=_parse_players(grid, block),
+                technical_staff=_parse_technical_staff(grid, block),
+            )
+            for title, grid in sheet_grids
+            for block in _collect_team_blocks(grid)
+            if not _is_free_block_title(block.title)
+        )
+
     def find_team_profile_for_role_sync(
             self,
             role: discord.Role,

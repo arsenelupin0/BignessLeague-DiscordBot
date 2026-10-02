@@ -547,6 +547,11 @@
         "name": "actualización_roles_masivo",
         "description": "Sincroniza masivamente roles de equipos, participante, jugador y staff desde Google Sheets."
       }
+    },
+    "discord_verification": {
+      "name": "verificacion_discord",
+      "description": "Comprueba miembros y roles de las plantillas por división y equipo.",
+      "team_description": "Equipo opcional: muestra solo sus miembros ausentes del servidor"
     }
   },
   "messages": {
@@ -1057,6 +1062,29 @@
           "rules": "Normativa - Bigness League"
         }
       }
+    },
+    "discord_verification": {
+      "title": "# 🔎 Verificación de Discord",
+      "filtered_title": "# 🔎 Miembros ausentes por equipo",
+      "summary": "**{teams} equipos · {total} registros de miembros**\n✅ En el servidor: **{present}** · ❌ No localizados: **{missing}** · ⚠️ Por revisar: **{review}** · 🏷️ Con roles pendientes: **{roles}**",
+      "legend": "-# Incluye jugadores y staff; cada persona cuenta una vez por equipo. Los nombres sin coincidencia pueden haber cambiado: usa IDs numéricos para confirmar ausencias y generar menciones. Las menciones no envían notificaciones.",
+      "team_heading": "## {division} · {team}",
+      "team_summary": "**{total} miembros** · ✅ {present} presentes · ❌ {missing} no localizados",
+      "identity": "**{player}** · {reference}\n  Hoja: {sheet}",
+      "no_resolved_id": "Sin ID resoluble ni mención disponible",
+      "present": "✅ En el servidor · roles comprobados correctos si no hay avisos de configuración.",
+      "missing": "❌ No localizado en este servidor.",
+      "invalid": "⚠️ Falta el Discord ID en la hoja; no se puede comprobar.",
+      "ambiguous": "⚠️ Varias coincidencias por nombre; usa un ID numérico para identificar a la persona.",
+      "missing_roles": "🏷️ En el servidor · faltan roles: {roles}",
+      "unavailable_role": "⚠️ Rol inexistente, sin configurar o ambiguo: **{role}**. No se pudo comprobar.",
+      "no_missing": "✅ No hay miembros ausentes identificados para este equipo.",
+      "empty_roster": "No hay jugadores ni staff registrados.",
+      "no_teams": "No hay equipos registrados en las hojas configuradas.",
+      "page": "-# Página {page}/{total} · Informe completo en el archivo adjunto.",
+      "previous": "Anterior",
+      "next_page": "Siguiente",
+      "owner_only": "Solo quien ejecutó el comando puede cambiar la página."
     }
   },
   "errors": {
@@ -1191,6 +1219,10 @@
       "discord_forbidden": "Discord ha rechazado la acción. Revisa los permisos del bot.",
       "http_error": "Discord ha devuelto un error al actualizar el canal.",
       "unexpected": "Ha ocurrido un error inesperado al procesar el comando."
+    },
+    "discord_verification": {
+      "members_unavailable": "No se pudo consultar la lista completa de miembros de Discord. No se han marcado ausencias. Revisa la conexión, los permisos y el intent de miembros del bot y vuelve a intentarlo.",
+      "team_not_found": "No se encontró ese equipo en las hojas configuradas. Elige un nombre del autocompletado."
     }
   },
   "actions": {

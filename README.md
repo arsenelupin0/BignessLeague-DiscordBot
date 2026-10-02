@@ -101,6 +101,8 @@ crea un canal de partido con permisos para ambos equipos.
 - `/dar_de_baja_jugador discord_jugador:<texto> equipo:<rol>`: elimina solo al jugador del roster de ese equipo.
 - `/dar_de_baja_staff discord_staff:<texto> equipo:<rol>`: elimina solo sus cargos de `STAFF TÉCNICO` en ese equipo.
 - `/asignar_rol_equipo_automatico equipo:<rol>`: revisa la hoja del equipo y sincroniza los roles en Discord.
+- `/verificacion_discord [equipo:<nombre>]`: contrasta las plantillas de Google Sheets con los miembros y roles del
+  servidor. Sin equipo muestra todas las divisiones; con equipo muestra solo sus miembros no localizados.
 - `/integracion_de_tickets`: publica el panel de soporte para abrir tickets desde un menu desplegable.
 - `/integracion_de_inscripciones`: publica el panel de inscripciones con sus cuatro competiciones.
 - `/recordatorios_ticket activados:<sí/no>`: activa o desactiva los avisos y el cierre automático por inactividad del
@@ -109,6 +111,28 @@ crea un canal de partido con permisos para ambos equipos.
   con los recordatorios activados o desactivados. Solo está disponible para el rol `Staff`.
 - `/subir_replays`: sube entre 3 y 5 ficheros `.replay` a Ballchasing, vuelca el resumen de la serie, games y
   jugadores en Google Sheets, evita duplicados por `Replay ID`/SHA256 y actualiza la clasificación de la división.
+
+`/verificacion_discord`:
+
+- Solo pueden ejecutarlo los roles `Staff`, `Administrador` y `Ceo`, dentro del servidor.
+- Lee una vez las hojas de plantillas configuradas en `GOOGLE_SHEETS_TEAM_SHEET_NAME`, incluidos los equipos que
+  no tienen rol en Discord. Reutiliza el parseo de jugadores y staff y omite los bloques libres.
+- El informe público agrupa división y equipo, indica presentes, no localizados, nombres ambiguos, IDs vacíos y
+  roles pendientes. Incluye el valor guardado en la hoja, el ID numérico y la mención cuando se pueden resolver.
+- Comprueba el rol del equipo dentro del rango configurado, `Participante`, `Jugador` para los jugadores y los
+  cargos de staff configurados. `Capitán` se exige cuando la persona también es jugador del mismo equipo.
+  Los roles inexistentes o ambiguos se señalan como configuración pendiente.
+- El parámetro `equipo` es un nombre con autocompletado de Sheets; permite elegir equipos sin rol en Discord.
+  Si un nombre se repite en varias hojas, incluye todas sus divisiones. El detalle filtrado muestra únicamente
+  miembros no localizados; el resumen mantiene los contadores de datos que requieren revisión.
+- Admite IDs numéricos, menciones y nombres de Discord, globales o del servidor. Un nombre sin coincidencia puede
+  haber cambiado: para confirmar ausencias y conservar menciones de quienes faltan, guarda IDs numéricos como texto.
+  La comprobación se refiere a la pertenencia a este servidor, no a la existencia global de una cuenta de Discord.
+- Consulta todos los miembros mediante la API; si falla, devuelve un error en lugar de inferir ausencias desde
+  una caché incompleta. Necesita el intent de miembros habilitado también en el portal de Discord.
+- Los informes largos tienen botones de paginación disponibles durante cinco minutos para quien lanzó el comando
+  y un archivo `verificacion_discord.md` con todas las páginas. Las menciones no envían notificaciones.
+- Es una comprobación de lectura: no modifica la hoja ni asigna o retira roles.
 
 Opciones disponibles en `/cerrar_canal`:
 

@@ -514,6 +514,11 @@
         "name": "bulk_role_update",
         "description": "Bulk-synchronizes team, participant, player, and staff roles from Google Sheets."
       }
+    },
+    "discord_verification": {
+      "name": "verificacion_discord",
+      "description": "Checks roster members and roles by division and team.",
+      "team_description": "Optional team: shows only its members missing from the server"
     }
   },
   "messages": {
@@ -914,6 +919,29 @@
           "footer": "Developed by the Bigness League team"
         }
       }
+    },
+    "discord_verification": {
+      "title": "# 🔎 Discord verification",
+      "filtered_title": "# 🔎 Missing members by team",
+      "summary": "**{teams} teams · {total} member records**\n✅ On the server: **{present}** · ❌ Not found: **{missing}** · ⚠️ Needs review: **{review}** · 🏷️ Missing roles: **{roles}**",
+      "legend": "-# Includes players and staff; each person counts once per team. Unmatched names may have changed: use numeric IDs to confirm absences and generate mentions. Mentions do not send notifications.",
+      "team_heading": "## {division} · {team}",
+      "team_summary": "**{total} members** · ✅ {present} present · ❌ {missing} not found",
+      "identity": "**{player}** · {reference}\n  Sheet: {sheet}",
+      "no_resolved_id": "No resolved ID or mention available",
+      "present": "✅ On the server · checked roles are correct unless configuration warnings apply.",
+      "missing": "❌ Not found on this server.",
+      "invalid": "⚠️ Discord ID is missing from the sheet; cannot verify.",
+      "ambiguous": "⚠️ Multiple name matches; use a numeric ID to identify this person.",
+      "missing_roles": "🏷️ On the server · missing roles: {roles}",
+      "unavailable_role": "⚠️ Missing, unconfigured or ambiguous role: **{role}**. Could not verify.",
+      "no_missing": "✅ No identified missing members for this team.",
+      "empty_roster": "No players or staff registered.",
+      "no_teams": "No registered teams in the configured worksheets.",
+      "page": "-# Page {page}/{total} · Complete report in the attachment.",
+      "previous": "Previous",
+      "next_page": "Next",
+      "owner_only": "Only the command author can change pages."
     }
   },
   "errors": {
@@ -1036,6 +1064,10 @@
       "discord_forbidden": "Discord rejected the action. Check the bot permissions.",
       "http_error": "Discord returned an error while updating the channel.",
       "unexpected": "An unexpected error occurred while processing the command."
+    },
+    "discord_verification": {
+      "members_unavailable": "Could not retrieve the complete Discord member list. No absences were recorded. Check the connection, permissions and bot members intent, then try again.",
+      "team_not_found": "That team was not found in the configured worksheets. Choose an autocomplete suggestion."
     }
   },
   "actions": {

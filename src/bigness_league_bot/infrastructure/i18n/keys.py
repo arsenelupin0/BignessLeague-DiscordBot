@@ -994,7 +994,16 @@ class _CommandsTeamRoleAssignment:
     sync_team_role: _CommandsTeamRoleAssignmentSyncTeamRole = _CommandsTeamRoleAssignmentSyncTeamRole()
     bulk_sync: _CommandsTeamRoleAssignmentBulkSync = _CommandsTeamRoleAssignmentBulkSync()
 
+
+class _CommandsDiscordVerification:
+    name: TranslationKey = TranslationKey(key="commands.discord_verification.name", default_text="verificacion_discord")
+    description: TranslationKey = TranslationKey(key="commands.discord_verification.description",
+                                                 default_text="Comprueba miembros y roles de las plantillas por divisi\u00f3n y equipo.")
+    team_description: TranslationKey = TranslationKey(key="commands.discord_verification.team_description",
+                                                      default_text="Equipo opcional: muestra solo sus miembros ausentes del servidor")
+
 class _Commands:
+    discord_verification: _CommandsDiscordVerification = _CommandsDiscordVerification()
     channel_management: _CommandsChannelManagement = _CommandsChannelManagement()
     channel_access: _CommandsChannelAccess = _CommandsChannelAccess()
     tickets: _CommandsTickets = _CommandsTickets()
@@ -1930,7 +1939,51 @@ class _MessagesMatchChannelCreation:
     final_four_welcome: _MessagesMatchChannelCreationFinalFourWelcome = _MessagesMatchChannelCreationFinalFourWelcome()
     asc_desc_welcome: _MessagesMatchChannelCreationAscDescWelcome = _MessagesMatchChannelCreationAscDescWelcome()
 
+
+class _MessagesDiscordVerification:
+    title: TranslationKey = TranslationKey(key="messages.discord_verification.title",
+                                           default_text="# \ud83d\udd0e Verificaci\u00f3n de Discord")
+    filtered_title: TranslationKey = TranslationKey(key="messages.discord_verification.filtered_title",
+                                                    default_text="# \ud83d\udd0e Miembros ausentes por equipo")
+    summary: TranslationKey = TranslationKey(key="messages.discord_verification.summary",
+                                             default_text="**{teams} equipos \u00b7 {total} registros de miembros**\n\u2705 En el servidor: **{present}** \u00b7 \u274c No localizados: **{missing}** \u00b7 \u26a0\ufe0f Por revisar: **{review}** \u00b7 \ud83c\udff7\ufe0f Con roles pendientes: **{roles}**")
+    legend: TranslationKey = TranslationKey(key="messages.discord_verification.legend",
+                                            default_text="-# Incluye jugadores y staff; cada persona cuenta una vez por equipo. Los nombres sin coincidencia pueden haber cambiado: usa IDs num\u00e9ricos para confirmar ausencias y generar menciones. Las menciones no env\u00edan notificaciones.")
+    team_heading: TranslationKey = TranslationKey(key="messages.discord_verification.team_heading",
+                                                  default_text="## {division} \u00b7 {team}")
+    team_summary: TranslationKey = TranslationKey(key="messages.discord_verification.team_summary",
+                                                  default_text="**{total} miembros** \u00b7 \u2705 {present} presentes \u00b7 \u274c {missing} no localizados")
+    identity: TranslationKey = TranslationKey(key="messages.discord_verification.identity",
+                                              default_text="**{player}** \u00b7 {reference}\n  Hoja: {sheet}")
+    no_resolved_id: TranslationKey = TranslationKey(key="messages.discord_verification.no_resolved_id",
+                                                    default_text="Sin ID resoluble ni menci\u00f3n disponible")
+    present: TranslationKey = TranslationKey(key="messages.discord_verification.present",
+                                             default_text="\u2705 En el servidor \u00b7 roles comprobados correctos si no hay avisos de configuraci\u00f3n.")
+    missing: TranslationKey = TranslationKey(key="messages.discord_verification.missing",
+                                             default_text="\u274c No localizado en este servidor.")
+    invalid: TranslationKey = TranslationKey(key="messages.discord_verification.invalid",
+                                             default_text="\u26a0\ufe0f Falta el Discord ID en la hoja; no se puede comprobar.")
+    ambiguous: TranslationKey = TranslationKey(key="messages.discord_verification.ambiguous",
+                                               default_text="\u26a0\ufe0f Varias coincidencias por nombre; usa un ID num\u00e9rico para identificar a la persona.")
+    missing_roles: TranslationKey = TranslationKey(key="messages.discord_verification.missing_roles",
+                                                   default_text="\ud83c\udff7\ufe0f En el servidor \u00b7 faltan roles: {roles}")
+    unavailable_role: TranslationKey = TranslationKey(key="messages.discord_verification.unavailable_role",
+                                                      default_text="\u26a0\ufe0f Rol inexistente, sin configurar o ambiguo: **{role}**. No se pudo comprobar.")
+    no_missing: TranslationKey = TranslationKey(key="messages.discord_verification.no_missing",
+                                                default_text="\u2705 No hay miembros ausentes identificados para este equipo.")
+    empty_roster: TranslationKey = TranslationKey(key="messages.discord_verification.empty_roster",
+                                                  default_text="No hay jugadores ni staff registrados.")
+    no_teams: TranslationKey = TranslationKey(key="messages.discord_verification.no_teams",
+                                              default_text="No hay equipos registrados en las hojas configuradas.")
+    page: TranslationKey = TranslationKey(key="messages.discord_verification.page",
+                                          default_text="-# P\u00e1gina {page}/{total} \u00b7 Informe completo en el archivo adjunto.")
+    previous: TranslationKey = TranslationKey(key="messages.discord_verification.previous", default_text="Anterior")
+    next_page: TranslationKey = TranslationKey(key="messages.discord_verification.next_page", default_text="Siguiente")
+    owner_only: TranslationKey = TranslationKey(key="messages.discord_verification.owner_only",
+                                                default_text="Solo quien ejecut\u00f3 el comando puede cambiar la p\u00e1gina.")
+
 class _Messages:
+    discord_verification: _MessagesDiscordVerification = _MessagesDiscordVerification()
     match_schedules: _MessagesMatchSchedules = _MessagesMatchSchedules()
     admin: _MessagesAdmin = _MessagesAdmin()
     team_profile: _MessagesTeamProfile = _MessagesTeamProfile()
@@ -2238,7 +2291,15 @@ class _ErrorsSlash:
     unexpected: TranslationKey = TranslationKey(key="errors.slash.unexpected",
                                                 default_text="Ha ocurrido un error inesperado al procesar el comando.")
 
+
+class _ErrorsDiscordVerification:
+    members_unavailable: TranslationKey = TranslationKey(key="errors.discord_verification.members_unavailable",
+                                                         default_text="No se pudo consultar la lista completa de miembros de Discord. No se han marcado ausencias. Revisa la conexi\u00f3n, los permisos y el intent de miembros del bot y vuelve a intentarlo.")
+    team_not_found: TranslationKey = TranslationKey(key="errors.discord_verification.team_not_found",
+                                                    default_text="No se encontr\u00f3 ese equipo en las hojas configuradas. Elige un nombre del autocompletado.")
+
 class _Errors:
+    discord_verification: _ErrorsDiscordVerification = _ErrorsDiscordVerification()
     channel_management: _ErrorsChannelManagement = _ErrorsChannelManagement()
     tickets: _ErrorsTickets = _ErrorsTickets()
     match_channel_creation: _ErrorsMatchChannelCreation = _ErrorsMatchChannelCreation()
