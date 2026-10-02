@@ -519,6 +519,10 @@
       "name": "verificacion_discord",
       "description": "Checks roster members and roles by division and team.",
       "team_description": "Optional team: shows only its members missing from the server"
+    },
+    "league_seedings": {
+      "name": "league_seedings",
+      "description": "Draw the 7 Gold and Silver matchdays and save the fixtures to Google Sheets."
     }
   },
   "messages": {
@@ -942,6 +946,17 @@
       "previous": "Previous",
       "next_page": "Next",
       "owner_only": "Only the command author can change pages."
+    },
+    "league_seedings": {
+      "overview": "# 🎲 BIGNESS LEAGUE · League draw\n\n✅ **Calendar saved to Google Sheets**\n\n🥇 **Gold Division** · 8 teams · 7 matchdays · 28 fixtures\n🥈 **Silver Division** · 8 teams · 7 matchdays · 28 fixtures\n\n⚽ **56 fixtures scheduled**\nEvery team will face **7 different opponents**, with **3 or 4 home matches**.\n\n📍 **GAME 1 · J1 → J7**\nTeams written to their cells: **home · empty result · away**.\n\n📅 Here is the calendar by division and matchday, with direct links to each worksheet.",
+      "division_heading": "## {emoji} {division}",
+      "destination": "✅ [Open calendar in Google Sheets]({sheet_url})\n**Worksheet:** {sheet_name} · **Cells:** `{ranges}`",
+      "matchdays": "**J{first} → J{last}** · {matches} fixtures per matchday",
+      "matchday_heading": "### Matchday {number}",
+      "fixture": "**P{number}** · {home} **vs** {away}",
+      "summary_only": "The complete calendar is saved in the linked worksheet. Team names are too long to show a full matchday in Discord.",
+      "gold_emoji": "🥇",
+      "silver_emoji": "🥈"
     }
   },
   "errors": {
@@ -1068,6 +1083,21 @@
     "discord_verification": {
       "members_unavailable": "Could not retrieve the complete Discord member list. No absences were recorded. Check the connection, permissions and bot members intent, then try again.",
       "team_not_found": "That team was not found in the configured worksheets. Choose an autocomplete suggestion."
+    },
+    "league_seedings": {
+      "team_count": "Cannot draw {division}: exactly {expected} registered teams are required, but I found {actual}. Check the sheet and run /league_seedings again.",
+      "duplicate_team": "There are duplicate team names in {division}. Fix the repeated blocks before running /league_seedings.",
+      "invalid_team_name": "A team name in {division} is empty or contains tabs, line breaks or control characters. Correct it to save the calendar.",
+      "ambiguous_division": "Several {division} worksheets contain registered teams. Configure one worksheet per division in BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME to avoid mixing seasons.",
+      "season_mismatch": "Gold and Silver belong to different seasons. Configure worksheets from the same season before running /league_seedings.",
+      "destination_configuration": "Configure separate Gold and Silver calendar worksheets in BOT_GOOGLE_SHEETS_MATCH_STANDINGS_SHEET_NAME, as used by result commands. No fixtures have been saved.",
+      "destination_not_found": "No unique calendar worksheet was found for {division}: {sheet_name}. Check BOT_GOOGLE_SHEETS_MATCH_STANDINGS_SHEET_NAME. No fixtures have been saved.",
+      "destination_season_mismatch": "Calendar worksheet {sheet_name} belongs to a different season than its teams. Check the configuration. No fixtures have been saved.",
+      "calendar_occupied": "Worksheet {sheet_name} already contains teams, results or formulas in the calendar. Neither division has been overwritten. Use /league_seedings at the start of the league with empty calendars.",
+      "invalid_grid": "Worksheet {sheet_name} cannot receive fixtures in B20:D47: rows or columns are missing, or cells are merged within that range. No fixtures have been saved.",
+      "grid_read_failed": "Both calendars could not be checked. No fixtures have been saved. Try again.",
+      "google_read_failed": "The calendar worksheets could not be read: {details}. No fixtures have been saved.",
+      "google_write_failed": "Saving the calendars to Google Sheets could not be confirmed: {details}. Check the worksheets before running the command again."
     }
   },
   "actions": {

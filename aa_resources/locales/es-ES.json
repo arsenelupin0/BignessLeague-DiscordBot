@@ -552,6 +552,10 @@
       "name": "verificacion_discord",
       "description": "Comprueba miembros y roles de las plantillas por división y equipo.",
       "team_description": "Equipo opcional: muestra solo sus miembros ausentes del servidor"
+    },
+    "league_seedings": {
+      "name": "league_seedings",
+      "description": "Sortea las 7 jornadas de Gold y Silver y guarda los partidos en Google Sheets."
     }
   },
   "messages": {
@@ -1085,6 +1089,17 @@
       "previous": "Anterior",
       "next_page": "Siguiente",
       "owner_only": "Solo quien ejecutó el comando puede cambiar la página."
+    },
+    "league_seedings": {
+      "overview": "# 🎲 BIGNESS LEAGUE · Sorteo de liga\n\n✅ **Calendario guardado en Google Sheets**\n\n🥇 **Gold Division** · 8 equipos · 7 jornadas · 28 encuentros\n🥈 **Silver Division** · 8 equipos · 7 jornadas · 28 encuentros\n\n⚽ **56 encuentros programados**\nCada equipo jugará contra **7 rivales distintos**, con **3 o 4 partidos como local**.\n\n📍 **GAME 1 · J1 → J7**\nEquipos escritos en sus celdas: **local · resultado vacío · visitante**.\n\n📅 Aquí tienes el calendario por división y jornada, con acceso directo a cada hoja.",
+      "division_heading": "## {emoji} {division}",
+      "destination": "✅ [Abrir calendario en Google Sheets]({sheet_url})\n**Hoja:** {sheet_name} · **Celdas:** `{ranges}`",
+      "matchdays": "**J{first} → J{last}** · {matches} encuentros por jornada",
+      "matchday_heading": "### Jornada {number}",
+      "fixture": "**P{number}** · {home} **vs** {away}",
+      "summary_only": "El calendario completo está guardado en la hoja enlazada. Los nombres son demasiado largos para mostrar una jornada completa en Discord.",
+      "gold_emoji": "🥇",
+      "silver_emoji": "🥈"
     }
   },
   "errors": {
@@ -1223,6 +1238,21 @@
     "discord_verification": {
       "members_unavailable": "No se pudo consultar la lista completa de miembros de Discord. No se han marcado ausencias. Revisa la conexión, los permisos y el intent de miembros del bot y vuelve a intentarlo.",
       "team_not_found": "No se encontró ese equipo en las hojas configuradas. Elige un nombre del autocompletado."
+    },
+    "league_seedings": {
+      "team_count": "No se puede sortear {division}: se necesitan exactamente {expected} equipos inscritos y he encontrado {actual}. Revisa la hoja y vuelve a ejecutar /league_seedings.",
+      "duplicate_team": "Hay nombres de equipo duplicados en {division}. Corrige los bloques repetidos antes de ejecutar /league_seedings.",
+      "invalid_team_name": "Hay un nombre de equipo vacío o con tabulaciones, saltos de línea o caracteres de control en {division}. Corrígelo para poder guardar el calendario.",
+      "ambiguous_division": "Hay varias hojas de {division} con equipos inscritos. Configura una sola hoja por división en BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME para evitar mezclar temporadas.",
+      "season_mismatch": "Gold y Silver pertenecen a temporadas diferentes. Configura las hojas de la misma temporada antes de ejecutar /league_seedings.",
+      "destination_configuration": "Configura dos hojas de calendario diferentes para Gold y Silver en BOT_GOOGLE_SHEETS_MATCH_STANDINGS_SHEET_NAME, como en los comandos de resultados. No se ha guardado ningún partido.",
+      "destination_not_found": "No se ha encontrado una hoja de calendario única para {division}: {sheet_name}. Revisa BOT_GOOGLE_SHEETS_MATCH_STANDINGS_SHEET_NAME. No se ha guardado ningún partido.",
+      "destination_season_mismatch": "La hoja de calendario {sheet_name} pertenece a una temporada diferente a la de sus equipos. Revisa la configuración. No se ha guardado ningún partido.",
+      "calendar_occupied": "La hoja {sheet_name} ya contiene equipos, resultados o fórmulas en el calendario. No se ha sobrescrito ninguna división. /league_seedings se utiliza al inicio de la liga, con los calendarios vacíos.",
+      "invalid_grid": "La hoja {sheet_name} no permite escribir los partidos en B20:D47: faltan filas o columnas, o hay celdas combinadas dentro de ese rango. No se ha guardado ningún partido.",
+      "grid_read_failed": "No se han podido comprobar ambos calendarios. No se ha guardado ningún partido. Vuelve a intentarlo.",
+      "google_read_failed": "No se han podido consultar las hojas de calendario: {details}. No se ha guardado ningún partido.",
+      "google_write_failed": "No se ha podido confirmar el guardado de los calendarios en Google Sheets: {details}. Comprueba las hojas antes de volver a ejecutar el comando."
     }
   },
   "actions": {

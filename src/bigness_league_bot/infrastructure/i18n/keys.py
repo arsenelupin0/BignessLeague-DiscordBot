@@ -1002,7 +1002,14 @@ class _CommandsDiscordVerification:
     team_description: TranslationKey = TranslationKey(key="commands.discord_verification.team_description",
                                                       default_text="Equipo opcional: muestra solo sus miembros ausentes del servidor")
 
+
+class _CommandsLeagueSeedings:
+    name: TranslationKey = TranslationKey(key="commands.league_seedings.name", default_text="league_seedings")
+    description: TranslationKey = TranslationKey(key="commands.league_seedings.description",
+                                                 default_text="Sortea las 7 jornadas de Gold y Silver y guarda los partidos en Google Sheets.")
+
 class _Commands:
+    league_seedings: _CommandsLeagueSeedings = _CommandsLeagueSeedings()
     discord_verification: _CommandsDiscordVerification = _CommandsDiscordVerification()
     channel_management: _CommandsChannelManagement = _CommandsChannelManagement()
     channel_access: _CommandsChannelAccess = _CommandsChannelAccess()
@@ -1982,7 +1989,28 @@ class _MessagesDiscordVerification:
     owner_only: TranslationKey = TranslationKey(key="messages.discord_verification.owner_only",
                                                 default_text="Solo quien ejecut\u00f3 el comando puede cambiar la p\u00e1gina.")
 
+
+class _MessagesLeagueSeedings:
+    overview: TranslationKey = TranslationKey(key="messages.league_seedings.overview",
+                                              default_text="# \ud83c\udfb2 BIGNESS LEAGUE \u00b7 Sorteo de liga\n\n\u2705 **Calendario guardado en Google Sheets**\n\n\ud83e\udd47 **Gold Division** \u00b7 8 equipos \u00b7 7 jornadas \u00b7 28 encuentros\n\ud83e\udd48 **Silver Division** \u00b7 8 equipos \u00b7 7 jornadas \u00b7 28 encuentros\n\n\u26bd **56 encuentros programados**\nCada equipo jugar\u00e1 contra **7 rivales distintos**, con **3 o 4 partidos como local**.\n\n\ud83d\udccd **GAME 1 \u00b7 J1 \u2192 J7**\nEquipos escritos en sus celdas: **local \u00b7 resultado vac\u00edo \u00b7 visitante**.\n\n\ud83d\udcc5 Aqu\u00ed tienes el calendario por divisi\u00f3n y jornada, con acceso directo a cada hoja.")
+    division_heading: TranslationKey = TranslationKey(key="messages.league_seedings.division_heading",
+                                                      default_text="## {emoji} {division}")
+    destination: TranslationKey = TranslationKey(key="messages.league_seedings.destination",
+                                                 default_text="\u2705 [Abrir calendario en Google Sheets]({sheet_url})\n**Hoja:** {sheet_name} \u00b7 **Celdas:** `{ranges}`")
+    matchdays: TranslationKey = TranslationKey(key="messages.league_seedings.matchdays",
+                                               default_text="**J{first} \u2192 J{last}** \u00b7 {matches} encuentros por jornada")
+    matchday_heading: TranslationKey = TranslationKey(key="messages.league_seedings.matchday_heading",
+                                                      default_text="### Jornada {number}")
+    fixture: TranslationKey = TranslationKey(key="messages.league_seedings.fixture",
+                                             default_text="**P{number}** \u00b7 {home} **vs** {away}")
+    summary_only: TranslationKey = TranslationKey(key="messages.league_seedings.summary_only",
+                                                  default_text="El calendario completo est\u00e1 guardado en la hoja enlazada. Los nombres son demasiado largos para mostrar una jornada completa en Discord.")
+    gold_emoji: TranslationKey = TranslationKey(key="messages.league_seedings.gold_emoji", default_text="\ud83e\udd47")
+    silver_emoji: TranslationKey = TranslationKey(key="messages.league_seedings.silver_emoji",
+                                                  default_text="\ud83e\udd48")
+
 class _Messages:
+    league_seedings: _MessagesLeagueSeedings = _MessagesLeagueSeedings()
     discord_verification: _MessagesDiscordVerification = _MessagesDiscordVerification()
     match_schedules: _MessagesMatchSchedules = _MessagesMatchSchedules()
     admin: _MessagesAdmin = _MessagesAdmin()
@@ -2298,7 +2326,38 @@ class _ErrorsDiscordVerification:
     team_not_found: TranslationKey = TranslationKey(key="errors.discord_verification.team_not_found",
                                                     default_text="No se encontr\u00f3 ese equipo en las hojas configuradas. Elige un nombre del autocompletado.")
 
+
+class _ErrorsLeagueSeedings:
+    team_count: TranslationKey = TranslationKey(key="errors.league_seedings.team_count",
+                                                default_text="No se puede sortear {division}: se necesitan exactamente {expected} equipos inscritos y he encontrado {actual}. Revisa la hoja y vuelve a ejecutar /league_seedings.")
+    duplicate_team: TranslationKey = TranslationKey(key="errors.league_seedings.duplicate_team",
+                                                    default_text="Hay nombres de equipo duplicados en {division}. Corrige los bloques repetidos antes de ejecutar /league_seedings.")
+    invalid_team_name: TranslationKey = TranslationKey(key="errors.league_seedings.invalid_team_name",
+                                                       default_text="Hay un nombre de equipo vac\u00edo o con tabulaciones, saltos de l\u00ednea o caracteres de control en {division}. Corr\u00edgelo para poder guardar el calendario.")
+    ambiguous_division: TranslationKey = TranslationKey(key="errors.league_seedings.ambiguous_division",
+                                                        default_text="Hay varias hojas de {division} con equipos inscritos. Configura una sola hoja por divisi\u00f3n en BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME para evitar mezclar temporadas.")
+    season_mismatch: TranslationKey = TranslationKey(key="errors.league_seedings.season_mismatch",
+                                                     default_text="Gold y Silver pertenecen a temporadas diferentes. Configura las hojas de la misma temporada antes de ejecutar /league_seedings.")
+    destination_configuration: TranslationKey = TranslationKey(key="errors.league_seedings.destination_configuration",
+                                                               default_text="Configura dos hojas de calendario diferentes para Gold y Silver en BOT_GOOGLE_SHEETS_MATCH_STANDINGS_SHEET_NAME, como en los comandos de resultados. No se ha guardado ning\u00fan partido.")
+    destination_not_found: TranslationKey = TranslationKey(key="errors.league_seedings.destination_not_found",
+                                                           default_text="No se ha encontrado una hoja de calendario \u00fanica para {division}: {sheet_name}. Revisa BOT_GOOGLE_SHEETS_MATCH_STANDINGS_SHEET_NAME. No se ha guardado ning\u00fan partido.")
+    destination_season_mismatch: TranslationKey = TranslationKey(
+        key="errors.league_seedings.destination_season_mismatch",
+        default_text="La hoja de calendario {sheet_name} pertenece a una temporada diferente a la de sus equipos. Revisa la configuraci\u00f3n. No se ha guardado ning\u00fan partido.")
+    calendar_occupied: TranslationKey = TranslationKey(key="errors.league_seedings.calendar_occupied",
+                                                       default_text="La hoja {sheet_name} ya contiene equipos, resultados o f\u00f3rmulas en el calendario. No se ha sobrescrito ninguna divisi\u00f3n. /league_seedings se utiliza al inicio de la liga, con los calendarios vac\u00edos.")
+    invalid_grid: TranslationKey = TranslationKey(key="errors.league_seedings.invalid_grid",
+                                                  default_text="La hoja {sheet_name} no permite escribir los partidos en B20:D47: faltan filas o columnas, o hay celdas combinadas dentro de ese rango. No se ha guardado ning\u00fan partido.")
+    grid_read_failed: TranslationKey = TranslationKey(key="errors.league_seedings.grid_read_failed",
+                                                      default_text="No se han podido comprobar ambos calendarios. No se ha guardado ning\u00fan partido. Vuelve a intentarlo.")
+    google_read_failed: TranslationKey = TranslationKey(key="errors.league_seedings.google_read_failed",
+                                                        default_text="No se han podido consultar las hojas de calendario: {details}. No se ha guardado ning\u00fan partido.")
+    google_write_failed: TranslationKey = TranslationKey(key="errors.league_seedings.google_write_failed",
+                                                         default_text="No se ha podido confirmar el guardado de los calendarios en Google Sheets: {details}. Comprueba las hojas antes de volver a ejecutar el comando.")
+
 class _Errors:
+    league_seedings: _ErrorsLeagueSeedings = _ErrorsLeagueSeedings()
     discord_verification: _ErrorsDiscordVerification = _ErrorsDiscordVerification()
     channel_management: _ErrorsChannelManagement = _ErrorsChannelManagement()
     tickets: _ErrorsTickets = _ErrorsTickets()

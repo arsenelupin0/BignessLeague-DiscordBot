@@ -63,6 +63,14 @@ class BignessLeagueBot(commands.Bot):
             ", ".join(local_commands) if local_commands else "(ninguno)",
         )
 
+        LOGGER.info(
+            "Sincronización iniciada: entorno=%s scope=%s guild_id=%s application_id=%s bot_id=%s",
+            self.settings.environment,
+            self.settings.sync_scope,
+            self.settings.guild_id,
+            self.application_id,
+            self.user.id if self.user is not None else None,
+        )
         sync_report = await sync_command_tree(
             self.tree,
             self.settings.sync_scope,

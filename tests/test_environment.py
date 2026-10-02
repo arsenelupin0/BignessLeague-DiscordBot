@@ -53,6 +53,33 @@ class EnvironmentTests(unittest.TestCase):
         self.assertEqual(load_environment(self.root), "development")
         self.assertEqual(os.environ["SHEETS"], "TEST")
 
+    def test_development_local_credentials_replace_inherited_production_token(self) -> None:
+        self.write(".env", "BOT_ENV=development\nDISCORD_TOKEN=test-bot-token\n")
+        self.write(".env.development", "DISCORD_GUILD_ID=123\nDISCORD_TOKEN=\n")
+        self.write(".env.production", "DISCORD_GUILD_ID=456\nDISCORD_TOKEN=production-token\n")
+        os.environ["DISCORD_TOKEN"] = "inherited-production-token"
+
+        self.assertEqual(load_environment(self.root), "development")
+        self.assertEqual(os.environ["DISCORD_TOKEN"], "test-bot-token")
+        self.assertEqual(os.environ["DISCORD_GUILD_ID"], "123")
+
+    def test_development_local_settings_override_inherited_values(self) -> None:
+        self.write(".env", "BOT_ENV=production\nDISCORD_GUILD_ID=123\n")
+        self.write(".env.development", "DISCORD_GUILD_ID=456\n")
+        os.environ.update(BOT_ENV="development", DISCORD_GUILD_ID="789")
+
+        self.assertEqual(load_environment(self.root), "development")
+        self.assertEqual(os.environ["BOT_ENV"], "development")
+        self.assertEqual(os.environ["DISCORD_GUILD_ID"], "123")
+
+    def test_development_preserves_process_settings_absent_from_local_file(self) -> None:
+        self.write(".env", "BOT_ENV=development\n")
+        self.write(".env.development", "DISCORD_TOKEN=\n")
+        os.environ["DISCORD_TOKEN"] = "explicit-test-token"
+
+        load_environment(self.root)
+        self.assertEqual(os.environ["DISCORD_TOKEN"], "explicit-test-token")
+
     def test_no_selector_defaults_to_development(self) -> None:
         self.write(".env.development", "SHEETS=TEST\n")
         self.assertEqual(load_environment(self.root), "development")

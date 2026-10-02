@@ -55,7 +55,12 @@ pip install -e .
 19. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
     Lo recomendado es colocar la fuente dentro de `aa_resources/fonts/`.
 
-La prioridad de configuración es: variables del proceso, `.env` y, finalmente, `.env.<BOT_ENV>` como valores base.
+La prioridad de configuración depende del entorno:
+
+- En `development`: `.env` privado, variables del proceso y `.env.development` como valores base. Esto evita que
+  un token heredado por el IDE sustituya las credenciales locales del bot de pruebas.
+- En `production`: variables del proceso, `.env` privado y `.env.production` como valores base.
+
 El entorno se elige desde `BOT_ENV` del proceso o de `.env`; si no está definido, se usa `development`.
 Para seleccionar `.env.production` sin modificar tu configuración local, establece `BOT_ENV=production` antes de
 iniciar el proceso. Los archivos versionados `.env.production` y `.env.development` son las plantillas completas:
@@ -64,9 +69,10 @@ incluyen hojas, canales, roles, tiempos y las claves de credenciales con valores
 instalación o en las variables de su proceso.
 El bot carga el perfil seleccionado y después aplica las sobrescrituras de `.env`. Basta con guardar en `.env`
 los tokens y los ajustes que quieras personalizar; los canales, hojas y tiempos pueden mantenerse en cada perfil.
-Cada clave de `.env` sustituye el valor de esa misma clave del perfil, incluso si el valor local está vacío;
-las claves que no aparecen en `.env` conservan el valor del perfil. La sustitución ocurre en memoria y no reescribe
-los archivos versionados.
+Cada clave de `.env` sustituye el valor de esa misma clave del perfil, incluso si el valor local está vacío.
+En producción se respetan los valores que ya estaban definidos en el proceso. Las claves ausentes de `.env`
+conservan el valor del proceso o del perfil según la prioridad anterior. La sustitución ocurre en memoria y no
+reescribe los archivos versionados.
 No hace falta otro archivo privado ni copiar todo el perfil. Por ejemplo, un `.env` mínimo puede contener:
 
 ```dotenv
@@ -113,6 +119,8 @@ python -m bigness_league_bot.main
 - `/cerrar_canal accion:<opcion>`: aplica acciones de cierre sobre el canal actual.
 - `/anadir_al_canal`: abre un selector filtrado para añadir roles al canal actual.
 - `/horarios_fijados`: muestra un resumen de los canales de partido que tienen horario fijado.
+- `/league_seedings`: sortea las siete jornadas de Gold y Silver, guarda los partidos directamente en Google Sheets
+  y presenta el calendario por división y jornada en Discord.
 -
 `/canal_de_jornada jornada:<numero> partido:<numero> minutos_cortesia:<numero> fecha:<texto> hora:<texto> bo_x:<numero> categoria:<division> equipo_1:<rol> equipo_2:<rol>`:
 crea un canal de partido con permisos para ambos equipos.
@@ -135,6 +143,32 @@ crea un canal de partido con permisos para ambos equipos.
   con los recordatorios activados o desactivados. Solo está disponible para el rol `Staff`.
 - `/subir_replays`: sube entre 3 y 5 ficheros `.replay` a Ballchasing, vuelca el resumen de la serie, games y
   jugadores en Google Sheets, evita duplicados por `Replay ID`/SHA256 y actualiza la clasificación de la división.
+
+`/league_seedings`:
+
+- Solo pueden ejecutarlo los roles `Staff`, `Administrador` y `Ceo`, dentro del servidor.
+- Lee los equipos de las hojas configuradas en `BOT_GOOGLE_SHEETS_TEAM_SHEET_NAME`, omitiendo bloques libres e
+  incluyendo equipos sin rol en Discord. Reconoce `Gold Division` y `Silver Division`, también con temporada (`S4`,
+  etc.) y sufijos de entorno `TEST`, `DEV` o `DEVELOPMENT`, por ejemplo `GOLD DIVISION S4 TEST`.
+- Exige exactamente ocho nombres únicos por división. Si faltan equipos, hay nombres duplicados, varias hojas
+  de la misma división o temporadas diferentes, informa del problema sin publicar un calendario parcial.
+- Cada división tiene siete jornadas de cuatro encuentros: todos contra todos a una vuelta, sin repetir rivales,
+  sin cruces entre divisiones y con tres o cuatro partidos como local por equipo.
+- Guarda directamente el calendario en las dos hojas configuradas en
+  `BOT_GOOGLE_SHEETS_MATCH_STANDINGS_SHEET_NAME`, usando el mismo destino y cálculo de filas que las subidas de
+  resultados. Ambas divisiones deben apuntar a hojas diferentes y de la misma temporada que sus equipos.
+- Rellena solo `GAME 1`: `B20:D47`, con local en B, resultado vacío en C y visitante en D.
+  Cada cuatro filas corresponde a una jornada: J1 ocupa 20–23 y J7 ocupa 44–47.
+  Conserva los formatos, los rótulos J1–J7, la clasificación y los bloques GAME 2–5.
+- Antes de escribir comprueba ambos calendarios (`A20:U47`), ignorando los rótulos de jornada y los separadores.
+  Si cualquier bloque contiene equipos, resultados
+  o fórmulas, rechaza el sorteo sin sobrescribirlos. Para iniciar otro calendario, vacía esos datos manualmente.
+  Las ejecuciones simultáneas de este comando se serializan dentro del bot.
+- Guarda ambas divisiones en una única petición atómica, modificando solo los valores de las celdas del calendario.
+  Si Google rechaza una actualización, no se aplica ninguna de las dos. La comprobación previa de vacíos no impide
+  cambios de otros editores entre la lectura y la escritura; evita editar el calendario durante el sorteo.
+- Discord muestra la confirmación de guardado y una presentación Markdown de los enfrentamientos por jornada,
+  con enlaces a cada hoja. Los nombres demasiado largos para Discord se conservan completos en Google Sheets.
 
 `/verificacion_discord`:
 
