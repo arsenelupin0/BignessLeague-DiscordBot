@@ -93,6 +93,12 @@ class BignessLeagueBot(commands.Bot):
             self.settings.guild_id or "(sin configurar)",
         )
         LOGGER.info(
+            "TEAM_CHANGE_BULLETIN_RUNTIME environment=%s worksheets=%s channel_id=%s logos=attachment_v1",
+            self.settings.environment,
+            self.settings.google_sheets_team_sheet_name,
+            self.settings.team_role_removal_announcement_channel_id,
+        )
+        LOGGER.info(
             "Ticket AI runtime=%s | Configurada=%s | Provider=%s | Modelo=%s | Base URL=%s | Auto-reply=%s",
             "activada" if self.ticket_ai is not None else "desactivada",
             self.settings.ticket_ai_enabled,

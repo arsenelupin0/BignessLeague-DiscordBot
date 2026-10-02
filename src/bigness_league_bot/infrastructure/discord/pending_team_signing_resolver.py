@@ -19,6 +19,8 @@ from bigness_league_bot.infrastructure.discord.team_change_announcements import 
     TEAM_STAFF_ROLE_SIGNING_SPEC,
 )
 from bigness_league_bot.infrastructure.discord.team_change_bulletin import (
+    create_team_change_repository,
+    load_team_change_metadata,
     resolve_team_change_bulletin_channel,
 )
 from bigness_league_bot.infrastructure.discord.team_role_assignment import (
@@ -259,10 +261,16 @@ class PendingTeamSigningAssignmentResolver:
         if channel is None:
             return ()
 
-        metadata = TeamRoleSheetMetadata(
-            worksheet_title=assignment.division_name,
-            team_name=assignment.team_role_name,
-            team_image_url=assignment.team_image_url,
+        repository = await create_team_change_repository(self.bot.settings, guild=member.guild)
+        metadata = await load_team_change_metadata(
+            repository=repository,
+            team_role=team_role,
+            fallback=TeamRoleSheetMetadata(
+                worksheet_title=assignment.division_name,
+                team_name=assignment.team_role_name,
+                team_image_url=None,
+            ),
+            guild=member.guild,
         )
         sent_messages: list[discord.Message] = []
         if team_role.id in added_role_ids:

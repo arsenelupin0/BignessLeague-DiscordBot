@@ -408,7 +408,13 @@ class TeamRoleChangeAnnouncementSender:
         elif files:
             send_kwargs["files"] = files
         try:
-            return await channel.send(**send_kwargs)
+            message = await channel.send(**send_kwargs)
+            LOGGER.info(
+                "TEAM_CHANGE_ANNOUNCEMENT_SENT guild_id=%s channel_id=%s message_id=%s team_role_id=%s worksheet=%s logo=%s",
+                guild.id, message.channel.id, message.id, team_role.id, metadata.worksheet_title,
+                "attachment" if logo_file is not None else "default",
+            )
+            return message
         finally:
             for file in files:
                 file.close()

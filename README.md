@@ -17,8 +17,8 @@ pip install -e .
 
 ## Configuración
 
-1. Crea tu archivo `.env` a partir de `.env.example`.
-2. Define `DISCORD_TOKEN` con el token del bot.
+1. Crea tu archivo privado `.env` en la raíz del proyecto con los valores que quieras sobrescribir.
+2. Define `DISCORD_TOKEN` con el token del bot en `.env`, que está ignorado por Git.
 3. Define `DISCORD_GUILD_ID` con el ID de tu servidor de pruebas.
 4. Opcionalmente, ajusta `BOT_PREFIX` si quieres usar otro prefijo para comandos de texto.
 5. Ajusta `BOT_ENV` y `BOT_SYNC_SCOPE` según el entorno.
@@ -54,6 +54,30 @@ pip install -e .
     `BOT_STAFF_SECOND_MANAGER_ROLE_ID` y `BOT_STAFF_CAPTAIN_ROLE_ID`.
 19. Si quieres forzar una fuente concreta para la imagen de `/ver_mi_equipo`, ajusta `BOT_TEAM_PROFILE_FONT_PATH`.
     Lo recomendado es colocar la fuente dentro de `aa_resources/fonts/`.
+
+La prioridad de configuración es: variables del proceso, `.env` y, finalmente, `.env.<BOT_ENV>` como valores base.
+El entorno se elige desde `BOT_ENV` del proceso o de `.env`; si no está definido, se usa `development`.
+Para seleccionar `.env.production` sin modificar tu configuración local, establece `BOT_ENV=production` antes de
+iniciar el proceso. Los archivos versionados `.env.production` y `.env.development` son las plantillas completas:
+incluyen hojas, canales, roles, tiempos y las claves de credenciales con valores vacíos. Los valores reales de
+`DISCORD_TOKEN`, `BOT_BALLCHASING_API_TOKEN` y `BOT_TICKET_AI_API_KEY` se configuran en el `.env` privado de cada
+instalación o en las variables de su proceso.
+El bot carga el perfil seleccionado y después aplica las sobrescrituras de `.env`. Basta con guardar en `.env`
+los tokens y los ajustes que quieras personalizar; los canales, hojas y tiempos pueden mantenerse en cada perfil.
+Cada clave de `.env` sustituye el valor de esa misma clave del perfil, incluso si el valor local está vacío;
+las claves que no aparecen en `.env` conservan el valor del perfil. La sustitución ocurre en memoria y no reescribe
+los archivos versionados.
+No hace falta otro archivo privado ni copiar todo el perfil. Por ejemplo, un `.env` mínimo puede contener:
+
+```dotenv
+DISCORD_TOKEN=tu_token_del_bot
+# Opcional, si utilizas Ballchasing:
+BOT_BALLCHASING_API_TOKEN=tu_token_de_ballchasing
+```
+
+El servicio de `aa_deploy/` selecciona producción con `BOT_ENV=production` y deja que Python cargue ambos archivos,
+con la misma prioridad que en desarrollo. No exporta los perfiles mediante `EnvironmentFile`, para que sus valores
+no se conviertan en variables del proceso que impidan las sobrescrituras locales.
 
 Si defines `DISCORD_GUILD_ID`, los slash commands se sincronizan en ese servidor y aparecen casi al instante. Si lo
 dejas vacío, se sincronizan globalmente y Discord puede tardar en propagarlos.
@@ -319,6 +343,20 @@ Aviso automático al perder rol de equipo:
   equipo, hoja y motivo (`TEAM_CHANGE_LOGO_FALLBACK`)
 - los enlaces de Drive terminados en `/view` son páginas HTML y no funcionan como imágenes directas en este flujo
 - este flujo solo escucha la perdida de roles de equipo; no se activa por cambios de roles técnicos
+
+Las incorporaciones pendientes y las autoasignaciones al entrar también consultan el logo actual en Sheets antes
+de anunciarse; no reutilizan el enlace guardado al crear la asignación. Si esa consulta falla, utilizan el logo
+por defecto.
+
+Para diagnosticar diferencias entre desarrollo y producción, el arranque registra `TEAM_CHANGE_BULLETIN_RUNTIME`
+con entorno, pestañas y canal. Cada logo registra descarga o caché (`TEAM_LOGO_DOWNLOAD` / `TEAM_LOGO_CACHE_HIT`),
+preparación del adjunto o motivo del fallo (`TEAM_CHANGE_LOGO_ATTACHED` / `TEAM_CHANGE_LOGO_FALLBACK`) y, después
+del envío, `TEAM_CHANGE_ANNOUNCEMENT_SENT` confirma `logo=attachment` o `logo=default`, con IDs del servidor,
+canal, mensaje y rol. Las firmas de las URLs no se escriben en esos registros.
+
+La espera de un hilo disponible para preparar el logo no activa por sí misma la imagen por defecto. La petición
+HTTP tiene un timeout de 8 segundos; el adjunto preparado permanece abierto hasta que Discord termina el envío,
+incluyendo sus esperas por límites de solicitudes.
 
 `/integracion_de_tickets` y `/integracion_de_inscripciones`:
 

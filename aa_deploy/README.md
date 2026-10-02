@@ -15,7 +15,8 @@ Dentro de esa carpeta debe vivir el proyecto completo, incluyendo:
 - `src/`
 - `aa_resources/`
 - `aa_var/`
-- `.env`
+- `.env.production`
+- `.env` privado del servidor, ignorado por Git
 
 ## Dependencias base
 
@@ -46,10 +47,11 @@ pip install -e .
 
 ## Configuracion
 
-Coloca tu archivo `.env` de produccion en:
+Coloca `.env.production` y el `.env` privado en la raíz del proyecto indicada por `WorkingDirectory` en
+`aa_deploy/bigness-league.service`. La plantilla actual usa:
 
 ```text
-/opt/bigness-league/.env
+/home/bigness/DiscordBot/BignessLeague-DiscordBot/.env.production
 ```
 
 Valores recomendados de base para produccion:
@@ -60,16 +62,28 @@ BOT_SYNC_SCOPE=global
 BOT_LOG_DIR=aa_var/logs
 ```
 
+`.env.production` está versionado y es la plantilla completa de producción: contiene los ajustes oficiales (hojas,
+canales, roles, tiempos, etc.) y las claves de credenciales con valores vacíos.
+Las credenciales se guardan en el `.env` privado de esa instalación, que Git ignora. Basta con guardar los tokens
+y cualquier ajuste que quieras sobrescribir; el resto se obtiene de `.env.production`. No necesitas otra plantilla
+ni copiar el perfil entero. No pongas tokens reales en los archivos versionados.
+Las sustituciones se aplican por nombre de clave al cargar la configuración; no modifican `.env.production`.
+
+Si utilizas `/opt/bigness-league`, ajusta también `WorkingDirectory`, `PYTHONPATH` y `ExecStart` del servicio a esa
+ruta. Systemd establece `BOT_ENV=production`; el cargador Python lee `.env.production` y después aplica `.env`.
+Así los ajustes locales prevalecen sobre el perfil y los tokens permanecen fuera de Git. El servicio no utiliza
+`EnvironmentFile`: ambos entornos comparten la misma lógica de carga en Python.
+
 ## Servicio systemd
 
-1. Revisa y ajusta `Despliegue/bigness-league.service` si cambias:
+1. Revisa y ajusta `aa_deploy/bigness-league.service` si cambias:
     - usuario
     - grupo
     - ruta de despliegue
 2. Copialo a `systemd`:
 
 ```bash
-sudo cp /opt/bigness-league/Despliegue/bigness-league.service /etc/systemd/system/bigness-league.service
+sudo cp /opt/bigness-league/aa_deploy/bigness-league.service /etc/systemd/system/bigness-league.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now bigness-league
 ```
@@ -82,7 +96,7 @@ Ver estado del servicio:
 sudo systemctl status bigness-league
 ```
 
-Reiniciar despues de actualizar codigo o `.env`:
+Reiniciar despues de actualizar codigo, `.env.production` o las credenciales de `.env`:
 
 ```bash
 sudo systemctl restart bigness-league
@@ -133,5 +147,5 @@ sudo systemctl restart bigness-league
 - No comprimas el proyecto en un unico `.py`.
 - Manten el despliegue con la estructura completa del repo.
 - `tail -F` es preferible a `tail -f` porque el logger rota `bigness_league.log`.
-- El bot carga `.env` desde el directorio de trabajo, por eso el `WorkingDirectory` del servicio debe apuntar a la raiz
-  del proyecto.
+- El bot busca `.env` y el perfil seleccionado en la raíz del proyecto, calculada desde el paquete Python.
+  Mantén `WorkingDirectory` apuntando a esa raíz para el resto de rutas relativas del despliegue.

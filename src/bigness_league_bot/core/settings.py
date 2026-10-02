@@ -16,16 +16,12 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit, urlunsplit
 
-from dotenv import load_dotenv
-
+from bigness_league_bot.core.environment import load_environment
 from bigness_league_bot.core.timezones import resolve_timezone
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
-load_dotenv(PROJECT_ROOT / ".env", override=True)
-_ENVIRONMENT_FILE = PROJECT_ROOT / f".env.{os.getenv('BOT_ENV', 'development').strip().lower()}"
-if _ENVIRONMENT_FILE.exists():
-    load_dotenv(_ENVIRONMENT_FILE, override=False)
+load_environment(PROJECT_ROOT)
 DEFAULT_GOOGLE_SHEETS_TEAM_WORKSHEETS = (
     "GOLD DIVISIÓN S4",
     "SILVER DIVISIÓN S4",

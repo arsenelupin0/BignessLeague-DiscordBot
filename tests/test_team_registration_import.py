@@ -204,7 +204,8 @@ class RegistrationAnnouncementTests(unittest.IsolatedAsyncioTestCase):
         resolver.announcement_sender = sender
         assignment = SimpleNamespace(division_name='Gold Division S4', team_role_name='Equipo nuevo',
                                      team_image_url=None, source='hacer_inscripcion')
-        with patch.object(pending, 'resolve_team_change_bulletin_channel', new_callable=AsyncMock):
+        with patch.object(pending, 'resolve_team_change_bulletin_channel', new_callable=AsyncMock), \
+                patch.object(pending, 'create_team_change_repository', new=AsyncMock(return_value=None)):
             result = await resolver._send_announcements(
                 member=SimpleNamespace(guild=SimpleNamespace(id=1)), assignment=assignment,
                 team_role=SimpleNamespace(id=30), staff_roles=(SimpleNamespace(id=31),), added_role_ids={30, 31},
@@ -212,7 +213,8 @@ class RegistrationAnnouncementTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result, (40,))
         sender.send_staff_role_change_announcement.assert_not_awaited()
         assignment.source = 'hacer_fichaje'
-        with patch.object(pending, 'resolve_team_change_bulletin_channel', new_callable=AsyncMock):
+        with patch.object(pending, 'resolve_team_change_bulletin_channel', new_callable=AsyncMock), \
+                patch.object(pending, 'create_team_change_repository', new=AsyncMock(return_value=None)):
             result = await resolver._send_announcements(
                 member=SimpleNamespace(guild=SimpleNamespace(id=1)), assignment=assignment,
                 team_role=SimpleNamespace(id=30), staff_roles=(SimpleNamespace(id=31),), added_role_ids={30, 31},

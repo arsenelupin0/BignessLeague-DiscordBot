@@ -22,15 +22,15 @@ class TeamChangeLogoTests(unittest.IsolatedAsyncioTestCase):
         self.team_key = "1:30"
 
     async def test_valid_logo_becomes_an_attachment_thumbnail(self) -> None:
-        with patch.object(logos, "load_team_logo_png", return_value=b"validated png") as loader:
+        with patch.object(logos, "load_team_logo_png_async", new=AsyncMock(return_value=b"validated png")) as loader:
             file = await logos.attach_team_change_logo(embed=self.embed, metadata=self.metadata, team_key=self.team_key)
         self.addCleanup(file.close)
-        loader.assert_called_once_with(self.metadata.team_image_url, team_key=self.team_key)
+        loader.assert_awaited_once_with(self.metadata.team_image_url, team_key=self.team_key)
         self.assertEqual(self.embed.thumbnail.url, "attachment://team-logo.png")
         self.assertEqual(file.fp.read(), b"validated png")
 
     async def test_download_failure_preserves_default_and_reports_reason(self) -> None:
-        with patch.object(logos, "load_team_logo_png", side_effect=TeamLogoLoadError("http_403")), \
+        with patch.object(logos, "load_team_logo_png_async", new=AsyncMock(side_effect=TeamLogoLoadError("http_403"))), \
                 self.assertLogs("bigness_league_bot.activity", level="WARNING") as logs:
             file = await logos.attach_team_change_logo(embed=self.embed, metadata=self.metadata, team_key=self.team_key)
         self.assertIsNone(file)
@@ -40,18 +40,20 @@ class TeamChangeLogoTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_no_link_invalidates_cache_and_preserves_default(self) -> None:
         metadata = TeamRoleSheetMetadata("SILVER DIVISION S4", "Profit", None)
-        with patch.object(logos, "load_team_logo_png", side_effect=TeamLogoLoadError("missing_link")) as loader, \
+        with patch.object(logos, "load_team_logo_png_async",
+                          new=AsyncMock(side_effect=TeamLogoLoadError("missing_link"))) as loader, \
                 self.assertLogs("bigness_league_bot.activity", level="WARNING"):
             self.assertIsNone(await logos.attach_team_change_logo(embed=self.embed, metadata=metadata,
                                                                   team_key=self.team_key))
-        loader.assert_called_once_with(None, team_key=self.team_key)
+        loader.assert_awaited_once_with(None, team_key=self.team_key)
         self.assertEqual(self.embed.thumbnail.url, "https://example.com/league.png")
 
     async def test_sender_publishes_both_card_and_logo_and_closes_files(self) -> None:
         card = discord.File(BytesIO(b"card"), filename="card.png")
         logo = discord.File(BytesIO(b"logo"), filename="team-logo.png")
         sender = delivery.TeamRoleChangeAnnouncementSender(bot=Mock(), deduplicator=Mock())
-        channel = SimpleNamespace(send=AsyncMock(return_value="published"))
+        published = SimpleNamespace(id=123, channel=SimpleNamespace(id=456))
+        channel = SimpleNamespace(send=AsyncMock(return_value=published))
         with patch.object(delivery, "build_team_change_content", return_value="announcement"), \
                 patch.object(delivery, "build_team_change_embed", return_value=(self.embed, card)), \
                 patch.object(delivery, "_build_role_removal_description", return_value="description"), \
@@ -61,7 +63,7 @@ class TeamChangeLogoTests(unittest.IsolatedAsyncioTestCase):
                 metadata=self.metadata, spec=TEAM_ROLE_SIGNING_SPEC, channel=channel,
             )
         attach.assert_awaited_once_with(embed=self.embed, metadata=self.metadata, team_key="99:2")
-        self.assertEqual(result, "published")
+        self.assertIs(result, published)
         self.assertEqual(channel.send.await_args.kwargs["files"], [card, logo])
         self.assertNotIn("file", channel.send.await_args.kwargs)
         self.assertTrue(card.fp.closed)

@@ -9,8 +9,8 @@ User=bigness
 Group=bigness
 WorkingDirectory=/home/bigness/DiscordBot/BignessLeague-DiscordBot
 
-EnvironmentFile=-/home/bigness/DiscordBot/BignessLeague-DiscordBot/.env.production
-EnvironmentFile=-/home/bigness/DiscordBot/BignessLeague-DiscordBot/.env
+# Python carga .env.production y aplica después las sobrescrituras de .env.
+Environment=BOT_ENV=production
 
 Environment=PYTHONPATH=/home/bigness/DiscordBot/BignessLeague-DiscordBot/src
 Environment=PYTHONUNBUFFERED=1

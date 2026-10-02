@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import logging
 import time
@@ -38,6 +39,12 @@ class CachedTeamLogo:
     source_key: str | None
 
 
+async def load_team_logo_png_async(url: str | None, *, team_key: str) -> bytes:
+    # Waiting for an executor worker or the team lock is not a download failure.
+    # The HTTP request applies its own timeout once the worker can start it.
+    return await asyncio.to_thread(load_team_logo_png, url, team_key=team_key)
+
+
 def load_team_logo_png(
         url: str | None, *, team_key: str, cache_directory: Path = TEAM_LOGO_CACHE_DIRECTORY,
 ) -> bytes:
@@ -74,6 +81,7 @@ def _load_team_logo_png(url: str, cache_path: Path, source_key: str) -> bytes:
     cached = _read_cached_logo(cache_path)
     matching_cache = cached is not None and cached.source_key == source_key
     if matching_cache and time.time() - cached.modified_at < CACHE_REFRESH_SECONDS:
+        LOGGER.info("TEAM_LOGO_CACHE_HIT asset=%s source=%s", cache_path.stem, source_key[:12])
         return cached.content
     if not matching_cache:
         # A new source invalidates the previous image, including on failure.
@@ -87,6 +95,9 @@ def _load_team_logo_png(url: str, cache_path: Path, source_key: str) -> bytes:
             _remove_cached_logo(legacy_path)
         return legacy.content
     try:
+        source = urlsplit(url)
+        LOGGER.info("TEAM_LOGO_DOWNLOAD asset=%s source=%s host=%s path=%s",
+                    cache_path.stem, source_key[:12], source.hostname, source.path)
         content = _download_logo_png(url)
     except TeamLogoLoadError:
         _discard_cached_logo(cache_path, cached)
