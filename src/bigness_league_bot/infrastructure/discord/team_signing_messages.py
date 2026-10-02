@@ -46,6 +46,7 @@ TEAM_SIGNING_GUIDE_TEMPLATE_BLOCK_MARKER = "```"
 @dataclass(frozen=True, slots=True)
 class TeamSigningTeamAnnouncementLink:
     url: str
+    member_mention: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -292,6 +293,7 @@ def build_team_signing_visibility_message(
             I18N.actions.team_signing.visibility.team_line,
             locale=locale,
             team_message_url=link.url,
+            member_mention=link.member_mention,
             team_role_mention=team_role_mention,
         )
         for link in team_links

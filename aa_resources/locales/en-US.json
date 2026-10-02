@@ -489,6 +489,15 @@
             "description": "Team where you want to manage a removal."
           }
         }
+      },
+      "modify_logo": {
+        "name": "modify_logo",
+        "description": "Updates a team logo link using a form.",
+        "parameters": {
+          "team": {
+            "description": "Team whose logo you want to update."
+          }
+        }
       }
     },
     "team_role_assignment": {
@@ -682,6 +691,14 @@
         "mmr_label": "MMR",
         "staff_roles_placeholder": "Select staff roles",
         "only_actor": "Only the command author can use this selector."
+      },
+      "logo_modification": {
+        "modal_title": "Update team logo",
+        "url_label": "New logo URL",
+        "url_placeholder": "https://example.com/logo.png",
+        "open_modal": "Update logo",
+        "prompt": "Current logo for **{team_name}**: {old_url}\nPress the button to enter the new URL.",
+        "no_logo": "No logo link."
       }
     },
     "team_role_removal_announcement": {
@@ -999,7 +1016,8 @@
       "remaining_signings_exceeded": "There are not enough remaining signings in `{team_name}`. Remaining: {remaining_signings}. Requested: {requested_signings}.",
       "team_roster_full": "There is not enough room in `{team_name}` for these signings. Free slots: {available_slots}. Requested signings: {requested_slots}.",
       "google_write_failed": "Google Sheets rejected the signing write request: {details}.",
-      "division_ambiguous": "Division `{division_name}` matches multiple sheets: {sheet_names}. Include the season in the template."
+      "division_ambiguous": "Division `{division_name}` matches multiple sheets: {sheet_names}. Include the season in the template.",
+      "invalid_logo_url": "The logo URL must be a valid HTTP or HTTPS link without spaces, up to 2000 characters long."
     },
     "team_role_assignment": {
       "participant_role_missing": "The configured participant role does not exist: `{role_id}`.",
@@ -1056,7 +1074,7 @@
       "role_assignment_ambiguous": "Ambiguous Discord matches for: {names}.",
       "visibility": {
         "content": "\n\n# Where can I see my signing?\n{team_lines}{staff_lines}",
-        "team_line": "- [Signed by]({team_message_url}) {team_role_mention}",
+        "team_line": "- {member_mention} [has signed for]({team_message_url}) {team_role_mention}",
         "team_line_unlinked": "- Signed by {team_role_mention}",
         "staff_line": "  - [New {staff_role_name} role for]({staff_message_url}) {member_mention} >> {team_role_mention}",
         "registration_content": "\n\n# Where can I see my registration?\n{team_lines}{staff_lines}"
@@ -1067,7 +1085,8 @@
         "player_line": "- [Player removal for]({player_message_url}) {member_mention} >> {team_role_mention}",
         "staff_line": "- [Removal from {staff_role_name} role for]({staff_message_url}) {member_mention} >> {team_role_mention}"
       },
-      "registration_completed": "Team `{team_name}` has been registered in `{division_name}` with {total_players}/6 players."
+      "registration_completed": "Team `{team_name}` has been registered in `{division_name}` with {total_players}/6 players.",
+      "logo_modified": "The logo for `{team_name}` has been updated in `{division_name}`."
     },
     "team_role_assignment": {
       "completed": "Role synchronization completed for `{team_name}`: new={assigned_count}, already_set={already_count}, unresolved={unresolved_count}, ambiguous={ambiguous_count}.",

@@ -33,7 +33,9 @@ def team_links_from_announcements(
         if not isinstance(announcement, SentTeamChangeAnnouncement):
             continue
 
-        links.append(TeamSigningTeamAnnouncementLink(url=announcement.jump_url))
+        links.append(TeamSigningTeamAnnouncementLink(
+            url=announcement.jump_url, member_mention=f"<@{announcement.member_id}>",
+        ))
 
     return deduplicate_team_links(links)
 

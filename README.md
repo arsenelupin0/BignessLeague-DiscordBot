@@ -199,7 +199,10 @@ Restricciones de `/cerrar_canal`:
   participante y jugador a los miembros de la plantilla que estén en Discord
 - publica un único anuncio `Ficha por` por miembro en `BOT_TEAM_ROLE_REMOVAL_ANNOUNCEMENT_CHANNEL_ID`, incluyendo
   staff, sin anuncios `Nuevo cargo en`; los miembros pendientes conservan este comportamiento al entrar al servidor
-- el resultado muestra `¿Dónde ver mi inscripción?`; su copia por MD representa los roles como `@Nombre del equipo`
+- el resultado muestra `¿Dónde ver mi inscripción?`, con una mención del miembro en cada enlace:
+  `@Usuario, es fichado por @Equipo`; también se identifica al miembro en los enlaces de `/hacer_fichaje`
+- la copia por MD representa los roles como `@Nombre del equipo` y los usuarios como `@Usuario(ID)`;
+  si Discord no facilita el usuario, conserva su ID para identificarlo
 
 `/hacer_fichaje`:
 
@@ -229,6 +232,15 @@ Restricciones de `/cerrar_canal`:
 - si un miembro de staff cambia de rol técnico, el bot retira los roles técnicos configurados que ya no correspondan
 - después de escribir, intenta asignar automáticamente el rol general de participante y el rol del equipo a los
   miembros que ya estén en Discord, junto con el rol general de jugador
+
+`/modificar_logo equipo:<equipo>`:
+
+- solo puede usarlo un miembro con `Staff`, `Administrador` o `Ceo`
+- muestra el logo actual y un botón para abrir el formulario con su URL como placeholder;
+  Discord limita el placeholder a 100 caracteres, por lo que los enlaces más largos se recortan ahí
+- exige una nueva URL HTTP o HTTPS y actualiza el enlace de la celda que contiene el nombre del equipo
+- conserva el nombre, roster, staff, formato y contador de fichajes; no crea un bloque si el equipo ya no existe
+- el formulario solo puede enviarlo quien ejecutó el comando, manteniendo sus permisos
 
 `/dar_de_baja`, `/dar_de_baja_jugador` y `/dar_de_baja_staff`:
 

@@ -241,7 +241,7 @@ class RegistrationMessageTests(unittest.TestCase):
         localizer = _localizer()
         content = build_team_signing_visibility_message(
             localizer=localizer, locale='es-ES', team_role_mention='<@&30>',
-            team_links=(TeamSigningTeamAnnouncementLink('https://discord.com/channels/1/2/3'),),
+            team_links=(TeamSigningTeamAnnouncementLink('https://discord.com/channels/1/2/3', '<@10>'),),
             registration=True,
         )
         self.assertIn('¿Dónde ver mi inscripción?', content)
@@ -257,7 +257,7 @@ class RegistrationMessageTests(unittest.TestCase):
     def test_signing_keeps_its_original_heading(self) -> None:
         content = build_team_signing_visibility_message(
             localizer=_localizer(), locale='es-ES', team_role_mention='<@&30>',
-            team_links=(TeamSigningTeamAnnouncementLink('https://example.com'),),
+            team_links=(TeamSigningTeamAnnouncementLink('https://example.com', '<@10>'),),
         )
         self.assertIn('¿Dónde ver mi fichaje?', content)
 

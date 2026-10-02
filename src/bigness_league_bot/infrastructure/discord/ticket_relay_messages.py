@@ -74,7 +74,7 @@ def build_ticket_command_relay_message(
         else f"/{command_name}"
     )
     return truncate_relay_text(
-        role_mentions_as_text(localizer.translate(
+        dm_mentions_as_text(localizer.translate(
             I18N.messages.tickets.relay.from_command_result,
             command_name=command_label,
             body=(
@@ -85,7 +85,7 @@ def build_ticket_command_relay_message(
                 attachment_mode="names",
             )
             ),
-        ), guild=message.guild)
+        ), message=message)
     )
 
 
@@ -99,6 +99,23 @@ def role_mentions_as_text(content: str, *, guild: discord.Guild | None) -> str:
         return f"@{discord.utils.escape_markdown(name)}"
 
     return re.sub(r"<@&(\d+)>", replace, content)
+
+
+def dm_mentions_as_text(content: str, *, message: discord.Message) -> str:
+    """Keep identities readable in DMs, including users absent from the guild cache."""
+    users = {user.id: user for user in getattr(message, "mentions", ())}
+    get_member = getattr(message.guild, "get_member", None)
+
+    def replace(match: re.Match[str]) -> str:
+        user_id = int(match.group(1))
+        user = users.get(user_id)
+        if user is None and get_member is not None:
+            user = get_member(user_id)
+        if user is None:
+            return f"@{user_id}"
+        return f"@{discord.utils.escape_markdown(user.name)}({user_id})"
+
+    return re.sub(r"<@!?(\d+)>", replace, role_mentions_as_text(content, guild=message.guild))
 
 
 def build_ticket_dm_relay_embed(
@@ -116,7 +133,7 @@ def build_ticket_dm_relay_embed(
         if deleted
         else message_content_body(localizer=localizer, message=message)
     )
-    body_value = role_mentions_as_text(body_value, guild=message.guild)
+    body_value = dm_mentions_as_text(body_value, message=message)
     description = f"{mention_line}**:** {body_value}\n\n_ _"
     embed = discord.Embed(
         description=description,
@@ -307,13 +324,13 @@ def clone_message_embeds(message: discord.Message) -> list[discord.Embed]:
     for original in message.embeds:
         embed = discord.Embed.from_dict(original.to_dict())
         if embed.title:
-            embed.title = role_mentions_as_text(embed.title, guild=message.guild)
+            embed.title = dm_mentions_as_text(embed.title, message=message)
         if embed.description:
-            embed.description = role_mentions_as_text(embed.description, guild=message.guild)
+            embed.description = dm_mentions_as_text(embed.description, message=message)
         for index, field in enumerate(embed.fields):
             embed.set_field_at(
-                index, name=role_mentions_as_text(field.name, guild=message.guild),
-                value=role_mentions_as_text(field.value, guild=message.guild), inline=field.inline,
+                index, name=dm_mentions_as_text(field.name, message=message),
+                value=dm_mentions_as_text(field.value, message=message), inline=field.inline,
             )
         embeds.append(embed)
     return embeds

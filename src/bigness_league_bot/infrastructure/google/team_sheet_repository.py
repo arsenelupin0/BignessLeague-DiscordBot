@@ -60,6 +60,7 @@ from bigness_league_bot.infrastructure.google.team_sheets.models import (
 )
 from bigness_league_bot.infrastructure.google.team_sheets.mutations import TeamSheetMutationService
 from bigness_league_bot.infrastructure.google.team_sheets.queries import TeamSheetQueryService
+from bigness_league_bot.infrastructure.google.team_sheets.team_logo_mutations import update_team_logo_sync
 from bigness_league_bot.infrastructure.google.team_sheets.team_registration import register_team_sync
 
 
@@ -112,6 +113,13 @@ class GoogleSheetsTeamRepository:
         return await asyncio.to_thread(
             self.mutations.update_team_roster_player_sync,
             update,
+        )
+
+    async def update_team_logo(
+            self, division_name: str, team_name: str, logo_url: str,
+    ) -> TeamRoleSheetMetadata:
+        return await asyncio.to_thread(
+            update_team_logo_sync, self.client, self.config, division_name, team_name, logo_url,
         )
 
     async def find_team_sheet_metadata_for_role(

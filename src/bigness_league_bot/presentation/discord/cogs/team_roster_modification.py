@@ -24,9 +24,12 @@ from bigness_league_bot.infrastructure.discord.team_roster_modification import (
 )
 from bigness_league_bot.infrastructure.discord.team_staff_interactive import (
     interactive_team_autocomplete,
+    resolve_selected_team_role,
 )
+from bigness_league_bot.infrastructure.google.team_sheet_repository import GoogleSheetsTeamRepository
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import localized_locale_str
+from bigness_league_bot.presentation.discord.views.team_logo_modification import TeamLogoModificationView
 from bigness_league_bot.presentation.discord.views.team_roster_modification import (
     PlayerRosterModificationView,
     StaffRosterModificationView,
@@ -142,6 +145,43 @@ class TeamRosterModificationCog(commands.Cog):
             view=view,
             ephemeral=True,
             wait=True,
+        )
+
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.team_signing.modify_logo.name),
+        description=localized_locale_str(I18N.commands.team_signing.modify_logo.description),
+    )
+    @app_commands.guild_only()
+    @app_commands.describe(equipo=localized_locale_str(
+        I18N.commands.team_signing.modify_logo.parameters.team.description,
+    ))
+    @app_commands.autocomplete(equipo=interactive_team_autocomplete)
+    async def modify_logo(
+            self, interaction: discord.Interaction[BignessLeagueBot], equipo: str,
+    ) -> None:
+        guild = interaction.guild
+        if guild is None or not isinstance(interaction.user, discord.Member):
+            raise UnsupportedChannelError(localize(I18N.errors.channel_management.server_only))
+        ensure_allowed_member(interaction.user)
+        role = resolve_selected_team_role(guild, equipo)
+        if role is None:
+            raise CommandUserError(localize(I18N.errors.team_signing.invalid_interactive_team))
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        repository = GoogleSheetsTeamRepository(interaction.client.settings)
+        metadata = await repository.find_team_sheet_metadata_for_role(role)
+        localizer = interaction.client.localizer
+        view = TeamLogoModificationView(
+            actor_id=interaction.user.id, guild_id=guild.id, metadata=metadata,
+            localizer=localizer, locale=interaction.locale,
+        )
+        await interaction.followup.send(
+            embed=discord.Embed(description=localizer.translate(
+                I18N.messages.team_signing.logo_modification.prompt, locale=interaction.locale,
+                team_name=discord.utils.escape_markdown(metadata.team_name),
+                old_url=metadata.team_image_url or localizer.translate(
+                    I18N.messages.team_signing.logo_modification.no_logo, locale=interaction.locale,
+                ),
+            )), view=view, ephemeral=True, allowed_mentions=discord.AllowedMentions.none(),
         )
 
     async def cog_app_command_error(

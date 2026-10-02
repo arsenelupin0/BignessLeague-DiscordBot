@@ -943,12 +943,30 @@ class _CommandsTeamSigningRemoveSigning:
                                                  default_text="Da de baja jugadores o staff t\u00e9cnico seleccionando el bloque y miembro del equipo.")
     parameters: _CommandsTeamSigningRemoveSigningParameters = _CommandsTeamSigningRemoveSigningParameters()
 
+
+class _CommandsTeamSigningModifyLogoParametersTeam:
+    description: TranslationKey = TranslationKey(key="commands.team_signing.modify_logo.parameters.team.description",
+                                                 default_text="Equipo cuyo logo quieres modificar.")
+
+
+class _CommandsTeamSigningModifyLogoParameters:
+    team: _CommandsTeamSigningModifyLogoParametersTeam = _CommandsTeamSigningModifyLogoParametersTeam()
+
+
+class _CommandsTeamSigningModifyLogo:
+    name: TranslationKey = TranslationKey(key="commands.team_signing.modify_logo.name", default_text="modificar_logo")
+    description: TranslationKey = TranslationKey(key="commands.team_signing.modify_logo.description",
+                                                 default_text="Modifica el enlace del logo de un equipo mediante un formulario.")
+    parameters: _CommandsTeamSigningModifyLogoParameters = _CommandsTeamSigningModifyLogoParameters()
+
+
 class _CommandsTeamSigning:
     make_registration: _CommandsTeamSigningMakeRegistration = _CommandsTeamSigningMakeRegistration()
     make_signing: _CommandsTeamSigningMakeSigning = _CommandsTeamSigningMakeSigning()
     make_interactive_staff_signing: _CommandsTeamSigningMakeInteractiveStaffSigning = _CommandsTeamSigningMakeInteractiveStaffSigning()
     modify_roster: _CommandsTeamSigningModifyRoster = _CommandsTeamSigningModifyRoster()
     remove_signing: _CommandsTeamSigningRemoveSigning = _CommandsTeamSigningRemoveSigning()
+    modify_logo: _CommandsTeamSigningModifyLogo = _CommandsTeamSigningModifyLogo()
 
 class _CommandsTeamRoleAssignmentSyncTeamRoleParametersTeamRole:
     description: TranslationKey = TranslationKey(
@@ -1291,6 +1309,22 @@ class _MessagesTeamSigningRosterModification:
     only_actor: TranslationKey = TranslationKey(key="messages.team_signing.roster_modification.only_actor",
                                                 default_text="Solo quien ejecut\u00f3 el comando puede usar este selector.")
 
+
+class _MessagesTeamSigningLogoModification:
+    modal_title: TranslationKey = TranslationKey(key="messages.team_signing.logo_modification.modal_title",
+                                                 default_text="Modificar logo del equipo")
+    url_label: TranslationKey = TranslationKey(key="messages.team_signing.logo_modification.url_label",
+                                               default_text="Nueva URL del logo")
+    url_placeholder: TranslationKey = TranslationKey(key="messages.team_signing.logo_modification.url_placeholder",
+                                                     default_text="https://ejemplo.com/logo.png")
+    open_modal: TranslationKey = TranslationKey(key="messages.team_signing.logo_modification.open_modal",
+                                                default_text="Modificar logo")
+    prompt: TranslationKey = TranslationKey(key="messages.team_signing.logo_modification.prompt",
+                                            default_text="Logo actual de **{team_name}**: {old_url}\nPulsa el bot\u00f3n para introducir la nueva URL.")
+    no_logo: TranslationKey = TranslationKey(key="messages.team_signing.logo_modification.no_logo",
+                                             default_text="Sin enlace de logo.")
+
+
 class _MessagesTeamSigning:
     guide: _MessagesTeamSigningGuide = _MessagesTeamSigningGuide()
     signing_guide: _MessagesTeamSigningSigningGuide = _MessagesTeamSigningSigningGuide()
@@ -1298,6 +1332,7 @@ class _MessagesTeamSigning:
     interactive_staff_role_selection: _MessagesTeamSigningInteractiveStaffRoleSelection = _MessagesTeamSigningInteractiveStaffRoleSelection()
     interactive_removal_selection: _MessagesTeamSigningInteractiveRemovalSelection = _MessagesTeamSigningInteractiveRemovalSelection()
     roster_modification: _MessagesTeamSigningRosterModification = _MessagesTeamSigningRosterModification()
+    logo_modification: _MessagesTeamSigningLogoModification = _MessagesTeamSigningLogoModification()
 
 class _MessagesTeamRoleRemovalAnnouncement:
     content: TranslationKey = TranslationKey(key="messages.team_role_removal_announcement.content",
@@ -2162,6 +2197,8 @@ class _ErrorsTeamSigning:
                                                          default_text="Google Sheets ha rechazado la escritura de fichajes: {details}.")
     division_ambiguous: TranslationKey = TranslationKey(key="errors.team_signing.division_ambiguous",
                                                         default_text="La divisi\u00f3n `{division_name}` coincide con varias hojas: {sheet_names}. Indica la temporada en la plantilla.")
+    invalid_logo_url: TranslationKey = TranslationKey(key="errors.team_signing.invalid_logo_url",
+                                                      default_text="La URL del logo debe ser un enlace HTTP o HTTPS v\u00e1lido, sin espacios y de hasta 2000 caracteres.")
 
 class _ErrorsTeamRoleAssignment:
     participant_role_missing: TranslationKey = TranslationKey(
@@ -2250,7 +2287,7 @@ class _ActionsTeamSigningVisibility:
     content: TranslationKey = TranslationKey(key="actions.team_signing.visibility.content",
                                              default_text="\n\n# \u00bfD\u00f3nde ver mi fichaje?\n{team_lines}{staff_lines}")
     team_line: TranslationKey = TranslationKey(key="actions.team_signing.visibility.team_line",
-                                               default_text="- [Fichado por]({team_message_url}) {team_role_mention}")
+                                               default_text="- {member_mention}, [es fichado por]({team_message_url}) {team_role_mention}")
     team_line_unlinked: TranslationKey = TranslationKey(key="actions.team_signing.visibility.team_line_unlinked",
                                                         default_text="- Fichado por {team_role_mention}")
     staff_line: TranslationKey = TranslationKey(key="actions.team_signing.visibility.staff_line",
@@ -2303,6 +2340,8 @@ class _ActionsTeamSigning:
     removal_visibility: _ActionsTeamSigningRemovalVisibility = _ActionsTeamSigningRemovalVisibility()
     registration_completed: TranslationKey = TranslationKey(key="actions.team_signing.registration_completed",
                                                             default_text="Se ha inscrito el equipo `{team_name}` en `{division_name}` con {total_players}/6 jugadores.")
+    logo_modified: TranslationKey = TranslationKey(key="actions.team_signing.logo_modified",
+                                                   default_text="Se ha actualizado el logo de `{team_name}` en `{division_name}`.")
 
 class _ActionsTeamRoleAssignment:
     completed: TranslationKey = TranslationKey(key="actions.team_role_assignment.completed",
