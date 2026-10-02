@@ -21,6 +21,8 @@ class DiscordVerificationView(discord.ui.View):
         self._update_buttons()
 
     def content(self) -> str:
+        if len(self.pages) == 1:
+            return self.pages[0]
         footer = self.localizer.translate(
             I18N.messages.discord_verification.page, locale=self.locale,
             page=self.index + 1, total=len(self.pages),

@@ -12,6 +12,7 @@ from bigness_league_bot.infrastructure.i18n.keys import I18N
 from bigness_league_bot.infrastructure.i18n.service import LocalizationService
 
 PAGE_LIMIT = 1900
+SINGLE_MESSAGE_LIMIT = 2000
 
 
 def _safe(value: str) -> str:
@@ -43,6 +44,7 @@ def build_verification_pages(
     if not missing_only:
         intro += "\n" + tr(keys.legend)
     pages = [intro]
+    full_sections = [intro]
 
     def member_line(member: MemberVerification) -> str:
         reference = f"<@{member.member_id}> · `{member.member_id}`" if member.member_id else tr(keys.no_resolved_id)
@@ -85,6 +87,7 @@ def build_verification_pages(
             lines.extend(member_line(m) for m in selected)
             if not selected:
                 lines.append(tr(keys.empty_roster))
+        full_sections.append(heading + "\n" + "\n".join(lines))
         section = heading
         for line in lines:
             # Keep pathological sheet labels or many aliases within Discord's limit.
@@ -101,5 +104,10 @@ def build_verification_pages(
         else:
             pages.append(section)
     if not reports:
-        pages[-1] += "\n\n" + tr(keys.no_teams)
+        empty_message = tr(keys.no_teams)
+        pages[-1] += "\n\n" + empty_message
+        full_sections.append(empty_message)
+    full_report = "\n\n".join(full_sections)
+    if len(full_report) <= SINGLE_MESSAGE_LIMIT:
+        return (full_report,)
     return tuple(pages)

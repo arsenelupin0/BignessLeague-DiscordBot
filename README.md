@@ -154,8 +154,9 @@ crea un canal de partido con permisos para ambos equipos.
   La comprobación se refiere a la pertenencia a este servidor, no a la existencia global de una cuenta de Discord.
 - Consulta todos los miembros mediante la API; si falla, devuelve un error en lugar de inferir ausencias desde
   una caché incompleta. Necesita el intent de miembros habilitado también en el portal de Discord.
-- Los informes largos tienen botones de paginación disponibles durante cinco minutos para quien lanzó el comando
-  y un archivo `verificacion_discord.md` con todas las páginas. Las menciones no envían notificaciones.
+- Si el informe cabe en un único mensaje, se muestra sin archivo, botones ni pie de paginación. Los informes más
+  largos tienen botones disponibles durante cinco minutos para quien lanzó el comando y un archivo
+  `verificacion_discord.md` con todas las páginas. Las menciones no envían notificaciones.
 - Es una comprobación de lectura: no modifica la hoja ni asigna o retira roles.
 
 Opciones disponibles en `/cerrar_canal`:

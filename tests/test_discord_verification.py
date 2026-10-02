@@ -247,6 +247,29 @@ class VerificationMessagesTests(unittest.TestCase):
         pages = build_verification_pages((report,), localizer=localizer(), locale="es-ES")
         self.assertTrue(all(len(p) <= 1900 for p in pages))
 
+    def test_single_message_uses_full_limit_and_paginates_only_when_exceeded(self) -> None:
+        report = self.report()
+        members = tuple(replace(report.members[1], player_name=f"Jugador {i}", member_id=MISSING_ID + i)
+                        for i in range(14))
+        report = replace(report, members=members)
+        local = localizer()
+
+        def render(value):
+            return build_verification_pages((value,), localizer=local, locale="es-ES", missing_only=True)
+
+        pages = render(report)
+        self.assertEqual(len(pages), 1)
+        padding = 2000 - len(pages[0])
+        self.assertTrue(0 <= padding <= 150)
+        last = replace(members[-1], player_name=members[-1].player_name + "x" * padding)
+        exact_limit = replace(report, members=members[:-1] + (last,))
+        self.assertEqual([len(page) for page in render(exact_limit)], [2000])
+
+        overflow = replace(exact_limit, members=members[:-1] + (replace(last, player_name=last.player_name + "x"),))
+        pages = render(overflow)
+        self.assertGreater(len(pages), 1)
+        self.assertTrue(all(len(page) <= 1900 for page in pages))
+
 
 class VerificationCommandTests(unittest.IsolatedAsyncioTestCase):
     async def send_using_discord_library(self, profiles, equipo=None):
@@ -291,11 +314,18 @@ class VerificationCommandTests(unittest.IsolatedAsyncioTestCase):
         ), equipo="Equipo")
         adapter.execute_webhook.assert_awaited_once()
         self.assertFalse(adapter.execute_webhook.call_args.kwargs["with_components"])
+        payload = adapter.execute_webhook.call_args.kwargs["payload"]
+        self.assertNotIn("attachments", payload)
+        self.assertNotIn("Página", payload["content"])
+        self.assertNotIn("archivo adjunto", payload["content"])
         state.store_view.assert_not_called()
 
     async def test_unfiltered_single_page_passes_real_webhook_validation(self) -> None:
         adapter, state = await self.send_using_discord_library((profile(str(MISSING_ID)),))
         self.assertFalse(adapter.execute_webhook.call_args.kwargs["with_components"])
+        payload = adapter.execute_webhook.call_args.kwargs["payload"]
+        self.assertNotIn("attachments", payload)
+        self.assertNotIn("Página", payload["content"])
         state.store_view.assert_not_called()
 
     async def test_multiple_pages_keep_interactive_view(self) -> None:
@@ -303,8 +333,11 @@ class VerificationCommandTests(unittest.IsolatedAsyncioTestCase):
             profile(str(MISSING_ID), team=f"Equipo {index}") for index in range(30)
         ))
         self.assertTrue(adapter.execute_webhook.call_args.kwargs["with_components"])
+        sent_files = adapter.execute_webhook.call_args.kwargs["files"]
+        self.assertEqual([file.filename for file in sent_files], ["verificacion_discord.md"])
         view = state.store_view.call_args.args[0]
         self.assertGreater(len(view.pages), 1)
+        self.assertIn("Página 1/", view.content())
         view.stop()
 
     async def test_optional_team_parameter_registration(self) -> None:
@@ -333,8 +366,9 @@ class VerificationCommandTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([p.team_name for p in audit.call_args.args[1]], ["Equipo"])
         sent = interaction.followup.send.call_args.kwargs
         self.assertEqual(sent["allowed_mentions"].to_dict(), {"parse": []})
-        self.assertEqual(sent["file"].filename, "verificacion_discord.md")
-        sent["file"].close()
+        self.assertNotIn("file", sent)
+        self.assertNotIn("view", sent)
+        self.assertNotIn("Página", sent["content"])
 
     async def test_unauthorized_user_cannot_read_sheets(self) -> None:
         interaction = SimpleNamespace(user=SimpleNamespace(roles=[]))
