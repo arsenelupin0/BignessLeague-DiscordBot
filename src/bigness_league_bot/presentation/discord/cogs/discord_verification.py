@@ -56,11 +56,14 @@ class DiscordVerificationCog(commands.Cog):
             pages=pages, actor_id=interaction.user.id,
             localizer=interaction.client.localizer, locale=interaction.locale,
         )
+        # Webhook.send accepts a View or an omitted argument, never None.
+        pagination_options = {"view": view} if len(pages) > 1 else {}
         view.message = await interaction.followup.send(
-            content=view.content(), view=view if len(pages) > 1 else None,
+            content=view.content(),
             file=discord.File(io.BytesIO("\n\n".join(pages).encode("utf-8")), filename="verificacion_discord.md"),
             allowed_mentions=discord.AllowedMentions.none(),
             wait=True,
+            **pagination_options,
         )
 
     @verification.autocomplete("equipo")

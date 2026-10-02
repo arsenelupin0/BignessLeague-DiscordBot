@@ -249,6 +249,64 @@ class VerificationMessagesTests(unittest.TestCase):
 
 
 class VerificationCommandTests(unittest.IsolatedAsyncioTestCase):
+    async def send_using_discord_library(self, profiles, equipo=None):
+        # Exercise discord.py's real validation and serialization. Only its HTTP
+        # transport and response construction are replaced; no messages are sent.
+        from discord.webhook.async_ import async_context
+
+        adapter = SimpleNamespace(execute_webhook=AsyncMock(return_value={}))
+        state = SimpleNamespace(allowed_mentions=None, store_view=Mock())
+        webhook = discord.Webhook(
+            {"id": "123", "type": 3, "token": "test-token"}, session=Mock(), state=state,
+        )
+        interaction = SimpleNamespace(
+            user=SimpleNamespace(id=42, roles=[SimpleNamespace(name="Staff")]),
+            guild=SimpleNamespace(), locale=discord.Locale.spain_spanish,
+            response=SimpleNamespace(defer=AsyncMock()), followup=webhook,
+            client=SimpleNamespace(settings=SimpleNamespace(channel_access_range_start_role_id=1,
+                                                            channel_access_range_end_role_id=2), localizer=localizer()),
+        )
+        repository = SimpleNamespace(list_team_profiles=AsyncMock(return_value=tuple(profiles)))
+
+        async def reports_for_profiles(guild, selected, **kwargs):
+            return tuple(verify_team(p, (
+                IdentityResolution(i, (), ()) for i in collect_roster_identities(p)
+            ), team_role=ExpectedRole(p.team_name, 1)) for p in selected)
+
+        module = "bigness_league_bot.presentation.discord.cogs.discord_verification"
+        token = async_context.set(adapter)
+        try:
+            with patch(module + ".GoogleSheetsTeamRepository", return_value=repository), \
+                    patch(module + ".get_channel_access_role_catalog"), \
+                    patch(module + ".verify_discord_rosters", side_effect=reports_for_profiles), \
+                    patch.object(discord.Webhook, "_create_message", return_value=SimpleNamespace(id=123)):
+                await DiscordVerificationCog.verification.callback(DiscordVerificationCog(), interaction, equipo)
+        finally:
+            async_context.reset(token)
+        return adapter, state
+
+    async def test_filtered_single_page_passes_real_webhook_validation(self) -> None:
+        adapter, state = await self.send_using_discord_library((
+            profile(str(MISSING_ID), team="Equipo"), profile(str(PRESENT_ID), team="Otro"),
+        ), equipo="Equipo")
+        adapter.execute_webhook.assert_awaited_once()
+        self.assertFalse(adapter.execute_webhook.call_args.kwargs["with_components"])
+        state.store_view.assert_not_called()
+
+    async def test_unfiltered_single_page_passes_real_webhook_validation(self) -> None:
+        adapter, state = await self.send_using_discord_library((profile(str(MISSING_ID)),))
+        self.assertFalse(adapter.execute_webhook.call_args.kwargs["with_components"])
+        state.store_view.assert_not_called()
+
+    async def test_multiple_pages_keep_interactive_view(self) -> None:
+        adapter, state = await self.send_using_discord_library(tuple(
+            profile(str(MISSING_ID), team=f"Equipo {index}") for index in range(30)
+        ))
+        self.assertTrue(adapter.execute_webhook.call_args.kwargs["with_components"])
+        view = state.store_view.call_args.args[0]
+        self.assertGreater(len(view.pages), 1)
+        view.stop()
+
     async def test_optional_team_parameter_registration(self) -> None:
         command = DiscordVerificationCog.verification
         self.assertEqual(command.name, "verificacion_discord")
