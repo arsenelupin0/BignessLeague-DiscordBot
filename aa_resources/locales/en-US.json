@@ -406,6 +406,15 @@
           }
         }
       },
+      "configure_ai": {
+        "name": "enable_ai",
+        "description": "Enables or disables AI for all open and new tickets.",
+        "parameters": {
+          "enabled": {
+            "description": "Yes to enable AI for all tickets; No to disable it."
+          }
+        }
+      },
       "configure_reminders": {
         "name": "ticket_reminders",
         "description": "Enables or disables inactivity reminders for the current ticket.",
@@ -902,6 +911,17 @@
         "stickers": "Stickers:\n{stickers}",
         "forwarded_body": "**Forwarded message:**\n{body}",
         "deleted_body": "**(Deleted message):** {body}"
+      },
+      "ai": {
+        "controls": {
+          "enabled": "AI enabled globally for open and new tickets. It will respond to subsequent messages in the configured categories. This setting persists across bot restarts.",
+          "disabled": "AI disabled for all open and new tickets. Pending queries have been cancelled. This setting persists across bot restarts.",
+          "failed": "Could not change the AI setting. Check state file permissions and, when enabling AI, the knowledge base and prompt files. The previous setting remains in effect."
+        },
+        "status": {
+          "backend_not_checked": "Not checked (AI disabled)",
+          "result": "## Ticket AI status\n- Loaded in runtime: `{loaded}`\n- Globally enabled: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Provider: `{provider}`\n- Model: `{model}`\n- Base URL: `{base_url}`\n- Backend reachable: `{backend_reachable}`\n- Auto-reply categories: `{categories}`\n- Knowledge base: `{knowledge_base_file}`\n- System prompt: `{system_prompt_file}`"
+        }
       },
       "inactivity": {
         "close_reason": "Your ticket has been closed automatically because of inactivity. If you still need help, open another ticket.",

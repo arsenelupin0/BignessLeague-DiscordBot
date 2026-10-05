@@ -412,6 +412,28 @@ class TicketsCog(commands.Cog):
         await interaction.response.defer(ephemeral=True, thinking=True)
         await self.ticket_ai_interactions.send_status(interaction)
 
+    @app_commands.command(
+        name=localized_locale_str(I18N.commands.tickets.configure_ai.name),
+        description=localized_locale_str(I18N.commands.tickets.configure_ai.description),
+    )
+    @app_commands.describe(
+        activada=localized_locale_str(
+            I18N.commands.tickets.configure_ai.parameters.enabled.description
+        ),
+    )
+    @app_commands.guild_only()
+    async def configure_ticket_ai(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            activada: bool,
+    ) -> None:
+        if interaction.guild is None or not isinstance(interaction.user, discord.Member):
+            raise CommandUserError(localize(I18N.errors.channel_management.server_only))
+        if not self._member_has_ceo_role(interaction.user):
+            raise CommandUserError(localize(I18N.errors.tickets.ceo_only))
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        await self.ticket_ai_interactions.set_enabled(interaction, enabled=activada)
+
     @commands.Cog.listener()
     async def on_interaction(
             self,

@@ -90,6 +90,15 @@
         "name": "ai_estado",
         "description": "Muestra el estado actual de la IA local para tickets."
       },
+      "configure_ai": {
+        "name": "activar_ia",
+        "description": "Activa o desactiva la IA para todos los tickets abiertos y nuevos.",
+        "parameters": {
+          "enabled": {
+            "description": "Sí para activar la IA en todos los tickets; No para desactivarla."
+          }
+        }
+      },
       "configure_reminders": {
         "name": "recordatorios_ticket",
         "description": "Activa o desactiva los recordatorios de inactividad del ticket actual.",
@@ -857,8 +866,14 @@
         "user_fallback": "He recibido tu mensaje. Un miembro del staff revisará tu caso en cuanto sea posible.",
         "user_escalated": "De acuerdo. He dejado el ticket para que lo revise una persona del staff lo antes posible.",
         "unavailable_thread": "La IA local no ha podido responder a este mensaje: {details}",
+        "controls": {
+          "enabled": "IA activada globalmente para los tickets abiertos y nuevos. Responderá a los siguientes mensajes en las categorías configuradas. El estado se conservará al reiniciar el bot.",
+          "disabled": "IA desactivada para todos los tickets abiertos y nuevos. Se han cancelado las consultas pendientes. El estado se conservará al reiniciar el bot.",
+          "failed": "No he podido cambiar el estado de la IA. Revisa los permisos del archivo de estado y, al activarla, los archivos de conocimiento y prompt. Se mantiene el estado anterior."
+        },
         "status": {
-          "result": "## Estado de la IA de tickets\n- Cargada en runtime: `{loaded}`\n- Activada por configuración: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Proveedor: `{provider}`\n- Modelo: `{model}`\n- Base URL: `{base_url}`\n- Backend accesible: `{backend_reachable}`\n- Categorías con auto-reply: `{categories}`\n- Base de conocimiento: `{knowledge_base_file}`\n- Prompt del sistema: `{system_prompt_file}`"
+          "backend_not_checked": "No comprobado (IA desactivada)",
+          "result": "## Estado de la IA de tickets\n- Cargada en runtime: `{loaded}`\n- Activada globalmente: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Proveedor: `{provider}`\n- Modelo: `{model}`\n- Base URL: `{base_url}`\n- Backend accesible: `{backend_reachable}`\n- Categorías con auto-reply: `{categories}`\n- Base de conocimiento: `{knowledge_base_file}`\n- Prompt del sistema: `{system_prompt_file}`"
         }
       },
       "inactivity": {

@@ -438,10 +438,23 @@ El panel de inscripciones aplica las etiquetas del mismo foro por ID:
 La base inicial de IA local usa Ollama por HTTP y una base de conocimiento en JSON. No depende del sistema operativo:
 el bot solo necesita poder acceder a `BOT_TICKET_AI_BASE_URL` o, en modo legacy, a `BOT_TICKET_AI_OLLAMA_BASE_URL`.
 
+El rol `CEO` puede usar `/activar_ia activada: Sí/No` desde cualquier canal del servidor para activar o desactivar
+las respuestas de IA en todos los tickets abiertos y nuevos, sin reiniciar el bot. Al activarla, responderá a los
+siguientes mensajes de usuario en las categorías permitidas; no envía respuestas retroactivas. Al desactivarla,
+descarta las respuestas pendientes y deja de consultar el backend. El comando controla la integración del bot;
+el proceso externo de Ollama o LM Studio se administra por separado.
+Una petición HTTP ya enviada puede finalizar en el backend, pero el bot descarta su resultado tras desactivar la IA.
+
+El estado global se guarda junto a `BOT_TICKET_STATE_FILE`, en `<nombre_sin_extension>_ai.json` (por defecto,
+`aa_var/tickets/active_tickets_ai.json`), y prevalece sobre las dos variables de activación al reiniciar. Si aún no
+existe ese archivo, la IA está activa solo cuando ambas variables están en `true`. El arranque no carga los recursos
+de IA ni consulta el backend: la carga se realiza al primer mensaje que la necesita o al activarla con el comando.
+`/ai_estado` muestra el estado efectivo y omite la consulta al backend cuando la IA está desactivada.
+
 Variables de entorno principales:
 
-- `BOT_TICKET_AI_ENABLED`: activa o desactiva la carga del servicio de IA local
-- `BOT_TICKET_AI_AUTO_REPLY_ENABLED`: permite contestación automática en las categorías seguras configuradas
+- `BOT_TICKET_AI_ENABLED`: habilita la IA inicialmente si no hay un estado global guardado
+- `BOT_TICKET_AI_AUTO_REPLY_ENABLED`: habilita las respuestas automáticas inicialmente junto con la variable anterior
 - `BOT_TICKET_AI_PROVIDER`: `openai_compatible` u `ollama_native`
 - `BOT_TICKET_AI_BASE_URL`: URL base del backend local
 - `BOT_TICKET_AI_API_KEY`: clave local para backends OpenAI-compatible como LM Studio u Ollama
@@ -459,13 +472,13 @@ Recursos incluidos:
 
 Flujo actual de la configuración:
 
-1. El bot carga la base de conocimiento JSON.
+1. Cuando la IA global está activada y necesita responder, el bot carga la base de conocimiento JSON.
 2. Recupera entradas relevantes por coincidencia lexica según categoria y mensaje.
 3. Llama al backend local con un prompt acotado y salida JSON estructurada.
 4. La respuesta devuelve `answer`, `confidence`, `should_escalate`, `reason` y `used_entry_ids`.
 5. Cuando el ticket entra por DM, el bot puede responder automáticamente si la categoria está permitida y la
    confianza supera el umbral configurado.
-6. El hilo interno recibe siempre una traza de la respuesta IA o del fallo del backend local.
+6. Mientras la IA sigue activada, el hilo interno recibe una traza de la respuesta IA o del fallo del backend local.
 
 Configuración recomendada en Windows con LM Studio:
 

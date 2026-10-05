@@ -221,13 +221,18 @@ class TicketParticipantMessenger:
             record: TicketRecord,
             content: str,
             exclude_user_ids: set[int] | None = None,
+            should_continue: Callable[[], bool] | None = None,
     ) -> None:
         skipped_user_ids = exclude_user_ids or set()
         for participant_id in record.participant_ids:
+            if should_continue is not None and not should_continue():
+                return
             if participant_id in skipped_user_ids:
                 continue
             try:
                 ticket_user = await self._resolve_ticket_user(participant_id)
+                if should_continue is not None and not should_continue():
+                    return
                 if ticket_user is None:
                     continue
                 await self._send_dm(

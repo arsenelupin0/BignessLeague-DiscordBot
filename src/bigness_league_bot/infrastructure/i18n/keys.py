@@ -187,7 +187,24 @@ class _CommandsTicketsConfigureDefaultReminders:
                                                  default_text="Configura los recordatorios predeterminados para los nuevos tickets.")
     parameters: _CommandsTicketsConfigureDefaultRemindersParameters = _CommandsTicketsConfigureDefaultRemindersParameters()
 
+
+class _CommandsTicketsConfigureAiParametersEnabled:
+    description: TranslationKey = TranslationKey(key="commands.tickets.configure_ai.parameters.enabled.description",
+                                                 default_text="S\u00ed para activar la IA en todos los tickets; No para desactivarla.")
+
+
+class _CommandsTicketsConfigureAiParameters:
+    enabled: _CommandsTicketsConfigureAiParametersEnabled = _CommandsTicketsConfigureAiParametersEnabled()
+
+
+class _CommandsTicketsConfigureAi:
+    name: TranslationKey = TranslationKey(key="commands.tickets.configure_ai.name", default_text="activar_ia")
+    description: TranslationKey = TranslationKey(key="commands.tickets.configure_ai.description",
+                                                 default_text="Activa o desactiva la IA para todos los tickets abiertos y nuevos.")
+    parameters: _CommandsTicketsConfigureAiParameters = _CommandsTicketsConfigureAiParameters()
+
 class _CommandsTickets:
+    configure_ai: _CommandsTicketsConfigureAi = _CommandsTicketsConfigureAi()
     publish_panel: _CommandsTicketsPublishPanel = _CommandsTicketsPublishPanel()
     publish_registration_panel: _CommandsTicketsPublishRegistrationPanel = _CommandsTicketsPublishRegistrationPanel()
     add_to_ticket: _CommandsTicketsAddToTicket = _CommandsTicketsAddToTicket()
@@ -1542,10 +1559,22 @@ class _MessagesTicketsRelay:
                                                          default_text="No he podido enviar este mensaje por DM al usuario `{user_id}`.")
 
 class _MessagesTicketsAiStatus:
+    backend_not_checked: TranslationKey = TranslationKey(key="messages.tickets.ai.status.backend_not_checked",
+                                                         default_text="No comprobado (IA desactivada)")
     result: TranslationKey = TranslationKey(key="messages.tickets.ai.status.result",
-                                            default_text="## Estado de la IA de tickets\n- Cargada en runtime: `{loaded}`\n- Activada por configuraci\u00f3n: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Proveedor: `{provider}`\n- Modelo: `{model}`\n- Base URL: `{base_url}`\n- Backend accesible: `{backend_reachable}`\n- Categor\u00edas con auto-reply: `{categories}`\n- Base de conocimiento: `{knowledge_base_file}`\n- Prompt del sistema: `{system_prompt_file}`")
+                                            default_text="## Estado de la IA de tickets\n- Cargada en runtime: `{loaded}`\n- Activada globalmente: `{enabled}`\n- Auto-reply: `{auto_reply}`\n- Proveedor: `{provider}`\n- Modelo: `{model}`\n- Base URL: `{base_url}`\n- Backend accesible: `{backend_reachable}`\n- Categor\u00edas con auto-reply: `{categories}`\n- Base de conocimiento: `{knowledge_base_file}`\n- Prompt del sistema: `{system_prompt_file}`")
+
+
+class _MessagesTicketsAiControls:
+    enabled: TranslationKey = TranslationKey(key="messages.tickets.ai.controls.enabled",
+                                             default_text="IA activada globalmente para los tickets abiertos y nuevos. Responder\u00e1 a los siguientes mensajes en las categor\u00edas configuradas. El estado se conservar\u00e1 al reiniciar el bot.")
+    disabled: TranslationKey = TranslationKey(key="messages.tickets.ai.controls.disabled",
+                                              default_text="IA desactivada para todos los tickets abiertos y nuevos. Se han cancelado las consultas pendientes. El estado se conservar\u00e1 al reiniciar el bot.")
+    failed: TranslationKey = TranslationKey(key="messages.tickets.ai.controls.failed",
+                                            default_text="No he podido cambiar el estado de la IA. Revisa los permisos del archivo de estado y, al activarla, los archivos de conocimiento y prompt. Se mantiene el estado anterior.")
 
 class _MessagesTicketsAi:
+    controls: _MessagesTicketsAiControls = _MessagesTicketsAiControls()
     thread_response: TranslationKey = TranslationKey(key="messages.tickets.ai.thread_response",
                                                      default_text="**Respuesta IA local:**\n{answer}\n\nConfianza: `{confidence}` | Escalar: `{should_escalate}`\nMotivo: {reason}\nBase de conocimiento: {used_entry_ids}")
     user_fallback: TranslationKey = TranslationKey(key="messages.tickets.ai.user_fallback",

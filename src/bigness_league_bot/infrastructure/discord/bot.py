@@ -30,6 +30,7 @@ from bigness_league_bot.infrastructure.discord.sync import (
 from bigness_league_bot.infrastructure.discord.telemetry import register_tree_error_handler
 from bigness_league_bot.infrastructure.i18n.discord_translator import DiscordTranslator
 from bigness_league_bot.infrastructure.i18n.service import LocalizationService
+from bigness_league_bot.infrastructure.ticket_ai.control import TicketAiControl
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,8 +51,12 @@ class BignessLeagueBot(commands.Bot):
             directory=settings.locales_dir,
             default_locale=settings.default_locale,
         )
-        self.ticket_ai: TicketAiService | None = TicketAiService.from_settings(settings)
+        self.ticket_ai_control = TicketAiControl(settings)
         register_tree_error_handler(self)
+
+    @property
+    def ticket_ai(self) -> TicketAiService | None:
+        return self.ticket_ai_control.service
 
     async def setup_hook(self) -> None:
         await self.tree.set_translator(DiscordTranslator(self.localizer))
@@ -107,11 +112,11 @@ class BignessLeagueBot(commands.Bot):
             self.settings.team_role_removal_announcement_channel_id,
         )
         LOGGER.info(
-            "Ticket AI runtime=%s | Configurada=%s | Provider=%s | Modelo=%s | Base URL=%s | Auto-reply=%s",
+            "Ticket AI cargada=%s | Activada globalmente=%s | Provider=%s | Modelo=%s | Base URL=%s | Auto-reply=%s",
             "activada" if self.ticket_ai is not None else "desactivada",
-            self.settings.ticket_ai_enabled,
+            self.ticket_ai_control.enabled,
             self.settings.ticket_ai_provider,
             self.settings.ticket_ai_model,
             self.settings.ticket_ai_base_url,
-            self.settings.ticket_ai_auto_reply_enabled,
+            self.ticket_ai_control.enabled,
         )

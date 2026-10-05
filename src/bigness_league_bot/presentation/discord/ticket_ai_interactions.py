@@ -19,6 +19,8 @@ from bigness_league_bot.application.services.ticket_ai import (
     create_ticket_ai_chat_client,
 )
 from bigness_league_bot.application.services.tickets import TicketRecord
+from bigness_league_bot.core.errors import CommandUserError
+from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.discord.ticket_ai_messages import (
     build_ticket_ai_conversation,
     build_ticket_ai_thread_message,
@@ -51,24 +53,53 @@ class TicketAiInteractions:
             self,
             interaction: discord.Interaction[BignessLeagueBot],
     ) -> None:
-        backend_reachable = await self._ping_backend()
+        control = self.bot.ticket_ai_control
+        backend_reachable = (
+            yes_no(await self._ping_backend())
+            if control.enabled
+            else self.bot.localizer.translate(
+                I18N.messages.tickets.ai.status.backend_not_checked,
+                locale=interaction.locale,
+            )
+        )
         await interaction.followup.send(
             interaction.client.localizer.translate(
                 I18N.messages.tickets.ai.status.result,
                 locale=interaction.locale,
                 loaded=yes_no(self.bot.ticket_ai is not None),
-                enabled=yes_no(self.bot.settings.ticket_ai_enabled),
-                auto_reply=yes_no(self.bot.settings.ticket_ai_auto_reply_enabled),
+                enabled=yes_no(control.enabled),
+                auto_reply=yes_no(control.enabled),
                 provider=self.bot.settings.ticket_ai_provider,
                 model=self.bot.settings.ticket_ai_model,
                 base_url=self.bot.settings.ticket_ai_base_url,
-                backend_reachable=yes_no(backend_reachable),
+                backend_reachable=backend_reachable,
                 categories=(
                         ", ".join(self.bot.settings.ticket_ai_autoreply_categories)
                         or "-"
                 ),
                 knowledge_base_file=str(self.bot.settings.ticket_ai_knowledge_base_file),
                 system_prompt_file=str(self.bot.settings.ticket_ai_system_prompt_file),
+            ),
+            ephemeral=True,
+        )
+
+    async def set_enabled(
+            self,
+            interaction: discord.Interaction[BignessLeagueBot],
+            *,
+            enabled: bool,
+    ) -> None:
+        try:
+            self.bot.ticket_ai_control.set_enabled(enabled)
+        except (OSError, ValueError, KeyError, TypeError):
+            LOGGER.exception("TICKET_AI_GLOBAL_SWITCH_FAILED enabled=%s", enabled)
+            raise CommandUserError(localize(I18N.messages.tickets.ai.controls.failed)) from None
+
+        await interaction.followup.send(
+            self.bot.localizer.translate(
+                I18N.messages.tickets.ai.controls.enabled
+                if enabled else I18N.messages.tickets.ai.controls.disabled,
+                locale=interaction.locale,
             ),
             ephemeral=True,
         )
@@ -80,7 +111,8 @@ class TicketAiInteractions:
             record: TicketRecord,
             thread: discord.Thread,
     ) -> None:
-        ticket_ai = self.bot.ticket_ai
+        control = self.bot.ticket_ai_control
+        ticket_ai = control.get_service()
         if ticket_ai is None:
             return
         if not ticket_ai.can_auto_reply(record.category_key):
@@ -109,12 +141,15 @@ class TicketAiInteractions:
             max_context_messages=self.bot.settings.ticket_ai_max_context_messages,
         )
         try:
-            ai_reply = await ticket_ai.generate_reply(
+            ai_reply = await control.generate_reply(
+                service=ticket_ai,
                 category_key=record.category_key,
                 latest_user_message=latest_user_message,
                 conversation=conversation,
             )
         except OllamaClientError as error:
+            if not control.is_current(ticket_ai):
+                return
             LOGGER.warning(
                 "TICKET_AI_UNAVAILABLE user=%s(%s) thread=%s details=%s",
                 message.author,
@@ -131,6 +166,8 @@ class TicketAiInteractions:
             )
             return
 
+        if ai_reply is None or not control.is_current(ticket_ai):
+            return
         await thread.send(
             build_ticket_ai_thread_message(
                 localizer=self.bot.localizer,
@@ -138,6 +175,8 @@ class TicketAiInteractions:
             ),
             allowed_mentions=discord.AllowedMentions.none(),
         )
+        if not control.is_current(ticket_ai):
+            return
         fallback_required = ai_reply.should_escalate
         LOGGER.info(
             "TICKET_AI_DECISION user=%s(%s) thread=%s category=%s confidence=%s threshold=%s escalate=%s fallback=%s used_entry_ids=%s",
@@ -154,6 +193,7 @@ class TicketAiInteractions:
         if fallback_required:
             await self.participant_messenger.broadcast_dm_message(
                 record=record,
+                should_continue=lambda: control.is_current(ticket_ai),
                 content=self.bot.localizer.translate(
                     I18N.messages.tickets.ai.user_escalated,
                 ),
@@ -163,6 +203,7 @@ class TicketAiInteractions:
         await self.participant_messenger.broadcast_dm_message(
             record=record,
             content=ai_reply.answer,
+            should_continue=lambda: control.is_current(ticket_ai),
         )
 
     async def _ping_backend(self) -> bool:
