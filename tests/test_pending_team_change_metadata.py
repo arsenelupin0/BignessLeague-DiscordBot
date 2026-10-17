@@ -4,9 +4,11 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
+from bigness_league_bot.core.localization import localize
 from bigness_league_bot.infrastructure.discord import pending_team_signing_resolver as pending
 from bigness_league_bot.infrastructure.google.team_sheets.errors import TeamSheetRequestError
 from bigness_league_bot.infrastructure.google.team_sheets.models import TeamRoleSheetMetadata
+from bigness_league_bot.infrastructure.i18n.keys import I18N
 
 
 class PendingTeamChangeMetadataTests(unittest.IsolatedAsyncioTestCase):
@@ -62,7 +64,8 @@ class PendingTeamChangeMetadataTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_sheet_failure_uses_default_instead_of_old_snapshot(self) -> None:
         repository = SimpleNamespace(find_team_sheet_metadata_for_role=AsyncMock(
-            side_effect=TeamSheetRequestError("unavailable"),
+            side_effect=TeamSheetRequestError(localize(I18N.errors.team_profile.google_request_failed,
+                                                       details="unavailable")),
         ))
         with self.assertLogs("bigness_league_bot.activity", level="WARNING"):
             await self.send(repository)

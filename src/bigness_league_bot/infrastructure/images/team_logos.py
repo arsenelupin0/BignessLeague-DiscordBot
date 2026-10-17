@@ -16,10 +16,15 @@ from uuid import uuid4
 
 from bigness_league_bot.application.services.team_logo import normalize_team_logo_url
 from bigness_league_bot.core.settings import PROJECT_ROOT
+from bigness_league_bot.infrastructure.images.team_logo_sources import (
+    is_discord_attachment,
+    resolve_team_logo_source,
+)
 
 LOGGER = logging.getLogger("bigness_league_bot.activity")
 TEAM_LOGO_CACHE_DIRECTORY = PROJECT_ROOT / "aa_var" / "team_logos"
-MAX_LOGO_BYTES = 4 * 1024 * 1024
+# Some original S4 assets in Drive are ~6 MiB before resizing (Reset Minds).
+MAX_LOGO_BYTES = 8 * 1024 * 1024
 MAX_LOGO_PIXELS = 16_000_000
 LOGO_SIZE = 256
 LOGO_TIMEOUT_SECONDS = 8
@@ -56,7 +61,7 @@ def load_team_logo_png(
     # overwrite a later replacement. Locks are bounded and shared by workers.
     with _CACHE_LOCKS[int(key, 16) % len(_CACHE_LOCKS)]:
         try:
-            url = _validate_logo_url(url)
+            url = resolve_team_logo_source(_validate_logo_url(url))
         except TeamLogoLoadError:
             _discard_cached_logo(cache_path, _read_cached_logo(cache_path))
             raise
@@ -80,7 +85,8 @@ def _validate_logo_url(url: str | None) -> str:
 def _load_team_logo_png(url: str, cache_path: Path, source_key: str) -> bytes:
     cached = _read_cached_logo(cache_path)
     matching_cache = cached is not None and cached.source_key == source_key
-    if matching_cache and time.time() - cached.modified_at < CACHE_REFRESH_SECONDS:
+    if matching_cache and (is_discord_attachment(url)
+                           or time.time() - cached.modified_at < CACHE_REFRESH_SECONDS):
         LOGGER.info("TEAM_LOGO_CACHE_HIT asset=%s source=%s", cache_path.stem, source_key[:12])
         return cached.content
     if not matching_cache:
@@ -90,7 +96,8 @@ def _load_team_logo_png(url: str, cache_path: Path, source_key: str) -> bytes:
     # requested; unrelated files cannot safely be assigned to this team.
     legacy_path = cache_path.parent / f"{source_key}.png"
     legacy = _read_cached_logo(legacy_path) if not matching_cache else None
-    if legacy is not None and time.time() - legacy.modified_at < CACHE_REFRESH_SECONDS:
+    if legacy is not None and (is_discord_attachment(url)
+                               or time.time() - legacy.modified_at < CACHE_REFRESH_SECONDS):
         if _write_cached_logo(cache_path, legacy.content, source_key):
             _remove_cached_logo(legacy_path)
         return legacy.content
@@ -99,13 +106,23 @@ def _load_team_logo_png(url: str, cache_path: Path, source_key: str) -> bytes:
         LOGGER.info("TEAM_LOGO_DOWNLOAD asset=%s source=%s host=%s path=%s",
                     cache_path.stem, source_key[:12], source.hostname, source.path)
         content = _download_logo_png(url)
-    except TeamLogoLoadError:
+    except TeamLogoLoadError as exc:
+        # An unavailable remote source does not invalidate previously validated
+        # pixels of that SAME source. A changed/removed URL still invalidates
+        # the old team copy before downloading, above.
+        retained = cached if matching_cache else legacy
+        if retained is not None:
+            LOGGER.warning("TEAM_LOGO_CACHE_STALE asset=%s source=%s reason=%s",
+                           cache_path.stem, source_key[:12], exc)
+            if legacy is not None and _write_cached_logo(cache_path, retained.content, source_key):
+                _remove_cached_logo(legacy_path)
+            return retained.content
         _discard_cached_logo(cache_path, cached)
         _remove_cached_logo(legacy_path)
         raise
     if _write_cached_logo(cache_path, content, source_key):
         _remove_cached_logo(legacy_path)
-    else:
+    elif not matching_cache:
         _discard_cached_logo(cache_path, cached)
     return content
 
@@ -113,8 +130,8 @@ def _load_team_logo_png(url: str, cache_path: Path, source_key: str) -> bytes:
 def _cache_identity(url: str) -> str:
     parsed = urlsplit(url)
     # Only the cache key loses expiring signatures. The HTTP request retains
-    # the complete URL supplied by Sheets, including backend and signature.
-    if parsed.hostname in ("cdn.discordapp.com", "media.discordapp.net") and parsed.path.startswith("/attachments/"):
+    # the complete resolved source URL, including backend and signature.
+    if is_discord_attachment(url):
         query = urlencode([(key, value) for key, value in parse_qsl(parsed.query, keep_blank_values=True)
                            if key not in {"ex", "is", "hm"}])
         return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, query, ""))
@@ -127,6 +144,7 @@ def _download_logo_png(url: str) -> bytes:
         with urlopen(request, timeout=LOGO_TIMEOUT_SECONDS) as response:
             content = response.read(MAX_LOGO_BYTES + 1)
     except HTTPError as exc:
+        exc.close()
         raise TeamLogoLoadError(f"http_{exc.code}") from exc
     except (OSError, TimeoutError, URLError, ValueError) as exc:
         raise TeamLogoLoadError("download_failed") from exc

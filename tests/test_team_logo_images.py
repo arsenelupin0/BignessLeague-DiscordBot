@@ -142,17 +142,16 @@ class TeamLogoImageTests(unittest.TestCase):
             self.load(self.url.replace("/2/", "/3/"))
         self.assertEqual(list(self.cache.iterdir()), [])
 
-    def test_failed_refresh_deletes_expired_legacy_copy(self) -> None:
+    def test_expired_legacy_discord_copy_is_migrated_without_network(self) -> None:
         source_key = hashlib.sha256(logos._cache_identity(self.url).encode()).hexdigest()
         legacy = self.cache / f"{source_key}.png"
         legacy.write_bytes(self.content)
         old = time.time() - logos.CACHE_REFRESH_SECONDS - 5
         os.utime(legacy, (old, old))
-        error = HTTPError(self.url, 403, "Expired", {}, None)
-        with patch.object(logos, "urlopen", side_effect=error), \
-                self.assertRaisesRegex(logos.TeamLogoLoadError, "http_403"):
+        with patch.object(logos, "urlopen", side_effect=AssertionError("immutable attachment must stay cached")):
             self.load()
-        self.assertEqual(list(self.cache.iterdir()), [])
+        self.assertFalse(legacy.exists())
+        self.assertEqual(len(list(self.cache.glob("team-*.png"))), 1)
 
     def test_legacy_source_copy_is_migrated_and_deleted_without_removing_other_files(self) -> None:
         source_key = hashlib.sha256(logos._cache_identity(self.url).encode()).hexdigest()
@@ -203,17 +202,73 @@ class TeamLogoImageTests(unittest.TestCase):
         with Image.open(paths[0]) as image:
             self.assertEqual(image.getpixel((0, 0)), (200, 20, 30, 255))
 
-    def test_failed_refresh_deletes_cached_logo_instead_of_serving_previous_pixels(self) -> None:
+    def test_discord_attachment_survives_signature_expiry_and_restart_without_network(self) -> None:
         with patch.object(logos, "urlopen", return_value=self.response(self.content)):
             self.load()
         for path in self.cache.glob("*.png"):
             old = time.time() - logos.CACHE_REFRESH_SECONDS - 5
             os.utime(path, (old, old))
-        error = HTTPError(self.url, 403, "Expired", {}, None)
-        with patch.object(logos, "urlopen", side_effect=error), \
-                self.assertRaisesRegex(logos.TeamLogoLoadError, "http_403"):
-            self.load()
-        self.assertEqual(list(self.cache.iterdir()), [])
+        with patch.object(logos, "urlopen", side_effect=AssertionError("expired URL must not be fetched")):
+            content = self.load()
+        self.assertEqual(content, self.content)
+        self.assertEqual(len(list(self.cache.iterdir())), 1)
+
+    def test_mutable_source_refresh_failure_preserves_matching_pixels_on_disk(self) -> None:
+        url = "https://example.com/logo.png"
+        for error in ("http_403", "http_404", "download_failed", "invalid_image", "invalid_size"):
+            with self.subTest(error=error):
+                with patch.object(logos, "_download_logo_png", return_value=self.content):
+                    self.load(url)
+                path = next(self.cache.glob("team-*.png"))
+                old = time.time() - logos.CACHE_REFRESH_SECONDS - 5
+                os.utime(path, (old, old))
+                before = path.read_bytes()
+                with patch.object(logos, "_download_logo_png", side_effect=logos.TeamLogoLoadError(error)), \
+                        self.assertLogs("bigness_league_bot.activity", level="WARNING") as recorded:
+                    self.assertEqual(self.load(url), self.content)
+                self.assertEqual(path.read_bytes(), before)
+                self.assertIn("TEAM_LOGO_CACHE_STALE", recorded.output[0])
+                self.assertIn(error, recorded.output[0])
+
+    def test_mutable_source_successful_refresh_updates_pixels(self) -> None:
+        url = "https://example.com/logo.png"
+        new_content = png_bytes(color=(200, 20, 30, 255))
+        with patch.object(logos, "_download_logo_png", return_value=self.content):
+            self.load(url)
+        path = next(self.cache.glob("team-*.png"))
+        old = time.time() - logos.CACHE_REFRESH_SECONDS - 5
+        os.utime(path, (old, old))
+        with patch.object(logos, "_download_logo_png", return_value=new_content) as download:
+            self.assertEqual(self.load(url), new_content)
+        download.assert_called_once_with(url)
+        self.assertEqual(logos._read_cached_logo(path).content, new_content)
+
+    def test_failed_mutable_refresh_retains_and_migrates_stale_legacy_copy(self) -> None:
+        url = "https://example.com/logo.png"
+        source_key = hashlib.sha256(logos._cache_identity(url).encode()).hexdigest()
+        legacy = self.cache / f"{source_key}.png"
+        legacy.write_bytes(self.content)
+        old = time.time() - logos.CACHE_REFRESH_SECONDS - 5
+        os.utime(legacy, (old, old))
+        with patch.object(logos, "_download_logo_png", side_effect=logos.TeamLogoLoadError("http_404")), \
+                self.assertLogs("bigness_league_bot.activity", level="WARNING"):
+            self.assertEqual(self.load(url), self.content)
+        self.assertFalse(legacy.exists())
+        self.assertEqual(len(list(self.cache.glob("team-*.png"))), 1)
+
+    def test_failed_cache_write_on_same_source_preserves_previous_valid_copy(self) -> None:
+        url = "https://example.com/logo.png"
+        with patch.object(logos, "_download_logo_png", return_value=self.content):
+            self.load(url)
+        path = next(self.cache.glob("team-*.png"))
+        old = time.time() - logos.CACHE_REFRESH_SECONDS - 5
+        os.utime(path, (old, old))
+        new_content = png_bytes(color=(200, 20, 30, 255))
+        with patch.object(logos, "_download_logo_png", return_value=new_content), \
+                patch.object(Path, "replace", side_effect=OSError("write denied")), \
+                self.assertLogs("bigness_league_bot.activity", level="WARNING"):
+            self.assertEqual(self.load(url), new_content)
+        self.assertEqual(logos._read_cached_logo(path).content, self.content)
 
     def test_expired_url_without_copy_reports_http_failure(self) -> None:
         with patch.object(logos, "urlopen", side_effect=HTTPError(self.url, 404, "Deleted", {}, None)), \

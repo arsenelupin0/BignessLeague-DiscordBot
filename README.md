@@ -412,13 +412,16 @@ Aviso automático al perder rol de equipo:
 - conserva un único PNG por equipo en `aa_var/team_logos/`, identificado por los IDs de servidor y rol;
   cambiar la URL elimina el escudo anterior en el siguiente anuncio, descarga y valida la nueva imagen y guarda
   únicamente esa nueva copia
-- si falta el enlace, es inválido o falla la descarga o la validación, elimina la copia del equipo y publica el
-  icono del servidor (logo de Bigness League) como imagen por defecto; nunca recupera el escudo anterior tras el fallo
-- reutiliza durante una hora una copia válida de la misma fuente, ignorando los parámetros de firma `ex`, `is` y `hm`
-  de Discord; al refrescarla, un fallo también elimina la copia y activa la imagen por defecto
+- si falta el enlace, es inválido o falla una fuente nueva sin copia válida, publica el icono del servidor como
+  imagen por defecto; una fuente nueva nunca recupera los píxeles de una URL anterior
+- los adjuntos de Discord ya descargados se conservan sin caducidad: su ruta identifica el archivo, mientras que
+  `ex`, `is` y `hm` son firmas temporales que no forman parte de la identidad de caché
+- las fuentes modificables (Drive u otros servidores) se refrescan cada hora; si falla la descarga o la validación,
+  conserva y adjunta la última copia válida de esa misma fuente, también después de reiniciar el bot
 - las copias del formato anterior por URL se migran y eliminan al usar ese enlace; los fallos se registran con
   equipo, hoja y motivo (`TEAM_CHANGE_LOGO_FALLBACK`)
-- los enlaces de Drive terminados en `/view` son páginas HTML y no funcionan como imágenes directas en este flujo
+- los enlaces de archivo de Drive `/file/d/ID/view`, `/open?id=ID` y `/uc?id=ID` se convierten a descarga directa;
+  el archivo debe permitir descargarlo sin iniciar sesión y seguir cumpliendo los límites de imagen (8 MiB, 16 MP)
 - este flujo solo escucha la perdida de roles de equipo; no se activa por cambios de roles técnicos
 
 Las incorporaciones pendientes y las autoasignaciones al entrar también consultan el logo actual en Sheets antes
@@ -430,6 +433,24 @@ con entorno, pestañas y canal. Cada logo registra descarga o caché (`TEAM_LOGO
 preparación del adjunto o motivo del fallo (`TEAM_CHANGE_LOGO_ATTACHED` / `TEAM_CHANGE_LOGO_FALLBACK`) y, después
 del envío, `TEAM_CHANGE_ANNOUNCEMENT_SENT` confirma `logo=attachment` o `logo=default`, con IDs del servidor,
 canal, mensaje y rol. Las firmas de las URLs no se escriben en esos registros.
+
+Recuperación de los logos S4 con enlaces caducados:
+
+- `aa_resources/team_logos/sources.json` relaciona las 16 rutas de adjuntos de las hojas oficiales con los archivos
+  de la carpeta compartida [Logos S4](https://drive.google.com/drive/folders/1jcddxWzPXzdtpfRP9Sa4rq5yM6aRecqh)
+- el bot consulta esa relación antes de descargar, por lo que una instalación sin caché puede recuperar el logo
+  desde Drive aunque el enlace de Discord en Sheets haya caducado; no necesita permisos nuevos ni modificar Sheets
+- la coincidencia utiliza la ruta completa del adjunto de Discord; los nombres de equipo y división del catálogo
+  son informativos. Una URL nueva de Sheets tiene prioridad y no hereda una recuperación por nombre de equipo
+- para sustituir un logo, usar `/modificar_logo` con el enlace del archivo de Drive compartido para lectura;
+  si cambia el ID del archivo, se invalida la copia anterior en el siguiente anuncio
+- el catálogo se despliega junto al código y los demás recursos. Conservar `aa_var/team_logos/` entre despliegues
+  permite seguir anunciando con los logos guardados durante una caída de Drive
+- `TEAM_LOGO_SOURCE_RECOVERED` identifica la recuperación por Drive; `TEAM_LOGO_CACHE_STALE` indica que falló
+  una actualización y se conservó la copia válida, con el motivo exacto
+
+Estos cambios se aplican a los nuevos anuncios. Los mensajes que ya se publicaron con el icono por defecto
+conservan ese icono hasta que se editen expresamente.
 
 La espera de un hilo disponible para preparar el logo no activa por sí misma la imagen por defecto. La petición
 HTTP tiene un timeout de 8 segundos; el adjunto preparado permanece abierto hasta que Discord termina el envío,
