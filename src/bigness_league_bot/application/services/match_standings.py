@@ -19,6 +19,8 @@ from dataclasses import dataclass
 from itertools import combinations
 from typing import Iterable
 
+from bigness_league_bot.application.services.standings_sanctions import unmarked_team_name
+
 NULL_MATCH_SCORE = "nulo"
 MATCH_SCORE_SUFFIXES = ("fw", "wo")
 MATCH_STANDINGS_RANGE = "A3:I11"
@@ -145,6 +147,8 @@ def match_standings_headers() -> list[str]:
 def build_match_standings_rows(
         team_names: Iterable[str],
         games: Iterable[MatchStandingGameResult],
+        *,
+        point_deductions: dict[str, int] | None = None,
 ) -> list[MatchStandingRow]:
     standings = {
         _normalize_team_name(team_name): _MutableStanding(team_name=team_name.strip())
@@ -260,6 +264,10 @@ def build_match_standings_rows(
         else:
             team_two.series_won += 1
             team_two.points += 3
+
+    # Apply once to points rebuilt from results, before ranking and tie grouping.
+    for team_name, points in (point_deductions or {}).items():
+        standings[_normalize_team_name(team_name)].points -= points
 
     ordered_rows = _order_standings_rows(
         standings,
@@ -520,10 +528,10 @@ def build_match_grid_standing_games(
 
         for game_index in range(MATCH_GRID_MAX_GAMES):
             base_index = MATCH_GRID_FIRST_GAME_COLUMN_INDEX + (game_index * MATCH_GRID_GAME_WIDTH)
-            team_one_name = _cell_at(row, base_index)
+            team_one_name = unmarked_team_name(_cell_at(row, base_index))
             score_cell = _cell_at(row, base_index + 1)
             score = _parse_score(score_cell)
-            team_two_name = _cell_at(row, base_index + 2)
+            team_two_name = unmarked_team_name(_cell_at(row, base_index + 2))
             if not team_one_name or not team_two_name:
                 continue
             if score is None and not _is_null_score(score_cell):

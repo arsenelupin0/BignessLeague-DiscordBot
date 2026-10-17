@@ -1179,5 +1179,67 @@
       "missing_team_roles": "Google Sheets teams without a Discord team role: {names}.",
       "more_items": ", and {remaining_count} more"
     }
+  },
+  "sanctions": {
+    "commands": {
+      "name": "sanction",
+      "description": "Manage standings points sanctions.",
+      "add_name": "add",
+      "add_description": "Register a sanction and recalculate the standings.",
+      "annul_name": "annul",
+      "annul_description": "Annul a sanction, preserving its history and restoring its points.",
+      "list_name": "list",
+      "list_description": "List division sanctions and their identifiers.",
+      "division": "Configured standings division.",
+      "team": "Sanctioned team's role.",
+      "points": "Points to deduct; enter a positive number.",
+      "reason": "Sanction or annulment reason (maximum 500 characters).",
+      "kind": "AI: ineligible lineup; OTRA: another points deduction.",
+      "matchday": "Affected matchday (required for AI).",
+      "match_number": "Match number within the matchday (required for AI).",
+      "identifier": "Sanction identifier, available from /sanction list."
+    },
+    "sheet": {
+      "title": "Sanciones de clasificación",
+      "id": "ID sanción",
+      "worksheet": "Hoja clasificación",
+      "season": "Temporada",
+      "division": "División",
+      "team": "Equipo",
+      "points": "Puntos a descontar",
+      "reason": "Motivo",
+      "kind": "Tipo",
+      "matchday": "Jornada",
+      "match_number": "Partido",
+      "state": "Estado",
+      "created_at": "Fecha alta UTC",
+      "created_by": "Registrada por",
+      "annulled_at": "Fecha anulación UTC",
+      "annulled_by": "Anulada por",
+      "annulment_reason": "Motivo anulación"
+    },
+    "messages": {
+      "added": "### Sanction registered\n**ID:** `{identifier}`\n**Team:** {team}\n**Standings:** {worksheet}\n**Deduction:** {points} point(s) · **Type:** {kind}\n**Reason:** {reason}\nStandings updated with all active sanctions.",
+      "annulled": "### Sanction annulled\n**ID:** `{identifier}`\n**Team:** {team}\n**Standings:** {worksheet}\n**Points restored:** {points}\n**Annulment reason:** {reason}\nStandings updated; the original record retains its history.",
+      "list_title": "### Sanctions · {worksheet}",
+      "list_row": "**{team}** · `{identifier}` · {state}\nDeduction: **{points}** · {kind} · J{matchday}/P{match_number}\n{reason}",
+      "empty": "No standings sanctions recorded for {worksheet}.",
+      "active": "Active",
+      "annulled_state": "Annulled"
+    },
+    "errors": {
+      "scope": "Cannot identify a unique season and division in '{sheet_name}'. Check the configuration.",
+      "invalid_record": "Sanction record '{identifier}' is invalid. Check its fields in Sanciones.",
+      "table": "The standings register in Sanciones is incomplete or has an unrecognized format. Standings were not recalculated.",
+      "unknown_team": "Team '{team}' is not in this standings roster. Check the sanction and division.",
+      "match_required": "Provide matchday (1–7) and match number (1–4) together. Both are required for an ineligible lineup (AI).",
+      "match_team": "Team '{team}' is not scheduled in J{matchday}/P{match_number}. Check the match before applying the sanction.",
+      "duplicate": "This sanction matches an existing record: `{identifier}`. Check /sanction list.",
+      "not_found": "Sanction `{identifier}` does not exist in the configured standings.",
+      "already_annulled": "Sanction `{identifier}` is already annulled.",
+      "reason": "Enter a reason between 1 and 500 characters.",
+      "request": "Could not read Sanciones or the standings: {details}. No changes were applied.",
+      "write": "Could not save the update to Google Sheets: {details}. Check the record before retrying."
+    }
   }
 }

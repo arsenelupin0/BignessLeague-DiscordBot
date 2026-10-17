@@ -11,7 +11,10 @@ from bigness_league_bot.application.services.match_replays import (
 from bigness_league_bot.application.services.match_standings import (
     MatchGridManualResult,
     MatchStandingRow,
+    build_match_grid_manual_result_row_values,
+    match_grid_row_number,
 )
+from bigness_league_bot.application.services.standings_sanctions import SanctionScope, sanction_error
 from bigness_league_bot.core.localization import localize
 from bigness_league_bot.core.settings import Settings
 from bigness_league_bot.infrastructure.google.match_replay_rosters import (
@@ -23,7 +26,9 @@ from bigness_league_bot.infrastructure.google.match_replay_sheet_names import (
 )
 from bigness_league_bot.infrastructure.google.match_replay_standings import (
     MatchReplayStandingsGateway,
+    report_grid_values,
 )
+from bigness_league_bot.infrastructure.google.sanctions_sheet import serialized_standings_write
 from bigness_league_bot.infrastructure.google.team_sheets.client import GoogleSheetsClient
 from bigness_league_bot.infrastructure.google.team_sheets.config import TeamSheetLookupConfig
 from bigness_league_bot.infrastructure.google.team_sheets.errors import (
@@ -94,6 +99,7 @@ class GoogleSheetsMatchStandingsRepository:
             team_names=team_names,
         )
 
+    @serialized_standings_write
     def refresh_division_standings_report_sync(
             self,
             division: MatchReplayDivision,
@@ -101,7 +107,7 @@ class GoogleSheetsMatchStandingsRepository:
             team_names: tuple[str, ...],
     ) -> MatchStandingsRefreshResult:
         service = self.client.build_service(read_only=False)
-        standings_worksheet_name = self._resolve_existing_standings_worksheet(
+        standings_worksheet_name = self.resolve_standings_worksheet(
             service,
             division=division,
         )
@@ -115,6 +121,7 @@ class GoogleSheetsMatchStandingsRepository:
             rows=rows,
         )
 
+    @serialized_standings_write
     def sync_report_to_standings_sync(
             self,
             report: MatchReplayReport,
@@ -122,25 +129,22 @@ class GoogleSheetsMatchStandingsRepository:
             team_names: tuple[str, ...],
     ) -> MatchStandingsRefreshResult:
         service = self.client.build_service(read_only=False)
-        standings_worksheet_name = self._resolve_existing_standings_worksheet(
+        standings_worksheet_name = self.resolve_standings_worksheet(
             service,
             division=report.division,
-        )
-        self.standings_gateway.write_match_grid_report(
-            service,
-            worksheet_name=standings_worksheet_name,
-            report=report,
         )
         rows = self.standings_gateway.refresh_standings_from_grid(
             service,
             worksheet_name=standings_worksheet_name,
             team_names=team_names,
+            replacement_row=report_grid_values(report),
         )
         return MatchStandingsRefreshResult(
             worksheet_name=standings_worksheet_name,
             rows=rows,
         )
 
+    @serialized_standings_write
     def sync_manual_result_to_standings_sync(
             self,
             division: MatchReplayDivision,
@@ -151,28 +155,25 @@ class GoogleSheetsMatchStandingsRepository:
             team_names: tuple[str, ...],
     ) -> MatchStandingsRefreshResult:
         service = self.client.build_service(read_only=False)
-        standings_worksheet_name = self._resolve_existing_standings_worksheet(
+        standings_worksheet_name = self.resolve_standings_worksheet(
             service,
             division=division,
-        )
-        self.standings_gateway.write_match_grid_manual_result(
-            service,
-            worksheet_name=standings_worksheet_name,
-            matchday=matchday,
-            match_number=match_number,
-            result=result,
         )
         rows = self.standings_gateway.refresh_standings_from_grid(
             service,
             worksheet_name=standings_worksheet_name,
             team_names=team_names,
+            replacement_row=(
+                match_grid_row_number(matchday=matchday, match_number=match_number),
+                build_match_grid_manual_result_row_values(result),
+            ),
         )
         return MatchStandingsRefreshResult(
             worksheet_name=standings_worksheet_name,
             rows=rows,
         )
 
-    def _resolve_existing_standings_worksheet(
+    def resolve_standings_worksheet(
             self,
             service: Any,
             *,
@@ -184,11 +185,15 @@ class GoogleSheetsMatchStandingsRepository:
         )
         worksheet_titles = self._list_worksheet_titles(service)
         if worksheet_name in worksheet_titles:
+            if SanctionScope.from_worksheet(worksheet_name).division.casefold() != division.value:
+                raise sanction_error("scope", sheet_name=worksheet_name)
             return worksheet_name
 
         normalized_target = normalize_worksheet_title(worksheet_name)
         for title in worksheet_titles:
             if normalize_worksheet_title(title) == normalized_target:
+                if SanctionScope.from_worksheet(title).division.casefold() != division.value:
+                    raise sanction_error("scope", sheet_name=title)
                 return title
 
         raise TeamSheetWriteError(

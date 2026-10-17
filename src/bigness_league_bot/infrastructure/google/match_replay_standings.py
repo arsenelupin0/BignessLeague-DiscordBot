@@ -34,7 +34,13 @@ from bigness_league_bot.application.services.match_standings import (
     match_standings_headers,
     match_standings_sheet_rows,
 )
+from bigness_league_bot.application.services.standings_sanctions import (
+    SanctionScope, StandingsSanction, sanction_deductions, sanction_marker_updates,
+)
 from bigness_league_bot.core.localization import localize
+from bigness_league_bot.infrastructure.google.sanctions_sheet import (
+    SanctionsSheetStore, sheet_range, values_update, STANDINGS_WRITE_LOCK,
+)
 from bigness_league_bot.infrastructure.google.team_sheets.config import TeamSheetLookupConfig
 from bigness_league_bot.infrastructure.google.team_sheets.errors import (
     GoogleSheetsDependencyError,
@@ -98,28 +104,7 @@ class MatchReplayStandingsGateway:
                 localize(I18N.errors.team_profile.google_dependencies_missing)
             ) from exc
 
-        game_scores = []
-        for game in report.games:
-            score = parse_score(match_replay_game_score(report, game))
-            if score is None:
-                continue
-            game_scores.append(
-                MatchGridGameScore(
-                    game_number=game.number,
-                    team_one_goals=score[0],
-                    team_two_goals=score[1],
-                )
-            )
-
-        row_number = match_grid_row_number(
-            matchday=report.matchday,
-            match_number=report.match_number,
-        )
-        values = build_match_grid_row_values(
-            team_one_name=report.team_one_name,
-            team_two_name=report.team_two_name,
-            game_scores=game_scores,
-        )
+        row_number, values = report_grid_values(report)
         try:
             service.spreadsheets().values().update(
                 spreadsheetId=self.config.spreadsheet_id,
@@ -209,18 +194,44 @@ class MatchReplayStandingsGateway:
             *,
             worksheet_name: str,
             team_names: tuple[str, ...],
+            sanctions: tuple[StandingsSanction, ...] | None = None,
+            extra_updates: list[dict[str, object]] | None = None,
+            replacement_row: tuple[int, list[object]] | None = None,
     ) -> tuple[MatchStandingRow, ...]:
-        games = self.list_match_grid_standing_game_results(
-            service,
-            worksheet_name=worksheet_name,
-        )
-        standings = build_match_standings_rows(team_names, games)
-        self.write_standings(
-            service,
-            worksheet_name=worksheet_name,
-            rows=match_standings_sheet_rows(standings),
-        )
-        return tuple(standings[:MATCH_STANDINGS_TEAM_COUNT])
+        with STANDINGS_WRITE_LOCK:
+            store = SanctionsSheetStore(self.config)
+            if sanctions is None:
+                sanctions = store.read(service).records
+            scope = SanctionScope.from_worksheet(worksheet_name)
+            deductions = sanction_deductions(sanctions, scope, team_names)
+            grid = store.read_values(service, sheet_range(worksheet_name, MATCH_GRID_RANGE))
+            if replacement_row is not None:
+                row_number, row_values = replacement_row
+                while len(grid) <= row_number - 20:
+                    grid.append([])
+                row = grid[row_number - 20]
+                row.extend([""] * max(0, 21 - len(row)))
+                row[1:21] = row_values
+            markers = sanction_marker_updates(grid, sanctions, scope)
+            standings = build_match_standings_rows(
+                team_names, build_match_grid_standing_games(grid), point_deductions=deductions,
+            )
+            values = [match_standings_headers(), *match_standings_sheet_rows(standings)[:MATCH_STANDINGS_TEAM_COUNT]]
+            while len(values) < MATCH_STANDINGS_ROW_COUNT:
+                values.append([""] * len(match_standings_headers()))
+            updates = list(extra_updates or ())
+            updates.append(values_update(worksheet_name, MATCH_STANDINGS_RANGE, values))
+            for row, column, name in markers:
+                if replacement_row is not None and replacement_row[0] == row:
+                    grid[row - 20][column] = name
+                else:
+                    updates.append(values_update(worksheet_name, f"{chr(65 + column)}{row}", [[name]]))
+            if replacement_row is not None:
+                row_number = replacement_row[0]
+                updates.append(values_update(worksheet_name, f"B{row_number}:U{row_number}",
+                                             [grid[row_number - 20][1:21]]))
+            store.commit(service, updates)
+            return tuple(standings[:MATCH_STANDINGS_TEAM_COUNT])
 
 
 def escape_worksheet_name(worksheet_name: str) -> str:
@@ -232,3 +243,16 @@ def parse_score(value: str) -> tuple[int, int] | None:
     if match is None:
         return None
     return int(match.group(1)), int(match.group(2))
+
+
+def report_grid_values(report: MatchReplayReport) -> tuple[int, list[object]]:
+    scores = []
+    for game in report.games:
+        score = parse_score(match_replay_game_score(report, game))
+        if score is not None:
+            scores.append(MatchGridGameScore(game.number, *score))
+    return (
+        match_grid_row_number(matchday=report.matchday, match_number=report.match_number),
+        build_match_grid_row_values(team_one_name=report.team_one_name, team_two_name=report.team_two_name,
+                                    game_scores=scores),
+    )

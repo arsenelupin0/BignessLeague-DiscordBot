@@ -2514,7 +2514,110 @@ class _Actions:
     team_signing: _ActionsTeamSigning = _ActionsTeamSigning()
     team_role_assignment: _ActionsTeamRoleAssignment = _ActionsTeamRoleAssignment()
 
+
+class _SanctionsCommands:
+    name: TranslationKey = TranslationKey(key="sanctions.commands.name", default_text="sancion")
+    description: TranslationKey = TranslationKey(key="sanctions.commands.description",
+                                                 default_text="Gestiona las sanciones de puntos de la clasificaci\u00f3n.")
+    add_name: TranslationKey = TranslationKey(key="sanctions.commands.add_name", default_text="a\u00f1adir")
+    add_description: TranslationKey = TranslationKey(key="sanctions.commands.add_description",
+                                                     default_text="Registra una sanci\u00f3n y recalcula la clasificaci\u00f3n.")
+    annul_name: TranslationKey = TranslationKey(key="sanctions.commands.annul_name", default_text="anular")
+    annul_description: TranslationKey = TranslationKey(key="sanctions.commands.annul_description",
+                                                       default_text="Anula una sanci\u00f3n conservando su historial y devuelve los puntos.")
+    list_name: TranslationKey = TranslationKey(key="sanctions.commands.list_name", default_text="listar")
+    list_description: TranslationKey = TranslationKey(key="sanctions.commands.list_description",
+                                                      default_text="Consulta las sanciones y sus identificadores en la divisi\u00f3n.")
+    division: TranslationKey = TranslationKey(key="sanctions.commands.division",
+                                              default_text="Divisi\u00f3n de la clasificaci\u00f3n configurada.")
+    team: TranslationKey = TranslationKey(key="sanctions.commands.team", default_text="Rol del equipo sancionado.")
+    points: TranslationKey = TranslationKey(key="sanctions.commands.points",
+                                            default_text="Puntos que se descuentan: introduce un n\u00famero positivo.")
+    reason: TranslationKey = TranslationKey(key="sanctions.commands.reason",
+                                            default_text="Motivo de la sanci\u00f3n o de su anulaci\u00f3n (m\u00e1ximo 500 caracteres).")
+    kind: TranslationKey = TranslationKey(key="sanctions.commands.kind",
+                                          default_text="AI: alineaci\u00f3n indebida; OTRA: otro descuento de puntos.")
+    matchday: TranslationKey = TranslationKey(key="sanctions.commands.matchday",
+                                              default_text="Jornada del partido afectado (obligatoria para AI).")
+    match_number: TranslationKey = TranslationKey(key="sanctions.commands.match_number",
+                                                  default_text="N\u00famero del partido dentro de la jornada (obligatorio para AI).")
+    identifier: TranslationKey = TranslationKey(key="sanctions.commands.identifier",
+                                                default_text="Identificador de la sanci\u00f3n, disponible en /sancion listar.")
+
+
+class _SanctionsSheet:
+    title: TranslationKey = TranslationKey(key="sanctions.sheet.title", default_text="Sanciones de clasificaci\u00f3n")
+    id: TranslationKey = TranslationKey(key="sanctions.sheet.id", default_text="ID sanci\u00f3n")
+    worksheet: TranslationKey = TranslationKey(key="sanctions.sheet.worksheet", default_text="Hoja clasificaci\u00f3n")
+    season: TranslationKey = TranslationKey(key="sanctions.sheet.season", default_text="Temporada")
+    division: TranslationKey = TranslationKey(key="sanctions.sheet.division", default_text="Divisi\u00f3n")
+    team: TranslationKey = TranslationKey(key="sanctions.sheet.team", default_text="Equipo")
+    points: TranslationKey = TranslationKey(key="sanctions.sheet.points", default_text="Puntos a descontar")
+    reason: TranslationKey = TranslationKey(key="sanctions.sheet.reason", default_text="Motivo")
+    kind: TranslationKey = TranslationKey(key="sanctions.sheet.kind", default_text="Tipo")
+    matchday: TranslationKey = TranslationKey(key="sanctions.sheet.matchday", default_text="Jornada")
+    match_number: TranslationKey = TranslationKey(key="sanctions.sheet.match_number", default_text="Partido")
+    state: TranslationKey = TranslationKey(key="sanctions.sheet.state", default_text="Estado")
+    created_at: TranslationKey = TranslationKey(key="sanctions.sheet.created_at", default_text="Fecha alta UTC")
+    created_by: TranslationKey = TranslationKey(key="sanctions.sheet.created_by", default_text="Registrada por")
+    annulled_at: TranslationKey = TranslationKey(key="sanctions.sheet.annulled_at",
+                                                 default_text="Fecha anulaci\u00f3n UTC")
+    annulled_by: TranslationKey = TranslationKey(key="sanctions.sheet.annulled_by", default_text="Anulada por")
+    annulment_reason: TranslationKey = TranslationKey(key="sanctions.sheet.annulment_reason",
+                                                      default_text="Motivo anulaci\u00f3n")
+
+
+class _SanctionsMessages:
+    added: TranslationKey = TranslationKey(key="sanctions.messages.added",
+                                           default_text="### Sanci\u00f3n registrada\n**ID:** `{identifier}`\n**Equipo:** {team}\n**Clasificaci\u00f3n:** {worksheet}\n**Descuento:** {points} punto(s) \u00b7 **Tipo:** {kind}\n**Motivo:** {reason}\nClasificaci\u00f3n actualizada con las sanciones activas.")
+    annulled: TranslationKey = TranslationKey(key="sanctions.messages.annulled",
+                                              default_text="### Sanci\u00f3n anulada\n**ID:** `{identifier}`\n**Equipo:** {team}\n**Clasificaci\u00f3n:** {worksheet}\n**Puntos devueltos:** {points}\n**Motivo de anulaci\u00f3n:** {reason}\nClasificaci\u00f3n actualizada; el registro original conserva su historial.")
+    list_title: TranslationKey = TranslationKey(key="sanctions.messages.list_title",
+                                                default_text="### Sanciones \u00b7 {worksheet}")
+    list_row: TranslationKey = TranslationKey(key="sanctions.messages.list_row",
+                                              default_text="**{team}** \u00b7 `{identifier}` \u00b7 {state}\nDescuento: **{points}** \u00b7 {kind} \u00b7 J{matchday}/P{match_number}\n{reason}")
+    empty: TranslationKey = TranslationKey(key="sanctions.messages.empty",
+                                           default_text="No hay sanciones de clasificaci\u00f3n registradas para {worksheet}.")
+    active: TranslationKey = TranslationKey(key="sanctions.messages.active", default_text="Activa")
+    annulled_state: TranslationKey = TranslationKey(key="sanctions.messages.annulled_state", default_text="Anulada")
+
+
+class _SanctionsErrors:
+    scope: TranslationKey = TranslationKey(key="sanctions.errors.scope",
+                                           default_text="No se puede identificar una \u00fanica temporada y divisi\u00f3n en \u00ab{sheet_name}\u00bb. Revisa la configuraci\u00f3n.")
+    invalid_record: TranslationKey = TranslationKey(key="sanctions.errors.invalid_record",
+                                                    default_text="El registro de sanci\u00f3n \u00ab{identifier}\u00bb no es v\u00e1lido. Revisa sus campos en Sanciones.")
+    table: TranslationKey = TranslationKey(key="sanctions.errors.table",
+                                           default_text="El registro de clasificaci\u00f3n en Sanciones est\u00e1 incompleto o tiene un formato no reconocido. No se ha recalculado la tabla.")
+    unknown_team: TranslationKey = TranslationKey(key="sanctions.errors.unknown_team",
+                                                  default_text="El equipo \u00ab{team}\u00bb no pertenece al listado de equipos de esta clasificaci\u00f3n. Revisa la sanci\u00f3n y la divisi\u00f3n.")
+    match_required: TranslationKey = TranslationKey(key="sanctions.errors.match_required",
+                                                    default_text="Indica jornada (1\u20137) y partido (1\u20134) juntos. Ambos son obligatorios para una alineaci\u00f3n indebida (AI).")
+    match_team: TranslationKey = TranslationKey(key="sanctions.errors.match_team",
+                                                default_text="El equipo \u00ab{team}\u00bb no figura en J{matchday}/P{match_number}. Revisa el partido antes de aplicar la sanci\u00f3n.")
+    duplicate: TranslationKey = TranslationKey(key="sanctions.errors.duplicate",
+                                               default_text="La sanci\u00f3n coincide con un registro existente: `{identifier}`. Rev\u00edsalo con /sancion listar.")
+    not_found: TranslationKey = TranslationKey(key="sanctions.errors.not_found",
+                                               default_text="No existe la sanci\u00f3n `{identifier}` en las clasificaciones configuradas.")
+    already_annulled: TranslationKey = TranslationKey(key="sanctions.errors.already_annulled",
+                                                      default_text="La sanci\u00f3n `{identifier}` ya est\u00e1 anulada.")
+    reason: TranslationKey = TranslationKey(key="sanctions.errors.reason",
+                                            default_text="Escribe un motivo de entre 1 y 500 caracteres.")
+    request: TranslationKey = TranslationKey(key="sanctions.errors.request",
+                                             default_text="No se pudo leer Sanciones o la clasificaci\u00f3n: {details}. No se han aplicado cambios.")
+    write: TranslationKey = TranslationKey(key="sanctions.errors.write",
+                                           default_text="No se pudo guardar la actualizaci\u00f3n en Google Sheets: {details}. Comprueba el registro antes de reintentar.")
+
+
+class _Sanctions:
+    commands: _SanctionsCommands = _SanctionsCommands()
+    sheet: _SanctionsSheet = _SanctionsSheet()
+    messages: _SanctionsMessages = _SanctionsMessages()
+    errors: _SanctionsErrors = _SanctionsErrors()
+
+
 class I18nKeys:
+    sanctions: _Sanctions = _Sanctions()
     commands: _Commands = _Commands()
     messages: _Messages = _Messages()
     errors: _Errors = _Errors()

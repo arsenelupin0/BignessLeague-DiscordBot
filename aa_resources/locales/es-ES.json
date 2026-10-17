@@ -1329,5 +1329,67 @@
       "missing_team_roles": "Equipos de Google Sheets sin rol de equipo en Discord: {names}.",
       "more_items": ", y {remaining_count} más"
     }
+  },
+  "sanctions": {
+    "commands": {
+      "name": "sancion",
+      "description": "Gestiona las sanciones de puntos de la clasificación.",
+      "add_name": "añadir",
+      "add_description": "Registra una sanción y recalcula la clasificación.",
+      "annul_name": "anular",
+      "annul_description": "Anula una sanción conservando su historial y devuelve los puntos.",
+      "list_name": "listar",
+      "list_description": "Consulta las sanciones y sus identificadores en la división.",
+      "division": "División de la clasificación configurada.",
+      "team": "Rol del equipo sancionado.",
+      "points": "Puntos que se descuentan: introduce un número positivo.",
+      "reason": "Motivo de la sanción o de su anulación (máximo 500 caracteres).",
+      "kind": "AI: alineación indebida; OTRA: otro descuento de puntos.",
+      "matchday": "Jornada del partido afectado (obligatoria para AI).",
+      "match_number": "Número del partido dentro de la jornada (obligatorio para AI).",
+      "identifier": "Identificador de la sanción, disponible en /sancion listar."
+    },
+    "sheet": {
+      "title": "Sanciones de clasificación",
+      "id": "ID sanción",
+      "worksheet": "Hoja clasificación",
+      "season": "Temporada",
+      "division": "División",
+      "team": "Equipo",
+      "points": "Puntos a descontar",
+      "reason": "Motivo",
+      "kind": "Tipo",
+      "matchday": "Jornada",
+      "match_number": "Partido",
+      "state": "Estado",
+      "created_at": "Fecha alta UTC",
+      "created_by": "Registrada por",
+      "annulled_at": "Fecha anulación UTC",
+      "annulled_by": "Anulada por",
+      "annulment_reason": "Motivo anulación"
+    },
+    "messages": {
+      "added": "### Sanción registrada\n**ID:** `{identifier}`\n**Equipo:** {team}\n**Clasificación:** {worksheet}\n**Descuento:** {points} punto(s) · **Tipo:** {kind}\n**Motivo:** {reason}\nClasificación actualizada con las sanciones activas.",
+      "annulled": "### Sanción anulada\n**ID:** `{identifier}`\n**Equipo:** {team}\n**Clasificación:** {worksheet}\n**Puntos devueltos:** {points}\n**Motivo de anulación:** {reason}\nClasificación actualizada; el registro original conserva su historial.",
+      "list_title": "### Sanciones · {worksheet}",
+      "list_row": "**{team}** · `{identifier}` · {state}\nDescuento: **{points}** · {kind} · J{matchday}/P{match_number}\n{reason}",
+      "empty": "No hay sanciones de clasificación registradas para {worksheet}.",
+      "active": "Activa",
+      "annulled_state": "Anulada"
+    },
+    "errors": {
+      "scope": "No se puede identificar una única temporada y división en «{sheet_name}». Revisa la configuración.",
+      "invalid_record": "El registro de sanción «{identifier}» no es válido. Revisa sus campos en Sanciones.",
+      "table": "El registro de clasificación en Sanciones está incompleto o tiene un formato no reconocido. No se ha recalculado la tabla.",
+      "unknown_team": "El equipo «{team}» no pertenece al listado de equipos de esta clasificación. Revisa la sanción y la división.",
+      "match_required": "Indica jornada (1–7) y partido (1–4) juntos. Ambos son obligatorios para una alineación indebida (AI).",
+      "match_team": "El equipo «{team}» no figura en J{matchday}/P{match_number}. Revisa el partido antes de aplicar la sanción.",
+      "duplicate": "La sanción coincide con un registro existente: `{identifier}`. Revísalo con /sancion listar.",
+      "not_found": "No existe la sanción `{identifier}` en las clasificaciones configuradas.",
+      "already_annulled": "La sanción `{identifier}` ya está anulada.",
+      "reason": "Escribe un motivo de entre 1 y 500 caracteres.",
+      "request": "No se pudo leer Sanciones o la clasificación: {details}. No se han aplicado cambios.",
+      "write": "No se pudo guardar la actualización en Google Sheets: {details}. Comprueba el registro antes de reintentar."
+    }
   }
 }

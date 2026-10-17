@@ -121,6 +121,9 @@ python -m bigness_league_bot.main
 - `/horarios_fijados`: muestra un resumen de los canales de partido que tienen horario fijado.
 - `/league_seedings`: sortea las siete jornadas de Gold y Silver, guarda los partidos directamente en Google Sheets
   y presenta el calendario por división y jornada en Discord.
+- `/sancion añadir`: registra un descuento de puntos y actualiza la clasificación.
+- `/sancion anular`: anula una sanción por su ID, conserva el historial y recalcula los puntos.
+- `/sancion listar`: muestra las sanciones de la división configurada y sus identificadores.
 -
 `/canal_de_jornada jornada:<numero> partido:<numero> minutos_cortesia:<numero> fecha:<texto> hora:<texto> bo_x:<numero> categoria:<division> equipo_1:<rol> equipo_2:<rol>`:
 crea un canal de partido con permisos para ambos equipos.
@@ -169,6 +172,45 @@ crea un canal de partido con permisos para ambos equipos.
   cambios de otros editores entre la lectura y la escritura; evita editar el calendario durante el sorteo.
 - Discord muestra la confirmación de guardado y una presentación Markdown de los enfrentamientos por jornada,
   con enlaces a cada hoja. Los nombres demasiado largos para Discord se conservan completos en Google Sheets.
+
+### Sanciones de clasificación
+
+Los roles `Staff`, `Administrador` y `Ceo` pueden gestionar descuentos desde el servidor. Ejemplo:
+
+```text
+/sancion añadir division:GOLD equipo:@Equipo puntos:1 motivo:Alineación indebida jornada:3 partido:2
+/sancion listar division:GOLD
+/sancion anular division:GOLD id:123456789012345678 motivo:Recurso estimado
+```
+
+- `puntos` es un entero positivo: `1` descuenta un punto. No cambies el total de puntos directamente para sancionar.
+- `tipo` es opcional y vale `AI` por defecto. Para `AI`, `jornada` (1–7) y `partido` (1–4) son obligatorios.
+  El equipo debe pertenecer a la división y al partido indicado. Con `tipo:OTRA` se permite un descuento general
+  sin partido; si se indican jornada y partido deben proporcionarse juntos.
+- La pestaña `Sanciones` conserva las fichas históricas de baneo. Debajo incluye el registro
+  «Sanciones de clasificación», con encabezados en A40:P40 en la hoja actual. Los baneos antiguos no se convierten
+  automáticamente en descuentos ni se aplican a otra temporada.
+- Cada registro incluye ID, hoja exacta de clasificación, temporada, división, equipo, puntos, motivo, tipo,
+  jornada, partido, estado y auditoría de alta/anulación. `ACTIVA` descuenta; `ANULADA` conserva el historial.
+  Las sanciones de una hoja `TEST` no afectan a las hojas oficiales, aunque compartan temporada y división.
+- `/clasificacion`, las subidas de replays de liga y los resultados `FW`, `WO` y `NULO` leen siempre las sanciones.
+  Reconstruyen los puntos desde la cuadrícula, descuentan las sanciones activas una sola vez y después ordenan
+  la tabla con los desempates existentes. Los puntos pueden quedar negativos.
+- La marca `(AI)` se añade al nombre del equipo sancionado en `GAME 1` del partido, en B o D según sea local
+  o visitante. No cambia el marcador ni sustituye `FW`, `WO` o `NULO`. Se repone al subir resultados y desaparece
+  al anular la última sanción AI de ese equipo en ese partido. Es una señal visual, no el origen del descuento.
+- Para corregir una sanción, anúlala y registra la nueva. Se rechazan las AI activas duplicadas para el mismo
+  equipo y partido. `listar` incluye las anuladas para poder consultar el historial.
+- Los cambios de sanción, puntos y marcas se guardan en una petición. Las subidas de resultados también actualizan
+  juntas la cuadrícula y la clasificación. Si falta el registro o sus datos son inválidos, no se recalcula
+  suponiendo que no hay sanciones. Las operaciones se serializan dentro del proceso del bot; evita editar estas
+  celdas mientras se ejecuta un comando o ejecutar varios procesos sobre la misma hoja.
+- En otro documento, prepara el registro existente con `python aa_scripts/prepare_standings_sanctions.py`
+  (solo previsualiza) y después `python aa_scripts/prepare_standings_sanctions.py --apply`.
+  Usa la configuración activa, busca espacio después de los valores y celdas combinadas existentes y solo añade
+  el registro vacío. Conserva valores, fórmulas y fichas anteriores. No renombres sus encabezados.
+- Los descuentos hechos previamente sobre el total deben registrarse como sanciones antes del siguiente recálculo.
+  No se intenta deducir una sanción a partir de la diferencia entre el total manual y los resultados.
 
 `/verificacion_discord`:
 
