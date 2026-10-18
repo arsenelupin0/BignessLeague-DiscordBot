@@ -271,6 +271,9 @@ class Settings:
     ballchasing_min_request_interval_seconds: float = 0.75
     ballchasing_rate_limit_retry_seconds: float = 10.0
     ballchasing_rate_limit_max_retries: int = 3
+    replay_name_parser_enabled: bool = True
+    replay_name_parser_path: Path = Path("aa_var/tools/rrrocket") / ("rrrocket.exe" if os.name == "nt" else "rrrocket")
+    replay_name_parser_timeout_seconds: int = 10
     team_profile_font_path: Path | None = None
     ticket_forum_channel_id: int | None = None
     ticket_state_file: Path = Path("aa_var/tickets/active_tickets.json")
@@ -493,6 +496,14 @@ class Settings:
         team_profile_font_path = _resolve_optional_storage_path(
             "BOT_TEAM_PROFILE_FONT_PATH"
         )
+        replay_name_parser_enabled = _read_bool("BOT_REPLAY_NAME_PARSER_ENABLED", True)
+        replay_name_parser_path = _resolve_storage_path(
+            "BOT_REPLAY_NAME_PARSER_PATH",
+            "aa_var/tools/rrrocket/" + ("rrrocket.exe" if os.name == "nt" else "rrrocket"),
+        )
+        replay_name_parser_timeout_seconds = _read_int("BOT_REPLAY_NAME_PARSER_TIMEOUT_SECONDS", 10)
+        if not 1 <= replay_name_parser_timeout_seconds <= 60:
+            raise ValueError("BOT_REPLAY_NAME_PARSER_TIMEOUT_SECONDS debe estar entre 1 y 60.")
         ticket_forum_channel_id = _read_optional_int("BOT_TICKET_FORUM_CHANNEL_ID")
         ticket_state_file = _resolve_storage_path(
             "BOT_TICKET_STATE_FILE",
@@ -644,6 +655,9 @@ class Settings:
             ballchasing_min_request_interval_seconds=ballchasing_min_request_interval_seconds,
             ballchasing_rate_limit_retry_seconds=ballchasing_rate_limit_retry_seconds,
             ballchasing_rate_limit_max_retries=ballchasing_rate_limit_max_retries,
+            replay_name_parser_enabled=replay_name_parser_enabled,
+            replay_name_parser_path=replay_name_parser_path,
+            replay_name_parser_timeout_seconds=replay_name_parser_timeout_seconds,
             team_profile_font_path=team_profile_font_path,
             ticket_forum_channel_id=ticket_forum_channel_id,
             ticket_state_file=ticket_state_file,

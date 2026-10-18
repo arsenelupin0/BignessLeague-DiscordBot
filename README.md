@@ -154,10 +154,52 @@ por nombre como ayuda para localizar discrepancias. Una coincidencia solo de nom
 El desglose cuenta cada campo por separado sobre la misma ficha: un ID correcto no figura entre los campos fallidos.
 Las cuentas duplicadas no se verifican automáticamente y un fallo en algún game se conserva en el resumen.
 
-El nombre recibido de Ballchasing se contrasta con `Epic Name` únicamente como aviso informativo, también cuando
-la cuenta está verificada. Puede ser un nombre de otra plataforma o llegar alterado desde la replay. Ese aviso
-no reduce el total verificado ni demuestra una alineación indebida. El bot muestra el nombre recibido y el registrado
-para revisarlos; no intenta reconstruir caracteres perdidos ni aceptar nombres por parecido.
+El nombre detectado se contrasta con `Epic Name` únicamente como aviso informativo, también cuando la cuenta está
+verificada. Puede ser un nombre de otra plataforma o llegar alterado desde el analizador. Ese aviso no reduce el
+total verificado ni demuestra una alineación indebida. No se aceptan nombres por parecido ni se reconstruyen
+caracteres perdidos.
+
+### Nombres Unicode de las replays
+
+El bot puede leer el nombre directamente del archivo original mediante
+[rrrocket 0.11.8 / Boxcars 0.13.0](https://github.com/nickbabcock/rrrocket/releases/tag/v0.11.8).
+Se integra como ejecutable externo en infraestructura: no requiere Rust ni un wrapper nativo para Python 3.14.
+Para instalar el binario oficial de tu sistema (Windows x64, Linux x64 o macOS x64/ARM64):
+
+```bash
+python aa_scripts/install_replay_parser.py
+```
+
+El instalador comprueba el SHA256 fijado y guarda el ejecutable, su licencia MIT y un manifiesto de versión en
+`aa_var/tools/rrrocket/`. No se versiona el binario y no hay descargas automáticas durante las subidas.
+La versión se actualiza explícitamente en el instalador, junto con los hashes oficiales y las pruebas con replays.
+
+```env
+BOT_REPLAY_NAME_PARSER_ENABLED=true
+BOT_REPLAY_NAME_PARSER_PATH=
+BOT_REPLAY_NAME_PARSER_TIMEOUT_SECONDS=10
+```
+
+La ruta vacía utiliza `aa_var/tools/rrrocket/rrrocket` (`rrrocket.exe` en Windows). Se puede indicar otra ruta
+en el `.env` privado. El bot entrega los bytes originales por stdin, comprueba el CRC y lee `PlayerStats` de la
+cabecera sin analizar los datos de red. Los cambios de protocolo de red de RL no obligan a procesar esa parte.
+Descarta bots y espectadores. Solo sustituye el nombre cuando la pareja plataforma/ID es única tanto en la cabecera
+como en Ballchasing. Conserva la identidad, los resultados y las estadísticas de Ballchasing, además del nombre que
+este devolvió en `ballchasing_name` para diagnóstico. El nombre local alimenta la verificación, Sheets y los resúmenes.
+En consolas, si la cabecera contiene un ID numérico y Ballchasing un gamertag, no se mezclan esos identificadores:
+se conserva el nombre de Ballchasing para esa cuenta.
+
+Si el ejecutable falta, falla, excede el timeout o no aporta una cuenta única, la subida continúa con Ballchasing.
+Los logs `REPLAY_NAME_LOCAL_RECOVERED`, `REPLAY_NAME_LOCAL_RESULT` y `REPLAY_NAME_LOCAL_FALLBACK` identifican el
+resultado y el motivo. `BOT_REPLAY_NAME_PARSER_ENABLED=false` desactiva la lectura local.
+Para comprobar archivos sin subirlos ni escribir en Sheets:
+
+```bash
+python aa_scripts/inspect_replay_names.py partido.replay
+```
+
+En las tres replays aportadas del 17 de octubre de 2026, rrrocket 0.11.8 recuperó exactamente
+`ᶠ ᵃ ᵏ ᵉDAVIDツ` de la cabecera; la lectura independiente de los datos de red confirmó el mismo nombre e ID.
 
 `/league_seedings`:
 

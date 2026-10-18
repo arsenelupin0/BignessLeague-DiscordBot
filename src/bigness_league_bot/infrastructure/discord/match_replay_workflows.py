@@ -87,6 +87,10 @@ from bigness_league_bot.infrastructure.google.match_standings_repository import 
     GoogleSheetsMatchStandingsRepository,
 )
 from bigness_league_bot.infrastructure.i18n.keys import I18N
+from bigness_league_bot.infrastructure.replays.name_recovery import (
+    build_replay_name_reader,
+    recover_replay_game_names,
+)
 
 if TYPE_CHECKING:
     from bigness_league_bot.infrastructure.discord.bot import BignessLeagueBot
@@ -299,6 +303,7 @@ async def process_replay_attachments(
         final_four_round_name=final_four_round_name,
         promotion_relegation=promotion_relegation,
     )
+    name_reader = build_replay_name_reader(interaction.client.settings)
     games = []
     failed_uploads: list[str] = []
     for index, upload in enumerate(uploads, start=1):
@@ -325,6 +330,7 @@ async def process_replay_attachments(
             )
             failed_uploads.append(f"Game {index} ({upload.filename})")
             continue
+        game = await recover_replay_game_names(game, upload.content, name_reader)
         games.append(game)
 
     ordered_games = sort_match_replay_games_by_replay_date(games)

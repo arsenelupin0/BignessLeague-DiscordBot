@@ -42,6 +42,8 @@ class MatchReplayPlayer:
     registered_platform: str = ""
     registered_platform_id: str = ""
     registered_epic_name: str = ""
+    ballchasing_name: str = ""
+    name_source: str = "ballchasing"
 
 
 @dataclass(frozen=True, slots=True)
