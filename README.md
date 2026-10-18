@@ -147,6 +147,18 @@ crea un canal de partido con permisos para ambos equipos.
 - `/subir_replays`: sube entre 3 y 5 ficheros `.replay` a Ballchasing, vuelca el resumen de la serie, games y
   jugadores en Google Sheets, evita duplicados por `Replay ID`/SHA256 y actualiza la clasificación de la división.
 
+La verificación de replays usa la pareja `Platform + Platform ID` de una ficha única de la división. `Platform` es
+la plataforma de juego (`epic`, `steam`, `psn`, `xbl` o `switch`); `ps4` y `ps5` equivalen a `psn`. El ID se compara
+sin eliminar signos ni espacios interiores. Se busca primero por plataforma e ID, después por ID único y finalmente
+por nombre como ayuda para localizar discrepancias. Una coincidencia solo de nombre nunca verifica una cuenta.
+El desglose cuenta cada campo por separado sobre la misma ficha: un ID correcto no figura entre los campos fallidos.
+Las cuentas duplicadas no se verifican automáticamente y un fallo en algún game se conserva en el resumen.
+
+El nombre recibido de Ballchasing se contrasta con `Epic Name` únicamente como aviso informativo, también cuando
+la cuenta está verificada. Puede ser un nombre de otra plataforma o llegar alterado desde la replay. Ese aviso
+no reduce el total verificado ni demuestra una alineación indebida. El bot muestra el nombre recibido y el registrado
+para revisarlos; no intenta reconstruir caracteres perdidos ni aceptar nombres por parecido.
+
 `/league_seedings`:
 
 - Solo pueden ejecutarlo los roles `Staff`, `Administrador` y `Ceo`, dentro del servidor.

@@ -12,10 +12,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
-import unicodedata
-
+from bigness_league_bot.application.services.match_replay_identity import (
+    replay_player_identity_key as _player_identity_key,
+)
 from bigness_league_bot.application.services.match_replay_models import (
-    MatchReplayPlayer,
     MatchReplayReport,
     MatchReplayRosterPlayer,
 )
@@ -38,6 +38,10 @@ class MatchReplayUnmatchedPlayer:
     platform: str
     platform_id: str
     missing_methods: tuple[str, ...]
+    registered_platform: str = ""
+    registered_platform_id: str = ""
+    registered_epic_name: str = ""
+    resolution_status: str = "unmatched"
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,115 +110,67 @@ def build_match_replay_roster_validation_summary(
 ) -> MatchReplayRosterValidationSummary:
     total_appearances = 0
     matched_appearances = 0
-    method_players: dict[str, set[tuple[str, str]]] = {}
-    unique_players: dict[tuple[str, str], bool] = {}
+    methods_by_player: dict[tuple[str, str], set[str]] = {}
+    verified_by_player: dict[tuple[str, str], bool] = {}
     unmatched_players: dict[tuple[str, str], MatchReplayUnmatchedPlayer] = {}
+    name_warnings: dict[tuple[str, str], MatchReplayUnmatchedPlayer] = {}
 
     for game in report.games:
         for team in (game.blue, game.orange):
-            for replay_player in team.players:
+            for player in team.players:
                 total_appearances += 1
-                player_key = _player_identity_key(replay_player)
-                match_methods = replay_player.match_methods
-                if (
-                        not match_methods
-                        and replay_player.match_method
-                        and replay_player.resolution_status == "matched"
-                ):
-                    match_methods = (replay_player.match_method,)
-                for method in match_methods:
-                    method_players.setdefault(method, set()).add(player_key)
-
-                identity_verified = {"platform", "platform_id"} <= set(match_methods)
-                unique_players[player_key] = unique_players.get(player_key, False) or identity_verified
-                if identity_verified:
-                    matched_appearances += 1
-                    unmatched_players.pop(player_key, None)
-                    continue
-
-                unmatched_players.setdefault(
-                    player_key,
-                    MatchReplayUnmatchedPlayer(
-                        team_name=team.name,
-                        player_name=replay_player.name,
-                        platform=replay_player.platform,
-                        platform_id=replay_player.platform_id,
-                        missing_methods=_missing_match_methods(match_methods),
-                    ),
+                key = _player_identity_key(player)
+                methods = set(player.match_methods)
+                if not methods and player.resolution_status == "matched":
+                    methods = set(player.match_method.split(" + "))
+                identity_verified = (
+                        player.resolution_status == "matched"
+                        and {"platform", "platform_id"} <= methods
                 )
+                matched_appearances += int(identity_verified)
+                # A failed appearance must not disappear depending on game order.
+                verified_by_player[key] = verified_by_player.get(key, True) and identity_verified
+                if key not in methods_by_player:
+                    methods_by_player[key] = methods
+                else:
+                    methods_by_player[key] &= methods
+                detail = MatchReplayUnmatchedPlayer(
+                    team_name=team.name,
+                    player_name=player.name,
+                    platform=player.platform,
+                    platform_id=player.platform_id,
+                    missing_methods=tuple(
+                        method for method in ("platform", "platform_id") if method not in methods
+                    ),
+                    registered_platform=player.registered_platform,
+                    registered_platform_id=player.registered_platform_id,
+                    registered_epic_name=player.registered_epic_name,
+                    resolution_status=player.resolution_status,
+                )
+                if not identity_verified:
+                    unmatched_players.setdefault(key, detail)
+                if "epic_name" not in methods:
+                    name_warnings.setdefault(key, detail)
 
-    matched_unique_players = sum(1 for matched in unique_players.values() if matched)
-    unmatched_unique_players = len(unique_players) - matched_unique_players
+    sort_key = lambda player: (player.team_name.casefold(), player.player_name.casefold())
+    matched_unique_players = sum(verified_by_player.values())
     return MatchReplayRosterValidationSummary(
         total_appearances=total_appearances,
         matched_appearances=matched_appearances,
         unmatched_appearances=total_appearances - matched_appearances,
-        unique_players=len(unique_players),
+        unique_players=len(verified_by_player),
         matched_unique_players=matched_unique_players,
-        unmatched_unique_players=unmatched_unique_players,
+        unmatched_unique_players=len(verified_by_player) - matched_unique_players,
         match_methods=tuple(
-            MatchReplayMatchMethodCount(method=method, count=count)
-            for method, count in sorted(
-                (
-                    (method, len(player_keys))
-                    for method, player_keys in method_players.items()
-                ),
-                key=lambda item: (-item[1], item[0]),
+            MatchReplayMatchMethodCount(
+                method=method,
+                count=sum(method in methods for methods in methods_by_player.values()),
             )
+            for method in ("platform", "platform_id", "epic_name")
         ),
-        unmatched_players=tuple(
-            sorted(
-                unmatched_players.values(),
-                key=lambda player: (
-                    player.team_name.casefold(),
-                    player.player_name.casefold(),
-                ),
-            )
-        ),
-        epic_name_unmatched_players=tuple(
-            player
-            for player in sorted(
-                unmatched_players.values(),
-                key=lambda player: (
-                    player.team_name.casefold(),
-                    player.player_name.casefold(),
-                ),
-            )
-            if "epic_name" not in _match_methods_for_unmatched_player(report, player)
-        ),
+        unmatched_players=tuple(sorted(unmatched_players.values(), key=sort_key)),
+        epic_name_unmatched_players=tuple(sorted(name_warnings.values(), key=sort_key)),
     )
-
-
-def _match_methods_for_unmatched_player(
-        report: MatchReplayReport,
-        unmatched_player: MatchReplayUnmatchedPlayer,
-) -> tuple[str, ...]:
-    target_key = _unmatched_player_key(unmatched_player)
-    for game in report.games:
-        for team in (game.blue, game.orange):
-            for replay_player in team.players:
-                if _player_identity_key(replay_player) != target_key:
-                    continue
-                return replay_player.match_methods or (
-                    (replay_player.match_method,) if replay_player.match_method else ()
-                )
-
-    return ()
-
-
-def _unmatched_player_key(player: MatchReplayUnmatchedPlayer) -> tuple[str, str]:
-    if player.platform_id:
-        return player.platform.casefold(), player.platform_id.casefold()
-    return "name", _normalize_player_lookup(player.player_name)
-
-
-def _missing_match_methods(match_methods: tuple[str, ...]) -> tuple[str, ...]:
-    missing: list[str] = []
-    if "platform" not in match_methods:
-        missing.append("platform")
-    if "platform_id" not in match_methods:
-        missing.append("platform_id")
-    return tuple(missing)
 
 
 def build_match_replay_player_stat_totals(
@@ -294,12 +250,6 @@ def _optional_stat(value: int | None) -> int:
     return value
 
 
-def _player_identity_key(player: MatchReplayPlayer) -> tuple[str, str]:
-    if player.platform_id:
-        return player.platform.casefold(), player.platform_id.casefold()
-    return "name", _normalize_player_lookup(player.name)
-
-
 def _team_sort_index(report: MatchReplayReport, team_name: str) -> int:
     normalized_team = normalize_match_replay_team_name(team_name)
     if match_replay_team_names_match(
@@ -313,8 +263,3 @@ def _team_sort_index(report: MatchReplayReport, team_name: str) -> int:
     ):
         return 1
     return 2
-
-
-def _normalize_player_lookup(value: str) -> str:
-    normalized = unicodedata.normalize("NFKC", value.casefold())
-    return "".join(character for character in normalized if character.isalnum())

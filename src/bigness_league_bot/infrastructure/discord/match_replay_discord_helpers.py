@@ -19,6 +19,7 @@ from bigness_league_bot.infrastructure.discord.emojis import (
     SILVER_DIVISION_EMOJI,
     render_custom_emoji,
 )
+from bigness_league_bot.infrastructure.discord.match_replay_messages import split_match_replay_message
 from bigness_league_bot.infrastructure.i18n.keys import I18N
 
 if TYPE_CHECKING:
@@ -100,17 +101,13 @@ async def send_channel_message(
         file: discord.File | None = None,
 ) -> None:
     channel = interaction.channel
-    if isinstance(channel, discord.abc.Messageable):
-        if file is None:
-            await channel.send(content=content)
-            return
-        await channel.send(content=content, file=file)
-        return
-
-    if file is None:
-        await interaction.followup.send(content=content)
-        return
-    await interaction.followup.send(content=content, file=file)
+    sender = channel.send if isinstance(channel, discord.abc.Messageable) else interaction.followup.send
+    chunks = split_match_replay_message(content)
+    for index, chunk in enumerate(chunks):
+        options = {"content": chunk, "allowed_mentions": discord.AllowedMentions.none()}
+        if file is not None and index == len(chunks) - 1:
+            options["file"] = file
+        await sender(**options)
 
 
 async def delete_original_interaction_response(

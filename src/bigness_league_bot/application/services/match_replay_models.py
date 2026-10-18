@@ -39,6 +39,9 @@ class MatchReplayPlayer:
     match_method: str = ""
     match_methods: tuple[str, ...] = ()
     resolution_status: str = "unmatched"
+    registered_platform: str = ""
+    registered_platform_id: str = ""
+    registered_epic_name: str = ""
 
 
 @dataclass(frozen=True, slots=True)

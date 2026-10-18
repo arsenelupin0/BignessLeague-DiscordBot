@@ -12,8 +12,11 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Iterable
 
-import unicodedata
-
+from bigness_league_bot.application.services.match_replay_identity import (
+    normalize_replay_name,
+    normalize_replay_platform,
+    normalize_replay_platform_id,
+)
 from bigness_league_bot.application.services.match_replay_models import (
     MatchReplayGame,
     MatchReplayPlayer,
@@ -95,6 +98,9 @@ def _resolve_match_replay_team(
                     match_method=method,
                     match_methods=match_methods,
                     resolution_status=resolution_status,
+                    registered_platform="",
+                    registered_platform_id="",
+                    registered_epic_name="",
                 )
             )
             continue
@@ -110,6 +116,9 @@ def _resolve_match_replay_team(
                 match_method=method,
                 match_methods=match_methods,
                 resolution_status=resolution_status,
+                registered_platform=roster_player.platform,
+                registered_platform_id=roster_player.platform_id,
+                registered_epic_name=roster_player.epic_name,
             )
         )
 
@@ -134,98 +143,50 @@ def _find_roster_player_match(
         replay_player: MatchReplayPlayer,
         roster_index: dict[str, dict[str, MatchReplayRosterPlayer]],
 ) -> tuple[MatchReplayRosterPlayer | None, str, tuple[str, ...], str]:
-    platform_key = _normalize_platform_lookup(replay_player.platform)
-    platform_id_key = _normalize_player_lookup(replay_player.platform_id)
-    epic_match = _find_unique_roster_index_match(
-        roster_index,
-        "epic_name",
-        _normalize_player_lookup(replay_player.name),
+    platform_key = normalize_replay_platform(replay_player.platform)
+    platform_id_key = normalize_replay_platform_id(replay_player.platform_id)
+    name_key = normalize_replay_name(replay_player.name)
+    pair_match = _find_unique_roster_index_match(
+        roster_index, "platform_pair", f"{platform_key}:{platform_id_key}",
+    ) if platform_key and platform_id_key else None
+    id_match = _find_unique_roster_index_match(roster_index, "platform_id", platform_id_key)
+    name_match = _find_unique_roster_index_match(roster_index, "epic_name", name_key)
+    pair_entry = roster_index["platform_pair"].get(f"{platform_key}:{platform_id_key}")
+    id_entry = roster_index["platform_id"].get(platform_id_key)
+    ambiguous = any(
+        entry is not None and _is_ambiguous_roster_player(entry)
+        for entry in (pair_entry, id_entry)
     )
-    if platform_key and platform_id_key:
-        platform_pair_match = _find_unique_roster_index_match(
-            roster_index,
-            "platform_pair",
-            f"{platform_key}:{platform_id_key}",
-        )
-        if platform_pair_match is not None:
-            match_methods = ["platform", "platform_id"]
-            if epic_match == platform_pair_match:
-                match_methods.append("epic_name")
-            return (
-                platform_pair_match,
-                "platform + platform_id",
-                tuple(match_methods),
-                "matched",
-            )
+    unresolved_status = "ambiguous" if ambiguous else "unmatched"
 
-    if epic_match is not None:
-        return (
-            epic_match,
-            "platform + platform_id",
-            _collect_partial_match_methods(
-                roster_index,
-                platform_key=platform_key,
-                platform_id_key=platform_id_key,
-                epic_match=epic_match,
-            ),
-            "unmatched",
-        )
+    # Always compare the fields against the same roster entry. Names are only a
+    # diagnostic fallback; they must never override a unique account ID.
+    candidate = pair_match or id_match or name_match
+    if candidate is None:
+        return None, "platform + platform_id", (), unresolved_status
 
-    match_methods = _collect_partial_match_methods(
-        roster_index,
-        platform_key=platform_key,
-        platform_id_key=platform_id_key,
-        epic_match=epic_match,
-    )
-    return None, "platform + platform_id", match_methods, "unmatched"
-
-
-def _collect_partial_match_methods(
-        roster_index: dict[str, dict[str, MatchReplayRosterPlayer]],
-        *,
-        platform_key: str,
-        platform_id_key: str,
-        epic_match: MatchReplayRosterPlayer | None,
-) -> tuple[str, ...]:
     methods: list[str] = []
-    if epic_match is not None:
-        methods.append("epic_name")
-        if platform_key and platform_key == _normalize_platform_lookup(epic_match.platform):
-            methods.append("platform")
-        if platform_id_key and platform_id_key == _normalize_player_lookup(epic_match.platform_id):
-            methods.append("platform_id")
-        return tuple(methods)
-
-    platform_id_match = _find_unique_roster_index_match(
-        roster_index,
-        "platform_id",
-        platform_id_key,
-    )
-    if platform_id_match is not None:
+    if platform_key and platform_key == normalize_replay_platform(candidate.platform):
+        methods.append("platform")
+    if pair_match is not None or id_match is not None:
         methods.append("platform_id")
-        if platform_key and platform_key == _normalize_platform_lookup(platform_id_match.platform):
-            methods.append("platform")
-    return tuple(
-        method
-        for method in methods
-        if method
-    )
+    if name_key and name_key == normalize_replay_name(candidate.epic_name):
+        methods.append("epic_name")
+    status = "matched" if pair_match is not None else unresolved_status
+    return candidate, "platform + platform_id", tuple(methods), status
 
 
 def _build_roster_player_index(
         roster_players: Iterable[MatchReplayRosterPlayer],
 ) -> dict[str, dict[str, MatchReplayRosterPlayer]]:
     index: dict[str, dict[str, MatchReplayRosterPlayer]] = {
-        "platform": {},
         "platform_id": {},
         "platform_pair": {},
         "epic_name": {},
     }
     for roster_player in roster_players:
-        platform_key = _normalize_platform_lookup(roster_player.platform)
-        platform_id_key = _normalize_player_lookup(roster_player.platform_id)
-        if platform_key:
-            _add_unique_roster_index_entry(index["platform"], platform_key, roster_player)
+        platform_key = normalize_replay_platform(roster_player.platform)
+        platform_id_key = normalize_replay_platform_id(roster_player.platform_id)
         if platform_id_key:
             _add_unique_roster_index_entry(index["platform_id"], platform_id_key, roster_player)
         if platform_key and platform_id_key:
@@ -234,7 +195,7 @@ def _build_roster_player_index(
                 f"{platform_key}:{platform_id_key}",
                 roster_player,
             )
-        normalized_epic_name = _normalize_player_lookup(roster_player.epic_name)
+        normalized_epic_name = normalize_replay_name(roster_player.epic_name)
         if normalized_epic_name:
             _add_unique_roster_index_entry(index["epic_name"], normalized_epic_name, roster_player)
     return index
@@ -292,18 +253,3 @@ def _resolve_team_name_from_counts(team_match_counts: dict[str, int]) -> str | N
     if len(ordered_matches) > 1 and ordered_matches[0][1] == ordered_matches[1][1]:
         return None
     return ordered_matches[0][0]
-
-
-def _normalize_player_lookup(value: str) -> str:
-    normalized = unicodedata.normalize("NFKC", value.casefold())
-    return "".join(character for character in normalized if character.isalnum())
-
-
-def _normalize_platform_lookup(value: str) -> str:
-    normalized = unicodedata.normalize("NFKC", value.casefold()).strip()
-    aliases = {
-        "ps4": "psn",
-        "ps5": "psn",
-    }
-    compact = "".join(character for character in normalized if character.isalnum())
-    return aliases.get(compact, aliases.get(normalized, normalized))
