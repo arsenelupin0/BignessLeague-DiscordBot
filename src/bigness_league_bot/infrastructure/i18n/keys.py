@@ -1165,10 +1165,10 @@ class _MessagesMatchReplaysUploaded:
                                                     default_text="Las {replay_count} replays adjuntas ya estaban registradas. No las he vuelto a procesar.")
     roster_validation_all_matched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_all_matched",
-        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- Identidad de cuenta: {match_methods}\n{method_breakdown}\n- Todos los jugadores detectados coinciden con la plataforma e ID registrados.{name_warnings_section}\n_ _\n## Resumen de estad\u00edsticas")
+        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n{method_breakdown}\n- Todos los jugadores detectados coinciden con la plataforma e ID registrados.{name_warnings_section}\n_ _\n## Resumen de estad\u00edsticas")
     roster_validation_with_unmatched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_with_unmatched",
-        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- Identidad de cuenta: {match_methods}\n{method_breakdown}\n\n**Jugadores pendientes de verificar**\n\n{unmatched_players}{name_warnings_section}\n_ _\n## Revisi\u00f3n del Staff\n- El Staff revisar\u00e1 las discrepancias de identidad de cuenta con los datos registrados. Una diferencia de nombre por s\u00ed sola es informativa.\n- Si se confirma una alineaci\u00f3n indebida, podr\u00e1 conllevar sanci\u00f3n grave, tanto al club como al jugador.\n- Se debe aportar toda la informaci\u00f3n posible para la revisi\u00f3n.\n_ _\n## Resumen de estad\u00edsticas")
+        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n{method_breakdown}\n\n**Jugadores pendientes de verificar**\n\n{unmatched_players}{name_warnings_section}\n_ _\n## Revisi\u00f3n del Staff\n- El Staff revisar\u00e1 las discrepancias de identidad de cuenta con los datos registrados. Una diferencia de nombre por s\u00ed sola es informativa.\n- Si se confirma una alineaci\u00f3n indebida, podr\u00e1 conllevar sanci\u00f3n grave, tanto al club como al jugador.\n- Se debe aportar toda la informaci\u00f3n posible para la revisi\u00f3n.\n_ _\n## Resumen de estad\u00edsticas")
     roster_platform_label: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_platform_label",
                                                            default_text="Plataforma")
     roster_name_warnings: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_name_warnings",
@@ -1180,10 +1180,10 @@ class _MessagesMatchReplaysUploaded:
                                                           default_text="no disponible")
     roster_unmatched_player: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_unmatched_player",
-        default_text="### {team} \u00b7 {player}\n**Ficha de Excel:** {registered_player}\n\n{comparisons}\n\n**Resultado:** {result}")
+        default_text="### {team} \u00b7 {player}\n{comparisons}\n\n**Resultado:** {result}")
     roster_ambiguous_account: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_ambiguous_account",
-        default_text="Cuenta ambigua: la plataforma e ID o el ID aparecen en varias fichas")
+        default_text="Cuenta ambigua: varias fichas apuntan a la misma cuenta")
     roster_platform_id_label: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_platform_id_label", default_text="Platform ID")
     roster_unevaluated_count: TranslationKey = TranslationKey(
@@ -1191,7 +1191,7 @@ class _MessagesMatchReplaysUploaded:
         default_text=" \u00b7 {count} sin dato en Excel")
     roster_unidentified_player: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_unidentified_player",
-        default_text="### {team} \u00b7 {player}\n**Datos de la replay**\n- **Plataforma:** {platform}\n- **Platform ID:** {platform_id}\n\n**Resultado de la b\u00fasqueda:** {reason}\n\n**Qu\u00e9 revisar:** {result}")
+        default_text="### {team} \u00b7 {player}\n**Platform ID de la replay:** {platform_id}\n\n**Resultado de la b\u00fasqueda:** {reason}\n\n**Qu\u00e9 revisar:** {result}")
     roster_record_missing_explanation: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_record_missing_explanation",
         default_text="\u26a0\ufe0f Este Platform ID no aparece en las fichas de la divisi\u00f3n y la b\u00fasqueda por nombre tampoco ha permitido vincular una ficha. El jugador puede tener una ficha con otros datos.")
@@ -1202,10 +1202,6 @@ class _MessagesMatchReplaysUploaded:
                                                            default_text="Falta dato de Excel")
     roster_status_different: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_status_different", default_text="No coincide")
-    roster_status_equal: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_status_equal",
-                                                         default_text="Coincide")
-    roster_correct_id: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_correct_id",
-                                                       default_text="\u2705 **Platform ID:** coincide con Excel.")
     roster_review_fields: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_review_fields",
                                                           default_text="\u274c Revisar {fields} en la ficha de Excel.")
     roster_incomplete_comparison: TranslationKey = TranslationKey(
@@ -1217,9 +1213,6 @@ class _MessagesMatchReplaysUploaded:
     roster_validation_more_unmatched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_more_unmatched",
         default_text="  - Y {remaining} m\u00e1s.")
-    roster_platform_equivalence: TranslationKey = TranslationKey(
-        key="messages.match_replays.uploaded.roster_platform_equivalence",
-        default_text="{detected} \u2192 `psn` (equivalencia aplicada)")
     roster_replay_id_missing_result: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_replay_id_missing_result",
         default_text="Falta el Platform ID para buscar la cuenta. Revisa los datos del archivo.")

@@ -64,3 +64,18 @@ class ReplayRosterSheetTests(unittest.TestCase):
         summary = build_match_replay_roster_validation_summary(resolved)
         self.assertEqual(summary.matched_unique_players, 1)
         self.assertFalse(summary.unmatched_players)
+
+    def test_tracker_hyperlink_locates_the_row_without_overriding_its_platform_id_column(self):
+        grids = snapshot(OLD_ID)
+        grids[0][1][23][4] = SheetCell(
+            value=NAME,
+            hyperlink=f"https://rocketleague.tracker.network/rocket-league/profile/epic/{ACTUAL_ID}/overview",
+        )
+        entries = list_division_roster_players_from_grids("SILVER DIVISION S4", grids)
+        resolved = resolve_match_replay_report_players(report(player(platform_id=ACTUAL_ID)), entries)
+        actual = resolved.games[0].blue.players[0]
+        summary = build_match_replay_roster_validation_summary(resolved)
+        self.assertEqual(actual.roster_player_name, "DAVID")
+        self.assertEqual(actual.registered_platform_id, OLD_ID)
+        self.assertEqual(summary.matched_unique_players, 0)
+        self.assertEqual(summary.unmatched_players[0].missing_methods, ("platform_id",))

@@ -28,6 +28,7 @@ from bigness_league_bot.application.services.match_replay_team_names import (
     match_replay_team_names_match,
     normalize_match_replay_team_name,
 )
+from bigness_league_bot.application.services.match_replay_tracker_identity import tracker_account_key
 
 
 def resolve_match_replay_report_players(
@@ -156,18 +157,23 @@ def _find_roster_player_match(
         roster_index, "platform_pair", f"{platform_key}:{platform_id_key}",
     ) if platform_key and platform_id_key else None
     id_match = _find_unique_roster_index_match(roster_index, "platform_id", platform_id_key)
+    tracker_match = _find_unique_roster_index_match(
+        roster_index, "tracker_pair", f"{platform_key}:{platform_id_key}",
+    ) if platform_key and platform_id_key else None
     name_match = _find_unique_roster_index_match(roster_index, "epic_name", name_key)
     pair_entry = roster_index["platform_pair"].get(f"{platform_key}:{platform_id_key}")
     id_entry = roster_index["platform_id"].get(platform_id_key)
+    tracker_entry = roster_index["tracker_pair"].get(f"{platform_key}:{platform_id_key}")
     ambiguous = any(
         entry is not None and _is_ambiguous_roster_player(entry)
-        for entry in (pair_entry, id_entry)
+        for entry in (pair_entry, id_entry, tracker_entry)
     )
     unresolved_status = "ambiguous" if ambiguous else "unmatched"
 
-    # Always compare the fields against the same roster entry. Names are only a
-    # diagnostic fallback; they must never override a unique account ID.
-    candidate = pair_match or id_match or name_match
+    # Always compare the fields against the same roster entry. Tracker links
+    # and names are diagnostic fallbacks; neither verifies fields
+    # that differ from the registered Platform / Platform ID columns.
+    candidate = pair_match or id_match or tracker_match or name_match
     if candidate is None:
         return None, "platform + platform_id", (), unresolved_status
 
@@ -189,6 +195,7 @@ def _build_roster_player_index(
         "platform_id": {},
         "platform_pair": {},
         "epic_name": {},
+        "tracker_pair": {},
     }
     for roster_player in roster_players:
         platform_key = normalize_replay_platform(roster_player.platform)
@@ -204,6 +211,9 @@ def _build_roster_player_index(
         normalized_epic_name = normalize_replay_name(roster_player.epic_name)
         if normalized_epic_name:
             _add_unique_roster_index_entry(index["epic_name"], normalized_epic_name, roster_player)
+        tracker_key = tracker_account_key(roster_player.tracker_url)
+        if tracker_key:
+            _add_unique_roster_index_entry(index["tracker_pair"], tracker_key, roster_player)
     return index
 
 

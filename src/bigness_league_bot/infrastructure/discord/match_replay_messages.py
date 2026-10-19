@@ -77,12 +77,15 @@ def format_match_replay_roster_validation(
         "platform": localizer.translate(keys.roster_platform_label, locale=locale),
         "platform_id": localizer.translate(keys.roster_platform_id_label, locale=locale),
     }
-    method_text = _format_method_list(ROSTER_VALIDATION_METHODS, labels)
     method_lines = []
     for method in ROSTER_VALIDATION_METHODS:
         count = method_counts.get(method, 0)
         evaluated = evaluated_counts.get(method, 0)
         pending = summary.unique_players - evaluated
+        # An unidentified account must not turn its platform into a warning.
+        # Show this breakdown only when every player has a platform reference.
+        if method == "platform" and pending:
+            continue
         icon = "❌" if evaluated > count else ("⚠️" if pending or not summary.unique_players else "✅")
         unlinked = min(pending, sum(
             method in player.unevaluated_methods and not _has_registered_record(player)
@@ -122,7 +125,6 @@ def format_match_replay_roster_validation(
         locale=locale,
         matched_unique=summary.matched_unique_players,
         unique_players=summary.unique_players,
-        match_methods=method_text,
         method_breakdown=method_breakdown,
         status_icon=("❌" if any(player.missing_methods for player in summary.unmatched_players)
                      else ("⚠️" if summary.unmatched_players else "✅")),
@@ -157,7 +159,6 @@ def _format_unmatched_player_line(
             keys.roster_unidentified_player, locale=locale,
             team=_escape_discord_markdown(player.team_name),
             player=_format_inline_code(player.player_name),
-            platform=_format_platform(player.platform, localizer=localizer, locale=locale),
             platform_id=_format_value(player.platform_id, localizer=localizer, locale=locale),
             reason=localizer.translate(reason_key, locale=locale),
             result=localizer.translate(result_key, locale=locale),
@@ -167,8 +168,7 @@ def _format_unmatched_player_line(
     for method in ROSTER_VALIDATION_METHODS:
         pending = method in player.unevaluated_methods
         failed = method in player.missing_methods
-        if method == "platform_id" and not pending and not failed:
-            comparisons.append(localizer.translate(keys.roster_correct_id, locale=locale))
+        if not pending and not failed:
             continue
         detected = player.platform if method == "platform" else player.platform_id
         registered = player.registered_platform if method == "platform" else player.registered_platform_id
@@ -176,8 +176,7 @@ def _format_unmatched_player_line(
         comparisons.append(localizer.translate(
             keys.roster_field_comparison, locale=locale, field=labels[method],
             icon="⚠️" if pending else ("❌" if failed else "✅"),
-            status=localizer.translate(keys.roster_status_pending if pending else
-                                       (keys.roster_status_different if failed else keys.roster_status_equal),
+            status=localizer.translate(keys.roster_status_pending if pending else keys.roster_status_different,
                                        locale=locale),
             detected=formatter(detected, localizer=localizer, locale=locale),
             registered=formatter(registered, localizer=localizer, locale=locale),
@@ -200,7 +199,6 @@ def _format_unmatched_player_line(
         keys.roster_unmatched_player, locale=locale,
         team=_escape_discord_markdown(player.team_name),
         player=_format_inline_code(player.registered_player_name or player.player_name),
-        registered_player=_format_value(player.registered_player_name, localizer=localizer, locale=locale),
         comparisons="\n\n".join(comparisons), result=result,
     )
 
@@ -223,12 +221,7 @@ def _format_value(value: str, *, localizer: LocalizationService, locale: str | d
 
 
 def _format_platform(value: str, *, localizer: LocalizationService, locale: str | discord.Locale | None) -> str:
-    formatted = _format_value(value, localizer=localizer, locale=locale)
-    normalized = normalize_replay_platform(value)
-    if normalized == "psn" and value.strip().casefold() != "psn":
-        return localizer.translate(I18N.messages.match_replays.uploaded.roster_platform_equivalence,
-                                   locale=locale, detected=formatted)
-    return formatted
+    return _format_value(normalize_replay_platform(value), localizer=localizer, locale=locale)
 
 
 def _format_inline_code(value: str) -> str:

@@ -169,23 +169,26 @@ class ReplayIdentityTests(unittest.TestCase):
                            (roster(platform="psn"), roster(platform="ps4")))
         self.assertEqual(resolved.games[0].blue.players[0].resolution_status, "ambiguous")
 
-    def test_screenshot_accounts_are_not_fixed_by_platform_aliases_or_removing_underscores(self):
+    def test_screenshot_tracker_links_identify_records_without_verifying_incorrect_columns(self):
         cases = (
             (player(name="liquidcap_", platform="ps4", platform_id="liquidcap_"),
              roster(player_name="Prime Liquidcap", platform="psn", platform_id="liquidcap",
-                    epic_name="Prime Liquidcap")),
+                    epic_name="Prime Liquidcap",
+                    tracker_url="https://rocketleague.tracker.network/rocket-league/profile/psn/liquidcap_/overview"),
+             ("platform_id",)),
             (player(name="Antoonioo_9", platform="ps4", platform_id="Antoonioo_9"),
              roster(player_name="Antoonioo_9", platform="epic",
-                    platform_id="4cf1bcc7b49f49d4bc4a8769b4947092", epic_name="Antoonio_")),
+                    platform_id="4cf1bcc7b49f49d4bc4a8769b4947092", epic_name="Antoonio_",
+                    tracker_url="https://rocketleague.tracker.network/rocket-league/profile/psn/Antoonioo_9/overview"),
+             ("platform", "platform_id")),
         )
-        for appearance, entry in cases:
+        for appearance, entry, incorrect in cases:
             with self.subTest(player=appearance.name):
                 summary = build_match_replay_roster_validation_summary(resolve(appearance, (entry,)))
                 self.assertEqual(summary.matched_unique_players, 0)
-                self.assertEqual(summary.unmatched_players[0].missing_methods, ())
-                self.assertEqual(summary.unmatched_players[0].unevaluated_methods,
-                                 ("platform", "platform_id"))
-                self.assertFalse(summary.epic_name_unmatched_players)
+                self.assertEqual(summary.unmatched_players[0].missing_methods, incorrect)
+                self.assertEqual(summary.unmatched_players[0].unevaluated_methods, ())
+                self.assertEqual(summary.unmatched_players[0].registered_player_name, entry.player_name)
 
     def test_failed_appearance_survives_in_either_game_order(self):
         matched = resolve().games[0].blue.players[0]
@@ -245,7 +248,7 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
         text = self.render(resolve(player(platform="steam")))
         self.assertIn("Platform ID: **1/1** ✅", text)
         self.assertIn("**Plataforma · ❌ No coincide**\n- **Replay:** `steam`\n- **Excel:** `epic`", text)
-        self.assertIn("✅ **Platform ID:** coincide con Excel.", text)
+        self.assertNotIn("**Platform ID ·", text)
         self.assertIn("**Resultado:** ❌ Revisar **Plataforma**", text)
         self.assertNotIn("account-123", text)
         self.assertEqual(text.count("C O IDAVID0"), 1)
@@ -279,9 +282,9 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
     def test_unknown_roster_marks_platform_as_unevaluated_instead_of_incorrect(self):
         text = self.render(resolve(player(platform_id="unknown")))
         self.assertIn("Jugadores verificados: **0/1** ⚠️", text)
-        self.assertIn("Plataforma: **0/1** ⚠️ · 1 sin ficha vinculada", text)
+        self.assertNotIn("Plataforma:", text)
         self.assertIn("Platform ID: **0/1** ⚠️ · 1 sin ficha vinculada", text)
-        self.assertIn("**Datos de la replay**", text)
+        self.assertIn("**Platform ID de la replay:** `unknown`", text)
         self.assertIn("**Resultado de la búsqueda:** ⚠️ Este Platform ID no aparece en las fichas", text)
         self.assertIn("El jugador puede tener una ficha con otros datos.", text)
         self.assertIn("**Qué revisar:** Comprueba la cuenta y el Platform ID registrados", text)
@@ -299,28 +302,56 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
         self.assertIn("The player may have an entry with different details.", text)
         self.assertNotIn("not evaluated", text)
 
-    def test_known_psn_account_displays_equivalence_and_only_the_incorrect_id(self):
+    def test_known_psn_account_only_displays_the_incorrect_id(self):
         text = self.render(resolve(
             player(name="Prime Liquidcap", platform="ps4", platform_id="liquidcap_"),
             (roster(player_name="Liquidcap", platform="psn", platform_id="liquidcap",
                     epic_name="Prime Liquidcap"),),
         ))
-        self.assertIn(
-            "**Plataforma · ✅ Coincide**\n- **Replay:** `ps4` → `psn` (equivalencia aplicada)\n- **Excel:** `psn`",
-            text)
+        self.assertIn("Plataforma: **1/1** ✅", text)
+        self.assertNotIn("**Plataforma ·", text)
+        self.assertNotIn("equivalencia", text)
+        self.assertNotIn("`ps4`", text)
         self.assertIn("**Platform ID · ❌ No coincide**\n- **Replay:** `liquidcap_`\n- **Excel:** `liquidcap`", text)
         self.assertIn("**Resultado:** ❌ Revisar **Platform ID**", text)
-        self.assertIn("**Ficha de Excel:** `Liquidcap`", text)
+        self.assertIn("### Astra Drift · `Liquidcap`", text)
         self.assertNotIn("Revisar **Plataforma**", text)
+
+    def test_liquidcap_tracker_reference_reports_the_id_difference_without_platform_details(self):
+        text = self.render(resolve(
+            player(name="liquidcap_", platform="ps4", platform_id="liquidcap_"),
+            (roster(player_name="Prime Liquidcap", platform="psn", platform_id="liquidcap",
+                    epic_name="Prime Liquidcap",
+                    tracker_url="https://rocketleague.tracker.network/rocket-league/profile/psn/liquidcap_/overview"),),
+        ))
+        self.assertIn("Plataforma: **1/1** ✅", text)
+        details = text.split("### Astra Drift", 1)[1]
+        self.assertNotIn("Plataforma", details)
+        self.assertIn("**Platform ID · ❌ No coincide**\n- **Replay:** `liquidcap_`\n- **Excel:** `liquidcap`", details)
+        self.assertNotIn("sin ficha vinculada", text)
+        self.assertNotIn("equivalencia", text)
+
+    def test_antonio_tracker_reference_exposes_the_real_epic_column_instead_of_an_unidentified_record(self):
+        text = self.render(resolve(
+            player(name="Antoonioo_9", platform="ps4", platform_id="Antoonioo_9"),
+            (roster(player_name="Antoonioo_9", platform="epic",
+                    platform_id="4cf1bcc7b49f49d4bc4a8769b4947092", epic_name="Antoonio_",
+                    tracker_url="https://rocketleague.tracker.network/rocket-league/profile/psn/Antoonioo_9/overview"),),
+        ))
+        self.assertIn("**Plataforma · ❌ No coincide**\n- **Replay:** `psn`\n- **Excel:** `epic`", text)
+        self.assertIn("**Resultado:** ❌ Revisar **Plataforma + Platform ID**", text)
+        self.assertNotIn("sin ficha vinculada", text)
+        self.assertNotIn("equivalencia", text)
+        self.assertNotIn("`ps4`", text)
 
     def test_duplicate_account_has_an_explicit_ambiguity_reason(self):
         text = self.render(resolve(entries=(roster(), roster())))
-        self.assertIn("Cuenta ambigua: la plataforma e ID o el ID aparecen en varias fichas", text)
+        self.assertIn("Cuenta ambigua: varias fichas apuntan a la misma cuenta", text)
         self.assertIn("Jugadores verificados: **0/1**", text)
         self.assertIn("Revisa los registros duplicados", text)
         self.assertNotIn("no aparece en las fichas", text)
 
-    def test_absent_playstation_id_reports_lookup_failure_and_applied_equivalence(self):
+    def test_absent_playstation_id_does_not_present_platform_as_a_problem(self):
         for platform in ("ps4", "ps5"):
             with self.subTest(platform=platform):
                 text = self.render(resolve(
@@ -328,7 +359,9 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
                     (roster(player_name="Prime Liquidcap", platform="psn", platform_id="liquidcap",
                             epic_name="Prime Liquidcap"),),
                 ))
-                self.assertIn(f"`{platform}` → `psn` (equivalencia aplicada)", text)
+                self.assertNotIn("Plataforma:", text)
+                self.assertNotIn("Identidad de cuenta", text)
+                self.assertNotIn("equivalencia", text)
                 self.assertIn("Este Platform ID no aparece en las fichas", text)
                 self.assertNotIn("sin evaluar", text)
                 self.assertNotIn("varias fichas", text)
@@ -361,7 +394,7 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
             (roster(platform_id=""),),
         )
         text = self.render(resolved)
-        self.assertIn("Plataforma: **1/2** ⚠️ · 1 sin ficha vinculada", text)
+        self.assertNotIn("Plataforma:", text)
         self.assertIn("Platform ID: **0/2** ⚠️ · 1 sin ficha vinculada · 1 sin dato en Excel", text)
 
     def test_discord_markdown_in_team_or_name_is_escaped(self):

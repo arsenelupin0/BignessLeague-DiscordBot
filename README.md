@@ -149,8 +149,11 @@ crea un canal de partido con permisos para ambos equipos.
 
 La verificación de replays usa la pareja `Platform + Platform ID` de una ficha única de la división. `Platform` es
 la plataforma de juego (`epic`, `steam`, `psn`, `xbl` o `switch`); `ps4` y `ps5` equivalen a `psn`. El ID se compara
-sin eliminar signos ni espacios interiores. Se busca primero por plataforma e ID, después por ID único y finalmente
-por nombre como ayuda para localizar discrepancias. Una coincidencia solo de nombre nunca verifica una cuenta.
+sin eliminar signos ni espacios interiores. Se busca primero por plataforma e ID, después por ID único y, como
+referencias para localizar discrepancias, por la cuenta exacta del enlace de Tracker registrado y por Epic Name.
+El enlace solo identifica qué fila revisar: no sustituye las columnas `Platform` / `Platform ID` ni verifica
+una cuenta cuyos valores registrados difieren. Los enlaces duplicados son ambiguos. No se consulta Tracker por red.
+Una coincidencia solo de nombre nunca verifica una cuenta.
 El desglose cuenta cada campo por separado sobre la misma ficha: un ID correcto no figura entre los campos fallidos.
 Las cuentas duplicadas no se verifican automáticamente y un fallo en algún game se conserva en el resumen.
 El informe distingue la búsqueda de cuenta de la comparación de campos: si el ID no aparece en la división y el
@@ -159,8 +162,11 @@ tener una ficha con otros datos. Si faltan datos de la replay o hay cuentas dupl
 El desglose distingue `sin ficha vinculada` de `sin dato en Excel`; eso no significa que se haya omitido la búsqueda.
 El bot no declara que la plataforma sea incorrecta simplemente porque no haya podido localizar la cuenta.
 Los campos comparados que sí difieren muestran ❌.
-El informe separa cada jugador en un bloque con los valores de `Replay` y `Excel`, el estado de cada campo y
-una conclusión que indica qué revisar. La equivalencia se muestra como `ps4` → `psn` o `ps5` → `psn`.
+El informe separa cada jugador en un bloque con los valores incorrectos o ausentes de `Replay` y `Excel` y
+una conclusión que indica qué revisar. Los campos correctos no se repiten entre las incidencias.
+La equivalencia `ps4` / `ps5` / `psn` se aplica internamente; Discord muestra `psn` si hay una discrepancia real
+de plataforma. El desglose de plataforma se omite cuando faltan fichas de referencia, para no convertir un
+fallo de identificación en un aviso de plataforma. Se elimina la línea técnica `Identidad de cuenta`.
 Sin una ficha identificada solo se muestran los datos detectados y el resultado concreto de la búsqueda;
 no se inventan valores registrados ni se repite al jugador en los avisos de nombre.
 
