@@ -272,25 +272,32 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
     def test_missing_values_and_unresolved_roster_are_explicit(self):
         text = self.render(resolve(player(platform_id="")))
         self.assertIn("no disponible", text)
-        self.assertIn("No se ha encontrado una ficha única para esta cuenta.", text)
+        self.assertIn("Falta el Platform ID en los datos de la replay", text)
+        self.assertNotIn("no aparece en las fichas", text)
+        self.assertNotIn("varias fichas", text)
 
     def test_unknown_roster_marks_platform_as_unevaluated_instead_of_incorrect(self):
         text = self.render(resolve(player(platform_id="unknown")))
         self.assertIn("Jugadores verificados: **0/1** ⚠️", text)
-        self.assertIn("Plataforma: **0/1** ⚠️ · 1 sin evaluar", text)
-        self.assertIn("Platform ID: **0/1** ⚠️ · 1 sin evaluar", text)
-        self.assertIn("⚠️ **Ficha de Excel sin identificar**", text)
+        self.assertIn("Plataforma: **0/1** ⚠️ · 1 sin ficha vinculada", text)
+        self.assertIn("Platform ID: **0/1** ⚠️ · 1 sin ficha vinculada", text)
         self.assertIn("**Datos de la replay**", text)
-        self.assertIn("**Datos de Excel**", text)
-        self.assertIn("**Resultado:** plataforma e ID sin evaluar.", text)
+        self.assertIn("**Resultado de la búsqueda:** ⚠️ Este Platform ID no aparece en las fichas", text)
+        self.assertIn("El jugador puede tener una ficha con otros datos.", text)
+        self.assertIn("**Qué revisar:** Comprueba la cuenta y el Platform ID registrados", text)
+        self.assertNotIn("**Datos de Excel**", text)
+        self.assertNotIn("sin evaluar", text)
+        self.assertNotIn("varias fichas", text)
         self.assertNotIn("Avisos de nombre", text)
         self.assertEqual(text.count("C O IDAVID0"), 1)
         self.assertNotIn("❌", text)
 
     def test_unknown_roster_evaluation_is_localized_in_english(self):
         text = self.render(resolve(player(platform_id="unknown")), "en-US")
-        self.assertIn("1 not evaluated", text)
-        self.assertIn("**Excel roster entry not identified**", text)
+        self.assertIn("1 without a linked roster entry", text)
+        self.assertIn("**Lookup result:** ⚠️ This Platform ID does not occur", text)
+        self.assertIn("The player may have an entry with different details.", text)
+        self.assertNotIn("not evaluated", text)
 
     def test_known_psn_account_displays_equivalence_and_only_the_incorrect_id(self):
         text = self.render(resolve(
@@ -298,7 +305,9 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
             (roster(player_name="Liquidcap", platform="psn", platform_id="liquidcap",
                     epic_name="Prime Liquidcap"),),
         ))
-        self.assertIn("**Plataforma · ✅ Coincide**\n- **Replay:** `ps4` → `psn`\n- **Excel:** `psn`", text)
+        self.assertIn(
+            "**Plataforma · ✅ Coincide**\n- **Replay:** `ps4` → `psn` (equivalencia aplicada)\n- **Excel:** `psn`",
+            text)
         self.assertIn("**Platform ID · ❌ No coincide**\n- **Replay:** `liquidcap_`\n- **Excel:** `liquidcap`", text)
         self.assertIn("**Resultado:** ❌ Revisar **Platform ID**", text)
         self.assertIn("**Ficha de Excel:** `Liquidcap`", text)
@@ -308,6 +317,52 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
         text = self.render(resolve(entries=(roster(), roster())))
         self.assertIn("Cuenta ambigua: la plataforma e ID o el ID aparecen en varias fichas", text)
         self.assertIn("Jugadores verificados: **0/1**", text)
+        self.assertIn("Revisa los registros duplicados", text)
+        self.assertNotIn("no aparece en las fichas", text)
+
+    def test_absent_playstation_id_reports_lookup_failure_and_applied_equivalence(self):
+        for platform in ("ps4", "ps5"):
+            with self.subTest(platform=platform):
+                text = self.render(resolve(
+                    player(name="liquidcap_", platform=platform, platform_id="liquidcap_"),
+                    (roster(player_name="Prime Liquidcap", platform="psn", platform_id="liquidcap",
+                            epic_name="Prime Liquidcap"),),
+                ))
+                self.assertIn(f"`{platform}` → `psn` (equivalencia aplicada)", text)
+                self.assertIn("Este Platform ID no aparece en las fichas", text)
+                self.assertNotIn("sin evaluar", text)
+                self.assertNotIn("varias fichas", text)
+                self.assertNotIn("**Excel:** `liquidcap`", text)
+
+    def test_matching_playstation_id_verifies_without_a_missing_reference_notice(self):
+        for platform in ("ps4", "ps5", "psn"):
+            with self.subTest(platform=platform):
+                text = self.render(resolve(
+                    player(name="liquidcap_", platform=platform, platform_id="liquidcap_"),
+                    (roster(platform="psn", platform_id="liquidcap_", epic_name="Prime Liquidcap"),),
+                ))
+                self.assertIn("Jugadores verificados: **1/1** ✅", text)
+                self.assertIn("Plataforma: **1/1** ✅", text)
+                self.assertIn("Platform ID: **1/1** ✅", text)
+                self.assertNotIn("sin ficha vinculada", text)
+                self.assertNotIn("Resultado de la búsqueda", text)
+
+    def test_missing_excel_value_is_distinct_from_an_account_not_found(self):
+        text = self.render(resolve(player(name=roster().epic_name), (roster(platform_id=""),)))
+        self.assertIn("**Platform ID · ⚠️ Falta dato de Excel**", text)
+        self.assertIn("Faltan datos registrados en Excel", text)
+        self.assertIn("Platform ID: **0/1** ⚠️ · 1 sin dato en Excel", text)
+        self.assertNotIn("sin ficha vinculada", text)
+        self.assertNotIn("Este Platform ID no aparece", text)
+
+    def test_summary_separates_unlinked_accounts_from_missing_excel_values(self):
+        resolved = resolve_match_replay_report_players(
+            report(player(name=roster().epic_name), player(name="Unknown", platform_id="other-id")),
+            (roster(platform_id=""),),
+        )
+        text = self.render(resolved)
+        self.assertIn("Plataforma: **1/2** ⚠️ · 1 sin ficha vinculada", text)
+        self.assertIn("Platform ID: **0/2** ⚠️ · 1 sin ficha vinculada · 1 sin dato en Excel", text)
 
     def test_discord_markdown_in_team_or_name_is_escaped(self):
         text = self.render(resolve(player(name="`@everyone`"), (roster(team_name="*Astra*"),)))

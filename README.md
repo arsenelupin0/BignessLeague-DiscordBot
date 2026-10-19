@@ -153,11 +153,15 @@ sin eliminar signos ni espacios interiores. Se busca primero por plataforma e ID
 por nombre como ayuda para localizar discrepancias. Una coincidencia solo de nombre nunca verifica una cuenta.
 El desglose cuenta cada campo por separado sobre la misma ficha: un ID correcto no figura entre los campos fallidos.
 Las cuentas duplicadas no se verifican automáticamente y un fallo en algún game se conserva en el resumen.
-Si no se identifica una ficha, sus campos quedan `sin evaluar` con ⚠️. El bot no declara que la plataforma sea
-incorrecta simplemente porque no haya podido localizar la cuenta. Los campos comparados que sí difieren muestran ❌.
+El informe distingue la búsqueda de cuenta de la comparación de campos: si el ID no aparece en la división y el
+Epic Name tampoco localiza una ficha, informa que ese ID no aparece en las fichas, aclarando que el jugador puede
+tener una ficha con otros datos. Si faltan datos de la replay o hay cuentas duplicadas, muestra ese motivo concreto.
+El desglose distingue `sin ficha vinculada` de `sin dato en Excel`; eso no significa que se haya omitido la búsqueda.
+El bot no declara que la plataforma sea incorrecta simplemente porque no haya podido localizar la cuenta.
+Los campos comparados que sí difieren muestran ❌.
 El informe separa cada jugador en un bloque con los valores de `Replay` y `Excel`, el estado de cada campo y
 una conclusión que indica qué revisar. La equivalencia se muestra como `ps4` → `psn` o `ps5` → `psn`.
-Sin una ficha identificada solo se muestran los datos detectados y el motivo de la comparación pendiente;
+Sin una ficha identificada solo se muestran los datos detectados y el resultado concreto de la búsqueda;
 no se inventan valores registrados ni se repite al jugador en los avisos de nombre.
 
 El nombre detectado se contrasta con `Epic Name` únicamente como aviso informativo, también cuando la cuenta está

@@ -84,7 +84,14 @@ def format_match_replay_roster_validation(
         evaluated = evaluated_counts.get(method, 0)
         pending = summary.unique_players - evaluated
         icon = "❌" if evaluated > count else ("⚠️" if pending or not summary.unique_players else "✅")
-        suffix = localizer.translate(keys.roster_unevaluated_count, locale=locale, count=pending) if pending else ""
+        unlinked = min(pending, sum(
+            method in player.unevaluated_methods and not _has_registered_record(player)
+            for player in summary.unmatched_players
+        ))
+        suffix = (localizer.translate(keys.roster_unlinked_count, locale=locale, count=unlinked)
+                  if unlinked else "")
+        if pending > unlinked:
+            suffix += localizer.translate(keys.roster_unevaluated_count, locale=locale, count=pending - unlinked)
         method_lines.append(f"  - {labels[method]}: **{count}/{summary.unique_players}** {icon}{suffix}")
     method_breakdown = "\n".join(method_lines)
     unresolved_keys = {_identity(player) for player in summary.unmatched_players}
@@ -136,17 +143,24 @@ def _format_unmatched_player_line(
         labels: dict[str, str],
 ) -> str:
     keys = I18N.messages.match_replays.uploaded
-    has_record = any((player.registered_player_name, player.registered_platform,
-                      player.registered_platform_id, player.registered_epic_name))
-    if not has_record:
+    if not _has_registered_record(player):
+        if player.resolution_status == "ambiguous":
+            reason_key = keys.roster_ambiguous_account
+            result_key = keys.roster_ambiguous_result
+        elif player.platform_id.strip() in {"", "-"}:
+            reason_key = keys.roster_replay_id_missing
+            result_key = keys.roster_replay_id_missing_result
+        else:
+            reason_key = keys.roster_record_missing_explanation
+            result_key = keys.roster_account_not_found_result
         return localizer.translate(
             keys.roster_unidentified_player, locale=locale,
             team=_escape_discord_markdown(player.team_name),
             player=_format_inline_code(player.player_name),
             platform=_format_platform(player.platform, localizer=localizer, locale=locale),
             platform_id=_format_value(player.platform_id, localizer=localizer, locale=locale),
-            reason=localizer.translate(keys.roster_ambiguous_account if player.resolution_status == "ambiguous"
-                                       else keys.roster_record_missing_explanation, locale=locale),
+            reason=localizer.translate(reason_key, locale=locale),
+            result=localizer.translate(result_key, locale=locale),
         )
 
     comparisons = []
@@ -191,6 +205,11 @@ def _format_unmatched_player_line(
     )
 
 
+def _has_registered_record(player: MatchReplayUnmatchedPlayer) -> bool:
+    return any((player.registered_player_name, player.registered_platform,
+                player.registered_platform_id, player.registered_epic_name))
+
+
 def _identity(player: MatchReplayUnmatchedPlayer) -> tuple[str, str]:
     if player.platform_id.strip():
         return normalize_replay_platform(player.platform), normalize_replay_platform_id(player.platform_id)
@@ -207,7 +226,8 @@ def _format_platform(value: str, *, localizer: LocalizationService, locale: str 
     formatted = _format_value(value, localizer=localizer, locale=locale)
     normalized = normalize_replay_platform(value)
     if normalized == "psn" and value.strip().casefold() != "psn":
-        return formatted + " → `psn`"
+        return localizer.translate(I18N.messages.match_replays.uploaded.roster_platform_equivalence,
+                                   locale=locale, detected=formatted)
     return formatted
 
 

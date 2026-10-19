@@ -1187,18 +1187,19 @@ class _MessagesMatchReplaysUploaded:
     roster_platform_id_label: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_platform_id_label", default_text="Platform ID")
     roster_unevaluated_count: TranslationKey = TranslationKey(
-        key="messages.match_replays.uploaded.roster_unevaluated_count", default_text=" \u00b7 {count} sin evaluar")
+        key="messages.match_replays.uploaded.roster_unevaluated_count",
+        default_text=" \u00b7 {count} sin dato en Excel")
     roster_unidentified_player: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_unidentified_player",
-        default_text="### {team} \u00b7 {player}\n\u26a0\ufe0f **Ficha de Excel sin identificar**\n\n**Datos de la replay**\n- **Plataforma:** {platform}\n- **Platform ID:** {platform_id}\n\n**Datos de Excel**\n{reason}\n\n**Resultado:** plataforma e ID sin evaluar. Revisa la cuenta registrada en la plantilla.")
+        default_text="### {team} \u00b7 {player}\n**Datos de la replay**\n- **Plataforma:** {platform}\n- **Platform ID:** {platform_id}\n\n**Resultado de la b\u00fasqueda:** {reason}\n\n**Qu\u00e9 revisar:** {result}")
     roster_record_missing_explanation: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_record_missing_explanation",
-        default_text="No se ha encontrado una ficha \u00fanica para esta cuenta.")
+        default_text="\u26a0\ufe0f Este Platform ID no aparece en las fichas de la divisi\u00f3n y la b\u00fasqueda por nombre tampoco ha permitido vincular una ficha. El jugador puede tener una ficha con otros datos.")
     roster_field_comparison: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_field_comparison",
         default_text="**{field} \u00b7 {icon} {status}**\n- **Replay:** {detected}\n- **Excel:** {registered}")
     roster_status_pending: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_status_pending",
-                                                           default_text="Sin evaluar")
+                                                           default_text="Falta dato de Excel")
     roster_status_different: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_status_different", default_text="No coincide")
     roster_status_equal: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_status_equal",
@@ -1216,6 +1217,23 @@ class _MessagesMatchReplaysUploaded:
     roster_validation_more_unmatched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_more_unmatched",
         default_text="  - Y {remaining} m\u00e1s.")
+    roster_platform_equivalence: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_platform_equivalence",
+        default_text="{detected} \u2192 `psn` (equivalencia aplicada)")
+    roster_replay_id_missing_result: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_replay_id_missing_result",
+        default_text="Falta el Platform ID para buscar la cuenta. Revisa los datos del archivo.")
+    roster_replay_id_missing: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_replay_id_missing",
+        default_text="Falta el Platform ID en los datos de la replay y no se ha localizado una ficha por el Epic Name.")
+    roster_ambiguous_result: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_ambiguous_result",
+        default_text="Revisa los registros duplicados de plataforma e ID. No se ha elegido ninguna ficha autom\u00e1ticamente.")
+    roster_account_not_found_result: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_account_not_found_result",
+        default_text="Comprueba la cuenta y el Platform ID registrados en la ficha del jugador.")
+    roster_unlinked_count: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_unlinked_count",
+                                                           default_text=" \u00b7 {count} sin ficha vinculada")
 
 class _MessagesMatchReplays:
     uploaded: _MessagesMatchReplaysUploaded = _MessagesMatchReplaysUploaded()
