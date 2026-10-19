@@ -623,6 +623,10 @@
         "roster_unmatched_player": "  - {team} -> {player} ({methods}) — {details}",
         "roster_ambiguous_account": "Ambiguous account: the platform and ID or the ID occur in multiple roster entries",
         "roster_platform_id_label": "Platform ID",
+        "roster_unevaluated_count": " · {count} not evaluated",
+        "roster_field_unevaluated": "{field}: replay {detected}; {reason} (not evaluated)",
+        "roster_registered_missing": "registered value unavailable",
+        "roster_comparison_pending": "**Comparison pending**",
         "roster_validation_more_unmatched": "  - And {remaining} more."
       },
       "manual_result_registered": "# {green_arrow} Administrative result registered\n- **{division_emoji} {division} {division_emoji}**\n  - **Matchday {jornada} | Match {partido}**\n  - **{team_one} {score_label} {team_two}**\n- Updated standings in `{standings_sheet_name}`.",

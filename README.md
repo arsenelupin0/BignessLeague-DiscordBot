@@ -153,6 +153,8 @@ sin eliminar signos ni espacios interiores. Se busca primero por plataforma e ID
 por nombre como ayuda para localizar discrepancias. Una coincidencia solo de nombre nunca verifica una cuenta.
 El desglose cuenta cada campo por separado sobre la misma ficha: un ID correcto no figura entre los campos fallidos.
 Las cuentas duplicadas no se verifican automáticamente y un fallo en algún game se conserva en el resumen.
+Si no se identifica una ficha, sus campos quedan `sin evaluar` con ⚠️. El bot no declara que la plataforma sea
+incorrecta simplemente porque no haya podido localizar la cuenta. Los campos comparados que sí difieren muestran ❌.
 
 El nombre detectado se contrasta con `Epic Name` únicamente como aviso informativo, también cuando la cuenta está
 verificada. Puede ser un nombre de otra plataforma o llegar alterado desde el analizador. Ese aviso no reduce el
@@ -164,15 +166,19 @@ caracteres perdidos.
 El bot puede leer el nombre directamente del archivo original mediante
 [rrrocket 0.11.8 / Boxcars 0.13.0](https://github.com/nickbabcock/rrrocket/releases/tag/v0.11.8).
 Se integra como ejecutable externo en infraestructura: no requiere Rust ni un wrapper nativo para Python 3.14.
-Para instalar el binario oficial de tu sistema (Windows x64, Linux x64 o macOS x64/ARM64):
+El repositorio y el paquete Python incluyen los archivos oficiales comprimidos para Windows x64, Linux x64 y
+macOS x64/ARM64 en `infrastructure/replays/vendor/`, junto con la licencia MIT y los hashes fijados en `runtime.py`.
+Tras clonar o hacer `git pull`, el bot prepara automáticamente la versión incluida al procesar la primera subida.
+No requiere una descarga de red ni un paso manual en cada máquina. `aa_var/tools/rrrocket/` es una copia regenerable;
+si falta, está corrupta o corresponde a otra versión, se vuelve a preparar desde el paquete versionado.
+Para prepararla expresamente antes de arrancar el bot, también está disponible:
 
 ```bash
 python aa_scripts/install_replay_parser.py
 ```
 
-El instalador comprueba el SHA256 fijado y guarda el ejecutable, su licencia MIT y un manifiesto de versión en
-`aa_var/tools/rrrocket/`. No se versiona el binario y no hay descargas automáticas durante las subidas.
-La versión se actualiza explícitamente en el instalador, junto con los hashes oficiales y las pruebas con replays.
+El comando comprueba el SHA256 y desempaqueta el ejecutable localmente. La actualización del parser consiste en
+versionar juntos los nuevos archivos oficiales, licencia, versión y hashes, tras comprobar las replays de regresión.
 
 ```env
 BOT_REPLAY_NAME_PARSER_ENABLED=true
@@ -189,7 +195,8 @@ este devolvió en `ballchasing_name` para diagnóstico. El nombre local alimenta
 En consolas, si la cabecera contiene un ID numérico y Ballchasing un gamertag, no se mezclan esos identificadores:
 se conserva el nombre de Ballchasing para esa cuenta.
 
-Si el ejecutable falta, falla, excede el timeout o no aporta una cuenta única, la subida continúa con Ballchasing.
+Una ruta personalizada se respeta y no se sustituye por el paquete incluido. Si la preparación automática falla,
+el parser falla, excede el timeout o no aporta una cuenta única, la subida continúa con Ballchasing.
 Los logs `REPLAY_NAME_LOCAL_RECOVERED`, `REPLAY_NAME_LOCAL_RESULT` y `REPLAY_NAME_LOCAL_FALLBACK` identifican el
 resultado y el motivo. `BOT_REPLAY_NAME_PARSER_ENABLED=false` desactiva la lectura local.
 Para comprobar archivos sin subirlos ni escribir en Sheets:

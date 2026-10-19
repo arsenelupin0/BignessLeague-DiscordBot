@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from bigness_league_bot.infrastructure.replays.rrrocket import ReplayNameParserError, RrrocketNameReader
+from bigness_league_bot.infrastructure.replays.runtime import ensure_bundled_runtime
 
 
 def main() -> None:
@@ -20,6 +21,8 @@ def main() -> None:
     args = parser.parse_args()
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
+    if not args.parser_path.is_file():
+        ensure_bundled_runtime(args.parser_path)
     reader = RrrocketNameReader(args.parser_path)
     output = []
     failed = False

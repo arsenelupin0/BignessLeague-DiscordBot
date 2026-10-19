@@ -112,7 +112,8 @@ class ReplayIdentityTests(unittest.TestCase):
     def test_identical_duplicate_rows_are_still_ambiguous(self):
         summary = build_match_replay_roster_validation_summary(resolve(entries=(roster(), roster())))
         self.assertEqual(summary.matched_unique_players, 0)
-        self.assertEqual(summary.unmatched_players[0].missing_methods, ("platform", "platform_id"))
+        self.assertEqual(summary.unmatched_players[0].missing_methods, ())
+        self.assertEqual(summary.unmatched_players[0].unevaluated_methods, ("platform", "platform_id"))
 
     def test_same_id_on_different_platforms_can_match_a_unique_pair(self):
         other = roster(platform="steam", player_name="Other", epic_name="Other")
@@ -141,7 +142,8 @@ class ReplayIdentityTests(unittest.TestCase):
 
     def test_unknown_player_is_not_verified_just_because_platform_exists(self):
         summary = build_match_replay_roster_validation_summary(resolve(player(platform_id="unknown")))
-        self.assertEqual(summary.unmatched_players[0].missing_methods, ("platform", "platform_id"))
+        self.assertEqual(summary.unmatched_players[0].missing_methods, ())
+        self.assertEqual(summary.unmatched_players[0].unevaluated_methods, ("platform", "platform_id"))
 
     def test_platform_aliases_share_identity_and_statistics(self):
         resolved = resolve_match_replay_report_players(
@@ -232,6 +234,18 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
         text = self.render(resolve(player(platform_id="")))
         self.assertIn("no disponible", text)
         self.assertIn("sin ficha única identificada", text)
+
+    def test_unknown_roster_marks_platform_as_unevaluated_instead_of_incorrect(self):
+        text = self.render(resolve(player(platform_id="unknown")))
+        self.assertIn("Plataforma: **0/1** ⚠️ · 1 sin evaluar", text)
+        self.assertIn("Platform ID: **0/1** ⚠️ · 1 sin evaluar", text)
+        self.assertIn("(**Comparación pendiente**)", text)
+        self.assertNotIn("(**Plataforma + Platform ID**)", text)
+
+    def test_unknown_roster_evaluation_is_localized_in_english(self):
+        text = self.render(resolve(player(platform_id="unknown")), "en-US")
+        self.assertIn("1 not evaluated", text)
+        self.assertIn("**Comparison pending**", text)
 
     def test_duplicate_account_has_an_explicit_ambiguity_reason(self):
         text = self.render(resolve(entries=(roster(), roster())))

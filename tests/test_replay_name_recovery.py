@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import importlib.util
 import io
 import json
 import os
@@ -20,6 +19,7 @@ from bigness_league_bot.application.services.match_replay_names import ReplayAcc
 from bigness_league_bot.application.services.match_replay_roster_resolution import resolve_match_replay_report_players
 from bigness_league_bot.application.services.match_replay_summaries import build_match_replay_roster_validation_summary
 from bigness_league_bot.core.settings import Settings
+from bigness_league_bot.infrastructure.replays import runtime
 from bigness_league_bot.infrastructure.replays.name_recovery import build_replay_name_reader, recover_replay_game_names
 from bigness_league_bot.infrastructure.replays.rrrocket import (
     ReplayNameParserError, RrrocketNameReader, extract_header_account_names,
@@ -225,10 +225,7 @@ class ParserConfigurationTests(unittest.TestCase):
 class ParserInstallerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        spec = importlib.util.spec_from_file_location("replay_parser_installer", Path(__file__).resolve().parents[1]
-                                                      / "aa_scripts/install_replay_parser.py")
-        cls.installer = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(cls.installer)
+        cls.installer = runtime
 
     def test_extracts_only_the_binary_without_writing_archive_paths(self):
         buffer = io.BytesIO()
@@ -242,16 +239,13 @@ class ParserInstallerTests(unittest.TestCase):
         with zipfile.ZipFile(buffer, "w") as archive:
             archive.writestr("one/rrrocket.exe", b"one")
             archive.writestr("two/rrrocket.exe", b"two")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(runtime.ReplayRuntimeError):
             self.installer.executable_from_archive(buffer.getvalue(), windows=True)
 
-    def test_download_requires_the_pinned_digest(self):
-        response = Mock()
-        response.__enter__ = Mock(return_value=SimpleNamespace(read=Mock(return_value=b"wrong archive")))
-        response.__exit__ = Mock(return_value=False)
-        with patch.object(self.installer.urllib.request, "urlopen", return_value=response):
-            with self.assertRaisesRegex(ValueError, "SHA256"):
-                self.installer.download_verified("https://example.test/asset", "0" * 64)
+    def test_bundled_archive_requires_the_pinned_digest(self):
+        suffix, _ = runtime.host_asset()
+        with self.assertRaisesRegex(runtime.ReplayRuntimeError, "bundle_checksum"):
+            runtime._read_bundled(f"rrrocket-{runtime.VERSION}-{suffix}", "0" * 64)
 
 
 if __name__ == "__main__":

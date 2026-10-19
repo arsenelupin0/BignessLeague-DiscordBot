@@ -29,6 +29,7 @@ from bigness_league_bot.application.services.match_replay_team_names import (
 class MatchReplayMatchMethodCount:
     method: str
     count: int
+    evaluated_count: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,6 +43,7 @@ class MatchReplayUnmatchedPlayer:
     registered_platform_id: str = ""
     registered_epic_name: str = ""
     resolution_status: str = "unmatched"
+    unevaluated_methods: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,6 +113,7 @@ def build_match_replay_roster_validation_summary(
     total_appearances = 0
     matched_appearances = 0
     methods_by_player: dict[tuple[str, str], set[str]] = {}
+    evaluated_by_player: dict[tuple[str, str], set[str]] = {}
     verified_by_player: dict[tuple[str, str], bool] = {}
     unmatched_players: dict[tuple[str, str], MatchReplayUnmatchedPlayer] = {}
     name_warnings: dict[tuple[str, str], MatchReplayUnmatchedPlayer] = {}
@@ -123,6 +126,10 @@ def build_match_replay_roster_validation_summary(
                 methods = set(player.match_methods)
                 if not methods and player.resolution_status == "matched":
                     methods = set(player.match_method.split(" + "))
+                evaluated = set(player.evaluated_methods if player.evaluated_methods is not None
+                                else ("platform", "platform_id"))
+                if player.registered_epic_name or "epic_name" in methods:
+                    evaluated.add("epic_name")
                 identity_verified = (
                         player.resolution_status == "matched"
                         and {"platform", "platform_id"} <= methods
@@ -132,20 +139,25 @@ def build_match_replay_roster_validation_summary(
                 verified_by_player[key] = verified_by_player.get(key, True) and identity_verified
                 if key not in methods_by_player:
                     methods_by_player[key] = methods
+                    evaluated_by_player[key] = evaluated
                 else:
                     methods_by_player[key] &= methods
+                    evaluated_by_player[key] &= evaluated
                 detail = MatchReplayUnmatchedPlayer(
                     team_name=team.name,
                     player_name=player.name,
                     platform=player.platform,
                     platform_id=player.platform_id,
                     missing_methods=tuple(
-                        method for method in ("platform", "platform_id") if method not in methods
+                        method for method in ("platform", "platform_id") if
+                        method in evaluated and method not in methods
                     ),
                     registered_platform=player.registered_platform,
                     registered_platform_id=player.registered_platform_id,
                     registered_epic_name=player.registered_epic_name,
                     resolution_status=player.resolution_status,
+                    unevaluated_methods=tuple(
+                        method for method in ("platform", "platform_id") if method not in evaluated),
                 )
                 if not identity_verified:
                     unmatched_players.setdefault(key, detail)
@@ -165,6 +177,7 @@ def build_match_replay_roster_validation_summary(
             MatchReplayMatchMethodCount(
                 method=method,
                 count=sum(method in methods for methods in methods_by_player.values()),
+                evaluated_count=sum(method in evaluated for evaluated in evaluated_by_player.values()),
             )
             for method in ("platform", "platform_id", "epic_name")
         ),

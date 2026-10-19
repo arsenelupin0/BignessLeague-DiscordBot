@@ -1190,6 +1190,15 @@ class _MessagesMatchReplaysUploaded:
         default_text="Cuenta ambigua: la plataforma e ID o el ID aparecen en varias fichas")
     roster_platform_id_label: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_platform_id_label", default_text="Platform ID")
+    roster_unevaluated_count: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_unevaluated_count", default_text=" \u00b7 {count} sin evaluar")
+    roster_field_unevaluated: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_field_unevaluated",
+        default_text="{field}: replay {detected}; {reason} (sin evaluar)")
+    roster_registered_missing: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_registered_missing", default_text="dato registrado no disponible")
+    roster_comparison_pending: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_comparison_pending", default_text="**Comparaci\u00f3n pendiente**")
     roster_validation_more_unmatched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_more_unmatched",
         default_text="  - Y {remaining} m\u00e1s.")

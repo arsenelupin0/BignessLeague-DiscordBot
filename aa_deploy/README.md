@@ -45,19 +45,23 @@ pip install --upgrade pip
 pip install -e .
 ```
 
-Para recuperar los nombres Unicode directamente de los archivos `.replay`, instala también el parser externo:
+El parser para recuperar los nombres Unicode está incluido en el repositorio y en el paquete Python.
+En Debian x64, el bot desempaqueta automáticamente la versión fijada en la primera subida de replays,
+sin descargar código ni requerir una instalación manual tras clonar o actualizar. Si deseas prepararlo previamente:
 
 ```bash
 python aa_scripts/install_replay_parser.py
 ```
 
-En Debian x64 descarga rrrocket 0.11.8 con Boxcars 0.13.0 desde su release oficial, verifica el SHA256 y lo guarda
-en `aa_var/tools/rrrocket/` junto a su licencia y manifiesto. No requiere instalar Rust. Las subidas no descargan
-ni actualizan ejecutables. Tras un despliegue nuevo, comprueba que el usuario del servicio puede ejecutar ese archivo.
+El comando usa rrrocket 0.11.8 con Boxcars 0.13.0 de los paquetes oficiales versionados en
+`infrastructure/replays/vendor/`,
+verifica el SHA256 y lo guarda en `aa_var/tools/rrrocket/` junto a su licencia y manifiesto. No requiere Rust ni red.
+Tras un despliegue nuevo, el usuario del servicio debe poder escribir en esa carpeta y ejecutar el archivo preparado.
 `BOT_REPLAY_NAME_PARSER_PATH` permite usar otra ubicación; vacío utiliza la ruta por defecto del proyecto.
-Los perfiles incluyen `BOT_REPLAY_NAME_PARSER_ENABLED=true` y un timeout de 10 segundos. Si falta el binario o falla
+Los perfiles incluyen `BOT_REPLAY_NAME_PARSER_ENABLED=true` y un timeout de 10 segundos. Una copia local ausente,
+corrupta o de otra versión se regenera a partir de los paquetes incluidos. Si falla la preparación o falla
 el parseo, el bot conserva los nombres de Ballchasing y registra `REPLAY_NAME_LOCAL_FALLBACK` con el motivo.
-En Linux ARM64 no hay un binario oficial fijado en este instalador; utiliza un rrrocket compatible mediante la ruta
+En Linux ARM64 no hay un paquete oficial incluido; utiliza un rrrocket compatible mediante la ruta
 personalizada o desactiva la lectura local. La verificación de plataforma e ID permanece disponible en ambos casos.
 
 ## Configuracion

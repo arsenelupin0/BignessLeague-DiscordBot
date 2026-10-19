@@ -64,16 +64,23 @@ def format_match_replay_roster_validation(
 ) -> str:
     keys = I18N.messages.match_replays.uploaded
     method_counts = {item.method: item.count for item in summary.match_methods}
+    evaluated_counts = {
+        item.method: item.evaluated_count if item.evaluated_count is not None else summary.unique_players
+        for item in summary.match_methods}
     labels = {
         "platform": localizer.translate(keys.roster_platform_label, locale=locale),
         "platform_id": localizer.translate(keys.roster_platform_id_label, locale=locale),
     }
     method_text = _format_method_list(ROSTER_VALIDATION_METHODS, labels)
-    method_breakdown = "\n".join(
-        f"  - {labels[method]}: **{method_counts.get(method, 0)}/{summary.unique_players}** "
-        + ("✅" if 0 < summary.unique_players == method_counts.get(method, 0) else "❌")
-        for method in ROSTER_VALIDATION_METHODS
-    )
+    method_lines = []
+    for method in ROSTER_VALIDATION_METHODS:
+        count = method_counts.get(method, 0)
+        evaluated = evaluated_counts.get(method, 0)
+        pending = summary.unique_players - evaluated
+        icon = "❌" if evaluated > count else ("⚠️" if pending or not summary.unique_players else "✅")
+        suffix = localizer.translate(keys.roster_unevaluated_count, locale=locale, count=pending) if pending else ""
+        method_lines.append(f"  - {labels[method]}: **{count}/{summary.unique_players}** {icon}{suffix}")
+    method_breakdown = "\n".join(method_lines)
     name_section = ""
     if summary.epic_name_unmatched_players:
         warnings = "\n".join(
@@ -146,12 +153,23 @@ def _format_unmatched_player_line(
         ))
     if player.resolution_status == "ambiguous":
         details.append(localizer.translate(keys.roster_ambiguous_account, locale=locale))
+    for method in player.unevaluated_methods:
+        detected = player.platform if method == "platform" else player.platform_id
+        has_record = any((player.registered_platform, player.registered_platform_id, player.registered_epic_name))
+        details.append(localizer.translate(
+            keys.roster_field_unevaluated, locale=locale, field=labels[method],
+            detected=_format_inline_code(detected) if detected else localizer.translate(keys.roster_missing_value,
+                                                                                        locale=locale),
+            reason=localizer.translate(keys.roster_registered_missing if has_record else keys.roster_no_unique_record,
+                                       locale=locale),
+        ))
     return localizer.translate(
         keys.roster_unmatched_player,
         locale=locale,
         team=_escape_discord_markdown(player.team_name),
         player=_format_inline_code(player.player_name),
-        methods=_format_method_list(player.missing_methods, labels),
+        methods=_format_method_list(player.missing_methods, labels) if player.missing_methods
+        else localizer.translate(keys.roster_comparison_pending, locale=locale),
         details="; ".join(details),
     )
 

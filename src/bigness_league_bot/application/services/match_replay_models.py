@@ -44,6 +44,7 @@ class MatchReplayPlayer:
     registered_epic_name: str = ""
     ballchasing_name: str = ""
     name_source: str = "ballchasing"
+    evaluated_methods: tuple[str, ...] | None = None
 
 
 @dataclass(frozen=True, slots=True)

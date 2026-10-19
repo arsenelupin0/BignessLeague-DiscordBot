@@ -5,8 +5,11 @@ import logging
 
 from bigness_league_bot.application.services.match_replay_models import MatchReplayGame
 from bigness_league_bot.application.services.match_replay_names import apply_replay_account_names
-from bigness_league_bot.core.settings import Settings
+from bigness_league_bot.core.settings import PROJECT_ROOT, Settings
 from bigness_league_bot.infrastructure.replays.rrrocket import ReplayNameParserError, RrrocketNameReader
+from bigness_league_bot.infrastructure.replays.runtime import (
+    ReplayRuntimeError, ensure_bundled_runtime, executable_name,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +18,14 @@ def build_replay_name_reader(settings: Settings) -> RrrocketNameReader | None:
     if not settings.replay_name_parser_enabled:
         LOGGER.info("REPLAY_NAME_LOCAL_DISABLED")
         return None
-    executable = settings.replay_name_parser_path
+    executable = settings.replay_name_parser_path.resolve()
+    managed_path = (PROJECT_ROOT / "aa_var/tools/rrrocket" / executable_name()).resolve()
+    if executable == managed_path:
+        try:
+            ensure_bundled_runtime(executable)
+        except ReplayRuntimeError as exc:
+            LOGGER.warning("REPLAY_NAME_LOCAL_FALLBACK reason=runtime_prepare details=%r", str(exc))
+            return None
     if not executable.is_file():
         LOGGER.warning("REPLAY_NAME_LOCAL_FALLBACK reason=not_installed executable=%s", executable)
         return None

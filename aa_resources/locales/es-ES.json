@@ -656,6 +656,10 @@
         "roster_unmatched_player": "  - {team} -> {player} ({methods}) — {details}",
         "roster_ambiguous_account": "Cuenta ambigua: la plataforma e ID o el ID aparecen en varias fichas",
         "roster_platform_id_label": "Platform ID",
+        "roster_unevaluated_count": " · {count} sin evaluar",
+        "roster_field_unevaluated": "{field}: replay {detected}; {reason} (sin evaluar)",
+        "roster_registered_missing": "dato registrado no disponible",
+        "roster_comparison_pending": "**Comparación pendiente**",
         "roster_validation_more_unmatched": "  - Y {remaining} más."
       },
       "manual_result_registered": "# {green_arrow} Resultado administrativo registrado\n- **{division_emoji} {division} {division_emoji}**\n  - **Jornada {jornada} | Partido {partido}**\n  - **{team_one} {score_label} {team_two}**\n- Clasificación actualizada en `{standings_sheet_name}`.",

@@ -101,6 +101,7 @@ def _resolve_match_replay_team(
                     registered_platform="",
                     registered_platform_id="",
                     registered_epic_name="",
+                    evaluated_methods=(),
                 )
             )
             continue
@@ -119,6 +120,11 @@ def _resolve_match_replay_team(
                 registered_platform=roster_player.platform,
                 registered_platform_id=roster_player.platform_id,
                 registered_epic_name=roster_player.epic_name,
+                evaluated_methods=tuple(
+                    method for method, value in (("platform", roster_player.platform),
+                                                 ("platform_id", roster_player.platform_id))
+                    if value.strip() not in {"", "-"}
+                ),
             )
         )
 

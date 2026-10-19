@@ -27,3 +27,6 @@ bigness-bot = "bigness_league_bot.main:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"bigness_league_bot.infrastructure.replays" = ["vendor/*"]
