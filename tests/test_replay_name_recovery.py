@@ -64,7 +64,8 @@ class HeaderNamesTests(unittest.TestCase):
         self.assertFalse(extract_header_account_names(header(player)))
 
     def test_platform_specific_ids_keep_their_exact_content(self):
-        for source, platform in (("Steam", "steam"), ("PS4", "psn"), ("Dingo", "xbl"), ("Switch", "switch")):
+        for source, platform in (("Steam", "steam"), ("PS4", "psn"), ("PS5", "psn"),
+                                 ("PSN", "psn"), ("Dingo", "xbl"), ("Switch", "switch")):
             with self.subTest(platform=source):
                 p = header_player(Platform={"value": "OnlinePlatform_" + source}, OnlineID="Account-._ 123")
                 self.assertEqual(extract_header_account_names(header(p))[0].platform, platform)

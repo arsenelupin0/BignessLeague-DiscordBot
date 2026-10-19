@@ -1168,23 +1168,19 @@ class _MessagesMatchReplaysUploaded:
         default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- Identidad de cuenta: {match_methods}\n{method_breakdown}\n- Todos los jugadores detectados coinciden con la plataforma e ID registrados.{name_warnings_section}\n_ _\n## Resumen de estad\u00edsticas")
     roster_validation_with_unmatched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_with_unmatched",
-        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- Identidad de cuenta: {match_methods}\n{method_breakdown}\n- Jugadores pendientes de verificar:\n{unmatched_players}{name_warnings_section}\n_ _\n## Informaci\u00f3n incorrecta\n- El Staff revisar\u00e1 las discrepancias de identidad de cuenta con los datos registrados. Una diferencia de nombre por s\u00ed sola es informativa.\n- Si se confirma una alineaci\u00f3n indebida, podr\u00e1 conllevar sanci\u00f3n grave, tanto al club como al jugador.\n- Se debe aportar toda la informaci\u00f3n posible para la revisi\u00f3n.\n_ _\n## Resumen de estad\u00edsticas")
+        default_text="## Verificaci\u00f3n de jugadores\n- Jugadores verificados: **{matched_unique}/{unique_players}** {status_icon}\n- Identidad de cuenta: {match_methods}\n{method_breakdown}\n\n**Jugadores pendientes de verificar**\n\n{unmatched_players}{name_warnings_section}\n_ _\n## Revisi\u00f3n del Staff\n- El Staff revisar\u00e1 las discrepancias de identidad de cuenta con los datos registrados. Una diferencia de nombre por s\u00ed sola es informativa.\n- Si se confirma una alineaci\u00f3n indebida, podr\u00e1 conllevar sanci\u00f3n grave, tanto al club como al jugador.\n- Se debe aportar toda la informaci\u00f3n posible para la revisi\u00f3n.\n_ _\n## Resumen de estad\u00edsticas")
     roster_platform_label: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_platform_label",
                                                            default_text="Plataforma")
     roster_name_warnings: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_name_warnings",
-                                                          default_text="\n- Avisos de nombre (informativos): Epic Name **{matched}/{total}** \u26a0\ufe0f\n  - Se compara el nombre de la replay con el Epic Name registrado. Puede diferir por plataforma, cambio de nombre o codificaci\u00f3n; este aviso no reduce los jugadores verificados.\n{players}")
+                                                          default_text="\n\n## Avisos de nombre (informativos)\nEstas cuentas est\u00e1n verificadas por plataforma e ID. Solo difiere el nombre; este aviso no reduce los jugadores verificados.\n\n{players}")
     roster_name_warning_player: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_name_warning_player",
-        default_text="  - {team} -> replay: {replay_name}; Epic Name registrado: {registered_name}")
-    roster_no_unique_record: TranslationKey = TranslationKey(
-        key="messages.match_replays.uploaded.roster_no_unique_record", default_text="sin ficha \u00fanica identificada")
+        default_text="### {team} \u00b7 {player}\n- **Replay:** {replay_name}\n- **Excel (Epic Name):** {registered_name}\n- **Resultado:** \u26a0\ufe0f Nombre diferente; cuenta verificada.")
     roster_missing_value: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_missing_value",
                                                           default_text="no disponible")
-    roster_field_mismatch: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_field_mismatch",
-                                                           default_text="{field}: replay {detected}; registrado {registered}")
     roster_unmatched_player: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_unmatched_player",
-        default_text="  - {team} -> {player} ({methods}) \u2014 {details}")
+        default_text="### {team} \u00b7 {player}\n**Ficha de Excel:** {registered_player}\n\n{comparisons}\n\n**Resultado:** {result}")
     roster_ambiguous_account: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_ambiguous_account",
         default_text="Cuenta ambigua: la plataforma e ID o el ID aparecen en varias fichas")
@@ -1192,13 +1188,31 @@ class _MessagesMatchReplaysUploaded:
         key="messages.match_replays.uploaded.roster_platform_id_label", default_text="Platform ID")
     roster_unevaluated_count: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_unevaluated_count", default_text=" \u00b7 {count} sin evaluar")
-    roster_field_unevaluated: TranslationKey = TranslationKey(
-        key="messages.match_replays.uploaded.roster_field_unevaluated",
-        default_text="{field}: replay {detected}; {reason} (sin evaluar)")
-    roster_registered_missing: TranslationKey = TranslationKey(
-        key="messages.match_replays.uploaded.roster_registered_missing", default_text="dato registrado no disponible")
-    roster_comparison_pending: TranslationKey = TranslationKey(
-        key="messages.match_replays.uploaded.roster_comparison_pending", default_text="**Comparaci\u00f3n pendiente**")
+    roster_unidentified_player: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_unidentified_player",
+        default_text="### {team} \u00b7 {player}\n\u26a0\ufe0f **Ficha de Excel sin identificar**\n\n**Datos de la replay**\n- **Plataforma:** {platform}\n- **Platform ID:** {platform_id}\n\n**Datos de Excel**\n{reason}\n\n**Resultado:** plataforma e ID sin evaluar. Revisa la cuenta registrada en la plantilla.")
+    roster_record_missing_explanation: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_record_missing_explanation",
+        default_text="No se ha encontrado una ficha \u00fanica para esta cuenta.")
+    roster_field_comparison: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_field_comparison",
+        default_text="**{field} \u00b7 {icon} {status}**\n- **Replay:** {detected}\n- **Excel:** {registered}")
+    roster_status_pending: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_status_pending",
+                                                           default_text="Sin evaluar")
+    roster_status_different: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_status_different", default_text="No coincide")
+    roster_status_equal: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_status_equal",
+                                                         default_text="Coincide")
+    roster_correct_id: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_correct_id",
+                                                       default_text="\u2705 **Platform ID:** coincide con Excel.")
+    roster_review_fields: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_review_fields",
+                                                          default_text="\u274c Revisar {fields} en la ficha de Excel.")
+    roster_incomplete_comparison: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_incomplete_comparison",
+        default_text="\u26a0\ufe0f Faltan datos registrados en Excel para completar la comparaci\u00f3n.")
+    roster_inline_name_notice: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_inline_name_notice",
+        default_text="**Nombre \u00b7 \u26a0\ufe0f Aviso informativo**\n- **Replay:** {detected}\n- **Excel (Epic Name):** {registered}")
     roster_validation_more_unmatched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_more_unmatched",
         default_text="  - Y {remaining} m\u00e1s.")

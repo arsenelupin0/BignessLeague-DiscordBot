@@ -44,6 +44,7 @@ class MatchReplayUnmatchedPlayer:
     registered_epic_name: str = ""
     resolution_status: str = "unmatched"
     unevaluated_methods: tuple[str, ...] = ()
+    registered_player_name: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,12 +157,13 @@ def build_match_replay_roster_validation_summary(
                     registered_platform_id=player.registered_platform_id,
                     registered_epic_name=player.registered_epic_name,
                     resolution_status=player.resolution_status,
+                    registered_player_name=player.roster_player_name,
                     unevaluated_methods=tuple(
                         method for method in ("platform", "platform_id") if method not in evaluated),
                 )
                 if not identity_verified:
                     unmatched_players.setdefault(key, detail)
-                if "epic_name" not in methods:
+                if player.registered_epic_name and "epic_name" not in methods:
                     name_warnings.setdefault(key, detail)
 
     sort_key = lambda player: (player.team_name.casefold(), player.player_name.casefold())

@@ -15,6 +15,7 @@ MAX_HEADER_JSON_BYTES = 8 * 1024 * 1024
 PLATFORMS = {
     "OnlinePlatform_Epic": "epic", "OnlinePlatform_Steam": "steam",
     "OnlinePlatform_PS4": "psn", "OnlinePlatform_PS5": "psn",
+    "OnlinePlatform_PSN": "psn",
     "OnlinePlatform_Dingo": "xbl", "OnlinePlatform_Switch": "switch",
 }
 

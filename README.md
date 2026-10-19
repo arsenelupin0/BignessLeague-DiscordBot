@@ -155,11 +155,17 @@ El desglose cuenta cada campo por separado sobre la misma ficha: un ID correcto 
 Las cuentas duplicadas no se verifican automáticamente y un fallo en algún game se conserva en el resumen.
 Si no se identifica una ficha, sus campos quedan `sin evaluar` con ⚠️. El bot no declara que la plataforma sea
 incorrecta simplemente porque no haya podido localizar la cuenta. Los campos comparados que sí difieren muestran ❌.
+El informe separa cada jugador en un bloque con los valores de `Replay` y `Excel`, el estado de cada campo y
+una conclusión que indica qué revisar. La equivalencia se muestra como `ps4` → `psn` o `ps5` → `psn`.
+Sin una ficha identificada solo se muestran los datos detectados y el motivo de la comparación pendiente;
+no se inventan valores registrados ni se repite al jugador en los avisos de nombre.
 
 El nombre detectado se contrasta con `Epic Name` únicamente como aviso informativo, también cuando la cuenta está
 verificada. Puede ser un nombre de otra plataforma o llegar alterado desde el analizador. Ese aviso no reduce el
 total verificado ni demuestra una alineación indebida. No se aceptan nombres por parecido ni se reconstruyen
 caracteres perdidos.
+Los avisos de cuentas verificadas se agrupan aparte. Si hay una discrepancia de cuenta y también de nombre,
+el aviso de nombre se incluye en el mismo bloque del jugador.
 
 ### Nombres Unicode de las replays
 

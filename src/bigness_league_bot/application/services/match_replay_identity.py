@@ -5,6 +5,8 @@ import unicodedata
 
 from bigness_league_bot.application.services.match_replay_models import MatchReplayPlayer
 
+PLAYSTATION_PLATFORMS = frozenset({"ps4", "ps5", "psn"})
+
 
 def normalize_replay_name(value: str) -> str:
     normalized = unicodedata.normalize("NFKC", value).casefold()
@@ -18,7 +20,7 @@ def normalize_replay_platform_id(value: str) -> str:
 
 def normalize_replay_platform(value: str) -> str:
     normalized = unicodedata.normalize("NFKC", value).strip().casefold()
-    return {"ps4": "psn", "ps5": "psn"}.get(normalized, normalized)
+    return "psn" if normalized in PLAYSTATION_PLATFORMS else normalized
 
 
 def replay_player_identity_key(player: MatchReplayPlayer) -> tuple[str, str]:
