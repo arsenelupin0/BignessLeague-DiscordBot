@@ -118,6 +118,7 @@ def _render_match_standings_image(
             _resolve_team_logo_url(team_logo_urls, row.team_name),
             fallback_logo_url,
             size=64,
+            team_name=row.team_name,
         )
         for row in rows
     }

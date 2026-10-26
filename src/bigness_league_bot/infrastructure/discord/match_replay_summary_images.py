@@ -115,12 +115,14 @@ def _render_match_replay_summary_image(
         _resolve_team_logo_url(team_logo_urls, report.team_one_name),
         fallback_logo_url,
         size=96,
+        team_name=report.team_one_name,
     )
     team_two_logo = _load_logo_image(
         Image,
         _resolve_team_logo_url(team_logo_urls, report.team_two_name),
         fallback_logo_url,
         size=96,
+        team_name=report.team_two_name,
     )
     title_font = _load_font(size=48, font_path=font_path)
     subtitle_font = _load_font(size=SUBTITLE_FONT_SIZE, font_path=font_path)

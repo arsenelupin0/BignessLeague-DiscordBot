@@ -542,6 +542,13 @@ Recuperación de los logos S4 con enlaces caducados:
 - `TEAM_LOGO_SOURCE_RECOVERED` identifica la recuperación por Drive; `TEAM_LOGO_CACHE_STALE` indica que falló
   una actualización y se conservó la copia válida, con el motivo exacto
 
+`/clasificacion` y las imágenes de clasificación y resumen de los comandos de replays usan el mismo cargador
+de logos que los fichajes: recuperan los enlaces del catálogo S4, convierten los enlaces de Drive y conservan
+una copia PNG por nombre de equipo en `aa_var/team_logos/`. Cambiar la URL en Sheets invalida esa copia;
+un fallo temporal conserva únicamente la imagen válida de la misma fuente. Si no se puede obtener un logo,
+se usa el icono del servidor y, si tampoco está disponible, las iniciales del equipo. Los fallos de este
+renderizado se registran con `MATCH_SUMMARY_LOGO_FALLBACK`, equipo y motivo, sin incluir firmas de URLs.
+
 Estos cambios se aplican a los nuevos anuncios. Los mensajes que ya se publicaron con el icono por defecto
 conservan ese icono hasta que se editen expresamente.
 

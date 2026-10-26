@@ -13,8 +13,6 @@ import logging
 from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, Protocol
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 
 from bigness_league_bot.application.services.match_replay_team_names import (
     TEAM_NAME_IGNORED_TOKENS,
@@ -24,6 +22,7 @@ from bigness_league_bot.infrastructure.discord.team_profile_layout import (
     TEAM_PROFILE_FONT_CANDIDATES,
     sanitize_text,
 )
+from bigness_league_bot.infrastructure.images.team_logos import TeamLogoLoadError, load_team_logo_png
 
 LOGGER = logging.getLogger(__name__)
 
@@ -333,36 +332,35 @@ def _load_logo_image(
         fallback_logo_url: str | None,
         *,
         size: int,
+        team_name: str,
 ) -> Any | None:
-    for candidate_url in (logo_url, fallback_logo_url):
+    candidates = (
+        (logo_url, f"match-summary:team:{_team_identity(team_name)}"),
+        (fallback_logo_url, f"match-summary:fallback:{fallback_logo_url}"),
+    )
+    for candidate_url, team_key in candidates:
         if not candidate_url:
             continue
         try:
-            return _fetch_logo_image(image_module, candidate_url, size=size)
-        except HTTPError as exc:
-            LOGGER.info(
-                "No se pudo cargar logo para imagen de resumen url=%s status=%s reason=%s",
-                candidate_url,
-                exc.code,
-                exc.reason,
+            return _fetch_logo_image(
+                image_module, candidate_url, size=size, team_key=team_key,
             )
-        except (OSError, TimeoutError, URLError, ValueError) as exc:
+        except (TeamLogoLoadError, OSError, ValueError) as exc:
             LOGGER.info(
-                "No se pudo cargar logo para imagen de resumen url=%s error=%s",
-                candidate_url,
+                "MATCH_SUMMARY_LOGO_FALLBACK team=%s asset=%s reason=%s",
+                team_name,
+                "team" if candidate_url == logo_url else "guild",
                 exc,
             )
     return None
 
 
-def _fetch_logo_image(image_module: Any, logo_url: str, *, size: int) -> Any:
-    request = Request(
-        logo_url,
-        headers={"User-Agent": "BignessLeagueBot/1.0"},
-    )
-    with urlopen(request, timeout=8) as response:
-        content = response.read(4 * 1024 * 1024)
-    image = image_module.open(BytesIO(content)).convert("RGBA")
+def _fetch_logo_image(image_module: Any, logo_url: str, *, size: int, team_key: str) -> Any:
+    # Share source recovery, image validation and persistent caching with signings.
+    # The stable team key lets a changed Sheets URL invalidate the previous copy.
+    content = load_team_logo_png(logo_url, team_key=team_key)
+    with image_module.open(BytesIO(content)) as source:
+        image = source.convert("RGBA")
     image.thumbnail((size, size))
     canvas = image_module.new("RGBA", (size, size), (0, 0, 0, 0))
     x = (size - image.width) // 2
