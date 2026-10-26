@@ -51,13 +51,17 @@ class ReplayRosterSheetTests(unittest.TestCase):
         self.assertEqual(summary.unmatched_players[0].missing_methods, ())
         self.assertEqual(summary.unmatched_players[0].unevaluated_methods, ("platform", "platform_id"))
 
-    def test_recovered_unicode_ign_does_not_become_an_epic_lookup_key(self):
+    def test_recovered_unicode_ign_proposes_a_candidate_without_becoming_a_verified_epic_name(self):
         entries = list_division_roster_players_from_grids("SILVER DIVISION S4", snapshot(OLD_ID))
         resolved = resolve_match_replay_report_players(report(player(platform_id=ACTUAL_ID, name=NAME)), entries)
         summary = build_match_replay_roster_validation_summary(resolved)
-        self.assertEqual(summary.unmatched_players[0].missing_methods, ())
-        self.assertEqual(summary.unmatched_players[0].unevaluated_methods, ("platform", "platform_id"))
-        self.assertEqual({m.method: m.count for m in summary.match_methods}["platform"], 0)
+        self.assertEqual(summary.matched_unique_players, 0)
+        self.assertEqual(summary.unmatched_players[0].missing_methods, ("platform_id",))
+        self.assertEqual(summary.unmatched_players[0].unevaluated_methods, ())
+        self.assertEqual({m.method: m.count for m in summary.match_methods}["platform"], 1)
+        self.assertEqual(resolved.games[0].blue.players[0].resolution_status, "name_candidate")
+        self.assertIsNone(resolved.games[0].blue.players[0].epic_name)
+        self.assertFalse(summary.epic_name_unmatched_players)
 
     def test_corrected_sheet_verifies_account_even_if_analyzer_name_is_corrupted(self):
         entries = list_division_roster_players_from_grids("SILVER DIVISION S4", snapshot())

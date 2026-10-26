@@ -1191,7 +1191,16 @@ class _MessagesMatchReplaysUploaded:
         default_text=" \u00b7 {count} sin dato en Excel")
     roster_unidentified_player: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_unidentified_player",
-        default_text="### {team} \u00b7 {player}\n**Platform ID de la replay:** {platform_id}\n\n**Resultado de la b\u00fasqueda:** {reason}\n\n**Qu\u00e9 revisar:** {result}")
+        default_text="### {team} \u00b7 {player}\n**Plataforma de la replay:** {platform}\n**Platform ID de la replay:** {platform_id}\n\n**Resultado de la b\u00fasqueda:** {reason}\n\n**Qu\u00e9 revisar:** {result}")
+    roster_name_candidate_notice: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_name_candidate_notice",
+        default_text="**\u26a0\ufe0f Ficha candidata por similitud de nombre**\n- **Replay (nombre en el juego):** {replay_name}\n- **Excel (Jugador):** {registered_player}\n- **Excel (Epic Name, como referencia):** {registered_epic}\nLa similitud de nombre no confirma la identidad del jugador.")
+    roster_name_candidate_result: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_name_candidate_result",
+        default_text="\u274c {fields} diferentes respecto a la ficha candidata. El Staff debe confirmar si corresponde a este jugador.")
+    roster_name_ambiguous_explanation: TranslationKey = TranslationKey(
+        key="messages.match_replays.uploaded.roster_name_ambiguous_explanation",
+        default_text="\u26a0\ufe0f Hay varios nombres similares o varias cuentas de la replay apuntan a la misma ficha candidata. No se ha elegido una ficha por suposici\u00f3n.")
     roster_record_missing_explanation: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_record_missing_explanation",
         default_text="\u26a0\ufe0f No se ha podido asociar esta cuenta con una ficha de la divisi\u00f3n mediante su ID o el enlace de Tracker registrado. El jugador puede tener una ficha con otros datos.")

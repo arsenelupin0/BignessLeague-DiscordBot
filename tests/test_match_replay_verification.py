@@ -95,14 +95,16 @@ class ReplayIdentityTests(unittest.TestCase):
         self.assertEqual(actual.resolution_status, "matched")
         self.assertNotIn("epic_name", actual.match_methods)
 
-    def test_matching_ign_is_not_a_roster_lookup_key(self):
-        summary = build_match_replay_roster_validation_summary(resolve(
-            player(name=roster().epic_name, platform_id="wrong-id"),
-        ))
+    def test_matching_ign_only_proposes_a_candidate_and_never_verifies_an_epic_name(self):
+        resolved = resolve(player(name=roster().epic_name, platform_id="wrong-id"))
+        summary = build_match_replay_roster_validation_summary(resolved)
+        actual = resolved.games[0].blue.players[0]
         self.assertEqual(summary.matched_unique_players, 0)
-        self.assertEqual(summary.unmatched_players[0].registered_player_name, "")
-        self.assertEqual(summary.unmatched_players[0].missing_methods, ())
-        self.assertEqual(summary.unmatched_players[0].unevaluated_methods, ("platform", "platform_id"))
+        self.assertEqual(actual.resolution_status, "name_candidate")
+        self.assertEqual(summary.unmatched_players[0].registered_player_name, "DAVID")
+        self.assertEqual(summary.unmatched_players[0].missing_methods, ("platform_id",))
+        self.assertEqual(summary.unmatched_players[0].unevaluated_methods, ())
+        self.assertIsNone(actual.epic_name)
         self.assertFalse(summary.epic_name_unmatched_players)
 
     def test_duplicate_account_cannot_be_verified_using_a_unique_name(self):

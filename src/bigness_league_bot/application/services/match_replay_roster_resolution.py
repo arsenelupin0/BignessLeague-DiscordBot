@@ -16,6 +16,7 @@ from bigness_league_bot.application.services.match_replay_identity import (
     normalize_epic_display_name,
     normalize_replay_platform,
     normalize_replay_platform_id,
+    replay_player_identity_key,
 )
 from bigness_league_bot.application.services.match_replay_models import (
     MatchReplayGame,
@@ -23,6 +24,9 @@ from bigness_league_bot.application.services.match_replay_models import (
     MatchReplayReport,
     MatchReplayRosterPlayer,
     MatchReplayTeam,
+)
+from bigness_league_bot.application.services.match_replay_roster_candidates import (
+    find_replay_roster_name_candidate,
 )
 from bigness_league_bot.application.services.match_replay_team_names import (
     match_replay_team_names_match,
@@ -35,13 +39,14 @@ def resolve_match_replay_report_players(
         report: MatchReplayReport,
         roster_players: Iterable[MatchReplayRosterPlayer],
 ) -> MatchReplayReport:
+    roster_players = tuple(roster_players)
     roster_index = _build_roster_player_index(roster_players)
     resolved_games: list[MatchReplayGame] = []
     unresolved_winners: list[str] = []
 
     for game in report.games:
-        resolved_blue = _resolve_match_replay_team(game.blue, roster_index)
-        resolved_orange = _resolve_match_replay_team(game.orange, roster_index)
+        resolved_blue = _resolve_match_replay_team(game.blue, roster_index, roster_players)
+        resolved_orange = _resolve_match_replay_team(game.orange, roster_index, roster_players)
         resolved_games.append(
             MatchReplayGame(
                 number=game.number,
@@ -54,6 +59,7 @@ def resolve_match_replay_report_players(
             )
         )
 
+    resolved_games = _reject_conflicting_name_candidates(resolved_games)
     team_one_games = 0
     team_two_games = 0
     normalized_team_one = normalize_match_replay_team_name(report.team_one_name)
@@ -86,6 +92,7 @@ def resolve_match_replay_report_players(
 def _resolve_match_replay_team(
         team: MatchReplayTeam,
         roster_index: dict[str, dict[str, MatchReplayRosterPlayer]],
+        roster_players: tuple[MatchReplayRosterPlayer, ...],
 ) -> MatchReplayTeam:
     resolved_players: list[MatchReplayPlayer] = []
     team_match_counts: dict[str, int] = {}
@@ -99,6 +106,8 @@ def _resolve_match_replay_team(
                     match_method=method,
                     match_methods=match_methods,
                     resolution_status=resolution_status,
+                    official_team_name="",
+                    roster_player_name="",
                     registered_platform="",
                     registered_platform_id="",
                     registered_epic_name="",
@@ -129,6 +138,7 @@ def _resolve_match_replay_team(
             )
         )
 
+    resolved_players = _apply_roster_name_candidates(team, resolved_players, roster_players)
     official_team_name = _resolve_team_name_from_counts(team_match_counts)
     if official_team_name is None:
         return MatchReplayTeam(
@@ -144,6 +154,77 @@ def _resolve_match_replay_team(
         goals=team.goals,
         players=tuple(resolved_players),
     )
+
+
+def _apply_roster_name_candidates(
+        team: MatchReplayTeam,
+        players: list[MatchReplayPlayer],
+        roster_players: tuple[MatchReplayRosterPlayer, ...],
+) -> list[MatchReplayPlayer]:
+    verified_teams = {normalize_match_replay_team_name(player.official_team_name)
+                      for player in players if player.resolution_status == "matched"}
+    if len(verified_teams) > 1:
+        return players
+    # Team context only narrows the name search. Every comparison below uses
+    # one player's actual Excel fields; platforms are never pooled by club.
+    team_key = next(iter(verified_teams)) if verified_teams else normalize_match_replay_team_name(team.name)
+    claimed = {(player.official_team_name, player.roster_player_name, player.registered_platform_id)
+               for player in players if player.roster_player_name}
+    eligible = tuple(entry for entry in roster_players
+                     if normalize_match_replay_team_name(entry.team_name) == team_key
+                     and (entry.team_name, entry.player_name, entry.platform_id) not in claimed)
+    proposals: dict[int, MatchReplayRosterPlayer] = {}
+    for index, player in enumerate(players):
+        if player.resolution_status != "unmatched" or player.roster_player_name:
+            continue
+        match = find_replay_roster_name_candidate(player.name, eligible)
+        if match.ambiguous:
+            players[index] = replace(player, resolution_status="name_ambiguous")
+        elif match.player is not None:
+            proposals[index] = match.player
+    for index, entry in proposals.items():
+        player = players[index]
+        if sum(candidate == entry for candidate in proposals.values()) > 1:
+            players[index] = replace(player, resolution_status="name_ambiguous")
+            continue
+        methods = tuple(method for method, detected, registered in (
+            ("platform", normalize_replay_platform(player.platform), normalize_replay_platform(entry.platform)),
+            ("platform_id", normalize_replay_platform_id(player.platform_id),
+             normalize_replay_platform_id(entry.platform_id)),
+        ) if detected not in {"", "-"} and detected == registered)
+        players[index] = replace(
+            player, official_team_name=entry.team_name, roster_player_name=entry.player_name,
+            registered_platform=entry.platform, registered_platform_id=entry.platform_id,
+            registered_epic_name=entry.epic_name, match_method="name_similarity", match_methods=methods,
+            resolution_status="name_candidate",
+            evaluated_methods=tuple(method for method, value in (
+                ("platform", entry.platform), ("platform_id", entry.platform_id),
+            ) if value.strip() not in {"", "-"}),
+        )
+    return players
+
+
+def _reject_conflicting_name_candidates(games: list[MatchReplayGame]) -> list[MatchReplayGame]:
+    candidates: dict[tuple[str, str], set[tuple[str, str, str]]] = {}
+    for game in games:
+        for team in (game.blue, game.orange):
+            for player in team.players:
+                if player.resolution_status == "name_candidate" and player.platform_id.strip() not in {"", "-"}:
+                    candidates.setdefault(replay_player_identity_key(player), set()).add(
+                        (player.official_team_name, player.roster_player_name, player.registered_platform_id))
+    conflicts = {key for key, entries in candidates.items() if len(entries) > 1}
+    if not conflicts:
+        return games
+
+    def clear_conflicts(team: MatchReplayTeam) -> MatchReplayTeam:
+        return replace(team, players=tuple(
+            replace(player, official_team_name="", roster_player_name="", registered_platform="",
+                    registered_platform_id="", registered_epic_name="", match_methods=(),
+                    evaluated_methods=(), resolution_status="name_ambiguous")
+            if player.resolution_status == "name_candidate" and replay_player_identity_key(player) in conflicts
+            else player for player in team.players))
+
+    return [replace(game, blue=clear_conflicts(game.blue), orange=clear_conflicts(game.orange)) for game in games]
 
 
 def _find_roster_player_match(

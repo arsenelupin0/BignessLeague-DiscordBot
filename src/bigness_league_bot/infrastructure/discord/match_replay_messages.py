@@ -82,9 +82,9 @@ def format_match_replay_roster_validation(
         count = method_counts.get(method, 0)
         evaluated = evaluated_counts.get(method, 0)
         pending = summary.unique_players - evaluated
-        # An unidentified account must not turn its platform into a warning.
-        # Show this breakdown only when every player has a platform reference.
-        if method == "platform" and pending:
+        # Missing references alone are not platform mismatches. A proven
+        # mismatch must remain visible even when other accounts are pending.
+        if method == "platform" and pending and evaluated == count:
             continue
         icon = "❌" if evaluated > count else ("⚠️" if pending or not summary.unique_players else "✅")
         unlinked = min(pending, sum(
@@ -149,6 +149,9 @@ def _format_unmatched_player_line(
         if player.resolution_status == "ambiguous":
             reason_key = keys.roster_ambiguous_account
             result_key = keys.roster_ambiguous_result
+        elif player.resolution_status == "name_ambiguous":
+            reason_key = keys.roster_name_ambiguous_explanation
+            result_key = keys.roster_account_not_found_result
         elif player.platform_id.strip() in {"", "-"}:
             reason_key = keys.roster_replay_id_missing
             result_key = keys.roster_replay_id_missing_result
@@ -160,11 +163,19 @@ def _format_unmatched_player_line(
             team=_escape_discord_markdown(player.team_name),
             player=_format_inline_code(player.player_name),
             platform_id=_format_value(player.platform_id, localizer=localizer, locale=locale),
+            platform=_format_platform(player.platform, localizer=localizer, locale=locale),
             reason=localizer.translate(reason_key, locale=locale),
             result=localizer.translate(result_key, locale=locale),
         )
 
     comparisons = []
+    if player.resolution_status == "name_candidate":
+        comparisons.append(localizer.translate(
+            keys.roster_name_candidate_notice, locale=locale,
+            replay_name=_format_inline_code(player.player_name),
+            registered_player=_format_value(player.registered_player_name, localizer=localizer, locale=locale),
+            registered_epic=_format_value(player.registered_epic_name, localizer=localizer, locale=locale),
+        ))
     for method in ROSTER_VALIDATION_METHODS:
         pending = method in player.unevaluated_methods
         failed = method in player.missing_methods
@@ -189,6 +200,9 @@ def _format_unmatched_player_line(
         ))
     if player.resolution_status == "ambiguous":
         result = localizer.translate(keys.roster_ambiguous_account, locale=locale)
+    elif player.resolution_status == "name_candidate" and player.missing_methods:
+        result = localizer.translate(keys.roster_name_candidate_result, locale=locale,
+                                     fields=_format_method_list(player.missing_methods, labels))
     elif player.missing_methods:
         result = localizer.translate(keys.roster_review_fields, locale=locale,
                                      fields=_format_method_list(player.missing_methods, labels))

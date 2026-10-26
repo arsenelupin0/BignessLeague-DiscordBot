@@ -151,14 +151,22 @@ La verificación de replays usa la pareja `Platform + Platform ID` de una ficha 
 la plataforma de juego (`epic`, `steam`, `psn`, `xbl` o `switch`); `ps4` y `ps5` equivalen a `psn`. El ID se compara
 sin eliminar signos ni espacios interiores. Se busca primero por plataforma e ID, después por ID único y, como
 referencias para localizar discrepancias, por la cuenta exacta del enlace de Tracker registrado y por un
-Epic Name obtenido explícitamente, cuando exista ese dato. El IGN nunca se utiliza como Epic Name para buscar fichas.
+Epic Name obtenido explícitamente, cuando exista ese dato. El IGN nunca se declara como Epic Name obtenido.
 El enlace solo identifica qué fila revisar: no sustituye las columnas `Platform` / `Platform ID` ni verifica
 una cuenta cuyos valores registrados difieren. Los enlaces duplicados son ambiguos. No se consulta Tracker por red.
-Una coincidencia solo de nombre nunca verifica una cuenta.
+Si esas referencias no localizan una ficha, se busca una candidata por similitud entre el IGN y las columnas
+`Jugador` / `Epic Name`, dentro del equipo identificado por las cuentas o por el nombre de la replay. Se toleran
+variaciones de letras repetidas; los nombres cortos o poco parecidos no proponen fichas. Si hay candidatos cercanos,
+varias cuentas apuntan a la misma ficha o los nombres de una cuenta sugieren fichas distintas entre games, se
+mantiene la ambigüedad. Una ficha ya asociada a otro participante del mismo game no se reutiliza por similitud.
+El mensaje muestra el IGN, los nombres originales de Excel y los valores individuales de plataforma e ID de esa
+ficha candidata. Se registra `name_similarity` / `name_candidate` en las filas de Replay Stats para revisión.
+Una coincidencia solo de nombre nunca verifica una cuenta; el informe solicita la confirmación del Staff.
 El desglose cuenta cada campo por separado sobre la misma ficha: un ID correcto no figura entre los campos fallidos.
 Las cuentas duplicadas no se verifican automáticamente y un fallo en algún game se conserva en el resumen.
 El informe distingue la búsqueda de cuenta de la comparación de campos: si las referencias de cuenta no permiten
-localizar una ficha, informa del resultado de esa búsqueda, aclarando que el jugador puede tener una ficha con
+localizar una ficha ni proponer una candidata por nombre, informa del resultado de la búsqueda: puede existir una ficha
+con
 otros datos. Si faltan datos de la replay o hay cuentas duplicadas, muestra ese motivo concreto.
 El desglose distingue `sin ficha vinculada` de `sin dato en Excel`; eso no significa que se haya omitido la búsqueda.
 El bot no declara que la plataforma sea incorrecta simplemente porque no haya podido localizar la cuenta.
@@ -166,8 +174,9 @@ Los campos comparados que sí difieren muestran ❌.
 El informe separa cada jugador en un bloque con los valores incorrectos o ausentes de `Replay` y `Excel` y
 una conclusión que indica qué revisar. Los campos correctos no se repiten entre las incidencias.
 La equivalencia `ps4` / `ps5` / `psn` se aplica internamente; Discord muestra `psn` si hay una discrepancia real
-de plataforma. El desglose de plataforma se omite cuando faltan fichas de referencia, para no convertir un
-fallo de identificación en un aviso de plataforma. Se elimina la línea técnica `Identidad de cuenta`.
+de plataforma. Si faltan fichas de referencia y no hay discrepancias de plataforma comparadas, se omite ese desglose.
+Una discrepancia individual comprobada se muestra aunque otras cuentas sigan pendientes de identificar.
+No se muestra la línea técnica `Identidad de cuenta`.
 Sin una ficha identificada solo se muestran los datos detectados y el resultado concreto de la búsqueda;
 no se inventan valores registrados ni se repite al jugador en los avisos de nombre.
 
@@ -176,7 +185,8 @@ Puede proceder de Steam o de una consola y diferir del `Epic Name` usado para a�
 Unicode conserva ese IGN; no obtiene por ello un Epic Name. `MatchReplayPlayer.name` guarda el IGN y
 `MatchReplayPlayer.epic_name` un Epic Name separado, si una fuente lo proporciona explícitamente.
 Los adaptadores actuales solo obtienen el IGN y dejan `epic_name=None`, incluso para la plataforma `epic`.
-En ese caso no se compara con la columna `Epic Name`, no se genera un aviso y no se declara ese campo verificado.
+En ese caso no se verifica la igualdad de Epic Names ni se genera un aviso de Epic Name diferente. El texto de
+Excel puede servir como referencia para proponer una ficha por similitud, sin declarar ese campo verificado.
 Si se dispone de ambos Epic Names, la diferencia es informativa y no reduce la verificación por plataforma e ID.
 Se conservan los signos y espacios interiores al comparar nombres Epic reales. No se infieren nombres desde IDs.
 La replay AD533872421E2D47898AC9B1A0ABE4EB se comprobó en cabecera y red: aporta `Arsene Lupin` como IGN de Steam
