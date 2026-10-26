@@ -13,6 +13,12 @@ def normalize_replay_name(value: str) -> str:
     return "".join(character for character in normalized if character.isalnum())
 
 
+def normalize_epic_display_name(value: str) -> str:
+    """Compare actual Epic display names, preserving punctuation and spaces."""
+    normalized = unicodedata.normalize("NFC", value).strip().casefold()
+    return normalized if normalized != "-" else ""
+
+
 def normalize_replay_platform_id(value: str) -> str:
     # IDs are opaque: removing punctuation can merge different accounts.
     return value.strip().casefold()

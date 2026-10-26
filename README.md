@@ -150,15 +150,16 @@ crea un canal de partido con permisos para ambos equipos.
 La verificación de replays usa la pareja `Platform + Platform ID` de una ficha única de la división. `Platform` es
 la plataforma de juego (`epic`, `steam`, `psn`, `xbl` o `switch`); `ps4` y `ps5` equivalen a `psn`. El ID se compara
 sin eliminar signos ni espacios interiores. Se busca primero por plataforma e ID, después por ID único y, como
-referencias para localizar discrepancias, por la cuenta exacta del enlace de Tracker registrado y por Epic Name.
+referencias para localizar discrepancias, por la cuenta exacta del enlace de Tracker registrado y por un
+Epic Name obtenido explícitamente, cuando exista ese dato. El IGN nunca se utiliza como Epic Name para buscar fichas.
 El enlace solo identifica qué fila revisar: no sustituye las columnas `Platform` / `Platform ID` ni verifica
 una cuenta cuyos valores registrados difieren. Los enlaces duplicados son ambiguos. No se consulta Tracker por red.
 Una coincidencia solo de nombre nunca verifica una cuenta.
 El desglose cuenta cada campo por separado sobre la misma ficha: un ID correcto no figura entre los campos fallidos.
 Las cuentas duplicadas no se verifican automáticamente y un fallo en algún game se conserva en el resumen.
-El informe distingue la búsqueda de cuenta de la comparación de campos: si el ID no aparece en la división y el
-Epic Name tampoco localiza una ficha, informa que ese ID no aparece en las fichas, aclarando que el jugador puede
-tener una ficha con otros datos. Si faltan datos de la replay o hay cuentas duplicadas, muestra ese motivo concreto.
+El informe distingue la búsqueda de cuenta de la comparación de campos: si las referencias de cuenta no permiten
+localizar una ficha, informa del resultado de esa búsqueda, aclarando que el jugador puede tener una ficha con
+otros datos. Si faltan datos de la replay o hay cuentas duplicadas, muestra ese motivo concreto.
 El desglose distingue `sin ficha vinculada` de `sin dato en Excel`; eso no significa que se haya omitido la búsqueda.
 El bot no declara que la plataforma sea incorrecta simplemente porque no haya podido localizar la cuenta.
 Los campos comparados que sí difieren muestran ❌.
@@ -170,12 +171,16 @@ fallo de identificación en un aviso de plataforma. Se elimina la línea técnic
 Sin una ficha identificada solo se muestran los datos detectados y el resultado concreto de la búsqueda;
 no se inventan valores registrados ni se repite al jugador en los avisos de nombre.
 
-El nombre detectado se contrasta con `Epic Name` únicamente como aviso informativo, también cuando la cuenta está
-verificada. Puede ser un nombre de otra plataforma o llegar alterado desde el analizador. Ese aviso no reduce el
-total verificado ni demuestra una alineación indebida. No se aceptan nombres por parecido ni se reconstruyen
-caracteres perdidos.
-Los avisos de cuentas verificadas se agrupan aparte. Si hay una discrepancia de cuenta y también de nombre,
-el aviso de nombre se incluye en el mismo bloque del jugador.
+El nombre de Ballchasing y `PlayerStats.Name` de la replay son el **IGN** (nombre visible en la partida).
+Puede proceder de Steam o de una consola y diferir del `Epic Name` usado para añadir amigos. La recuperación
+Unicode conserva ese IGN; no obtiene por ello un Epic Name. `MatchReplayPlayer.name` guarda el IGN y
+`MatchReplayPlayer.epic_name` un Epic Name separado, si una fuente lo proporciona explícitamente.
+Los adaptadores actuales solo obtienen el IGN y dejan `epic_name=None`, incluso para la plataforma `epic`.
+En ese caso no se compara con la columna `Epic Name`, no se genera un aviso y no se declara ese campo verificado.
+Si se dispone de ambos Epic Names, la diferencia es informativa y no reduce la verificación por plataforma e ID.
+Se conservan los signos y espacios interiores al comparar nombres Epic reales. No se infieren nombres desde IDs.
+La replay AD533872421E2D47898AC9B1A0ABE4EB se comprobó en cabecera y red: aporta `Arsene Lupin` como IGN de Steam
+y un EpicPUID técnico, pero no se encontró `arsenelupin0` como nombre Epic en los datos decodificados.
 
 ### Nombres Unicode de las replays
 
@@ -207,7 +212,8 @@ en el `.env` privado. El bot entrega los bytes originales por stdin, comprueba e
 cabecera sin analizar los datos de red. Los cambios de protocolo de red de RL no obligan a procesar esa parte.
 Descarta bots y espectadores. Solo sustituye el nombre cuando la pareja plataforma/ID es única tanto en la cabecera
 como en Ballchasing. Conserva la identidad, los resultados y las estadísticas de Ballchasing, además del nombre que
-este devolvió en `ballchasing_name` para diagnóstico. El nombre local alimenta la verificación, Sheets y los resúmenes.
+este devolvió en `ballchasing_name` para diagnóstico. El nombre local se usa como IGN en Sheets y los resúmenes;
+no aporta un Epic Name ni se compara con ese campo.
 En consolas, si la cabecera contiene un ID numérico y Ballchasing un gamertag, no se mezclan esos identificadores:
 se conserva el nombre de Ballchasing para esa cuenta.
 

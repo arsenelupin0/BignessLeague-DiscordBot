@@ -45,6 +45,7 @@ class MatchReplayUnmatchedPlayer:
     resolution_status: str = "unmatched"
     unevaluated_methods: tuple[str, ...] = ()
     registered_player_name: str = ""
+    detected_epic_name: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,8 +130,12 @@ def build_match_replay_roster_validation_summary(
                     methods = set(player.match_method.split(" + "))
                 evaluated = set(player.evaluated_methods if player.evaluated_methods is not None
                                 else ("platform", "platform_id"))
-                if player.registered_epic_name or "epic_name" in methods:
+                if (player.epic_name and player.epic_name.strip() not in {"", "-"}
+                        and player.registered_epic_name.strip() not in {"", "-"}):
                     evaluated.add("epic_name")
+                else:
+                    evaluated.discard("epic_name")
+                    methods.discard("epic_name")
                 identity_verified = (
                         player.resolution_status == "matched"
                         and {"platform", "platform_id"} <= methods
@@ -158,12 +163,13 @@ def build_match_replay_roster_validation_summary(
                     registered_epic_name=player.registered_epic_name,
                     resolution_status=player.resolution_status,
                     registered_player_name=player.roster_player_name,
+                    detected_epic_name=player.epic_name or "",
                     unevaluated_methods=tuple(
                         method for method in ("platform", "platform_id") if method not in evaluated),
                 )
                 if not identity_verified:
                     unmatched_players.setdefault(key, detail)
-                if player.registered_epic_name and "epic_name" not in methods:
+                if "epic_name" in evaluated and "epic_name" not in methods:
                     name_warnings.setdefault(key, detail)
 
     sort_key = lambda player: (player.team_name.casefold(), player.player_name.casefold())

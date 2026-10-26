@@ -12,7 +12,7 @@ from __future__ import annotations
 import discord
 
 from bigness_league_bot.application.services.match_replay_identity import (
-    normalize_replay_name, normalize_replay_platform, normalize_replay_platform_id,
+    normalize_epic_display_name, normalize_replay_name, normalize_replay_platform, normalize_replay_platform_id,
 )
 from bigness_league_bot.application.services.match_replay_summaries import (
     MatchReplayRosterValidationSummary,
@@ -100,7 +100,7 @@ def format_match_replay_roster_validation(
     unresolved_keys = {_identity(player) for player in summary.unmatched_players}
     verified_name_warnings = tuple(
         player for player in summary.epic_name_unmatched_players
-        if player.registered_epic_name and _identity(player) not in unresolved_keys
+        if _epic_names_differ(player) and _identity(player) not in unresolved_keys
     )
     name_section = ""
     if verified_name_warnings:
@@ -109,7 +109,7 @@ def format_match_replay_roster_validation(
                 keys.roster_name_warning_player, locale=locale,
                 team=_escape_discord_markdown(player.team_name),
                 player=_format_inline_code(player.registered_player_name or player.player_name),
-                replay_name=_format_inline_code(player.player_name),
+                detected_name=_format_inline_code(player.detected_epic_name),
                 registered_name=_format_inline_code(player.registered_epic_name),
             )
             for player in verified_name_warnings
@@ -181,11 +181,10 @@ def _format_unmatched_player_line(
             detected=formatter(detected, localizer=localizer, locale=locale),
             registered=formatter(registered, localizer=localizer, locale=locale),
         ))
-    if (player.registered_epic_name
-            and normalize_replay_name(player.player_name) != normalize_replay_name(player.registered_epic_name)):
+    if _epic_names_differ(player):
         comparisons.append(localizer.translate(
             keys.roster_inline_name_notice, locale=locale,
-            detected=_format_inline_code(player.player_name),
+            detected=_format_inline_code(player.detected_epic_name),
             registered=_format_inline_code(player.registered_epic_name),
         ))
     if player.resolution_status == "ambiguous":
@@ -201,6 +200,12 @@ def _format_unmatched_player_line(
         player=_format_inline_code(player.registered_player_name or player.player_name),
         comparisons="\n\n".join(comparisons), result=result,
     )
+
+
+def _epic_names_differ(player: MatchReplayUnmatchedPlayer) -> bool:
+    detected = normalize_epic_display_name(player.detected_epic_name)
+    registered = normalize_epic_display_name(player.registered_epic_name)
+    return bool(detected and registered and detected != registered)
 
 
 def _has_registered_record(player: MatchReplayUnmatchedPlayer) -> bool:

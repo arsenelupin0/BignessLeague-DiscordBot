@@ -1172,10 +1172,10 @@ class _MessagesMatchReplaysUploaded:
     roster_platform_label: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_platform_label",
                                                            default_text="Plataforma")
     roster_name_warnings: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_name_warnings",
-                                                          default_text="\n\n## Avisos de nombre (informativos)\nEstas cuentas est\u00e1n verificadas por plataforma e ID. Solo difiere el nombre; este aviso no reduce los jugadores verificados.\n\n{players}")
+                                                          default_text="\n\n## Avisos de Epic Name\nEl Epic Name obtenido para estas cuentas verificadas difiere del registrado. Este aviso no reduce los jugadores verificados.\n\n{players}")
     roster_name_warning_player: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_name_warning_player",
-        default_text="### {team} \u00b7 {player}\n- **Replay:** {replay_name}\n- **Excel (Epic Name):** {registered_name}\n- **Resultado:** \u26a0\ufe0f Nombre diferente; cuenta verificada.")
+        default_text="### {team} \u00b7 {player}\n- **Epic Name obtenido:** {detected_name}\n- **Excel (Epic Name):** {registered_name}\n- **Resultado:** \u26a0\ufe0f Epic Name diferente; cuenta verificada.")
     roster_missing_value: TranslationKey = TranslationKey(key="messages.match_replays.uploaded.roster_missing_value",
                                                           default_text="no disponible")
     roster_unmatched_player: TranslationKey = TranslationKey(
@@ -1194,7 +1194,7 @@ class _MessagesMatchReplaysUploaded:
         default_text="### {team} \u00b7 {player}\n**Platform ID de la replay:** {platform_id}\n\n**Resultado de la b\u00fasqueda:** {reason}\n\n**Qu\u00e9 revisar:** {result}")
     roster_record_missing_explanation: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_record_missing_explanation",
-        default_text="\u26a0\ufe0f Este Platform ID no aparece en las fichas de la divisi\u00f3n y la b\u00fasqueda por nombre tampoco ha permitido vincular una ficha. El jugador puede tener una ficha con otros datos.")
+        default_text="\u26a0\ufe0f No se ha podido asociar esta cuenta con una ficha de la divisi\u00f3n mediante su ID o el enlace de Tracker registrado. El jugador puede tener una ficha con otros datos.")
     roster_field_comparison: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_field_comparison",
         default_text="**{field} \u00b7 {icon} {status}**\n- **Replay:** {detected}\n- **Excel:** {registered}")
@@ -1209,7 +1209,7 @@ class _MessagesMatchReplaysUploaded:
         default_text="\u26a0\ufe0f Faltan datos registrados en Excel para completar la comparaci\u00f3n.")
     roster_inline_name_notice: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_inline_name_notice",
-        default_text="**Nombre \u00b7 \u26a0\ufe0f Aviso informativo**\n- **Replay:** {detected}\n- **Excel (Epic Name):** {registered}")
+        default_text="**Epic Name \u00b7 \u26a0\ufe0f Aviso informativo**\n- **Epic Name obtenido:** {detected}\n- **Excel (Epic Name):** {registered}")
     roster_validation_more_unmatched: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_validation_more_unmatched",
         default_text="  - Y {remaining} m\u00e1s.")
@@ -1218,7 +1218,7 @@ class _MessagesMatchReplaysUploaded:
         default_text="Falta el Platform ID para buscar la cuenta. Revisa los datos del archivo.")
     roster_replay_id_missing: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_replay_id_missing",
-        default_text="Falta el Platform ID en los datos de la replay y no se ha localizado una ficha por el Epic Name.")
+        default_text="Falta el Platform ID en los datos de la replay y no se ha podido localizar la ficha.")
     roster_ambiguous_result: TranslationKey = TranslationKey(
         key="messages.match_replays.uploaded.roster_ambiguous_result",
         default_text="Revisa los registros duplicados de plataforma e ID. No se ha elegido ninguna ficha autom\u00e1ticamente.")

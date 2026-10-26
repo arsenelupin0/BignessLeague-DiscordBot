@@ -12,6 +12,8 @@ from bigness_league_bot.application.services.match_replay_models import MatchRep
 
 @dataclass(frozen=True, slots=True)
 class ReplayAccountName:
+    """An IGN bound to a platform account, not an Epic Games display name."""
+
     platform: str
     platform_id: str
     name: str

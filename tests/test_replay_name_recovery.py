@@ -94,11 +94,12 @@ class LocalNameMergeTests(unittest.TestCase):
                          original.blue.players[0])
         self.assertEqual(replace(enriched, blue=original.blue), original)
 
-    def test_recovered_name_matches_registered_epic_name_without_a_warning(self):
+    def test_recovered_unicode_ign_does_not_supply_an_epic_name(self):
         enriched = apply_replay_account_names(game(), extract_header_account_names(header()))
         resolved = resolve_match_replay_report_players(report(*enriched.blue.players), (roster(),))
         summary = build_match_replay_roster_validation_summary(resolved)
         self.assertEqual(summary.matched_unique_players, 1)
+        self.assertIsNone(resolved.games[0].blue.players[0].epic_name)
         self.assertFalse(summary.epic_name_unmatched_players)
 
     def test_different_platform_or_id_never_joins_by_display_name_or_position(self):

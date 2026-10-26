@@ -13,7 +13,7 @@ from dataclasses import replace
 from typing import Iterable
 
 from bigness_league_bot.application.services.match_replay_identity import (
-    normalize_replay_name,
+    normalize_epic_display_name,
     normalize_replay_platform,
     normalize_replay_platform_id,
 )
@@ -152,7 +152,8 @@ def _find_roster_player_match(
 ) -> tuple[MatchReplayRosterPlayer | None, str, tuple[str, ...], str]:
     platform_key = normalize_replay_platform(replay_player.platform)
     platform_id_key = normalize_replay_platform_id(replay_player.platform_id)
-    name_key = normalize_replay_name(replay_player.name)
+    # The IGN may be a Steam/console name. It is not an Epic lookup key.
+    name_key = normalize_epic_display_name(replay_player.epic_name or "")
     pair_match = _find_unique_roster_index_match(
         roster_index, "platform_pair", f"{platform_key}:{platform_id_key}",
     ) if platform_key and platform_id_key else None
@@ -182,7 +183,7 @@ def _find_roster_player_match(
         methods.append("platform")
     if pair_match is not None or id_match is not None:
         methods.append("platform_id")
-    if name_key and name_key == normalize_replay_name(candidate.epic_name):
+    if name_key and name_key == normalize_epic_display_name(candidate.epic_name):
         methods.append("epic_name")
     status = "matched" if pair_match is not None else unresolved_status
     return candidate, "platform + platform_id", tuple(methods), status
@@ -208,7 +209,7 @@ def _build_roster_player_index(
                 f"{platform_key}:{platform_id_key}",
                 roster_player,
             )
-        normalized_epic_name = normalize_replay_name(roster_player.epic_name)
+        normalized_epic_name = normalize_epic_display_name(roster_player.epic_name)
         if normalized_epic_name:
             _add_unique_roster_index_entry(index["epic_name"], normalized_epic_name, roster_player)
         tracker_key = tracker_account_key(roster_player.tracker_url)

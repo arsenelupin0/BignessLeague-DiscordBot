@@ -75,6 +75,8 @@ def extract_header_account_names(payload: Any) -> tuple[ReplayAccountName, ...]:
         platform_value = player.get("Platform", {})
         platform_key = platform_value.get("value") if isinstance(platform_value, dict) else None
         platform = PLATFORMS.get(platform_key) if isinstance(platform_key, str) else None
+        # Header Name is the in-game display name, including for linked
+        # Steam/console accounts; it does not provide their Epic display name.
         name = player.get("Name")
         if not platform or not isinstance(name, str) or not _valid_name(name):
             continue

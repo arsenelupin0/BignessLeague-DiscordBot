@@ -50,18 +50,20 @@ def resolve(appearance=None, entries=None):
 
 
 class ReplayIdentityTests(unittest.TestCase):
-    def test_corrupted_name_does_not_invalidate_matching_account(self):
+    def test_corrupted_ign_does_not_invalidate_account_or_evaluate_epic_name(self):
         resolved = resolve()
         actual = resolved.games[0].blue.players[0]
         summary = build_match_replay_roster_validation_summary(resolved)
         self.assertEqual(actual.resolution_status, "matched")
         self.assertEqual(actual.match_methods, ("platform", "platform_id"))
+        self.assertIsNone(actual.epic_name)
         self.assertEqual(summary.matched_unique_players, 1)
         self.assertFalse(summary.unmatched_players)
-        self.assertEqual(len(summary.epic_name_unmatched_players), 1)
-        self.assertEqual(summary.epic_name_unmatched_players[0].registered_epic_name, roster().epic_name)
+        self.assertFalse(summary.epic_name_unmatched_players)
+        epic = next(m for m in summary.match_methods if m.method == "epic_name")
+        self.assertEqual((epic.count, epic.evaluated_count), (0, 0))
 
-    def test_six_correct_accounts_report_six_ids_with_one_name_notice(self):
+    def test_six_correct_accounts_with_different_igns_do_not_evaluate_epic_names(self):
         entries = tuple(roster(platform_id=f"id-{i}", epic_name=f"Player{i}", player_name=f"Player{i}")
                         for i in range(6))
         players = tuple(player(platform_id=f"id-{i}", name=f"Player{i}" if i else "C O IDAVID0")
@@ -73,9 +75,9 @@ class ReplayIdentityTests(unittest.TestCase):
         summary = build_match_replay_roster_validation_summary(resolve_match_replay_report_players(original, entries))
         self.assertEqual(summary.matched_unique_players, 6)
         self.assertEqual({m.method: m.count for m in summary.match_methods},
-                         {"platform": 6, "platform_id": 6, "epic_name": 5})
+                         {"platform": 6, "platform_id": 6, "epic_name": 0})
         self.assertFalse(summary.unmatched_players)
-        self.assertEqual(len(summary.epic_name_unmatched_players), 1)
+        self.assertFalse(summary.epic_name_unmatched_players)
 
     def test_unique_id_takes_priority_over_another_players_name(self):
         other = roster(player_name="Other", platform_id="other-id", epic_name="C O IDAVID0", platform="steam")
@@ -93,18 +95,20 @@ class ReplayIdentityTests(unittest.TestCase):
         self.assertEqual(actual.resolution_status, "matched")
         self.assertNotIn("epic_name", actual.match_methods)
 
-    def test_matching_name_is_only_a_hint_when_id_is_wrong(self):
+    def test_matching_ign_is_not_a_roster_lookup_key(self):
         summary = build_match_replay_roster_validation_summary(resolve(
             player(name=roster().epic_name, platform_id="wrong-id"),
         ))
         self.assertEqual(summary.matched_unique_players, 0)
-        self.assertEqual(summary.unmatched_players[0].missing_methods, ("platform_id",))
+        self.assertEqual(summary.unmatched_players[0].registered_player_name, "")
+        self.assertEqual(summary.unmatched_players[0].missing_methods, ())
+        self.assertEqual(summary.unmatched_players[0].unevaluated_methods, ("platform", "platform_id"))
         self.assertFalse(summary.epic_name_unmatched_players)
 
     def test_duplicate_account_cannot_be_verified_using_a_unique_name(self):
         duplicate = roster(player_name="Other", epic_name="Different", discord_id="43")
         summary = build_match_replay_roster_validation_summary(resolve(
-            player(name=roster().epic_name), (roster(), duplicate),
+            player(epic_name=roster().epic_name), (roster(), duplicate),
         ))
         self.assertEqual(summary.matched_unique_players, 0)
         self.assertEqual(summary.unmatched_players[0].missing_methods, ("platform_id",))
@@ -136,7 +140,7 @@ class ReplayIdentityTests(unittest.TestCase):
                                  ({"platform": ""}, ("platform",))):
             with self.subTest(changes=changes):
                 summary = build_match_replay_roster_validation_summary(
-                    resolve(player(name=roster().epic_name, **changes)))
+                    resolve(player(epic_name=roster().epic_name, **changes)))
                 self.assertEqual(summary.matched_unique_players, 0)
                 self.assertEqual(summary.unmatched_players[0].missing_methods, missing)
 
@@ -201,14 +205,13 @@ class ReplayIdentityTests(unittest.TestCase):
                 self.assertEqual(summary.unmatched_players[0].missing_methods, ("platform",))
                 self.assertEqual({m.method: m.count for m in summary.match_methods}["platform"], 0)
 
-    def test_name_warning_detects_later_changes_without_duplicating_player(self):
+    def test_ign_changes_across_games_do_not_create_epic_name_warnings(self):
         resolved = resolve_match_replay_report_players(
             report(player(name=roster().epic_name), player()), (roster(),),
         )
         summary = build_match_replay_roster_validation_summary(resolved)
         self.assertEqual(summary.matched_unique_players, 1)
-        self.assertEqual(len(summary.epic_name_unmatched_players), 1)
-        self.assertEqual(summary.epic_name_unmatched_players[0].player_name, "C O IDAVID0")
+        self.assertFalse(summary.epic_name_unmatched_players)
 
     def test_ballchasing_payload_keeps_name_and_identity_separate(self):
         parsed = _parse_replay_payload({
@@ -232,16 +235,13 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
             summary=build_match_replay_roster_validation_summary(resolved),
         )
 
-    def test_verified_account_has_informational_name_warning_without_identity_failure(self):
+    def test_verified_account_with_different_ign_has_no_epic_name_warning(self):
         text = self.render(resolve())
         self.assertIn("Jugadores verificados: **1/1** ✅", text)
         self.assertIn("Platform ID: **1/1** ✅", text)
-        self.assertIn("## Avisos de nombre (informativos)", text)
-        self.assertIn("- **Replay:** `C O IDAVID0`", text)
-        self.assertIn(f"- **Excel (Epic Name):** `{roster().epic_name}`", text)
-        self.assertIn(roster().epic_name, text)
+        self.assertNotIn("Avisos de", text)
+        self.assertNotIn("Epic Name", text)
         self.assertNotIn("pendientes de verificar", text)
-        self.assertNotIn("Información incorrecta", text)
         self.assertNotIn("❌", text)
 
     def test_correct_id_is_omitted_from_failed_fields(self):
@@ -251,11 +251,11 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
         self.assertNotIn("**Platform ID ·", text)
         self.assertIn("**Resultado:** ❌ Revisar **Plataforma**", text)
         self.assertNotIn("account-123", text)
-        self.assertEqual(text.count("C O IDAVID0"), 1)
+        self.assertEqual(text.count("C O IDAVID0"), 0)
         self.assertNotIn("## Avisos de nombre", text)
 
     def test_wrong_id_shows_expected_and_detected_values(self):
-        text = self.render(resolve(player(name=roster().epic_name, platform_id="wrong-id")))
+        text = self.render(resolve(player(epic_name=roster().epic_name, platform_id="wrong-id")))
         self.assertIn("**Platform ID · ❌ No coincide**\n- **Replay:** `wrong-id`\n- **Excel:** `account-123`", text)
         self.assertIn("**Resultado:** ❌ Revisar **Platform ID**", text)
         self.assertNotIn("Avisos de nombre", text)
@@ -268,7 +268,7 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
     def test_english_uses_english_messages(self):
         text = self.render(resolve(player(platform="steam")), "en-US")
         self.assertIn("Players awaiting verification", text)
-        self.assertIn("**Name · ⚠️ Informational notice**", text)
+        self.assertNotIn("Informational notice", text)
         self.assertIn("**Platform · ❌ Does not match**\n- **Replay:** `steam`\n- **Excel:** `epic`", text)
         self.assertNotIn("registrado", text)
 
@@ -285,7 +285,7 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
         self.assertNotIn("Plataforma:", text)
         self.assertIn("Platform ID: **0/1** ⚠️ · 1 sin ficha vinculada", text)
         self.assertIn("**Platform ID de la replay:** `unknown`", text)
-        self.assertIn("**Resultado de la búsqueda:** ⚠️ Este Platform ID no aparece en las fichas", text)
+        self.assertIn("**Resultado de la búsqueda:** ⚠️ No se ha podido asociar esta cuenta", text)
         self.assertIn("El jugador puede tener una ficha con otros datos.", text)
         self.assertIn("**Qué revisar:** Comprueba la cuenta y el Platform ID registrados", text)
         self.assertNotIn("**Datos de Excel**", text)
@@ -298,13 +298,13 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
     def test_unknown_roster_evaluation_is_localized_in_english(self):
         text = self.render(resolve(player(platform_id="unknown")), "en-US")
         self.assertIn("1 without a linked roster entry", text)
-        self.assertIn("**Lookup result:** ⚠️ This Platform ID does not occur", text)
+        self.assertIn("**Lookup result:** ⚠️ This account could not be linked", text)
         self.assertIn("The player may have an entry with different details.", text)
         self.assertNotIn("not evaluated", text)
 
     def test_known_psn_account_only_displays_the_incorrect_id(self):
         text = self.render(resolve(
-            player(name="Prime Liquidcap", platform="ps4", platform_id="liquidcap_"),
+            player(epic_name="Prime Liquidcap", platform="ps4", platform_id="liquidcap_"),
             (roster(player_name="Liquidcap", platform="psn", platform_id="liquidcap",
                     epic_name="Prime Liquidcap"),),
         ))
@@ -362,7 +362,7 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
                 self.assertNotIn("Plataforma:", text)
                 self.assertNotIn("Identidad de cuenta", text)
                 self.assertNotIn("equivalencia", text)
-                self.assertIn("Este Platform ID no aparece en las fichas", text)
+                self.assertIn("No se ha podido asociar esta cuenta", text)
                 self.assertNotIn("sin evaluar", text)
                 self.assertNotIn("varias fichas", text)
                 self.assertNotIn("**Excel:** `liquidcap`", text)
@@ -381,7 +381,7 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
                 self.assertNotIn("Resultado de la búsqueda", text)
 
     def test_missing_excel_value_is_distinct_from_an_account_not_found(self):
-        text = self.render(resolve(player(name=roster().epic_name), (roster(platform_id=""),)))
+        text = self.render(resolve(player(epic_name=roster().epic_name), (roster(platform_id=""),)))
         self.assertIn("**Platform ID · ⚠️ Falta dato de Excel**", text)
         self.assertIn("Faltan datos registrados en Excel", text)
         self.assertIn("Platform ID: **0/1** ⚠️ · 1 sin dato en Excel", text)
@@ -390,7 +390,7 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
 
     def test_summary_separates_unlinked_accounts_from_missing_excel_values(self):
         resolved = resolve_match_replay_report_players(
-            report(player(name=roster().epic_name), player(name="Unknown", platform_id="other-id")),
+            report(player(epic_name=roster().epic_name), player(name="Unknown", platform_id="other-id")),
             (roster(platform_id=""),),
         )
         text = self.render(resolved)
@@ -398,7 +398,10 @@ class ReplayVerificationMessagesTests(unittest.TestCase):
         self.assertIn("Platform ID: **0/2** ⚠️ · 1 sin ficha vinculada · 1 sin dato en Excel", text)
 
     def test_discord_markdown_in_team_or_name_is_escaped(self):
-        text = self.render(resolve(player(name="`@everyone`"), (roster(team_name="*Astra*"),)))
+        original = report(player(name="`@everyone`", platform_id="unknown"))
+        game = original.games[0]
+        original = replace(original, games=(replace(game, blue=replace(game.blue, name="*Astra*")),))
+        text = self.render(resolve_match_replay_report_players(original, (roster(),)))
         self.assertIn("\\*Astra*", text)
         self.assertIn("`'@everyone'`", text)
 

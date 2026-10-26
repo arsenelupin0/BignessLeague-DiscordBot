@@ -544,6 +544,7 @@ def _parse_player(payload: dict[str, Any]) -> MatchReplayPlayer:
         platform = _payload_str(player_id, "platform")
         platform_id = _payload_str(player_id, "id")
 
+    # Analyzer name is the observed IGN, not an independently obtained Epic name.
     return MatchReplayPlayer(
         name=_payload_str(payload, "name"),
         platform=platform,

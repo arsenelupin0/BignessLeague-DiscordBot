@@ -26,6 +26,7 @@ class MatchReplayDivision(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class MatchReplayPlayer:
+    # Visible in-game name (IGN), not necessarily the Epic Games display name.
     name: str
     platform: str
     platform_id: str
@@ -45,6 +46,9 @@ class MatchReplayPlayer:
     ballchasing_name: str = ""
     name_source: str = "ballchasing"
     evaluated_methods: tuple[str, ...] | None = None
+    # Only a separately obtained Epic display name may populate this field.
+    # Ballchasing name and replay PlayerStats.Name must never populate it.
+    epic_name: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
