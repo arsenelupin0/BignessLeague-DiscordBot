@@ -28,6 +28,7 @@ from bigness_league_bot.infrastructure.discord.channel_access_management import 
     ensure_allowed_member,
 )
 from bigness_league_bot.infrastructure.discord.channel_management import (
+    apply_missing_evidence_marker,
     apply_missing_replays_marker,
     apply_match_reopen,
     apply_match_played_lockdown,
@@ -89,6 +90,12 @@ CHANNEL_CLOSE_CHOICES: list[app_commands.Choice[str]] = [
             I18N.commands.channel_management.close_channel.choices.missing_replays
         ),
         value=ChannelCloseMode.MISSING_REPLAYS.value,
+    ),
+    _string_choice(
+        name=localized_locale_str(
+            I18N.commands.channel_management.close_channel.choices.missing_evidence
+        ),
+        value=ChannelCloseMode.MISSING_EVIDENCE.value,
     ),
     _string_choice(
         name=localized_locale_str(
@@ -359,6 +366,9 @@ class ChannelManagement(commands.Cog):
 
         if action is ChannelCloseMode.MISSING_REPLAYS:
             return await apply_missing_replays_marker(channel, actor)
+
+        if action is ChannelCloseMode.MISSING_EVIDENCE:
+            return await apply_missing_evidence_marker(channel, actor)
 
         if action is ChannelCloseMode.MATCHDAY_CLOSED:
             return await apply_matchday_closed(channel, actor)

@@ -17,6 +17,7 @@ import discord
 
 from bigness_league_bot.application.services.channel_closure import (
     MATCH_CHANNEL_STATUS_CLOSED,
+    MATCH_CHANNEL_STATUS_MISSING_EVIDENCE,
     MATCH_CHANNEL_STATUS_MISSING_REPLAYS,
     MATCH_CHANNEL_STATUS_OPEN,
     MATCH_CHANNEL_STATUS_PLAYED,
@@ -246,6 +247,35 @@ async def apply_missing_replays_marker(
     return ChannelActionResult(
         action=ChannelCloseMode.MISSING_REPLAYS,
         summary=localize(I18N.actions.channel_management.missing_replays_summary),
+    )
+
+
+async def apply_missing_evidence_marker(
+        channel: discord.TextChannel,
+        actor: discord.abc.User,
+) -> ChannelActionResult:
+    channel_name = with_match_channel_status(
+        channel.name,
+        MATCH_CHANNEL_STATUS_MISSING_EVIDENCE,
+    )
+
+    await channel.edit(
+        name=channel_name,
+        reason=(
+            f"{user_audit_label(actor)} ejecutó /cerrar_canal "
+            f"accion={ChannelCloseMode.MISSING_EVIDENCE.value}"
+        ),
+    )
+    LOGGER.info(
+        "CHANNEL_MISSING_EVIDENCE_MARKED channel=%s(%s) actor=%s(%s)",
+        channel.name,
+        channel.id,
+        user_audit_label(actor),
+        actor.id,
+    )
+    return ChannelActionResult(
+        action=ChannelCloseMode.MISSING_EVIDENCE,
+        summary=localize(I18N.actions.channel_management.missing_evidence_summary),
     )
 
 

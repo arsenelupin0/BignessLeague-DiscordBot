@@ -19,6 +19,8 @@ class _CommandsChannelManagementCloseChannelChoices:
         key="commands.channel_management.close_channel.choices.match_in_progress", default_text="Horario en disputa")
     missing_replays: TranslationKey = TranslationKey(
         key="commands.channel_management.close_channel.choices.missing_replays", default_text="Faltan replays")
+    missing_evidence: TranslationKey = TranslationKey(
+        key="commands.channel_management.close_channel.choices.missing_evidence", default_text="Falta de evidencias")
     match_played: TranslationKey = TranslationKey(key="commands.channel_management.close_channel.choices.match_played",
                                                   default_text="Partido jugado")
     matchday_closed: TranslationKey = TranslationKey(
@@ -2483,6 +2485,8 @@ class _ActionsChannelManagement:
                                                        default_text="Se han anadido al canal estos roles: {roles}.")
     missing_replays_summary: TranslationKey = TranslationKey(key="actions.channel_management.missing_replays_summary",
                                                              default_text="# \u26a0\ufe0f IMPORTANTE \u26a0\ufe0f\n_ _\nCanal marcado como **pendiente** de **replays**. En caso de que no se suban las replays, el **partido** se podr\u00eda dar como **nulo** para **ambos equipos** y ninguno **sumar\u00eda puntos**.")
+    missing_evidence_summary: TranslationKey = TranslationKey(key="actions.channel_management.missing_evidence_summary",
+                                                              default_text="# :sos: IMPORTANTE :sos:\n_ _\nCanal marcado **en disputa** a falta de evidencias,  o aclaraciones que necesite el **staff** para este encuentro. En caso de que no se resuelvan las dudas, el **partido** se queda como **nulo** para **ambos equipos** hasta que se resuelva todo.")
     match_scheduled_summary: TranslationKey = TranslationKey(key="actions.channel_management.match_scheduled_summary",
                                                              default_text="# {green_arrow} Horario fijado\n_ _\n- Ambos equipos se han puesto de acuerdo y se ha cerrado un horario.\n  - \ufe0f\ud83d\udcc6 **<t:{timestamp}:F>**\n  - \u231b **<t:{timestamp}:R>**\n- Si un equipo no puede al final, que avise con tiempo mencionando al equipo rival.\n- {team_mentions}\n- Informaci\u00f3n extra para {caster_mentions}")
     match_in_progress_summary: TranslationKey = TranslationKey(
